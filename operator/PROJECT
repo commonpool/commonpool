@@ -1,7 +1,7 @@
 domain: commonpool.net
 layout: go.kubebuilder.io/v2
 projectName: operator
-repo: github.com/commonpool/commonpool
+repo: github.com/commonpool/commonpool/operator
 resources:
 - group: apps
   kind: CommonpoolInstallation

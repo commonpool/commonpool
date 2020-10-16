@@ -20,16 +20,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // CommonpoolInstallationSpec defines the desired state of CommonpoolInstallation
 type CommonpoolInstallationSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// Foo is an example field of CommonpoolInstallation. Edit CommonpoolInstallation_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// BackendImage Overrides the docker image used for the backend service
+	BackendImage *string `json:"backendImage,omitempty"`
+	// FrontendImage Overrides the docker image used for the frontend service
+	FrontendImage *string `json:"frontendImage,omitempty"`
+	// IngressHost Specifies the host for the kubernetes ingress
+	IngressHost string `json:"ingressHost"`
 }
 
 // CommonpoolInstallationStatus defines the observed state of CommonpoolInstallation

@@ -27,8 +27,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	appsv1 "github.com/commonpool/commonpool/api/v1"
-	"github.com/commonpool/commonpool/controllers"
+	appsv1 "github.com/commonpool/commonpool/operator/api/v1"
+	"github.com/commonpool/commonpool/operator/controllers"
 	// +kubebuilder:scaffold:imports
 )
 
