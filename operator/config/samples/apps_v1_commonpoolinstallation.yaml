@@ -1,0 +1,7 @@
+apiVersion: apps.commonpool.net/v1
+kind: CommonpoolInstallation
+metadata:
+  name: commonpoolinstallation-sample
+spec:
+  # Add fields here
+  foo: bar
