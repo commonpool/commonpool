@@ -1,0 +1,237 @@
+basePath: /api/v1
+definitions:
+  utils.Error:
+    properties:
+      errors:
+        additionalProperties: true
+        type: object
+    type: object
+  web.CreateResourcePayload:
+    properties:
+      description:
+        type: string
+      exchangeValue:
+        type: integer
+      necessityLevel:
+        type: integer
+      summary:
+        type: string
+      timeSensitivity:
+        type: integer
+      type:
+        type: integer
+    type: object
+  web.CreateResourceRequest:
+    properties:
+      resource:
+        $ref: '#/definitions/web.CreateResourcePayload'
+        type: object
+    type: object
+  web.CreateResourceResponse:
+    properties:
+      resource:
+        $ref: '#/definitions/web.Resource'
+        type: object
+    type: object
+  web.GetResourceResponse:
+    properties:
+      resource:
+        $ref: '#/definitions/web.Resource'
+        type: object
+    type: object
+  web.Resource:
+    properties:
+      description:
+        type: string
+      exchangeValue:
+        type: integer
+      id:
+        type: string
+      necessityLevel:
+        type: integer
+      summary:
+        type: string
+      timeSensitivity:
+        type: integer
+      type:
+        type: integer
+    type: object
+  web.SearchResourcesResponse:
+    properties:
+      resources:
+        items:
+          $ref: '#/definitions/web.Resource'
+        type: array
+      skip:
+        type: integer
+      take:
+        type: integer
+      totalCount:
+        type: integer
+    type: object
+  web.UpdateResourcePayload:
+    properties:
+      description:
+        type: string
+      exchangeValue:
+        type: integer
+      necessityLevel:
+        type: integer
+      summary:
+        type: string
+      timeSensitivity:
+        type: integer
+      type:
+        type: integer
+    type: object
+  web.UpdateResourceRequest:
+    properties:
+      resource:
+        $ref: '#/definitions/web.UpdateResourcePayload'
+        type: object
+    type: object
+  web.UpdateResourceResponse:
+    properties:
+      resource:
+        $ref: '#/definitions/web.Resource'
+        type: object
+    type: object
+host: 127.0.0.1:8585
+info:
+  contact: {}
+  description: resources api
+  license: {}
+  termsOfService: http://swagger.io/terms
+  title: resources api
+  version: "1.0"
+paths:
+  /resources:
+    get:
+      consumes:
+      - application/json
+      description: Search for resources
+      operationId: searchResources
+      parameters:
+      - description: Search text
+        in: query
+        name: query
+        required: true
+        type: string
+      - description: Resource type
+        enum:
+        - "0"
+        - "1"
+        in: query
+        name: type
+        required: true
+        type: string
+      - default: 10
+        description: Number of resources to take
+        in: query
+        name: take
+        type: integer
+      - default: 0
+        description: Number of resources to skip
+        in: query
+        name: skip
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.SearchResourcesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Error'
+      summary: Searches resources
+      tags:
+      - resources
+    post:
+      consumes:
+      - application/json
+      description: Creates a resource
+      operationId: createResource
+      parameters:
+      - description: Resource to create
+        in: body
+        name: resource
+        required: true
+        schema:
+          $ref: '#/definitions/web.CreateResourceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.CreateResourceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Error'
+      summary: Creates a resource
+      tags:
+      - resources
+    put:
+      consumes:
+      - application/json
+      description: Updates a resource
+      operationId: updateResource
+      parameters:
+      - description: Resource id
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Resource to create
+        in: body
+        name: resource
+        required: true
+        schema:
+          $ref: '#/definitions/web.UpdateResourceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.UpdateResourceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Error'
+      summary: Updates a resource
+      tags:
+      - resources
+  /resources/:id:
+    get:
+      consumes:
+      - application/json
+      description: Gets a resource by id
+      operationId: getResource
+      parameters:
+      - description: Resource id
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/web.GetResourceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Error'
+      summary: Gets a single resource
+      tags:
+      - resources
+swagger: "2.0"
