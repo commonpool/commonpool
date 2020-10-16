@@ -1,8 +1,8 @@
 package web
 
 import (
-	"github.com/labstack/echo/v4"
 	"github.com/commonpool/backend/model"
+	"github.com/labstack/echo/v4"
 )
 
 type SearchResourcesResponse struct {

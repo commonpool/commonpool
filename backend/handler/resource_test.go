@@ -3,11 +3,11 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/labstack/echo/v4"
 	"github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/router"
 	"github.com/commonpool/backend/web"
+	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -301,7 +301,6 @@ func newGetResourceRequest(key string) (*httptest.ResponseRecorder, echo.Context
 	c.SetParamValues(key)
 	return rec, c
 }
-
 
 func newCreateResourceRequest(js string) (*httptest.ResponseRecorder, echo.Context) {
 	_, _, rec, c := newRequest(echo.POST, "/api/resources", &js)

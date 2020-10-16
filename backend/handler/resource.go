@@ -1,11 +1,11 @@
 package handler
 
 import (
-	"github.com/labstack/echo/v4"
 	. "github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/web"
+	"github.com/labstack/echo/v4"
 	"net/http"
 	"strconv"
 	"strings"

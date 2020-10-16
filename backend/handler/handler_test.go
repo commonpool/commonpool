@@ -1,11 +1,11 @@
 package handler
 
 import (
-	"github.com/jinzhu/gorm"
-	"github.com/labstack/echo/v4"
 	"github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/router"
 	"github.com/commonpool/backend/store"
+	"github.com/jinzhu/gorm"
+	"github.com/labstack/echo/v4"
 	"log"
 	"os"
 	"testing"

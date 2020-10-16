@@ -1,13 +1,13 @@
 package main
 
 import (
-	"github.com/jinzhu/gorm"
-	"github.com/labstack/echo/v4"
 	_ "github.com/commonpool/backend/docs"
 	"github.com/commonpool/backend/handler"
 	"github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/router"
 	"github.com/commonpool/backend/store"
+	"github.com/jinzhu/gorm"
+	"github.com/labstack/echo/v4"
 	echoSwagger "github.com/swaggo/echo-swagger"
 	"net/http"
 )
@@ -17,7 +17,6 @@ var (
 	rs resource.Store
 	e  *echo.Echo
 )
-
 
 // @title resources api
 // @version 1.0
