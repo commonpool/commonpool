@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+
 	k8sappsv1 "k8s.io/api/apps/v1"
 	k8scorev1 "k8s.io/api/core/v1"
 	k8snetworkingv1beta1 "k8s.io/api/networking/v1beta1"
@@ -52,6 +53,9 @@ type CommonpoolInstallationReconciler struct {
 
 // +kubebuilder:rbac:groups=apps.commonpool.net,resources=commonpoolinstallations,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=apps.commonpool.net,resources=commonpoolinstallations/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=apps,resources=deployments,verbs=create;delete;get;list;update;patch;watch
+// +kubebuilder:rbac:groups=core,resources=services,verbs=create;delete;get;list;update;patch;watch
+// +kubebuilder:rbac:groups=networking,resources=ingresses,verbs=create;delete;get;list;update;patch;watch
 
 func (r *CommonpoolInstallationReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()
@@ -193,23 +197,28 @@ func (r *CommonpoolInstallationReconciler) getIngress(ctx context.Context, insta
 }
 
 func (r *CommonpoolInstallationReconciler) createFrontendDeployment(ctx context.Context, installation *appsv1.CommonpoolInstallation) error {
-	return r.Create(ctx, r.newFrontendDeployment(installation))
+	newFrontendDeployment := r.newFrontendDeployment(installation)
+	return r.Create(ctx, newFrontendDeployment)
 }
 
 func (r *CommonpoolInstallationReconciler) createBackendDeployment(ctx context.Context, installation *appsv1.CommonpoolInstallation) error {
-	return r.Create(ctx, r.newBackendDeployment(installation))
+	newBackendDeployment := r.newBackendDeployment(installation)
+	return r.Create(ctx, newBackendDeployment)
 }
 
 func (r *CommonpoolInstallationReconciler) createFrontendService(ctx context.Context, installation *appsv1.CommonpoolInstallation) error {
-	return r.Create(ctx, r.newFrontendService(installation))
+	newFrontendService := r.newFrontendService(installation)
+	return r.Create(ctx, newFrontendService)
 }
 
 func (r *CommonpoolInstallationReconciler) createBackendService(ctx context.Context, installation *appsv1.CommonpoolInstallation) error {
-	return r.Create(ctx, r.newBackendService(installation))
+	newBackendService := r.newBackendService(installation)
+	return r.Create(ctx, newBackendService)
 }
 
 func (r *CommonpoolInstallationReconciler) createIngress(ctx context.Context, installation *appsv1.CommonpoolInstallation) error {
-	return r.Create(ctx, r.newIngress(installation))
+	newIngress := r.newIngress(installation)
+	return r.Create(ctx, newIngress)
 }
 
 func (r *CommonpoolInstallationReconciler) newFrontendDeployment(installation *appsv1.CommonpoolInstallation) *k8sappsv1.Deployment {

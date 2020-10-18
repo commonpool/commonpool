@@ -48,8 +48,6 @@ spec:
             ingressHost:
               description: IngressHost Specifies the host for the kubernetes ingress
               type: string
-          required:
-          - ingressHost
           type: object
         status:
           description: CommonpoolInstallationStatus defines the observed state of
