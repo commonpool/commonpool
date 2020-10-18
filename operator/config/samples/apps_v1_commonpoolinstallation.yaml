@@ -1,5 +1,6 @@
 apiVersion: apps.commonpool.net/v1
 kind: CommonpoolInstallation
 metadata:
-  name: commonpoolinstallation-sample
-spec: {}
+  name: commonpool-prod
+spec:
+  ingressHost: commonpool.net

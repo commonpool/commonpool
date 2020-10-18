@@ -23,9 +23,9 @@ import (
 // CommonpoolInstallationSpec defines the desired state of CommonpoolInstallation
 type CommonpoolInstallationSpec struct {
 	// BackendImage Overrides the docker image used for the backend service
-	BackendImage *string `json:"backendImage,omitempty"`
+	BackendImage string `json:"backendImage,omitempty"`
 	// FrontendImage Overrides the docker image used for the frontend service
-	FrontendImage *string `json:"frontendImage,omitempty"`
+	FrontendImage string `json:"frontendImage,omitempty"`
 	// IngressHost Specifies the host for the kubernetes ingress
 	IngressHost string `json:"ingressHost,omitempty"`
 }

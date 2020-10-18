@@ -13,7 +13,7 @@ spec:
 apiVersion: cert-manager.io/v1alpha2
 kind: Certificate
 metadata:
-  name: serving-cert  # this name should match the one appeared in kustomizeconfig.yaml
+  name: commonpool-webhook-ca  # this name should match the one appeared in kustomizeconfig.yaml
   namespace: system
 spec:
   # $(SERVICE_NAME) and $(SERVICE_NAMESPACE) will be substituted by kustomize
@@ -23,4 +23,4 @@ spec:
   issuerRef:
     kind: Issuer
     name: selfsigned-issuer
-  secretName: webhook-server-cert # this secret will not be prefixed, since it's not managed by kustomize
+  secretName: commonpool-webhook-ca # this secret will not be prefixed, since it's not managed by kustomize

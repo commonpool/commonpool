@@ -27,6 +27,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
+	appscommonpoolnetv1 "github.com/commonpool/commonpool/operator/api/v1"
 	appsv1 "github.com/commonpool/commonpool/operator/api/v1"
 	"github.com/commonpool/commonpool/operator/controllers"
 	// +kubebuilder:scaffold:imports
@@ -41,6 +42,7 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(appsv1.AddToScheme(scheme))
+	utilruntime.Must(appscommonpoolnetv1.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
 }
 
@@ -73,6 +75,10 @@ func main() {
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "CommonpoolInstallation")
+		os.Exit(1)
+	}
+	if err = (&appscommonpoolnetv1.CommonpoolInstallation{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "CommonpoolInstallation")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder

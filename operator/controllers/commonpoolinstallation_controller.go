@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"time"
 
 	k8sappsv1 "k8s.io/api/apps/v1"
 	k8scorev1 "k8s.io/api/core/v1"
@@ -39,10 +40,12 @@ const frontendServicePort = 80
 const backendServicePort = 8585
 const frontendPortName = "http-frontend"
 const backendPortName = "http-backend"
-const appKey = "appKey"
-const installationKey = "installation"
-const backendAppName = "backend"
-const frontendApp = "frontend"
+const app = "app"
+const tier = "tier"
+const version = "version"
+const backend = "backend"
+const frontend = "frontend"
+const commonpool = "commonpool"
 
 // CommonpoolInstallationReconciler reconciles a CommonpoolInstallation object
 type CommonpoolInstallationReconciler struct {
@@ -55,7 +58,7 @@ type CommonpoolInstallationReconciler struct {
 // +kubebuilder:rbac:groups=apps.commonpool.net,resources=commonpoolinstallations/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=create;delete;get;list;update;patch;watch
 // +kubebuilder:rbac:groups=core,resources=services,verbs=create;delete;get;list;update;patch;watch
-// +kubebuilder:rbac:groups=networking,resources=ingresses,verbs=create;delete;get;list;update;patch;watch
+// +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=create;delete;get;list;update;patch;watch
 
 func (r *CommonpoolInstallationReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()
@@ -64,6 +67,10 @@ func (r *CommonpoolInstallationReconciler) Reconcile(req ctrl.Request) (ctrl.Res
 	installation := &appsv1.CommonpoolInstallation{}
 	err := r.Get(ctx, req.NamespacedName, installation)
 	if err != nil {
+		if errors.IsNotFound(err) {
+			log.Info("CommonpoolInstallation not found. Ignoring since object must be deleted.")
+			return ctrl.Result{}, nil
+		}
 		log.Error(err, "Could not retrieve CommonpoolInstallation")
 		return ctrl.Result{}, err
 	}
@@ -76,13 +83,14 @@ func (r *CommonpoolInstallationReconciler) Reconcile(req ctrl.Request) (ctrl.Res
 			log.Error(err, "Failed to create frontend deployment")
 			return ctrl.Result{}, err
 		}
+		return ctrl.Result{Requeue: true}, nil
 	} else if err != nil {
 		log.Error(err, "Could not retrieve frontend deployment")
 		return ctrl.Result{}, err
 	}
 
-	if frontendDeployment.Spec.Template.Spec.Containers[0].Image != *installation.Spec.FrontendImage {
-		frontendDeployment.Spec.Template.Spec.Containers[0].Image = *installation.Spec.FrontendImage
+	if frontendDeployment.Spec.Template.Spec.Containers[0].Image != installation.Spec.FrontendImage {
+		frontendDeployment.Spec.Template.Spec.Containers[0].Image = installation.Spec.FrontendImage
 		err := r.Update(ctx, frontendDeployment)
 		if err != nil {
 			log.Error(err, "Failed to update frontend deployment image")
@@ -99,6 +107,7 @@ func (r *CommonpoolInstallationReconciler) Reconcile(req ctrl.Request) (ctrl.Res
 			log.Error(err, "Failed to create frontend service")
 			return ctrl.Result{}, err
 		}
+		return ctrl.Result{Requeue: true, RequeueAfter: time.Millisecond * 250}, nil
 	} else if err != nil {
 		log.Error(err, "Failed to retrieve frontend service")
 		return ctrl.Result{}, err
@@ -112,13 +121,14 @@ func (r *CommonpoolInstallationReconciler) Reconcile(req ctrl.Request) (ctrl.Res
 			log.Error(err, "Failed to create backend deployment")
 			return ctrl.Result{}, err
 		}
+		return ctrl.Result{Requeue: true}, nil
 	} else if err != nil {
 		log.Error(err, "Could not retrieve backend deployment")
 		return ctrl.Result{}, err
 	}
 
-	if backendDeployment.Spec.Template.Spec.Containers[0].Image != *installation.Spec.BackendImage {
-		backendDeployment.Spec.Template.Spec.Containers[0].Image = *installation.Spec.BackendImage
+	if backendDeployment.Spec.Template.Spec.Containers[0].Image != installation.Spec.BackendImage {
+		backendDeployment.Spec.Template.Spec.Containers[0].Image = installation.Spec.BackendImage
 		err := r.Update(ctx, backendDeployment)
 		if err != nil {
 			log.Error(err, "Failed to update backend deployment image")
@@ -135,6 +145,7 @@ func (r *CommonpoolInstallationReconciler) Reconcile(req ctrl.Request) (ctrl.Res
 			log.Error(err, "Failed to create backend service")
 			return ctrl.Result{}, err
 		}
+		return ctrl.Result{Requeue: true, RequeueAfter: time.Millisecond * 250}, nil
 	} else if err != nil {
 		log.Error(err, "Failed to retrieve backend service")
 		return ctrl.Result{}, err
@@ -148,28 +159,39 @@ func (r *CommonpoolInstallationReconciler) Reconcile(req ctrl.Request) (ctrl.Res
 			log.Error(err, "Failed to create ingress")
 			return ctrl.Result{}, err
 		}
+		return ctrl.Result{Requeue: true}, nil
 	} else if err != nil {
 		log.Error(err, "Failed to retrieve ingress")
 		return ctrl.Result{}, err
+	}
+
+	if ingress.Spec.Rules[0].Host != installation.Spec.IngressHost {
+		ingress.Spec.Rules[0].Host = installation.Spec.IngressHost
+		err = r.Update(ctx, ingress)
+		if err != nil {
+			log.Error(err, "Failed to update ingress host")
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{Requeue: true}, nil
 	}
 
 	return ctrl.Result{}, nil
 }
 
 func (r *CommonpoolInstallationReconciler) getFrontendDeploymentName(installation *appsv1.CommonpoolInstallation) types.NamespacedName {
-	return r.getNamespacedNameWithSuffix(installation, "-"+frontendApp)
+	return r.getNamespacedNameWithSuffix(installation, "-"+frontend)
 }
 
 func (r *CommonpoolInstallationReconciler) getBackendDeploymentName(installation *appsv1.CommonpoolInstallation) types.NamespacedName {
-	return r.getNamespacedNameWithSuffix(installation, "-"+backendAppName)
+	return r.getNamespacedNameWithSuffix(installation, "-"+backend)
 }
 
 func (r *CommonpoolInstallationReconciler) getFrontendServiceName(installation *appsv1.CommonpoolInstallation) types.NamespacedName {
-	return r.getNamespacedNameWithSuffix(installation, "-"+frontendApp)
+	return r.getNamespacedNameWithSuffix(installation, "-"+frontend)
 }
 
 func (r *CommonpoolInstallationReconciler) getBackendServiceName(installation *appsv1.CommonpoolInstallation) types.NamespacedName {
-	return r.getNamespacedNameWithSuffix(installation, "-"+backendAppName)
+	return r.getNamespacedNameWithSuffix(installation, "-"+backend)
 }
 
 func (r *CommonpoolInstallationReconciler) getIngressName(installation *appsv1.CommonpoolInstallation) types.NamespacedName {
@@ -197,99 +219,137 @@ func (r *CommonpoolInstallationReconciler) getIngress(ctx context.Context, insta
 }
 
 func (r *CommonpoolInstallationReconciler) createFrontendDeployment(ctx context.Context, installation *appsv1.CommonpoolInstallation) error {
-	newFrontendDeployment := r.newFrontendDeployment(installation)
+	newFrontendDeployment, err := r.newFrontendDeployment(installation)
+	if err != nil {
+		return err
+	}
 	return r.Create(ctx, newFrontendDeployment)
 }
 
 func (r *CommonpoolInstallationReconciler) createBackendDeployment(ctx context.Context, installation *appsv1.CommonpoolInstallation) error {
-	newBackendDeployment := r.newBackendDeployment(installation)
+	newBackendDeployment, err := r.newBackendDeployment(installation)
+	if err != nil {
+		return err
+	}
 	return r.Create(ctx, newBackendDeployment)
 }
 
 func (r *CommonpoolInstallationReconciler) createFrontendService(ctx context.Context, installation *appsv1.CommonpoolInstallation) error {
-	newFrontendService := r.newFrontendService(installation)
+	newFrontendService, err := r.newFrontendService(installation)
+	if err != nil {
+		return err
+	}
 	return r.Create(ctx, newFrontendService)
 }
 
 func (r *CommonpoolInstallationReconciler) createBackendService(ctx context.Context, installation *appsv1.CommonpoolInstallation) error {
-	newBackendService := r.newBackendService(installation)
+	newBackendService, err := r.newBackendService(installation)
+	if err != nil {
+		return err
+	}
 	return r.Create(ctx, newBackendService)
 }
 
 func (r *CommonpoolInstallationReconciler) createIngress(ctx context.Context, installation *appsv1.CommonpoolInstallation) error {
-	newIngress := r.newIngress(installation)
+	newIngress, err := r.newIngress(installation)
+	if err != nil {
+		return err
+	}
 	return r.Create(ctx, newIngress)
 }
 
-func (r *CommonpoolInstallationReconciler) newFrontendDeployment(installation *appsv1.CommonpoolInstallation) *k8sappsv1.Deployment {
+func (r *CommonpoolInstallationReconciler) newFrontendDeployment(installation *appsv1.CommonpoolInstallation) (*k8sappsv1.Deployment, error) {
 	var replicas int32 = 1
 
-	return &k8sappsv1.Deployment{
+	deployment := &k8sappsv1.Deployment{
 		ObjectMeta: k8smetav1.ObjectMeta{
 			Name:      r.getFrontendDeploymentName(installation).Name,
 			Namespace: r.getFrontendDeploymentName(installation).Namespace,
 			Labels: map[string]string{
-				appKey:          frontendApp,
-				installationKey: installation.Name,
+				app:     commonpool,
+				version: installation.Name,
+				tier:    frontend,
 			},
 		},
 		Spec: k8sappsv1.DeploymentSpec{
 			Replicas: &replicas,
 			Selector: &k8smetav1.LabelSelector{
 				MatchLabels: map[string]string{
-					appKey:          frontendApp,
-					installationKey: installation.Name,
+					app:     commonpool,
+					version: installation.Name,
+					tier:    frontend,
 				},
 			},
 			Template: k8scorev1.PodTemplateSpec{
+				ObjectMeta: k8smetav1.ObjectMeta{
+					Labels: map[string]string{
+						app:     commonpool,
+						version: installation.Name,
+						tier:    frontend,
+					},
+				},
 				Spec: k8scorev1.PodSpec{
 					Containers: []k8scorev1.Container{
 						{
-							Name:  frontendApp,
-							Image: *installation.Spec.FrontendImage,
+							Name:  frontend,
+							Image: installation.Spec.FrontendImage,
 						},
 					},
 				},
 			},
 		},
 	}
+
+	err := ctrl.SetControllerReference(installation, deployment, r.Scheme)
+	return deployment, err
 }
 
-func (r *CommonpoolInstallationReconciler) newBackendDeployment(installation *appsv1.CommonpoolInstallation) *k8sappsv1.Deployment {
+func (r *CommonpoolInstallationReconciler) newBackendDeployment(installation *appsv1.CommonpoolInstallation) (*k8sappsv1.Deployment, error) {
 	var replicas int32 = 1
-	return &k8sappsv1.Deployment{
+	deployment := &k8sappsv1.Deployment{
 		ObjectMeta: k8smetav1.ObjectMeta{
 			Name:      r.getBackendDeploymentName(installation).Name,
 			Namespace: r.getBackendDeploymentName(installation).Namespace,
 			Labels: map[string]string{
-				appKey:          backendAppName,
-				installationKey: installation.Name,
+				app:     commonpool,
+				version: installation.Name,
+				tier:    backend,
 			},
 		},
 		Spec: k8sappsv1.DeploymentSpec{
 			Replicas: &replicas,
 			Selector: &k8smetav1.LabelSelector{
 				MatchLabels: map[string]string{
-					appKey:          backendAppName,
-					installationKey: installation.Name,
+					app:     commonpool,
+					version: installation.Name,
+					tier:    backend,
 				},
 			},
 			Template: k8scorev1.PodTemplateSpec{
+				ObjectMeta: k8smetav1.ObjectMeta{
+					Labels: map[string]string{
+						app:     commonpool,
+						version: installation.Name,
+						tier:    backend,
+					},
+				},
 				Spec: k8scorev1.PodSpec{
 					Containers: []k8scorev1.Container{
 						{
-							Name:  backendAppName,
-							Image: *installation.Spec.FrontendImage,
+							Name:  backend,
+							Image: installation.Spec.BackendImage,
 						},
 					},
 				},
 			},
 		},
 	}
+	err := ctrl.SetControllerReference(installation, deployment, r.Scheme)
+	return deployment, err
 }
 
-func (r *CommonpoolInstallationReconciler) newFrontendService(installation *appsv1.CommonpoolInstallation) *k8scorev1.Service {
-	return &k8scorev1.Service{
+func (r *CommonpoolInstallationReconciler) newFrontendService(installation *appsv1.CommonpoolInstallation) (*k8scorev1.Service, error) {
+	service := &k8scorev1.Service{
 		ObjectMeta: k8smetav1.ObjectMeta{
 			Name:      r.getFrontendServiceName(installation).Name,
 			Namespace: r.getFrontendServiceName(installation).Namespace,
@@ -305,15 +365,18 @@ func (r *CommonpoolInstallationReconciler) newFrontendService(installation *apps
 				},
 			},
 			Selector: map[string]string{
-				appKey:          frontendApp,
-				installationKey: installation.Name,
+				app:     commonpool,
+				version: installation.Name,
+				tier:    frontend,
 			},
 		},
 	}
+	err := ctrl.SetControllerReference(installation, service, r.Scheme)
+	return service, err
 }
 
-func (r *CommonpoolInstallationReconciler) newBackendService(installation *appsv1.CommonpoolInstallation) *k8scorev1.Service {
-	return &k8scorev1.Service{
+func (r *CommonpoolInstallationReconciler) newBackendService(installation *appsv1.CommonpoolInstallation) (*k8scorev1.Service, error) {
+	service := &k8scorev1.Service{
 		ObjectMeta: k8smetav1.ObjectMeta{
 			Name:      r.getBackendServiceName(installation).Name,
 			Namespace: r.getBackendServiceName(installation).Namespace,
@@ -329,18 +392,25 @@ func (r *CommonpoolInstallationReconciler) newBackendService(installation *appsv
 				},
 			},
 			Selector: map[string]string{
-				appKey:          backendAppName,
-				installationKey: installation.Name,
+				app:     commonpool,
+				version: installation.Name,
+				tier:    backend,
 			},
 		},
 	}
+	err := ctrl.SetControllerReference(installation, service, r.Scheme)
+	return service, err
 }
 
-func (r *CommonpoolInstallationReconciler) newIngress(installation *appsv1.CommonpoolInstallation) *k8snetworkingv1beta1.Ingress {
-	return &k8snetworkingv1beta1.Ingress{
+func (r *CommonpoolInstallationReconciler) newIngress(installation *appsv1.CommonpoolInstallation) (*k8snetworkingv1beta1.Ingress, error) {
+	ingress := &k8snetworkingv1beta1.Ingress{
 		ObjectMeta: k8smetav1.ObjectMeta{
 			Name:      r.getIngressName(installation).Name,
 			Namespace: r.getIngressName(installation).Namespace,
+			Labels: map[string]string{
+				app:     commonpool,
+				version: installation.Name,
+			},
 		},
 		Spec: k8snetworkingv1beta1.IngressSpec{
 			Rules: []k8snetworkingv1beta1.IngressRule{
@@ -355,6 +425,11 @@ func (r *CommonpoolInstallationReconciler) newIngress(installation *appsv1.Commo
 										ServiceName: r.getBackendServiceName(installation).Name,
 										ServicePort: intstr.FromString(backendPortName),
 									},
+								}, {
+									Backend: k8snetworkingv1beta1.IngressBackend{
+										ServiceName: r.getFrontendServiceName(installation).Name,
+										ServicePort: intstr.FromString(frontendPortName),
+									},
 								},
 							},
 						},
@@ -363,6 +438,8 @@ func (r *CommonpoolInstallationReconciler) newIngress(installation *appsv1.Commo
 			},
 		},
 	}
+	err := ctrl.SetControllerReference(installation, ingress, r.Scheme)
+	return ingress, err
 }
 
 func (r *CommonpoolInstallationReconciler) getNamespacedNameWithSuffix(installation *appsv1.CommonpoolInstallation, suffix string) types.NamespacedName {
