@@ -1,0 +1,75 @@
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: commonpool
+  namespace: default
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - commonpool.net
+    - "*.commonpool.net"
+    tls:
+      httpsRedirect: true 
+  - port:
+      number: 443
+      name: https-443
+      protocol: HTTPS
+    hosts:
+    - commonpool.net
+    - "*.commonpool.net"
+    tls:
+      mode: SIMPLE 
+      credentialName: commonpool-cert-prod
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: commonpool
+  namespace: default
+spec:
+  hosts:
+  - commonpool.net
+  gateways:
+  - commonpool
+  http:
+  - name: "prod-backend"
+    match:
+    - uri:
+        prefix: "/api"
+    route:
+    - destination:
+        host: commonpool-prod-backend
+        subset: commonpool-prod
+  - name: "prod-frontend"
+    route:
+    - destination:
+        host: commonpool-prod-frontend
+        subset: commonpool-prod
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: commonpool-prod-backend
+spec:
+  host: commonpool-prod-backend.default.svc.cluster.local
+  subsets:
+  - name: commonpool-prod
+    labels:
+      version: commonpool-prod
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: commonpool-prod-frontend
+spec:
+  host: commonpool-prod-frontend.default.svc.cluster.local
+  subsets:
+  - name: commonpool-prod
+    labels:
+      version: commonpool-prod

@@ -1,9 +1,14 @@
+/* tslint:disable:no-string-literal */
 // This file can be replaced during build by using the `fileReplacements` array.
 // `ng build --prod` replaces `environment.ts` with `environment.prod.ts`.
 // The list of file replacements can be found in `angular.json`.
 
-export const environment = {
-  production: false
+import {IEnvironment} from './IEnvironment';
+
+export const environment: IEnvironment = {
+  production: false,
+  apiUrl: window['env']['apiUrl'] || 'default',
+  debug: window['env']['debug'] || true
 };
 
 /*

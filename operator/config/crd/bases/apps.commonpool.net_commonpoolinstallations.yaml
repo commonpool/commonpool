@@ -41,6 +41,20 @@ spec:
               description: BackendImage Overrides the docker image used for the backend
                 service
               type: string
+            databaseHost:
+              type: string
+            databaseName:
+              type: string
+            databasePasswordSecret:
+              type: string
+            databasePasswordSecretKey:
+              type: string
+            databasePort:
+              type: integer
+            databaseUserSecret:
+              type: string
+            databaseUserSecretKey:
+              type: string
             frontendImage:
               description: FrontendImage Overrides the docker image used for the frontend
                 service
@@ -48,6 +62,14 @@ spec:
             ingressHost:
               description: IngressHost Specifies the host for the kubernetes ingress
               type: string
+          required:
+          - databaseHost
+          - databaseName
+          - databasePasswordSecret
+          - databasePasswordSecretKey
+          - databasePort
+          - databaseUserSecret
+          - databaseUserSecretKey
           type: object
         status:
           description: CommonpoolInstallationStatus defines the observed state of

@@ -33,7 +33,8 @@ kops-install: master-dns-policy cert-manager-policy
 	P2=$$(aws iam list-policies --query 'Policies[?PolicyName==`master-dns-policy`].Arn' --output text); \
 	echo p2 = $$P2; \
 	kops get cluster -o json \
-	| jq ".spec.externalPolicies.master |= (. += [\"$$P1\", \"$$P2\"] | unique)" \
+	| jq ".spec.externalPolicies.nodes |= (. += [\"$$P1\"] | unique)" \
+	| jq ".spec.externalPolicies.master |= (. += [\"$$P2\"] | unique)" \
 	| kops replace -f -
 	kops update cluster --yes 
 	kops rolling-update cluster --yes

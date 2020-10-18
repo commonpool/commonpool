@@ -1,0 +1,129 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: auth
+  labels:
+    istio-injection: enabled
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  namespace: auth
+  labels:
+    app: keycloak
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      containers:
+      - name: keycloak
+        image: quay.io/keycloak/keycloak:11.0.2
+        env:
+        - name: KEYCLOAK_USER
+          value: "admin"
+        - name: KEYCLOAK_PASSWORD
+          value: "admin"
+        - name: PROXY_ADDRESS_FORWARDING
+          value: "true"
+        - name: DB_VENDOR
+          value: postgres
+        - name: DB_ADDR
+          value: commonpool-staging-us-east-1.cq3l1mvyjz9i.us-east-1.rds.amazonaws.com
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_DATABASE
+          value: keycloak
+        - name: DB_SCHEMA
+          value: public
+        - name: DB_USER_FILE
+          value: /secrets/db-username
+        - name: DB_PASSWORD_FILE
+          value: /secrets/db-password
+        ports:
+        - name: http-keycloak
+          containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /auth/realms/master
+            port: 8080
+        volumeMounts:
+        - mountPath: /secrets
+          name: db-user-secret
+          readOnly: true
+      volumes:
+      - name: db-user-secret
+        secret: 
+          secretName: keycloak-db
+          defaultMode: 0400
+          items:
+          - key: username
+            path: db-username
+          - key: password
+            path: db-password
+          
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak
+  namespace: auth
+  labels:
+    app: keycloak
+spec:
+  ports:
+  - name: http-keycloak
+    port: 80
+    targetPort: http-keycloak
+  selector:
+    app: keycloak
+  type: ClusterIP
+---
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: keycloak
+  namespace: auth
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - auth.commonpool.net
+    tls:
+      httpsRedirect: true 
+  - port:
+      number: 443
+      name: https-443
+      protocol: HTTPS
+    hosts:
+    - auth.commonpool.net
+    tls:
+      mode: SIMPLE 
+      credentialName: commonpool-cert-prod
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: keycloak
+  namespace: auth
+spec:
+  hosts:
+  - auth.commonpool.net
+  gateways:
+  - keycloak
+  http:
+  - name: "keycloak"
+    route:
+    - destination:
+        host: keycloak

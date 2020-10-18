@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: box
+spec:
+  containers:
+  - image: alpine:3.12
+    name: alpine
+    args:
+    - sleep
+    - "1000000"

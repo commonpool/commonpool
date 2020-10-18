@@ -3,6 +3,7 @@ import {ErrorResponse, SearchResourceRequest, SearchResourcesResponse} from './m
 import {Observable, throwError} from 'rxjs';
 import {HttpClient} from '@angular/common/http';
 import {catchError, map, tap} from 'rxjs/operators';
+import {environment} from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -14,7 +15,7 @@ export class BackendService {
   }
 
   searchResources(request: SearchResourceRequest): Observable<SearchResourcesResponse> {
-    return this.http.get<SearchResourcesResponse>(`http://127.0.0.1:8585/api/v1/resources`, {
+    return this.http.get<SearchResourcesResponse>(`${environment.apiUrl}/api/v1/resources`, {
       params: {
         take: request.take.toString(),
         skip: request.skip.toString(),
@@ -30,7 +31,7 @@ export class BackendService {
           throwError(ErrorResponse.fromHttpResponse(res));
         }
         const body = res.body as SearchResourcesResponse;
-        console.log(body)
+        console.log(body);
         return new SearchResourcesResponse(body.resources, body.totalCount, body.take, body.skip);
       })
     );

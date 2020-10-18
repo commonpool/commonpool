@@ -1,12 +1,13 @@
 package store
 
 import (
+	"errors"
 	"fmt"
-	"github.com/commonpool/backend/errors"
+	errs "github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/resource"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 	"os"
 )
 
@@ -17,8 +18,8 @@ type ResourceStore struct {
 // GetByKey Gets a resource by keys
 func (rs *ResourceStore) GetByKey(key model.ResourceKey, r *model.Resource) error {
 	if err := rs.db.First(r, "id = ?", key.GetUUID().String()).Error; err != nil {
-		if gorm.IsRecordNotFoundError(err) {
-			return errors.NewResourceNotFoundError(key.String())
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errs.NewResourceNotFoundError(key.String())
 		}
 		return err
 	}
@@ -39,7 +40,7 @@ func (rs *ResourceStore) Search(query resource.Query) (*resource.QueryResult, er
 		chain = chain.Where(`"resources"."summary" like ?`, "%"+*query.Query+"%")
 	}
 
-	var totalCount int
+	var totalCount int64
 	err := chain.Count(&totalCount).Error
 	if err != nil {
 		return nil, err
@@ -58,7 +59,7 @@ func (rs *ResourceStore) Search(query resource.Query) (*resource.QueryResult, er
 
 	return &resource.QueryResult{
 		Items:      resources,
-		TotalCount: totalCount,
+		TotalCount: int(totalCount),
 		Take:       query.Take,
 		Skip:       query.Skip,
 	}, nil
@@ -69,7 +70,7 @@ func (rs *ResourceStore) Search(query resource.Query) (*resource.QueryResult, er
 func (rs *ResourceStore) Delete(key model.ResourceKey) error {
 	result := rs.db.Delete(&model.Resource{}, "id = ?", key.GetUUID().String())
 	if result.RowsAffected == 0 {
-		return errors.NewResourceNotFoundError(key.String())
+		return errs.NewResourceNotFoundError(key.String())
 	}
 	return result.Error
 }
@@ -81,10 +82,10 @@ func (rs *ResourceStore) Create(resource *model.Resource) error {
 
 // Update updates a resource
 func (rs *ResourceStore) Update(resource *model.Resource) error {
-	update := rs.db.Model(resource).Update(resource)
+	update := rs.db.Model(resource).Save(resource)
 	if update.RowsAffected == 0 {
 		key := resource.GetKey()
-		return errors.NewResourceNotFoundError(key.String())
+		return errs.NewResourceNotFoundError(key.String())
 	}
 	return update.Error
 }
@@ -98,12 +99,17 @@ func NewResourceStore(db *gorm.DB) *ResourceStore {
 }
 
 func NewTestDb() *gorm.DB {
-	db, err := gorm.Open("sqlite3", "./realworld_test.db")
+	db, err := gorm.Open(sqlite.Open("./realworld_test.db"), &gorm.Config{})
 	if err != nil {
 		fmt.Println("storage err: ", err)
 	}
-	db.DB().SetMaxIdleConns(3)
-	db.LogMode(true)
+	sqlDB, err := db.DB()
+
+	if err != nil {
+		panic(err)
+	}
+
+	sqlDB.SetMaxIdleConns(3)
 	return db
 }
 

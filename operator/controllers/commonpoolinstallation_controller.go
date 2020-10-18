@@ -18,6 +18,8 @@ package controllers
 
 import (
 	"context"
+	"fmt"
+	"strconv"
 	"time"
 
 	k8sappsv1 "k8s.io/api/apps/v1"
@@ -36,16 +38,31 @@ import (
 	appsv1 "github.com/commonpool/commonpool/operator/api/v1"
 )
 
-const frontendServicePort = 80
-const backendServicePort = 8585
-const frontendPortName = "http-frontend"
-const backendPortName = "http-backend"
-const app = "app"
-const tier = "tier"
-const version = "version"
-const backend = "backend"
-const frontend = "frontend"
-const commonpool = "commonpool"
+const (
+	frontendServicePort             = 80
+	backendServicePort              = 8585
+	frontendPortName                = "http-frontend"
+	backendPortName                 = "http-backend"
+	app                             = "app"
+	tier                            = "tier"
+	version                         = "version"
+	backend                         = "backend"
+	backendContainerName            = "backend"
+	frontend                        = "frontend"
+	frontendContainerName           = "frontend"
+	commonpool                      = "commonpool"
+	dbUserFileEnv                   = "DB_USER_FILE"
+	dbPasswordFileEnv               = "DB_PASSWORD_FILE"
+	dbHostEnv                       = "DB_HOST"
+	dbNameEnv                       = "DB_NAME"
+	dbPortEnv                       = "DB_PORT"
+	dbUsernameSecretPath            = "/secrets/username"
+	dbPasswordSecretPath            = "/secrets/password"
+	databasePasswordVolumeName      = "db-password-secret"
+	databaseUsernameVolumeName      = "db-user-secret"
+	databaseUsernameVolumeSecretKey = "username"
+	databasePasswordVolumeSecretKey = "password"
+)
 
 // CommonpoolInstallationReconciler reconciles a CommonpoolInstallation object
 type CommonpoolInstallationReconciler struct {
@@ -132,6 +149,120 @@ func (r *CommonpoolInstallationReconciler) Reconcile(req ctrl.Request) (ctrl.Res
 		err := r.Update(ctx, backendDeployment)
 		if err != nil {
 			log.Error(err, "Failed to update backend deployment image")
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{Requeue: true}, nil
+	}
+
+	backendContainer, err := containerByName(backendDeployment.Spec.Template.Spec.Containers, backendContainerName)
+	if err != nil {
+		log.Error(err, "Failed to get backend container")
+		return ctrl.Result{}, err
+	}
+
+	dbHostEnvVar, err := envByName(backendContainer.Env, dbHostEnv)
+	if err != nil {
+		log.Error(err, "Failed to get db host env var")
+		return ctrl.Result{}, err
+	}
+	if dbHostEnvVar.Value != installation.Spec.DatabaseHost {
+		dbHostEnvVar.Value = installation.Spec.DatabaseHost
+		err := r.Update(ctx, backendDeployment)
+		if err != nil {
+			log.Error(err, "Failed to update backend db host")
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{Requeue: true}, nil
+	}
+
+	dbNameEnvVar, err := envByName(backendContainer.Env, dbNameEnv)
+	if err != nil {
+		log.Error(err, "Failed to get db name env var")
+		return ctrl.Result{}, err
+	}
+	if dbNameEnvVar.Value != installation.Spec.DatabaseName {
+		dbNameEnvVar.Value = installation.Spec.DatabaseName
+		err := r.Update(ctx, backendDeployment)
+		if err != nil {
+			log.Error(err, "Failed to update backend db name")
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{Requeue: true}, nil
+	}
+
+	dbPortEnvVar, err := envByName(backendContainer.Env, dbPortEnv)
+	if err != nil {
+		log.Error(err, "Failed to get db port env var")
+		return ctrl.Result{}, err
+	}
+	dbPortEnvVarValue, err := strconv.Atoi(dbPortEnvVar.Value)
+	if err != nil {
+		log.Error(err, "Failed to parse db port env var")
+		return ctrl.Result{}, err
+	}
+	if dbPortEnvVarValue != installation.Spec.DatabasePort {
+		dbPortEnvVar.Value = strconv.Itoa(installation.Spec.DatabasePort)
+		err := r.Update(ctx, backendDeployment)
+		if err != nil {
+			log.Error(err, "Failed to update backend db port")
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{Requeue: true}, nil
+	}
+
+	usernameVol, err := volumeByName(backendDeployment.Spec.Template.Spec.Volumes, databaseUsernameVolumeName)
+	if err != nil {
+		log.Error(err, "Failed to get volume "+databaseUsernameVolumeName)
+		return ctrl.Result{}, err
+	}
+	if usernameVol.VolumeSource.Secret.SecretName != installation.Spec.DatabaseUserSecret {
+		usernameVol.VolumeSource.Secret.SecretName = installation.Spec.DatabaseUserSecret
+		err := r.Update(ctx, backendDeployment)
+		if err != nil {
+			log.Error(err, "Failed to update db user secret")
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{Requeue: true}, nil
+	}
+	usernameVolumeItem, err := volumeItemByKey(usernameVol.Secret.Items, databaseUsernameVolumeSecretKey)
+	if err != nil {
+		log.Error(err, "Failed to get username volume item")
+		return ctrl.Result{}, err
+	}
+	if usernameVolumeItem.Key != installation.Spec.DatabaseUserSecretKey {
+		usernameVolumeItem.Key = installation.Spec.DatabaseUserSecretKey
+		err := r.Update(ctx, backendDeployment)
+		if err != nil {
+			log.Error(err, "Failed to update db user secret key")
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{Requeue: true}, nil
+	}
+
+	passwordVol, err := volumeByName(backendDeployment.Spec.Template.Spec.Volumes, databasePasswordVolumeName)
+	if err != nil {
+		log.Error(err, "Failed to get volume "+databasePasswordVolumeName)
+		return ctrl.Result{}, err
+	}
+	if passwordVol.VolumeSource.Secret.SecretName != installation.Spec.DatabasePasswordSecret {
+		passwordVol.VolumeSource.Secret.SecretName = installation.Spec.DatabasePasswordSecret
+		err := r.Update(ctx, backendDeployment)
+		if err != nil {
+			log.Error(err, "Failed to update db password secret")
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{Requeue: true}, nil
+	}
+	passwordVolumeItem, err := volumeItemByKey(passwordVol.Secret.Items, databasePasswordVolumeSecretKey)
+	if err != nil {
+		log.Error(err, "Failed to get password volume item")
+		return ctrl.Result{}, err
+	}
+	if passwordVolumeItem.Key != installation.Spec.DatabasePasswordSecretKey {
+		passwordVolumeItem.Key = installation.Spec.DatabasePasswordSecretKey
+		err := r.Update(ctx, backendDeployment)
+		if err != nil {
+			log.Error(err, "Failed to update db password secret key")
 			return ctrl.Result{}, err
 		}
 		return ctrl.Result{Requeue: true}, nil
@@ -291,8 +422,21 @@ func (r *CommonpoolInstallationReconciler) newFrontendDeployment(installation *a
 				Spec: k8scorev1.PodSpec{
 					Containers: []k8scorev1.Container{
 						{
-							Name:  frontend,
+							Name:  frontendContainerName,
 							Image: installation.Spec.FrontendImage,
+							Ports: []k8scorev1.ContainerPort{
+								{
+									Name:          frontendPortName,
+									ContainerPort: frontendServicePort,
+									Protocol:      "TCP",
+								},
+							},
+							Env: []k8scorev1.EnvVar{
+								{
+									Name:  "API_URL",
+									Value: "https://" + installation.Spec.IngressHost,
+								},
+							},
 						},
 					},
 				},
@@ -305,7 +449,10 @@ func (r *CommonpoolInstallationReconciler) newFrontendDeployment(installation *a
 }
 
 func (r *CommonpoolInstallationReconciler) newBackendDeployment(installation *appsv1.CommonpoolInstallation) (*k8sappsv1.Deployment, error) {
+
 	var replicas int32 = 1
+	var readOnlyMode int32 = 0400
+
 	deployment := &k8sappsv1.Deployment{
 		ObjectMeta: k8smetav1.ObjectMeta{
 			Name:      r.getBackendDeploymentName(installation).Name,
@@ -336,8 +483,57 @@ func (r *CommonpoolInstallationReconciler) newBackendDeployment(installation *ap
 				Spec: k8scorev1.PodSpec{
 					Containers: []k8scorev1.Container{
 						{
-							Name:  backend,
+							Name:  backendContainerName,
 							Image: installation.Spec.BackendImage,
+							Ports: []k8scorev1.ContainerPort{
+								{
+									Name:          backendPortName,
+									ContainerPort: backendServicePort,
+									Protocol:      "TCP",
+								},
+							},
+							VolumeMounts: []k8scorev1.VolumeMount{
+								{Name: databaseUsernameVolumeName, ReadOnly: true, MountPath: dbUsernameSecretPath, SubPath: databaseUsernameVolumeSecretKey},
+								{Name: databasePasswordVolumeName, ReadOnly: true, MountPath: dbPasswordSecretPath, SubPath: databasePasswordVolumeSecretKey},
+							},
+							Env: []k8scorev1.EnvVar{
+								{Name: dbUserFileEnv, Value: dbUsernameSecretPath},
+								{Name: dbPasswordFileEnv, Value: dbPasswordSecretPath},
+								{Name: dbHostEnv, Value: installation.Spec.DatabaseHost},
+								{Name: dbNameEnv, Value: installation.Spec.DatabaseName},
+								{Name: dbPortEnv, Value: strconv.Itoa(installation.Spec.DatabasePort)},
+							},
+						},
+					},
+					Volumes: []k8scorev1.Volume{
+						{
+							Name: databaseUsernameVolumeName,
+							VolumeSource: k8scorev1.VolumeSource{
+								Secret: &k8scorev1.SecretVolumeSource{
+									SecretName: installation.Spec.DatabaseUserSecret,
+									Items: []k8scorev1.KeyToPath{
+										{
+											Key:  installation.Spec.DatabaseUserSecretKey,
+											Path: databaseUsernameVolumeSecretKey,
+											Mode: &readOnlyMode,
+										},
+									},
+								},
+							},
+						}, {
+							Name: databasePasswordVolumeName,
+							VolumeSource: k8scorev1.VolumeSource{
+								Secret: &k8scorev1.SecretVolumeSource{
+									SecretName: installation.Spec.DatabaseUserSecret,
+									Items: []k8scorev1.KeyToPath{
+										{
+											Key:  installation.Spec.DatabasePasswordSecretKey,
+											Path: databasePasswordVolumeSecretKey,
+											Mode: &readOnlyMode,
+										},
+									},
+								},
+							},
 						},
 					},
 				},
@@ -456,4 +652,40 @@ func (r *CommonpoolInstallationReconciler) SetupWithManager(mgr ctrl.Manager) er
 		Owns(&k8sappsv1.Deployment{}).
 		Owns(&k8scorev1.Service{}).
 		Complete(r)
+}
+
+func containerByName(containers []k8scorev1.Container, name string) (*k8scorev1.Container, error) {
+	for _, container := range containers {
+		if container.Name == name {
+			return &container, nil
+		}
+	}
+	return nil, fmt.Errorf("container with name %s not found", name)
+}
+
+func envByName(env []k8scorev1.EnvVar, name string) (*k8scorev1.EnvVar, error) {
+	for _, envVar := range env {
+		if envVar.Name == name {
+			return &envVar, nil
+		}
+	}
+	return nil, fmt.Errorf("env var with name %s not found", name)
+}
+
+func volumeByName(items []k8scorev1.Volume, name string) (*k8scorev1.Volume, error) {
+	for _, volume := range items {
+		if volume.Name == name {
+			return &volume, nil
+		}
+	}
+	return nil, fmt.Errorf("volume with name %s not found", name)
+}
+
+func volumeItemByKey(items []k8scorev1.KeyToPath, key string) (*k8scorev1.KeyToPath, error) {
+	for _, item := range items {
+		if item.Key == key {
+			return &item, nil
+		}
+	}
+	return nil, fmt.Errorf("item with key %s not found", key)
 }

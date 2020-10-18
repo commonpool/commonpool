@@ -4,3 +4,10 @@ metadata:
   name: commonpool-prod
 spec:
   ingressHost: commonpool.net
+  databasePort: 5432
+  databaseName: commonpool_prod
+  databaseHost: commonpool-staging-us-east-1.cq3l1mvyjz9i.us-east-1.rds.amazonaws.com
+  databaseUserSecret: commonpool-prod-pg
+  databaseUserSecretKey: username
+  databasePasswordSecret: commonpool-prod-pg
+  databasePasswordSecretKey: password

@@ -4,8 +4,8 @@ import (
 	"github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/router"
 	"github.com/commonpool/backend/store"
-	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo/v4"
+	"gorm.io/gorm"
 	"log"
 	"os"
 	"testing"
@@ -27,10 +27,6 @@ func setup() {
 }
 
 func tearDown() {
-	if d != nil {
-		_ = d.Close()
-	}
-
 	if err := store.DropTestDB(); err != nil {
 		log.Fatal(err)
 	}
