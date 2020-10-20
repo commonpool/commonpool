@@ -1,8 +1,7 @@
 import {Component, OnInit} from '@angular/core';
 import {BackendService} from '../../api/backend.service';
 import {ActivatedRoute, Router} from '@angular/router';
-import {Subject} from 'rxjs';
-import {distinctUntilChanged, map, pluck, switchMap} from 'rxjs/operators';
+import {distinctUntilChanged, pluck, switchMap} from 'rxjs/operators';
 import {AuthService} from '../../auth.service';
 
 @Component({
@@ -18,7 +17,12 @@ export class ResourceDetailsComponent implements OnInit {
     pluck('resource')
   );
 
-  constructor(private backend: BackendService, private router: Router, private route: ActivatedRoute, public auth: AuthService) {
+  constructor(
+    private backend: BackendService,
+    private router: Router,
+    private route: ActivatedRoute,
+    public auth: AuthService
+  ) {
 
   }
 

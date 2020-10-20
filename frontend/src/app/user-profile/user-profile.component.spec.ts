@@ -1,16 +1,37 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {async, ComponentFixture, TestBed} from '@angular/core/testing';
 
-import { UserProfileComponent } from './user-profile.component';
+import {UserProfileComponent} from './user-profile.component';
+import {ActivatedRoute, convertToParamMap} from '@angular/router';
+import {BackendService} from '../api/backend.service';
+import {of} from 'rxjs';
 
 describe('UserProfileComponent', () => {
   let component: UserProfileComponent;
   let fixture: ComponentFixture<UserProfileComponent>;
 
+  const paramMap = of(convertToParamMap({
+    id: 'd31e8b48-7309-4c83-9884-4142efdf7271',
+  }));
+
+  const mockActivatedRoute = {
+    params: paramMap
+  };
+  const mockBackend = {};
+
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ UserProfileComponent ]
+      declarations: [UserProfileComponent],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: mockActivatedRoute
+        }, {
+          provide: BackendService,
+          useValue: mockBackend
+        }
+      ]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {

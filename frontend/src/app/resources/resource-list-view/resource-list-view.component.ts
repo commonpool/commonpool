@@ -48,7 +48,7 @@ export class ResourceListViewComponent {
       startWith([] as ExtendedResource[])
     );
 
-  constructor(private backend: BackendService, private auth: AuthService) {
+  constructor(private backend: BackendService) {
 
   }
 
