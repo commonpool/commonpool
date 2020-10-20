@@ -2,10 +2,10 @@ import {async, ComponentFixture, TestBed} from '@angular/core/testing';
 
 import {ResourceDetailsComponent} from './resource-details.component';
 import {BackendService} from '../../api/backend.service';
-import {ActivatedRoute, Router} from '@angular/router';
+import {ActivatedRoute, convertToParamMap, Router} from '@angular/router';
 import {AuthService} from '../../auth.service';
 import {of} from 'rxjs';
-import {convertToParamMap} from '@angular/router';
+import {ExtendedResource, Resource, ResourceType} from '../../api/models';
 
 describe('ResourceDetailsComponent', () => {
   let component: ResourceDetailsComponent;
@@ -15,7 +15,23 @@ describe('ResourceDetailsComponent', () => {
     id: 'd31e8b48-7309-4c83-9884-4142efdf7271',
   }));
 
-  const mockBackend = {};
+  const mockBackend = {
+    getResource: () => {
+      return of(
+        new ExtendedResource(new Resource(
+          'id',
+          'summary',
+          'description',
+          ResourceType.Offer,
+          10,
+          20,
+          'createdBy',
+          'createdById',
+          '2020-10-20T19:26:05.425Z'
+        )));
+    }
+  };
+
   const mockRouter = {};
   const mockRoute = {
     params: paramMap
@@ -53,4 +69,5 @@ describe('ResourceDetailsComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
-});
+})
+;

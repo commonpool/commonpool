@@ -4,6 +4,7 @@ import {UserProfileComponent} from './user-profile.component';
 import {ActivatedRoute, convertToParamMap} from '@angular/router';
 import {BackendService} from '../api/backend.service';
 import {of} from 'rxjs';
+import {UserInfoResponse} from '../api/models';
 
 describe('UserProfileComponent', () => {
   let component: UserProfileComponent;
@@ -16,7 +17,14 @@ describe('UserProfileComponent', () => {
   const mockActivatedRoute = {
     params: paramMap
   };
-  const mockBackend = {};
+
+  const mockBackend = {
+    getUserInfo: () => of({
+      id: 'user-id',
+      username: 'username'
+    } as UserInfoResponse),
+    searchResources: () => of([])
+  };
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
