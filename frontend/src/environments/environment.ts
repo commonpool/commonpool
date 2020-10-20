@@ -7,8 +7,8 @@ import {IEnvironment} from './IEnvironment';
 
 export const environment: IEnvironment = {
   production: false,
-  apiUrl: window['env']['apiUrl'] || 'http://localhost:4200',
-  debug: window['env']['debug'] || true
+  apiUrl: (window as any)?.apiUrl || 'http://localhost:4200',
+  debug: (window as any)?.env?.debug || true
 };
 
 /*

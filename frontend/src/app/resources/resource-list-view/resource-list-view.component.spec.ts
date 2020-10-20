@@ -57,7 +57,9 @@ describe('ResourceListViewComponent', () => {
         ResourceType.Offer,
         10,
         20,
-        30
+        'createdBy',
+        'createdById',
+        '2020-10-20T19:26:05.425Z'
       )], 1, 10, 0);
 
     const resources$ = defer(() => of(resources).pipe(delay(100)));
