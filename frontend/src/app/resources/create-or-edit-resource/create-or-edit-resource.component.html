@@ -1,0 +1,44 @@
+<div>
+
+  <div class="input-group" id="resource-type-group">
+    <label for="resource-type">Type</label>
+    <select
+      name="resource-type"
+      id="resource-type"
+      [(ngModel)]="resourceType"
+      [disabled]="pending"
+    >
+      <option [value]="0">Offer</option>
+      <option [value]="1">Request</option>
+    </select>
+  </div>
+
+  <div class="input-group" id="summary-group">
+    <label for="summary">Summary</label>
+    <input [(ngModel)]="summary" [disabled]="pending" type="text" id="summary" name="summary">
+  </div>
+
+  <div class="input-group" id="description-group">
+    <label for="description">Description</label>
+    <textarea [(ngModel)]="description" [disabled]="pending" id="description" name="description" rows="5"
+              cols="40"></textarea>
+  </div>
+
+  <div class="input-group input-group-horizontal" id="value-in-hours-group">
+    <label for="value-in-hours-to">Between</label>
+    <input [(ngModel)]="valueInHoursFrom" [disabled]="pending" name="necessity-level" type="number" id="value-in-hours-to">
+    <label for="value-in-hours-from">and</label>
+    <input [(ngModel)]="valueInHoursTo" [disabled]="pending" name="necessity-level" type="number" id="value-in-hours-from">
+    hours
+  </div>
+
+  <div class="input-group">
+    <button type="button" [disabled]="pending" (click)="submit()">Submit</button>
+  </div>
+
+</div>
+
+<div>
+  {{ error | json}}
+</div>
+

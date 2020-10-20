@@ -40,6 +40,10 @@ func (rs *ResourceStore) Search(query resource.Query) (*resource.QueryResult, er
 		chain = chain.Where(`"resources"."summary" like ?`, "%"+*query.Query+"%")
 	}
 
+	if query.CreatedBy != "" {
+		chain = chain.Where(`"resources"."created_by" = ?`, query.CreatedBy)
+	}
+
 	var totalCount int64
 	err := chain.Count(&totalCount).Error
 	if err != nil {
@@ -97,6 +101,11 @@ func NewResourceStore(db *gorm.DB) *ResourceStore {
 		db: db,
 	}
 }
+func NewAuthStore(db *gorm.DB) *UserStore {
+	return &UserStore{
+		db: db,
+	}
+}
 
 func NewTestDb() *gorm.DB {
 	db, err := gorm.Open(sqlite.Open("./realworld_test.db"), &gorm.Config{})
@@ -116,6 +125,7 @@ func NewTestDb() *gorm.DB {
 func AutoMigrate(db *gorm.DB) {
 	db.AutoMigrate(
 		&model.Resource{},
+		&model.User{},
 	)
 }
 

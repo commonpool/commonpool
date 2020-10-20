@@ -40,8 +40,6 @@ type CommonpoolInstallationSpec struct {
 	OidcClientIdSecretKey     string `json:"oidcClientIdSecretKey"`
 	OidcClientSecretSecret    string `json:"oidcClientSecretSecret"`
 	OidcClientSecretSecretKey string `json:"oidcClientSecretSecretKey"`
-	OidcRedirectUri           string `json:"oidcRedirectUri"`
-
 }
 
 // CommonpoolInstallationStatus defines the observed state of CommonpoolInstallation

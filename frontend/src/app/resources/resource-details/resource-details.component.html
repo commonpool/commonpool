@@ -1,0 +1,20 @@
+<div id="resource-details">
+  <div *ngIf="resource$ | async; let resource">
+    <h1>{{resource.summary}}</h1>
+    <h3>{{resource.description}}</h3>
+    <p>Value: {{resource.valueInHoursFrom}}h - {{resource.valueInHoursTo}}h </p>
+    <p>Created by <a [routerLink]="'/profiles/' + resource.createdById">{{resource.createdBy}}</a> {{resource.createdAtDistanceAgo}}</p>
+
+    <div *ngIf="auth.session$ | async; let session">
+      <div *ngIf="session.id === resource.createdById">
+        <button (click)="editResource(resource.id)">Edit</button>
+        <button>Delete</button>
+      </div>
+      <div *ngIf="session.id !== resource.createdById">
+        <button>Contact</button>
+      </div>
+
+    </div>
+
+  </div>
+</div>

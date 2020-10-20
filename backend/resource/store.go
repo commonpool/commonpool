@@ -3,10 +3,11 @@ package resource
 import "github.com/commonpool/backend/model"
 
 type Query struct {
-	Type  *model.ResourceType
-	Query *string
-	Skip  int
-	Take  int
+	Type      *model.ResourceType
+	Query     *string
+	Skip      int
+	Take      int
+	CreatedBy string
 }
 
 type QueryResult struct {

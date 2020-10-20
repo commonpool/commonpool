@@ -20,6 +20,7 @@ import (
 // @Produce json
 // @Param query query string true "Search text"
 // @Param type query string true "Resource type" Enums(0,1)
+// @Param created_by query string true "Created by"
 // @Param take query int false "Number of resources to take" minimum(0) maximum(100) default(10)
 // @Param skip query int false "Number of resources to skip" minimum(0) default(0)
 // @Success 200 {object} web.SearchResourcesResponse
@@ -43,11 +44,14 @@ func (h *Handler) SearchResources(c echo.Context) error {
 		return NewErrResponse(c, err)
 	}
 
+	createdBy := c.QueryParam("created_by")
+
 	search, err := h.resourceStore.Search(resource.Query{
-		Type:  resourceType,
-		Query: &searchQuery,
-		Skip:  skip,
-		Take:  take,
+		Type:      resourceType,
+		Query:     &searchQuery,
+		CreatedBy: createdBy,
+		Skip:      skip,
+		Take:      take,
 	})
 	if err != nil {
 		return NewErrResponse(c, err)
@@ -55,7 +59,12 @@ func (h *Handler) SearchResources(c echo.Context) error {
 
 	var resources = make([]web.Resource, len(search.Items))
 	for i, item := range search.Items {
-		resources[i] = NewResourceResponse(item)
+		createdBy := &model.User{}
+		err = h.userStore.GetByKey(model.NewUserKey(item.CreatedBy), createdBy)
+		if err != nil {
+			// todo
+		}
+		resources[i] = NewResourceResponse(item, createdBy)
 	}
 	response := web.SearchResourcesResponse{
 		Resources:  resources,
@@ -90,8 +99,14 @@ func (h *Handler) GetResource(c echo.Context) error {
 		return NewErrResponse(c, err)
 	}
 
+	createdBy := &model.User{}
+	err = h.userStore.GetByKey(model.NewUserKey(resource.CreatedBy), createdBy)
+	if err != nil {
+		// todo
+	}
+
 	response := web.GetResourceResponse{
-		Resource: NewResourceResponse(resource),
+		Resource: NewResourceResponse(resource, createdBy),
 	}
 
 	return c.JSON(http.StatusOK, response)
@@ -132,42 +147,32 @@ func (h *Handler) CreateResource(c echo.Context) error {
 	if isDescriptionTooLong(resource.Description) {
 		return newDescriptionTooLongError(c)
 	}
-	if isExchangeValueTooLow(resource) {
-		return newExchangeValueTooLowError(c)
-	}
-	if isExchangeValueTooHigh(resource) {
-		return newExchangeValueTooHighError(c)
-	}
-	if isNecessityLevelTooLow(resource) {
-		return newNecessityLevelTooLowError(c)
-	}
-	if isNecessityLevelTooHigh(resource) {
-		return newNecessityLevelTooHighError(c)
-	}
-	if isTimeSensitivityTooLow(resource) {
-		return newTimeSensitivityTooLowError(c)
-	}
-	if isTimeSensitivityTooHigh(resource) {
-		return newTimeSensitivityTooHighError(c)
-	}
+
+	subject := h.authorization.GetAuthUserSession(c).Subject
 
 	res := model.NewResource(
 		model.NewResourceKey(),
 		resource.Type,
-		"author",
+		subject,
 		resource.Summary,
 		resource.Description,
-		model.NewTimeSensitivity(resource.TimeSensitivity),
-		model.NewNecessityLevel(resource.NecessityLevel),
-		model.NewExchangeValue(resource.ExchangeValue))
+		resource.ValueInHoursFrom,
+		resource.ValueInHoursTo,
+	)
 
 	err := h.resourceStore.Create(&res)
 	if err != nil {
 		// todo
 	}
 
+	createdBy := &model.User{}
+	err = h.userStore.GetByKey(model.NewUserKey(res.CreatedBy), createdBy)
+	if err != nil {
+		// todo
+	}
+
 	response := web.CreateResourceResponse{
-		Resource: NewResourceResponse(res),
+		Resource: NewResourceResponse(res, createdBy),
 	}
 	return c.JSON(http.StatusCreated, response)
 }
@@ -222,38 +227,25 @@ func (h *Handler) UpdateResource(c echo.Context) error {
 	if isDescriptionTooLong(desiredResource.Description) {
 		return newDescriptionTooLongError(c)
 	}
-	if isExchangeValueTooLow(desiredResource) {
-		return newExchangeValueTooLowError(c)
-	}
-	if isExchangeValueTooHigh(desiredResource) {
-		return newExchangeValueTooHighError(c)
-	}
-	if isNecessityLevelTooLow(desiredResource) {
-		return newNecessityLevelTooLowError(c)
-	}
-	if isNecessityLevelTooHigh(desiredResource) {
-		return newNecessityLevelTooHighError(c)
-	}
-	if isTimeSensitivityTooLow(desiredResource) {
-		return newTimeSensitivityTooLowError(c)
-	}
-	if isTimeSensitivityTooHigh(desiredResource) {
-		return newTimeSensitivityTooHighError(c)
-	}
 
 	resToUpdate.Summary = desiredResource.Summary
 	resToUpdate.Description = desiredResource.Description
 	resToUpdate.Type = desiredResource.Type
-	resToUpdate.ExchangeValue = model.NewExchangeValue(desiredResource.ExchangeValue)
-	resToUpdate.NecessityLevel = model.NewNecessityLevel(desiredResource.NecessityLevel)
-	resToUpdate.TimeSensitivity = model.NewTimeSensitivity(desiredResource.TimeSensitivity)
+	resToUpdate.ValueInHoursFrom = desiredResource.ValueInHoursFrom
+	resToUpdate.ValueInHoursTo = desiredResource.ValueInHoursTo
 
 	if err := h.resourceStore.Update(&resToUpdate); err != nil {
 		return c.JSON(http.StatusBadRequest, "Could not update resource")
 	}
 
+	createdBy := &model.User{}
+	err = h.userStore.GetByKey(model.NewUserKey(resToUpdate.CreatedBy), createdBy)
+	if err != nil {
+		// todo
+	}
+
 	return c.JSON(http.StatusOK, web.GetResourceResponse{
-		Resource: NewResourceResponse(resToUpdate),
+		Resource: NewResourceResponse(resToUpdate, createdBy),
 	})
 
 }
@@ -331,81 +323,17 @@ func isSummaryTooShort(summary string) bool {
 	return len(summary) == 0
 }
 
-func newExchangeValueTooLowError(c echo.Context) error {
-	return NewErrResponse(c, NewError(
-		ErrExchangeValueTooLow,
-		ErrExchangeValueTooLowCode,
-		http.StatusBadRequest))
-}
-
-func newExchangeValueTooHighError(c echo.Context) error {
-	return NewErrResponse(c, NewError(
-		ErrExchangeValueTooHigh,
-		ErrExchangeValueTooHighCode,
-		http.StatusBadRequest))
-}
-
-func isExchangeValueTooLow(resource web.CreateResourcePayload) bool {
-	return resource.ExchangeValue < 0
-}
-
-func isExchangeValueTooHigh(resource web.CreateResourcePayload) bool {
-	return resource.ExchangeValue > 100
-}
-
-func newNecessityLevelTooLowError(c echo.Context) error {
-	return NewErrResponse(c, NewError(
-		ErrNecessityLevelValueTooLow,
-		ErrNecessityLevelValueTooLowCode,
-		http.StatusBadRequest))
-}
-
-func newNecessityLevelTooHighError(c echo.Context) error {
-	return NewErrResponse(c, NewError(
-		ErrNecessityLevelValueTooHigh,
-		ErrNecessityLevelValueTooHighCode,
-		http.StatusBadRequest))
-}
-
-func isNecessityLevelTooLow(resource web.CreateResourcePayload) bool {
-	return resource.NecessityLevel < 0
-}
-
-func isNecessityLevelTooHigh(resource web.CreateResourcePayload) bool {
-	return resource.NecessityLevel > 100
-}
-
-func newTimeSensitivityTooLowError(c echo.Context) error {
-	return NewErrResponse(c, NewError(
-		ErrTimeSensitivityValueTooLow,
-		ErrTimeSensitivityValueTooLowCode,
-		http.StatusBadRequest))
-}
-
-func newTimeSensitivityTooHighError(c echo.Context) error {
-	return NewErrResponse(c, NewError(
-		ErrTimeSensitivityValueTooHigh,
-		ErrTimeSensitivityValueTooHighCode,
-		http.StatusBadRequest))
-}
-
-func isTimeSensitivityTooLow(resource web.CreateResourcePayload) bool {
-	return resource.TimeSensitivity < 0
-}
-
-func isTimeSensitivityTooHigh(resource web.CreateResourcePayload) bool {
-	return resource.TimeSensitivity > 100
-}
-
-func NewResourceResponse(res model.Resource) web.Resource {
+func NewResourceResponse(res model.Resource, usr *model.User) web.Resource {
 	return web.Resource{
-		Id:              res.ID.String(),
-		Type:            res.Type,
-		Description:     res.Description,
-		Summary:         res.Summary,
-		TimeSensitivity: res.TimeSensitivity.Value,
-		NecessityLevel:  res.NecessityLevel.Value,
-		ExchangeValue:   res.ExchangeValue.Value,
+		Id:               res.ID.String(),
+		Type:             res.Type,
+		Description:      res.Description,
+		Summary:          res.Summary,
+		CreatedBy:        usr.Username,
+		CreatedById:      usr.ID,
+		CreatedAt:        res.CreatedAt,
+		ValueInHoursFrom: res.ValueInHoursFrom,
+		ValueInHoursTo:   res.ValueInHoursTo,
 	}
 }
 

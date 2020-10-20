@@ -26,10 +26,10 @@ spec:
       - name: keycloak
         image: quay.io/keycloak/keycloak:11.0.2
         env:
-        - name: KEYCLOAK_USER
-          value: "admin"
-        - name: KEYCLOAK_PASSWORD
-          value: "admin"
+        - name: KEYCLOAK_USER_FILE
+          value: /secrets/username
+        - name: KEYCLOAK_PASSWORD_FILE
+          value: /secrets/password
         - name: PROXY_ADDRESS_FORWARDING
           value: "true"
         - name: DB_VENDOR
@@ -54,9 +54,22 @@ spec:
             path: /auth/realms/master
             port: 8080
         volumeMounts:
-        - mountPath: /secrets
+        - mountPath: /secrets/db-username
           name: db-user-secret
           readOnly: true
+          subPath: username
+        - mountPath: /secrets/db-password
+          name: db-user-secret
+          readOnly: true
+          subPath: password
+        - mountPath: /secrets/username
+          name: keycloak-secret
+          readOnly: true
+          subPath: username
+        - mountPath: /secrets/password
+          name: keycloak-secret
+          readOnly: true
+          subPath: password
       volumes:
       - name: db-user-secret
         secret: 
@@ -64,10 +77,18 @@ spec:
           defaultMode: 0400
           items:
           - key: username
-            path: db-username
+            path: username
           - key: password
-            path: db-password
-          
+            path: password
+      - name: keycloak-secret
+        secret: 
+          secretName: keycloak
+          defaultMode: 0400
+          items:
+          - key: username
+            path: username
+          - key: password
+            path: password
 ---
 apiVersion: v1
 kind: Service
@@ -110,7 +131,7 @@ spec:
     - auth.commonpool.net
     tls:
       mode: SIMPLE 
-      credentialName: commonpool-cert-prod
+      credentialName: keycloak-cert-prod
 ---
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService

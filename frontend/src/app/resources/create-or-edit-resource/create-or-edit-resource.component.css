@@ -1,0 +1,23 @@
+.input-group{
+  padding: 1rem;
+}
+
+.input-group:not(.input-group-horizontal) label {
+  margin-bottom: 0.25rem;
+  display:block
+}
+
+.input-group label {
+  display: inline-block;
+  padding-right: 1rem;
+}
+
+.input-group label:not(:first-child) {
+  display: inline-block;
+  padding-left: 1rem;
+}
+
+input[type=text] {
+  min-width: 20rem;
+}
+

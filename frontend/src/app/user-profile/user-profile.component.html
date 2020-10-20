@@ -1,0 +1,14 @@
+<div *ngIf="userInfo$ | async; let userInfo">
+  <h2>
+  {{userInfo.username}}
+  </h2>
+</div>
+
+<h4>Resources</h4>
+<div *ngIf="userResources$ | async; let resources">
+  <div *ngFor="let resource of resources">
+    <a [routerLink]="'/resources/' + resource.id">
+    {{resource.summary}}
+    </a>
+  </div>
+</div>

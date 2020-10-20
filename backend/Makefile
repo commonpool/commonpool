@@ -8,6 +8,7 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
+SHELL=bash
 
 test: fmt vet
 	go test ./...
@@ -26,3 +27,18 @@ docker-build: test
 
 docker-push: 
 	docker push $(IMG)
+
+compose-up:
+	docker-compose up -d
+
+compose-down:
+	docker-compose down
+
+.env-export:
+	sed -ne '/^export / {p;d}; /.*=/ s/^/export / p' .env > .env-export
+
+%: .env-export
+	. .env-export && make -f secondary "$@"
+
+start: compose-up .env-export
+	. .env-export && go run main.go

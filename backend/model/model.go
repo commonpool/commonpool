@@ -16,6 +16,9 @@ const (
 
 func ParseResourceType(s string) (*ResourceType, error) {
 	var res ResourceType
+	if s == "" {
+		return nil, nil
+	}
 	if s == "0" {
 		res = Offer
 		return &res, nil
@@ -50,21 +53,41 @@ func NewExchangeValue(value int) ExchangeValue {
 }
 
 type Resource struct {
-	ID              uuid.UUID `gorm:"type:uuid;primary_key"`
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
-	DeletedAt       *time.Time      `sql:"index"`
-	Summary         string          `gorm:"not null;"`
-	Description     string          `gorm:"not null;"`
-	CreatedBy       string          `gorm:"not null;"`
-	Type            ResourceType    `gorm:"not null;"`
-	TimeSensitivity TimeSensitivity `gorm:"embedded;"`
-	NecessityLevel  NecessityLevel  `gorm:"embedded;"`
-	ExchangeValue   ExchangeValue   `gorm:"embedded;"`
+	ID               uuid.UUID `gorm:"type:uuid;primary_key"`
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+	DeletedAt        *time.Time   `sql:"index"`
+	Summary          string       `gorm:"not null;"`
+	Description      string       `gorm:"not null;"`
+	CreatedBy        string       `gorm:"not null;"`
+	Type             ResourceType `gorm:"not null;"`
+	ValueInHoursFrom int          `gorm:"not null;'"`
+	ValueInHoursTo   int          `gorm:"not null"`
+}
+
+type User struct {
+	ID        string `gorm:"primary_key"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt *time.Time `sql:"index"`
+	Username  string     `gorm:"not null"`
+	Email     string     `gorm:"not null"`
 }
 
 type ResourceKey struct {
 	uuid uuid.UUID
+}
+
+type UserKey struct {
+	subject string
+}
+
+func NewUserKey(subject string) UserKey {
+	return UserKey{subject: subject}
+}
+
+func (k *UserKey) String() string {
+	return k.subject
 }
 
 func NewResourceKey() ResourceKey {
@@ -104,17 +127,16 @@ func NewResource(
 	createdBy string,
 	summary string,
 	description string,
-	timeSensitivity TimeSensitivity,
-	necessityLevel NecessityLevel,
-	exchangeValue ExchangeValue) Resource {
+	valueInHoursFrom int,
+	valueInHoursTo int,
+) Resource {
 	return Resource{
-		ID:              key.uuid,
-		Summary:         summary,
-		Description:     description,
-		CreatedBy:       createdBy,
-		Type:            resourceType,
-		NecessityLevel:  necessityLevel,
-		ExchangeValue:   exchangeValue,
-		TimeSensitivity: timeSensitivity,
+		ID:               key.uuid,
+		Summary:          summary,
+		Description:      description,
+		CreatedBy:        createdBy,
+		Type:             resourceType,
+		ValueInHoursFrom: valueInHoursFrom,
+		ValueInHoursTo:   valueInHoursTo,
 	}
 }

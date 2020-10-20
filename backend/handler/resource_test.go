@@ -29,9 +29,9 @@ func TestSearchBySummaryAndType(t *testing.T) {
 		"author",
 		"a superb summary",
 		"Description",
-		model.NewTimeSensitivity(20),
-		model.NewNecessityLevel(30),
-		model.NewExchangeValue(40))
+		1,
+		2,
+	)
 	assert.NoError(t, rs.Create(&resource))
 
 	_, _, rec, c := newRequest(echo.GET, "/api/resources?take=10&skip=0&query=superb&type=0", nil)
@@ -178,9 +178,8 @@ func TestGetResource(t *testing.T) {
 		"author",
 		"Summary",
 		"Description",
-		model.NewTimeSensitivity(20),
-		model.NewNecessityLevel(30),
-		model.NewExchangeValue(40))
+		1,
+		2)
 	assert.NoError(t, rs.Create(&resource))
 
 	// Getting the resource
@@ -196,9 +195,8 @@ func TestGetResource(t *testing.T) {
 	assert.Equal(t, "Summary", res.Resource.Summary)
 	assert.Equal(t, "Description", res.Resource.Description)
 	assert.Equal(t, model.Offer, res.Resource.Type)
-	assert.Equal(t, 20, res.Resource.TimeSensitivity)
-	assert.Equal(t, 30, res.Resource.NecessityLevel)
-	assert.Equal(t, 40, res.Resource.ExchangeValue)
+	assert.Equal(t, 1, res.Resource.ValueInHoursFrom)
+	assert.Equal(t, 2, res.Resource.ValueInHoursTo)
 
 }
 
@@ -259,9 +257,8 @@ func TestUpdateResource(t *testing.T) {
 		"author",
 		"Summary",
 		"Description",
-		model.NewTimeSensitivity(20),
-		model.NewNecessityLevel(30),
-		model.NewExchangeValue(40))
+		1,
+		2)
 	assert.NoError(t, rs.Create(&resource))
 
 	// Setting up the request
@@ -273,7 +270,9 @@ func TestUpdateResource(t *testing.T) {
 			"type":1,
 			"timeSensitivity":20,
 			"exchangeValue":30,
-			"necessityLevel":40
+			"necessityLevel":40,
+			"valueInHoursFrom":3,
+			"valueInHoursTo":4
 		}
 	}`
 	rec, c := newUpdateResourceRequest(key, js)
@@ -288,9 +287,8 @@ func TestUpdateResource(t *testing.T) {
 	assert.Equal(t, "new summary", res.Resource.Summary)
 	assert.Equal(t, "new description", res.Resource.Description)
 	assert.Equal(t, model.Request, res.Resource.Type)
-	assert.Equal(t, 20, res.Resource.TimeSensitivity)
-	assert.Equal(t, 30, res.Resource.ExchangeValue)
-	assert.Equal(t, 40, res.Resource.NecessityLevel)
+	assert.Equal(t, 3, res.Resource.ValueInHoursFrom)
+	assert.Equal(t, 4, res.Resource.ValueInHoursTo)
 }
 
 func newGetResourceRequest(key string) (*httptest.ResponseRecorder, echo.Context) {

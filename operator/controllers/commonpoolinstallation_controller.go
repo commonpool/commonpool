@@ -56,12 +56,22 @@ const (
 	dbHostEnv                       = "DB_HOST"
 	dbNameEnv                       = "DB_NAME"
 	dbPortEnv                       = "DB_PORT"
+	baseUrlEnv                      = "BASE_URL"
+	oidcDiscoveryUrlEnv             = "OIDC_DISCOVERY_URL"
+	oidcClientIdFileEnv             = "OIDC_CLIENT_ID_FILE"
+	oidcClientSecretFileEnv         = "OIDC_CLIENT_SECRET_FILE"
 	dbUsernameSecretPath            = "/secrets/username"
 	dbPasswordSecretPath            = "/secrets/password"
+	oidcClientIdSecretPath          = "/secrets/oidc-client-id"
+	oidcClientSecretSecretPath      = "/secrets/oidc-client-secret"
 	databasePasswordVolumeName      = "db-password-secret"
 	databaseUsernameVolumeName      = "db-user-secret"
+	oidcClientIdVolumeName          = "oidc-client-id"
+	oidcClientSecretVolumeName      = "oidc-client-secret"
 	databaseUsernameVolumeSecretKey = "username"
 	databasePasswordVolumeSecretKey = "password"
+	oidcClientIdVolumeSecretKey     = "oidc-client-id"
+	oidcClientSecretVolumeSecretKey = "oidc-client-secret"
 )
 
 // CommonpoolInstallationReconciler reconciles a CommonpoolInstallation object
@@ -493,15 +503,68 @@ func (r *CommonpoolInstallationReconciler) newBackendDeployment(installation *ap
 								},
 							},
 							VolumeMounts: []k8scorev1.VolumeMount{
-								{Name: databaseUsernameVolumeName, ReadOnly: true, MountPath: dbUsernameSecretPath, SubPath: databaseUsernameVolumeSecretKey},
-								{Name: databasePasswordVolumeName, ReadOnly: true, MountPath: dbPasswordSecretPath, SubPath: databasePasswordVolumeSecretKey},
+								{
+									Name:      databaseUsernameVolumeName,
+									ReadOnly:  true,
+									MountPath: dbUsernameSecretPath,
+									SubPath:   databaseUsernameVolumeSecretKey,
+								},
+								{
+									Name:      databasePasswordVolumeName,
+									ReadOnly:  true,
+									MountPath: dbPasswordSecretPath,
+									SubPath:   databasePasswordVolumeSecretKey,
+								},
+								{
+									Name:      oidcClientIdVolumeName,
+									ReadOnly:  true,
+									MountPath: oidcClientIdSecretPath,
+									SubPath:   oidcClientIdVolumeSecretKey,
+								},
+								{
+									Name:      oidcClientSecretVolumeName,
+									ReadOnly:  true,
+									MountPath: oidcClientSecretSecretPath,
+									SubPath:   oidcClientSecretVolumeSecretKey,
+								},
 							},
 							Env: []k8scorev1.EnvVar{
-								{Name: dbUserFileEnv, Value: dbUsernameSecretPath},
-								{Name: dbPasswordFileEnv, Value: dbPasswordSecretPath},
-								{Name: dbHostEnv, Value: installation.Spec.DatabaseHost},
-								{Name: dbNameEnv, Value: installation.Spec.DatabaseName},
-								{Name: dbPortEnv, Value: strconv.Itoa(installation.Spec.DatabasePort)},
+								{
+									Name:  dbUserFileEnv,
+									Value: dbUsernameSecretPath,
+								},
+								{
+									Name:  dbPasswordFileEnv,
+									Value: dbPasswordSecretPath,
+								},
+								{
+									Name:  dbHostEnv,
+									Value: installation.Spec.DatabaseHost,
+								},
+								{
+									Name:  dbNameEnv,
+									Value: installation.Spec.DatabaseName,
+								},
+								{
+									Name:  dbPortEnv,
+									Value: strconv.Itoa(installation.Spec.DatabasePort),
+								},
+								{
+									Name:  baseUrlEnv,
+									Value: "https://" + installation.Spec.IngressHost,
+								},
+								{
+									Name:  oidcDiscoveryUrlEnv,
+									Value: installation.Spec.OidcDiscoveryUrl,
+								},
+								{
+									Name:  oidcClientIdFileEnv,
+									Value: oidcClientIdSecretPath,
+								},
+								{
+									Name:  oidcClientSecretFileEnv,
+									Value: oidcClientSecretSecretPath,
+								},
 							},
 						},
 					},
@@ -529,6 +592,34 @@ func (r *CommonpoolInstallationReconciler) newBackendDeployment(installation *ap
 										{
 											Key:  installation.Spec.DatabasePasswordSecretKey,
 											Path: databasePasswordVolumeSecretKey,
+											Mode: &readOnlyMode,
+										},
+									},
+								},
+							},
+						}, {
+							Name: oidcClientIdVolumeName,
+							VolumeSource: k8scorev1.VolumeSource{
+								Secret: &k8scorev1.SecretVolumeSource{
+									SecretName: installation.Spec.OidcClientIdSecret,
+									Items: []k8scorev1.KeyToPath{
+										{
+											Key:  installation.Spec.OidcClientIdSecretKey,
+											Path: oidcClientIdVolumeSecretKey,
+											Mode: &readOnlyMode,
+										},
+									},
+								},
+							},
+						}, {
+							Name: oidcClientSecretVolumeName,
+							VolumeSource: k8scorev1.VolumeSource{
+								Secret: &k8scorev1.SecretVolumeSource{
+									SecretName: installation.Spec.OidcClientSecretSecret,
+									Items: []k8scorev1.KeyToPath{
+										{
+											Key:  installation.Spec.OidcClientSecretSecretKey,
+											Path: oidcClientSecretVolumeSecretKey,
 											Mode: &readOnlyMode,
 										},
 									},

@@ -1,27 +1,44 @@
-<label for="searchBox">Search</label>
-<input id="searchBox" [ngModel]="query$ | async" (ngModelChange)="querySubject.next($event)" type="text"/>
+<div id="search-row">
+  <label for="searchBox">Search</label>
+  <input id="searchBox" [ngModel]="query$ | async" (ngModelChange)="querySubject.next($event)" type="text"/>
 
-<select
-  name="resourceType"
-  id="resourceType"
-  [ngModel]="resourceType$ | async"
-  (ngModelChange)="resourceTypeSubject.next($event)">
-  <option [value]="0">Offer</option>
-  <option [value]="1">Request</option>
-</select>
-
-<div *ngIf="resources$ | async as resources">
-  <div *ngIf="!(pending$ | async); else pending">
-    Resources:
-    <div class="resource" *ngFor="let resource of resources">
-      {{resource.id}}
-    </div>
-  </div>
+  <label for="searchBox">Type</label>
+  <select
+    name="resourceType"
+    id="resourceType"
+    [ngModel]="resourceType$ | async"
+    (ngModelChange)="resourceTypeSubject.next($event)">
+    <option [value]="0">Offer</option>
+    <option [value]="1">Request</option>
+  </select>
 </div>
 
-
-<ng-template #pending>
-  <div id="pendingIndicator">
-    pending
+<div id="resource-list">
+  <div *ngIf="resources$ | async as resources">
+    <div *ngIf="!(pending$ | async); else pending">
+      <h4>
+        Resources:
+      </h4>
+      <div class="resource-shadow">
+        <div class="resource" *ngFor="let resource of resources">
+          <div class="resource-title">
+            <b><a [routerLink]="'/resources/' + resource.id">{{resource.summary}}</a></b>
+          </div>
+          <div><span *ngIf="resource.type === 0">offering </span> by <b><a
+            [routerLink]="'/profiles/' + resource.createdById">{{resource.createdBy}}</a></b>
+            for {{resource.valueInHoursFrom}}h-{{resource.valueInHoursTo}}h
+          </div>
+          <div>{{resource.description}}</div>
+          <div>posted {{resource.createdAtDistanceAgo}}</div>
+        </div>
+      </div>
+    </div>
   </div>
-</ng-template>
+
+  <ng-template #pending>
+    <div id="pendingIndicator">
+      ...
+    </div>
+  </ng-template>
+</div>
+

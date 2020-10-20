@@ -1,8 +1,9 @@
 import {Component} from '@angular/core';
 import {BackendService} from '../../api/backend.service';
-import {BehaviorSubject, combineLatest, of, ReplaySubject, Subject} from 'rxjs';
-import {catchError, debounceTime, distinctUntilChanged, filter, map, shareReplay, startWith, switchMap, tap} from 'rxjs/operators';
-import {Resource, ResourceType, SearchResourceRequest} from '../../api/models';
+import {combineLatest, of, ReplaySubject} from 'rxjs';
+import {catchError, debounceTime, distinctUntilChanged, map, startWith, switchMap, tap} from 'rxjs/operators';
+import {ExtendedResource, ResourceType, SearchResourceRequest} from '../../api/models';
+import {AuthService} from '../../auth.service';
 
 @Component({
   selector: 'app-resource-list-view',
@@ -12,7 +13,7 @@ import {Resource, ResourceType, SearchResourceRequest} from '../../api/models';
 export class ResourceListViewComponent {
 
   querySubject = new ReplaySubject<string>();
-  query$ = this.querySubject.asObservable();
+  query$ = this.querySubject.asObservable().pipe(startWith(''));
 
   pendingSubject = new ReplaySubject<boolean>();
   pending$ = this.pendingSubject.asObservable().pipe(startWith(false));
@@ -20,8 +21,8 @@ export class ResourceListViewComponent {
   resourceTypeSubject = new ReplaySubject<ResourceType>();
   resourceType$ = this.resourceTypeSubject.asObservable().pipe(startWith(ResourceType.Offer));
 
-  resources$ =
 
+  resources$ =
     combineLatest(
       [
         this.query$.pipe(
@@ -31,24 +32,23 @@ export class ResourceListViewComponent {
         this.resourceType$
       ]
     ).pipe(
-      filter(([q, t]) => !!q && q.length > 4),
-      map(([q, t]) => new SearchResourceRequest(q, t, 10, 0)),
+      map(([q, t]) => new SearchResourceRequest(q, t, undefined, 10, 0)),
       tap(() => {
         this.pendingSubject.next(true);
       }),
       switchMap(req => {
         return this.backend.searchResources(req).pipe(
           map(r => r.resources),
-          catchError(err => of([]))
+          catchError(err => of([] as ExtendedResource[]))
         );
       }),
       tap(() => {
         this.pendingSubject.next(false);
       }),
-      startWith([] as Resource[])
+      startWith([] as ExtendedResource[])
     );
 
-  constructor(private backend: BackendService) {
+  constructor(private backend: BackendService, private auth: AuthService) {
 
   }
 

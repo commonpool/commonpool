@@ -6,6 +6,8 @@ import (
 )
 
 const (
+	ErrUserNotFoundMsg                 = "User with id %s could not be found"
+	ErrUserNotFoundCode                = "USR-1000"
 	ErrResourceNotFoundMsg             = "Resource with id %s could not be found"
 	ErrResourceNotFoundCode            = "RES-PER-1000"
 	ErrCreateResourceCannotBind        = "Cannot process resource"
@@ -64,6 +66,13 @@ func NewResourceNotFoundError(key string) *ErrorResponse {
 	return NewError(
 		fmt.Sprintf(ErrResourceNotFoundMsg, key),
 		ErrResourceNotFoundCode,
+		http.StatusNotFound)
+}
+
+func NewUserNotFoundError(key string) *ErrorResponse {
+	return NewError(
+		fmt.Sprintf(ErrUserNotFoundMsg, key),
+		ErrUserNotFoundCode,
 		http.StatusNotFound)
 }
 
