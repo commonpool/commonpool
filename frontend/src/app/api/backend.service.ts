@@ -76,7 +76,6 @@ export class BackendService {
 
   searchResources(request: SearchResourceRequest): Observable<SearchResourcesResponse> {
     const params: any = {};
-    console.log(request);
     if (request.createdBy !== undefined) {
       params.created_by = request.createdBy;
     }
@@ -88,6 +87,9 @@ export class BackendService {
     }
     if (request.type !== undefined) {
       params.type = request.type.toString();
+    }
+    if (request.query !== undefined){
+      params.query = request.query;
     }
     console.log(params);
     return this.http.get<SearchResourcesResponse>(`${environment.apiUrl}/api/v1/resources`, {

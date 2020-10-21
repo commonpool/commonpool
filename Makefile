@@ -17,7 +17,13 @@ RESET := $(shell tput -Txterm sgr0)
 new-branch:
 	@echo && \
 	read -p '${BLUE}enter issue number:${RESET}' issueNumber && \
+	curl -s --head https://github.com/commonpool/commonpool/issues/$${issueNumber} | head -n 1 | grep "HTTP/1.[01] [23].." > /dev/null; \
+	if [ "$$?" -eq "1" ]; then \
+   		echo "can't find issue #$${issueNumber}"; \
+   		exit; \
+	fi; \
 	read -p '${BLUE}enter branch name:${RESET}' branchName && \
+	exit; \
 	echo && \
 	branchName=issue/$${issueNumber}/$$(echo $${branchName,,} | tr -s ' ' | tr ' ' '-'); \
 	echo "Name of branch to create: ${BLUE}$${branchName}${RESET}" && \
@@ -31,12 +37,18 @@ new-branch:
     esac \
 	done 
 
-.PHONY: pr
+.PHONY: create-pr
 create-pr: 
 	@branch=$$(git symbolic-ref --short HEAD); \
 	echo; \
 	issueNumber=$$(echo $${branch} | awk '{split($$0,a,"/"); print a[2]}'); \
 	issueName=$$(echo $${branch} | awk '{split($$0,a,"/"); print a[3]}'); \
+	curl -s --head https://github.com/commonpool/commonpool/tree/$${branch} | head -n 1 | grep "HTTP/1.[01] [23].." > /dev/null; \
+	if [ "$$?" -eq "1" ]; then \
+   		echo "can't find issue #$${issueNumber}"; \
+   		exit; \
+	fi; \
+	echo "Found remote branch $${branchName}"; \
 	echo "Creating PR for branch ${BLUE}$${branch}${RESET}"; \
 	echo "Issue number ${BLUE}$${issueNumber}${RESET}"; \
 	echo "Issue name ${BLUE}$${issueName}${RESET}"; \
