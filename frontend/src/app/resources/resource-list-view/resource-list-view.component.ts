@@ -21,7 +21,6 @@ export class ResourceListViewComponent {
   resourceTypeSubject = new ReplaySubject<ResourceType>();
   resourceType$ = this.resourceTypeSubject.asObservable().pipe(startWith(ResourceType.Offer));
 
-
   resources$ =
     combineLatest(
       [
