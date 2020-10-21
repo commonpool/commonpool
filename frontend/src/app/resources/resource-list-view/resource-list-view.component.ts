@@ -3,7 +3,6 @@ import {BackendService} from '../../api/backend.service';
 import {combineLatest, of, ReplaySubject} from 'rxjs';
 import {catchError, debounceTime, distinctUntilChanged, map, startWith, switchMap, tap} from 'rxjs/operators';
 import {ExtendedResource, ResourceType, SearchResourceRequest} from '../../api/models';
-import {AuthService} from '../../auth.service';
 
 @Component({
   selector: 'app-resource-list-view',
@@ -21,7 +20,6 @@ export class ResourceListViewComponent {
   resourceTypeSubject = new ReplaySubject<ResourceType>();
   resourceType$ = this.resourceTypeSubject.asObservable().pipe(startWith(ResourceType.Offer));
 
-
   resources$ =
     combineLatest(
       [
@@ -32,7 +30,7 @@ export class ResourceListViewComponent {
         this.resourceType$
       ]
     ).pipe(
-      map(([q, t]) => new SearchResourceRequest(q, t, undefined, 10, 0)),
+      map(([query, type]) => new SearchResourceRequest(query, type, undefined, 10, 0)),
       tap(() => {
         this.pendingSubject.next(true);
       }),
