@@ -12,9 +12,18 @@ BLUE         := $(shell tput -Txterm setaf 6)
 WHITE        := $(shell tput -Txterm setaf 7)
 RESET := $(shell tput -Txterm sgr0)
 
+.PHONY: help
+help:
+	@echo 
+	@echo 'Makefile for commonpool'
+	@echo 
+	@echo Usage:
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "    \033[36mmake %-30s\033[0m %s\n", $$1, $$2}'
+	@echo
+
 
 .PHONY: new-branch
-new-branch:
+new-branch: ## Creates a new branch for a given issue
 	@echo && \
 	read -p '${BLUE}enter issue number:${RESET}' issueNumber && \
 	curl -s --head https://github.com/commonpool/commonpool/issues/$${issueNumber} | head -n 1 | grep "HTTP/1.[01] [23].." > /dev/null; \
@@ -23,7 +32,6 @@ new-branch:
    		exit; \
 	fi; \
 	read -p '${BLUE}enter branch name:${RESET}' branchName && \
-	exit; \
 	echo && \
 	branchName=issue/$${issueNumber}/$$(echo $${branchName,,} | tr -s ' ' | tr ' ' '-'); \
 	echo "Name of branch to create: ${BLUE}$${branchName}${RESET}" && \
@@ -38,7 +46,7 @@ new-branch:
 	done 
 
 .PHONY: create-pr
-create-pr: 
+create-pr: ## Creates a pr for the current branch
 	@branch=$$(git symbolic-ref --short HEAD); \
 	echo; \
 	issueNumber=$$(echo $${branch} | awk '{split($$0,a,"/"); print a[2]}'); \
