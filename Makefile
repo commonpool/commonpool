@@ -18,12 +18,12 @@ help:
 	@echo 'Makefile for commonpool'
 	@echo 
 	@echo Usage:
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "    \033[36mmake %-30s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36mmake %-20s\033[0m %s\n", $$1, $$2}'
 	@echo
 
 
-.PHONY: new-branch
-new-branch: ## Creates a new branch for a given issue
+.PHONY: branch
+branch: ## Creates a new branch for a given issue
 	@echo && \
 	read -p '${BLUE}enter issue number:${RESET}' issueNumber && \
 	curl -s --head https://github.com/commonpool/commonpool/issues/$${issueNumber} | head -n 1 | grep "HTTP/1.[01] [23].." > /dev/null; \
@@ -45,8 +45,8 @@ new-branch: ## Creates a new branch for a given issue
     esac \
 	done 
 
-.PHONY: create-pr
-create-pr: ## Creates a pr for the current branch
+.PHONY: pull-request
+pull-request: ## Creates a pr for the current branch
 	@branch=$$(git symbolic-ref --short HEAD); \
 	echo; \
 	issueNumber=$$(echo $${branch} | awk '{split($$0,a,"/"); print a[2]}'); \
@@ -69,3 +69,8 @@ create-pr: ## Creates a pr for the current branch
       * ) echo "Please answer yes or no.";; \
     esac \
 	done 
+
+
+.PHONY: update-branch-list
+update-branch-list: ## will update all of your branches set to track remote ones, but not merge any changes in.
+	git remote update origin --prune

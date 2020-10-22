@@ -2,7 +2,6 @@ package web
 
 import (
 	"github.com/commonpool/backend/model"
-	"github.com/labstack/echo/v4"
 	"time"
 )
 
@@ -72,6 +71,27 @@ type UserInfoResponse struct {
 	Username string `json:"username"`
 }
 
-func (r *CreateResourceRequest) bind(c echo.Context) {
+type GetLatestThreadsResponse struct {
+	Threads []Thread `json:"threads"`
+}
 
+type Thread struct {
+	Id                string `json:"id"`
+	WithUsername      string `json:"withUsername"`
+	WithUsernameId    string `json:"withUsernameId"`
+	LastChars         string `json:"lastChars"`
+	HasUnreadMessages bool   `json:"hasUnreadMessages"`
+}
+
+type Message struct {
+	ID         string    `json:"id"`
+	CreatedAt  time.Time `json:"createdAt"`
+	SenderId   string    `json:"senderId"`
+	ReceiverId string    `json:"receiverId"`
+	ThreadId   string    `json:"threadId"`
+	Content    string    `json:"content"`
+}
+
+type GetThreadMessagesResponse struct {
+	Messages []Message `json:"messages"`
 }
