@@ -193,4 +193,17 @@ export class BackendService {
     );
   }
 
+  sendMessage(topic: string, content: string): Observable<void> {
+    return this.http.post(`${environment.apiUrl}/api/v1/chat/topic`, {message: content}, {
+      observe: 'response'
+    }).pipe(
+      map((res) => {
+        if (res.status !== 200) {
+          throwError(ErrorResponse.fromHttpResponse(res));
+        }
+        return;
+      })
+    );
+  }
+
 }

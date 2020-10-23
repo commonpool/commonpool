@@ -1,7 +1,18 @@
 <div class="thread">
+  <div class="inputBox">
+    <textarea #message class="input" rows="1" [key></textarea>
+    <button (click)="sendMessage(message.value)" class="submit">submit</button>
+  </div>
+
   <ng-container *ngIf="messages$| async; let messages">
     <div *ngFor="let message of messages.messages" class="message" [ngClass]="{sentByMe: message.sentByMe}">
-      {{message.sentByUsername}}: {{message.content}}
+      <div class="sender">
+        <a [routerLink]="'/profiles/' + message.sentBy">{{message.sentByUsername}}</a> - {{message.sentAtDistance}}
+      </div>
+      <div class="content">
+        {{message.content}}
+      </div>
     </div>
   </ng-container>
+
 </div>

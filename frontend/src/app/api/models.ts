@@ -184,7 +184,10 @@ export class Message {
     public sentByUsername: string,
     public topicId: string,
     public sentByMe: boolean) {
+    this.sentAtDistance = formatDistanceToNow(Date.parse(sentAt), {addSuffix: true});
   }
+
+  public sentAtDistance: string;
 
   static from(message: Message) {
     return new Message(
