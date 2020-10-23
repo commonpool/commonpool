@@ -5,7 +5,16 @@
        [ngClass]="{'unread' : thread.hasUnreadMessages}"
        class="thread"
     >
-      {{thread.lastMessageUsername}} - {{thread.lastChars}}
+      <div class="title">{{thread.title}}</div>
+      <div class="last-message">
+        <div class="last-message-author">
+        {{thread.lastMessageUsername}}:
+        </div>
+        <div class="last-message-preview">
+          {{thread.lastChars}}
+        </div>
+      </div>
+
     </a>
   </div>
   <div *ngIf="threads.length ===0 ">

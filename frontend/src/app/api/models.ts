@@ -1,5 +1,5 @@
 import {HttpResponse} from '@angular/common/http';
-import {formatDistanceToNow} from 'date-fns';
+import {formatDistanceToNow, format} from 'date-fns';
 
 export enum ResourceType {
   Offer = 0,
@@ -142,6 +142,7 @@ export class GetThreadsRequest {
 
 export class Thread {
   constructor(
+    public title: string,
     public hasUnreadMessages: boolean,
     public topicId: string,
     public lastChars: string,
@@ -152,6 +153,7 @@ export class Thread {
 
   static from(thread: Thread) {
     return new Thread(
+      thread.title,
       thread.hasUnreadMessages,
       thread.topicId,
       thread.lastChars,
@@ -184,10 +186,15 @@ export class Message {
     public sentByUsername: string,
     public topicId: string,
     public sentByMe: boolean) {
-    this.sentAtDistance = formatDistanceToNow(Date.parse(sentAt), {addSuffix: true});
+    const date = new Date(Date.parse(this.sentAt));
+    this.sentAtDistance = formatDistanceToNow(date, {addSuffix: true});
+    this.sentAtHour = format(date, 'hh');
+    this.sentAtDate = date;
   }
 
   public sentAtDistance: string;
+  public sentAtHour: string;
+  public sentAtDate: Date;
 
   static from(message: Message) {
     return new Message(

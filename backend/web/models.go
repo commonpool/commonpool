@@ -83,6 +83,7 @@ type Thread struct {
 	LastMessageAt       time.Time `json:"lastMessageAt"`
 	LastMessageUsername string    `json:"lastMessageUsername"`
 	LastMessageUserId   string    `json:"lastMessageUserId"`
+	Title               string    `json:"title"`
 }
 
 type InquireAboutResourceRequest struct {

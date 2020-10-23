@@ -49,7 +49,7 @@ func (cs *ChatStore) GetThreadMessages(threadKey model.ThreadKey, take int, skip
 	if len(messages) > 0 {
 		lastMessageTs := messages[0].SentAt
 		err = cs.db.Model(&model.Thread{}).
-			Where("topic_id = ? AND user_id = ? AND last_time_read < ?", threadKey.TopicKey.String(), threadKey.UserKey.String(), lastMessageTs).
+			Where("topic_id = ? AND user_id = ?", threadKey.TopicKey.String(), threadKey.UserKey.String(), lastMessageTs).
 			Update("last_time_read", lastMessageTs).
 			Error
 		if err != nil {
@@ -60,7 +60,7 @@ func (cs *ChatStore) GetThreadMessages(threadKey model.ThreadKey, take int, skip
 	return messages, nil
 }
 
-func (cs *ChatStore) GetByKey(threadKey model.ThreadKey) (*model.Thread, error) {
+func (cs *ChatStore) GetThread(threadKey model.ThreadKey) (*model.Thread, error) {
 	thread := &model.Thread{}
 	err := cs.db.First(thread, "topic_id = ? and user_id = ?", threadKey.TopicKey.String(), threadKey.UserKey.String()).Error
 	if err != nil {
@@ -82,6 +82,10 @@ func (cs *ChatStore) SendMessage(author model.UserKey, authorUserName string, to
 			Where("topic_id = ?", topic.ID.String()).
 			Find(&recipientThreadsForTopic).
 			Error
+
+		if err != nil {
+			return err
+		}
 
 		for _, recipientThreadForTopic := range recipientThreadsForTopic {
 
@@ -127,6 +131,15 @@ func (cs *ChatStore) SendMessage(author model.UserKey, authorUserName string, to
 	})
 }
 
+func (cs *ChatStore) GetTopic(key model.TopicKey) (*model.Topic, error) {
+	var topic model.Topic
+	err := cs.db.Where("id = ?", key.ID.String()).First(&topic).Error
+	if err != nil {
+		return nil, err
+	}
+	return &topic, nil
+}
+
 func (cs *ChatStore) GetOrCreateResourceTopicMapping(rk model.ResourceKey, uk model.UserKey, rs resource.Store) (*model.ResourceTopic, error) {
 
 	var rt model.ResourceTopic
@@ -136,6 +149,12 @@ func (cs *ChatStore) GetOrCreateResourceTopicMapping(rk model.ResourceKey, uk mo
 	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
 
 		err = cs.db.Transaction(func(tx *gorm.DB) error {
+
+			var res model.Resource
+			err = rs.GetByKey(rk, &res)
+			if err != nil {
+				return err
+			}
 
 			newResourceTopic := model.ResourceTopic{
 				TopicId:    uuid.NewV4(),
@@ -149,7 +168,8 @@ func (cs *ChatStore) GetOrCreateResourceTopicMapping(rk model.ResourceKey, uk mo
 			}
 
 			newTopic := model.Topic{
-				ID: newResourceTopic.TopicId,
+				ID:    newResourceTopic.TopicId,
+				Title: "About " + res.Summary,
 			}
 			err := cs.db.Create(newTopic).Error
 			if err != nil {
@@ -162,12 +182,6 @@ func (cs *ChatStore) GetOrCreateResourceTopicMapping(rk model.ResourceKey, uk mo
 				TopicID:   newResourceTopic.TopicId,
 				UserID:    uk.String(),
 				CreatedAt: createdAt,
-			}
-
-			var res model.Resource
-			err = rs.GetByKey(rk, &res)
-			if err != nil {
-				return err
 			}
 
 			ownerKey := res.GetUserKey()

@@ -61,20 +61,28 @@ func (h *Handler) GetLatestThreads(c echo.Context) error {
 	var items = make([]web.Thread, len(threads))
 	for i, thread := range threads {
 
-		var user = model.User{}
-		err := h.authStore.GetByKey(model.NewUserKey(thread.UserID), &user)
+		topic, err := h.chatStore.GetTopic(thread.GetKey().TopicKey)
 		if err != nil {
 			return err
 		}
+
+		fmt.Println("!!!")
+		fmt.Println(userKey.String())
+		fmt.Println(thread.LastTimeRead)
+		fmt.Println(thread.LastMessageAt)
+
+		before := !thread.LastMessageAt.After(thread.LastTimeRead)
+		fmt.Println("Has unread : ", before)
 
 		items[i] = web.Thread{
 			TopicID:             thread.TopicID.String(),
 			RecipientID:         thread.UserID,
 			LastChars:           thread.LastMessageChars,
-			HasUnreadMessages:   thread.LastTimeRead.Before(thread.LastMessageAt),
+			HasUnreadMessages:   before,
 			LastMessageAt:       thread.LastMessageAt,
 			LastMessageUserId:   thread.LastMessageUserId,
 			LastMessageUsername: thread.LastMessageUserName,
+			Title:               topic.Title,
 		}
 	}
 
@@ -105,7 +113,6 @@ func (h *Handler) GetMessages(c echo.Context) error {
 	userKey := model.NewUserKey(authUser.Subject)
 
 	topicStr := c.QueryParam("topic")
-	c.Logger().Info("TOPIC QRY PARAM: "+ topicStr, c.ParamNames(), c.ParamValues())
 	if topicStr == "" {
 		return fmt.Errorf("'topic' query param is required")
 	}

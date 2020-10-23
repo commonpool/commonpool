@@ -1,13 +1,9 @@
 <div class="thread">
-  <div class="inputBox">
-    <textarea #message class="input" rows="1"></textarea>
-    <button (click)="sendMessage(message.value)" class="submit">submit</button>
-  </div>
 
   <ng-container *ngIf="messages$| async; let messages">
     <div *ngFor="let message of messages.messages" class="message" [ngClass]="{sentByMe: message.sentByMe}">
-      <div class="sender">
-        <a [routerLink]="'/profiles/' + message.sentBy">{{message.sentByUsername}}</a> - {{message.sentAtDistance}}
+      <div class="header">
+        <a class="sender" [routerLink]="'/profiles/' + message.sentBy">{{message.sentByUsername}}</a>&nbsp;<span class="sent-at">{{message.sentAtDate | date:'h:mmaaa'}}</span>
       </div>
       <div class="content">
         {{message.content}}
@@ -15,4 +11,9 @@
     </div>
   </ng-container>
 
+</div>
+
+<div class="inputBox">
+  <textarea [(ngModel)]="content" class="input" rows="1" (keydown.enter)="sendMessage()"></textarea>
+  <button (click)="sendMessage()" class="submit">submit</button>
 </div>

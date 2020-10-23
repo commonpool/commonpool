@@ -2,4 +2,24 @@
   display: block;
   padding: 1rem;
   border: 1px solid black;
+  margin-left: 1rem;
+  margin-right: 1rem;
+  margin-bottom: 0.125rem;
+  color: black;
+  text-decoration: none
+}
+
+.thread:not(.unread) {
+  font-weight: bold;
+}
+
+.thread .last-message-author {
+  display: inline-block;
+  width: 5rem;
+}
+
+.thread .last-message-preview {
+  display: inline-block;
+  font-style: italic;
+  color: #555;
 }

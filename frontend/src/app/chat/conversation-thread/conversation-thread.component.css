@@ -1,33 +1,49 @@
 .thread {
   display: flex;
   flex-direction: column-reverse;
+  height: calc(100vh - 6rem);
+  max-height: calc(100vh - 6rem);
+  overflow-y: scroll;
+  background: #eee;
+}
+
+.message:first-child {
+  margin-bottom: 1rem;
 }
 
 .message {
-  border: 1px solid black;
-  padding: 1rem;
-  border-radius: 1rem;
-  display: inline-block;
-  max-width: 75vw;
-  box-shadow: #00000022 0.5rem 0.5rem 0rem;
+  display: block;
+  margin-left: 2rem;
+  padding: 0.25rem;
+  background: white;
+  width: 100%;
+  max-width: calc(100% - 5rem)
+}
+.message:hover {
+  background: #f8f8f8;
 }
 
-.message.sentByMe {
-  align-self: flex-start;
-  background-color: black;
-  color: white;
+.message .header {
+  margin-bottom: 0.5rem;
+}
+
+.message .sent-at {
+  color: #999;
+  font-size: 80%;
 }
 
 .message .sender {
   font-weight: bold;
-  margin-bottom: 1rem;
+  text-decoration: none;
 }
 
-.message.sentByMe .sender a {
-  color: white;
-}
-.message .sender a {
+.message .sender, .message .sender a {
   color: black;
+}
+
+.message .content {
+  color: #333;
+  font-family: "DejaVu Sans", serif
 }
 
 .inputBox{

@@ -198,7 +198,7 @@ export class BackendService {
       observe: 'response'
     }).pipe(
       map((res) => {
-        if (res.status !== 200) {
+        if (res.status !== 202) {
           throwError(ErrorResponse.fromHttpResponse(res));
         }
         return;

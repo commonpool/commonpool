@@ -37,14 +37,29 @@ func TestSendMessage(t *testing.T) {
 	mockLoggedInAs(user1)
 	user1Threads := getLatestThreads(t, 0, 10).Threads
 	assert.Equal(t, 1, len(user1Threads))
+
+	js, _ = json.MarshalIndent(user1Threads, "", "   ")
+	fmt.Println("user 1 threads", string(js))
+
 	user1Messages := getThreadMessages(t, user1Threads[0].TopicID).Messages
 	assert.Equal(t, 1, len(user1Messages))
+
+	js, _ = json.MarshalIndent(user1Messages, "", "   ")
+	fmt.Println("user 1 messages", string(js))
 
 	// user 1 replies to user 2
 	sendMessage(t, user1Threads[0].TopicID, "hello back!")
 	user1Threads = getLatestThreads(t, 0, 10).Threads
+
+	js, _ = json.MarshalIndent(user1Threads, "", "   ")
+	fmt.Println("user 1 threads", string(js))
+
 	assert.Equal(t, 1, len(user1Threads))
 	user1Messages = getThreadMessages(t, user1Threads[0].TopicID).Messages
+
+	js, _ = json.MarshalIndent(user1Threads, "", "   ")
+	fmt.Println("user 1 messages", string(js))
+
 	assert.Equal(t, 2, len(user1Messages))
 
 	js, _ = json.MarshalIndent(user1Messages, "", "   ")
@@ -54,7 +69,7 @@ func TestSendMessage(t *testing.T) {
 
 func newSendMessageRequest(js string, topicId string) (*httptest.ResponseRecorder, echo.Context) {
 	_, _, rec, c := newRequest(echo.POST, fmt.Sprintf("/api/chat/%s", topicId), &js)
-	c.SetParamNames("id")
+	c.SetParamNames("topic")
 	c.SetParamValues(topicId)
 	return rec, c
 }
@@ -63,9 +78,11 @@ func sendMessage(t *testing.T, topicId string, message string) {
 	js := fmt.Sprintf(`{ "message" : "%s" }`, message)
 	rec, c := newSendMessageRequest(js, topicId)
 	assert.NoError(t, h.SendMessage(c))
+
+	fmt.Println(string(rec.Body.Bytes()))
+
 	assert.Equal(t, http.StatusAccepted, rec.Code)
 }
-
 
 func newInquireAboutResourceRequest(js string, resourceId string) (*httptest.ResponseRecorder, echo.Context) {
 	_, _, rec, c := newRequest(echo.POST, fmt.Sprintf("/api/resources/%s/inquire", resourceId), &js)
@@ -99,8 +116,7 @@ func getLatestThreads(t *testing.T, skip int, take int) web.GetLatestThreadsResp
 
 func newGetMessagesRequest(thread string) (*httptest.ResponseRecorder, echo.Context) {
 	_, _, rec, c := newRequest(echo.GET, "/api/chat/messages", nil)
-	c.SetParamNames("topic")
-	c.SetParamValues(thread)
+	c.QueryParams().Set("topic", thread)
 	return rec, c
 }
 

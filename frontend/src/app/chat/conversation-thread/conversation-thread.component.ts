@@ -17,7 +17,7 @@ export class ConversationThreadComponent implements OnInit {
   private take$ = this.takeSubject.pipe(startWith(10));
   private topicSubject = new BehaviorSubject<string>(undefined);
   private topic$ = this.topicSubject.asObservable();
-
+  public content = '';
   private topicSub = this.route.params.pipe(pluck('id')).subscribe(topic => {
     this.topicSubject.next(topic);
   });
@@ -33,14 +33,17 @@ export class ConversationThreadComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    setInterval(() => this.refresh(), 1000)
   }
 
   refresh() {
     this.triggerSubject.next(null);
   }
 
-  sendMessage(content: string) {
-    this.backend.sendMessage(this.topicSubject.value, content).subscribe(() => {
+
+  sendMessage() {
+    this.backend.sendMessage(this.topicSubject.value, this.content).subscribe(() => {
+      this.content = '';
       this.refresh();
     });
   }

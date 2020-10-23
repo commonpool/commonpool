@@ -10,5 +10,6 @@ type Store interface {
 	GetThreadMessages(key model.ThreadKey, take int, skip int) ([]model.Message, error)
 	SendMessage(author model.UserKey, authorUserName string, topic model.TopicKey, content string) error
 	GetOrCreateResourceTopicMapping(rk model.ResourceKey, uk model.UserKey, rs resource.Store) (*model.ResourceTopic, error)
-	GetByKey(threadKey model.ThreadKey) (*model.Thread, error)
+	GetThread(threadKey model.ThreadKey) (*model.Thread, error)
+	GetTopic(key model.TopicKey) (*model.Topic, error)
 }
