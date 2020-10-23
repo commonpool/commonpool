@@ -6,10 +6,14 @@ import (
 )
 
 type Message struct {
-	ID         uuid.UUID `gorm:"type:uuid;primary_key"`
-	CreatedAt  time.Time
-	SenderId   string
-	ReceiverId string
-	ThreadId   string
-	Content    string
+	ID       string    `gorm:"primary_key"`
+	TopicId  uuid.UUID `gorm:"type:uuid"`
+	UserID   string
+	AuthorID string
+	SentAt   time.Time
+	Content  string
+}
+
+func (m *Message) GetAuthorKey() UserKey {
+	return NewUserKey(m.AuthorID)
 }

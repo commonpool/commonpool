@@ -76,20 +76,35 @@ type GetLatestThreadsResponse struct {
 }
 
 type Thread struct {
-	Id                string `json:"id"`
-	WithUsername      string `json:"withUsername"`
-	WithUsernameId    string `json:"withUsernameId"`
-	LastChars         string `json:"lastChars"`
-	HasUnreadMessages bool   `json:"hasUnreadMessages"`
+	TopicID             string    `json:"id"`
+	RecipientID         string    `json:"recipientId"`
+	RecipientUsername   string    `json:"recipientUsername"`
+	LastChars           string    `json:"lastChars"`
+	HasUnreadMessages   bool      `json:"hasUnreadMessages"`
+	LastMessageAt       time.Time `json:"lastMessageAt"`
+	LastMessageUsername string    `json:"lastMessageUsername"`
+	LastMessageUserId   string    `json:"lastMessageUserId"`
+}
+
+type InquireAboutResourceRequest struct {
+	Message string `json:"message"`
+}
+
+type SendMessageRequest struct {
+	Message string `json:"message"`
+}
+
+type GetLatestMessageThreadsResponse struct {
+	Messages []Message `json:"messages"`
 }
 
 type Message struct {
-	ID         string    `json:"id"`
-	CreatedAt  time.Time `json:"createdAt"`
-	SenderId   string    `json:"senderId"`
-	ReceiverId string    `json:"receiverId"`
-	ThreadId   string    `json:"threadId"`
-	Content    string    `json:"content"`
+	ID             string    `json:"id"`
+	SentAt         time.Time `json:"sentAt"`
+	SentBy         string    `json:"sentBy"`
+	TopicID        string    `json:"topicId"`
+	Content        string    `json:"content"`
+	SentByUsername string    `json:"sentByUsername"`
 }
 
 type GetThreadMessagesResponse struct {

@@ -2,7 +2,6 @@ package model
 
 import (
 	"github.com/commonpool/backend/errors"
-	"net/http"
 )
 
 type ResourceType int
@@ -25,5 +24,7 @@ func ParseResourceType(s string) (*ResourceType, error) {
 		res = Request
 		return &res, nil
 	}
-	return nil, errors.NewError(errors.ErrInvalidResourceType, errors.ErrInvalidResourceTypeCode, http.StatusBadRequest)
+
+	err := errors.ErrParseResourceType(s)
+	return nil, &err
 }

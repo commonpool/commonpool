@@ -60,7 +60,7 @@ func (h *Handler) SearchResources(c echo.Context) error {
 	var resources = make([]web.Resource, len(search.Items))
 	for i, item := range search.Items {
 		createdBy := &model.User{}
-		err = h.userStore.GetByKey(model.NewUserKey(item.CreatedBy), createdBy)
+		err = h.authStore.GetByKey(model.NewUserKey(item.CreatedBy), createdBy)
 		if err != nil {
 			// todo
 		}
@@ -91,22 +91,22 @@ func (h *Handler) GetResource(c echo.Context) error {
 
 	resourceKey, err := model.ParseResourceKey(c.Param("id"))
 	if err != nil {
-		return NewErrResponse(c, NewError(ErrUuidParseError, ErrUuidParseErrorCode, http.StatusBadRequest))
+		return NewErrResponse(c, err)
 	}
 
-	resource := model.Resource{}
-	if err := h.resourceStore.GetByKey(*resourceKey, &resource); err != nil {
+	res := model.Resource{}
+	if err := h.resourceStore.GetByKey(*resourceKey, &res); err != nil {
 		return NewErrResponse(c, err)
 	}
 
 	createdBy := &model.User{}
-	err = h.userStore.GetByKey(model.NewUserKey(resource.CreatedBy), createdBy)
+	err = h.authStore.GetByKey(model.NewUserKey(res.CreatedBy), createdBy)
 	if err != nil {
-		// todo
+		return NewErrResponse(c, err)
 	}
 
 	response := web.GetResourceResponse{
-		Resource: NewResourceResponse(resource, createdBy),
+		Resource: NewResourceResponse(res, createdBy),
 	}
 
 	return c.JSON(http.StatusOK, response)
@@ -125,50 +125,47 @@ func (h *Handler) GetResource(c echo.Context) error {
 // @Router /resources [post]
 func (h *Handler) CreateResource(c echo.Context) error {
 
+	var err error
+
 	req := web.CreateResourceRequest{}
 
-	if err := c.Bind(&req); err != nil {
-		err := NewError(ErrCreateResourceCannotBind, ErrCreateResourceCannotBindCode, http.StatusBadRequest)
-		return NewErrorResponse(c, *err)
+	if err = c.Bind(&req); err != nil {
+		response := ErrCreateResourceBadRequest(err)
+		return NewErrResponse(c, &response)
 	}
 
-	if err := c.Validate(req); err != nil {
+	if err = c.Validate(req); err != nil {
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 
-	resource := sanitize(req.Resource)
+	sanitized := sanitizeResource(req.Resource)
 
-	if isSummaryTooShort(resource.Summary) {
-		return newSummaryTooShortError(c)
-	}
-	if isSummaryTooLong(resource.Summary) {
-		return newSummaryTooLongError(c)
-	}
-	if isDescriptionTooLong(resource.Description) {
-		return newDescriptionTooLongError(c)
+	err = h.validateResource(c, sanitized)
+	if err != nil {
+		return NewErrResponse(c, err)
 	}
 
 	subject := h.authorization.GetAuthUserSession(c).Subject
 
 	res := model.NewResource(
 		model.NewResourceKey(),
-		resource.Type,
+		sanitized.Type,
 		subject,
-		resource.Summary,
-		resource.Description,
-		resource.ValueInHoursFrom,
-		resource.ValueInHoursTo,
+		sanitized.Summary,
+		sanitized.Description,
+		sanitized.ValueInHoursFrom,
+		sanitized.ValueInHoursTo,
 	)
 
-	err := h.resourceStore.Create(&res)
+	err = h.resourceStore.Create(&res)
 	if err != nil {
-		// todo
+		return NewErrResponse(c, err)
 	}
 
 	createdBy := &model.User{}
-	err = h.userStore.GetByKey(model.NewUserKey(res.CreatedBy), createdBy)
+	err = h.authStore.GetByKey(model.NewUserKey(res.CreatedBy), createdBy)
 	if err != nil {
-		// todo
+		return NewErrResponse(c, err)
 	}
 
 	response := web.CreateResourceResponse{
@@ -194,52 +191,49 @@ func (h *Handler) UpdateResource(c echo.Context) error {
 
 	// Binds the request payload to the web.CreateResourceRequest instance
 	if err := c.Bind(&req); err != nil {
-		newError := NewError(ErrUpdateResourceCannotBind, ErrUpdateResourceCannotBindCode, http.StatusBadRequest)
-		return NewErrorResponse(c, *newError)
+		response := ErrUpdateResourceBadRequest(err)
+		return NewErrResponse(c, &response)
 	}
 
 	// Validates the CreateResourceRequest
 	if err := c.Validate(req); err != nil {
-		return c.JSON(http.StatusBadRequest, err.Error())
+		response := ErrValidation(err.Error())
+		return NewErrResponse(c, &response)
 	}
 
 	// Gets the resource id
 	resourceKey, err := model.ParseResourceKey(c.Param("id"))
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, "Invalid resource id")
+		response := ErrInvalidResourceKey(err.Error())
+		return NewErrResponse(c, &response)
 	}
 
 	// Retrieves the resource
 	resToUpdate := model.Resource{}
 	if err := h.resourceStore.GetByKey(*resourceKey, &resToUpdate); err != nil {
-		return c.JSON(http.StatusBadRequest, "Could not get resource")
+		return NewErrResponse(c, err)
 	}
 
 	// Validate
-	desiredResource := sanitize(req.Resource)
+	sanitized := sanitizeResource(req.Resource)
 
-	if isSummaryTooLong(desiredResource.Summary) {
-		return newSummaryTooLongError(c)
-	}
-	if isSummaryTooShort(desiredResource.Summary) {
-		return newSummaryTooShortError(c)
-	}
-	if isDescriptionTooLong(desiredResource.Description) {
-		return newDescriptionTooLongError(c)
+	err = h.validateResource(c, sanitized)
+	if err != nil {
+		return NewErrResponse(c, err)
 	}
 
-	resToUpdate.Summary = desiredResource.Summary
-	resToUpdate.Description = desiredResource.Description
-	resToUpdate.Type = desiredResource.Type
-	resToUpdate.ValueInHoursFrom = desiredResource.ValueInHoursFrom
-	resToUpdate.ValueInHoursTo = desiredResource.ValueInHoursTo
+	resToUpdate.Summary = sanitized.Summary
+	resToUpdate.Description = sanitized.Description
+	resToUpdate.Type = sanitized.Type
+	resToUpdate.ValueInHoursFrom = sanitized.ValueInHoursFrom
+	resToUpdate.ValueInHoursTo = sanitized.ValueInHoursTo
 
 	if err := h.resourceStore.Update(&resToUpdate); err != nil {
 		return c.JSON(http.StatusBadRequest, "Could not update resource")
 	}
 
 	createdBy := &model.User{}
-	err = h.userStore.GetByKey(model.NewUserKey(resToUpdate.CreatedBy), createdBy)
+	err = h.authStore.GetByKey(model.NewUserKey(resToUpdate.CreatedBy), createdBy)
 	if err != nil {
 		// todo
 	}
@@ -253,7 +247,8 @@ func (h *Handler) UpdateResource(c echo.Context) error {
 func ParseSkip(c echo.Context) (int, error) {
 	skip, err := ParseQueryParamInt(c, "skip", 0)
 	if err != nil {
-		return 0, NewErrResponse(c, NewError(ErrInvalidSkip, ErrInvalidSkipCode, http.StatusBadRequest))
+		response := ErrParseSkip(err.Error())
+		return 0, &response
 	}
 	if skip < 0 {
 		skip = 0
@@ -264,7 +259,8 @@ func ParseSkip(c echo.Context) (int, error) {
 func ParseTake(c echo.Context, defaultTake int, maxTake int) (int, error) {
 	take, err := ParseQueryParamInt(c, "take", defaultTake)
 	if err != nil {
-		return 0, NewErrResponse(c, NewError(ErrInvalidTake, ErrInvalidTakeCode, http.StatusBadRequest))
+		response := ErrParseTake(err.Error())
+		return 0, &response
 	}
 	if take < 0 {
 		take = 0
@@ -278,49 +274,64 @@ func ParseTake(c echo.Context, defaultTake int, maxTake int) (int, error) {
 func ParseQueryParamInt(c echo.Context, paramName string, defaultValue int) (int, error) {
 	paramAsStr := c.QueryParam(paramName)
 	if paramAsStr != "" {
-		return strconv.Atoi(paramAsStr)
+		int, err := strconv.Atoi(paramAsStr)
+		if err != nil {
+			response := ErrCannotConvertToInt(paramAsStr, err.Error())
+			return 0, &response
+		}
+		return int, nil
 	} else {
 		return defaultValue, nil
 	}
 }
 
-func sanitize(resource web.CreateResourcePayload) web.CreateResourcePayload {
+func sanitizeResource(resource web.CreateResourcePayload) web.CreateResourcePayload {
 	resource.Summary = strings.TrimSpace(resource.Summary)
 	resource.Description = strings.TrimSpace(resource.Description)
 	return resource
 }
 
-func newDescriptionTooLongError(c echo.Context) error {
-	return NewErrResponse(c, NewError(
-		ErrDescriptionTooLong,
-		ErrDescriptionTooLongCode,
-		http.StatusBadRequest))
+func (h *Handler) validateResource(c echo.Context, sanitized web.CreateResourcePayload) error {
+	var err error
+	err = h.checkSummaryNotTooShort(c, sanitized.Summary)
+	if err != nil {
+		return err
+	}
+	err = h.checkSummaryNotTooLong(c, sanitized.Summary)
+	if err != nil {
+		return err
+	}
+	err = h.checkDescriptionNotTooLong(c, sanitized.Description)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func newSummaryTooLongError(c echo.Context) error {
-	return NewErrResponse(c, NewError(
-		ErrSummaryTooLong,
-		ErrSummaryTooLongCode,
-		http.StatusBadRequest))
+func (h *Handler) checkSummaryNotTooShort(c echo.Context, summary string) error {
+	var err error = nil
+	if len(summary) < 5 {
+		response := ErrValidation("summary is too short")
+		err = &response
+		return err
+	}
+	return nil
 }
 
-func newSummaryTooShortError(c echo.Context) error {
-	return NewErrResponse(c, NewError(
-		ErrSummaryEmptyOrNull,
-		ErrSummaryEmptyOrNullCode,
-		http.StatusBadRequest))
+func (h *Handler) checkSummaryNotTooLong(c echo.Context, summary string) error {
+	if len(summary) > 100 {
+		response := ErrValidation("summary is too long")
+		return &response
+	}
+	return nil
 }
 
-func isDescriptionTooLong(description string) bool {
-	return len(description) > 100
-}
-
-func isSummaryTooLong(summary string) bool {
-	return len(summary) > 100
-}
-
-func isSummaryTooShort(summary string) bool {
-	return len(summary) == 0
+func (h *Handler) checkDescriptionNotTooLong(c echo.Context, description string) error {
+	if len(description) > 100 {
+		response := ErrValidation("description is too long")
+		return &response
+	}
+	return nil
 }
 
 func NewResourceResponse(res model.Resource, usr *model.User) web.Resource {

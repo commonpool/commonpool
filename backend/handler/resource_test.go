@@ -100,8 +100,7 @@ func TestCreateResourceInvalid400(t *testing.T) {
 
 	res := errors.ErrorResponse{}
 	assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &res))
-	assert.Equal(t, errors.ErrCreateResourceCannotBind, res.Message)
-	assert.Equal(t, errors.ErrCreateResourceCannotBindCode, res.Code)
+	assert.Equal(t, "ErrCreateResourceBadRequest", res.Code)
 	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 }
 
@@ -126,8 +125,7 @@ func TestCreateResourceEmptyName400(t *testing.T) {
 
 	res := errors.ErrorResponse{}
 	assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &res))
-	assert.Equal(t, errors.ErrSummaryEmptyOrNull, res.Message)
-	assert.Equal(t, errors.ErrSummaryEmptyOrNullCode, res.Code)
+	assert.Equal(t, "ErrValidation", res.Code)
 	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 	fmt.Println(string(rec.Body.Bytes()))
 }
@@ -139,7 +137,7 @@ func TestCreateResourceLongSummary400(t *testing.T) {
 	setup()
 
 	var a = ""
-	for i := 0; i < 101; i++ {
+	for i := 0; i <= 101; i++ {
 		a = a + "A"
 	}
 
@@ -158,8 +156,7 @@ func TestCreateResourceLongSummary400(t *testing.T) {
 
 	res := errors.ErrorResponse{}
 	assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &res))
-	assert.Equal(t, errors.ErrSummaryTooLong, res.Message)
-	assert.Equal(t, errors.ErrSummaryTooLongCode, res.Code)
+	assert.Equal(t, "ErrValidation", res.Code)
 	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 	fmt.Println(string(rec.Body.Bytes()))
 }
@@ -175,7 +172,7 @@ func TestGetResource(t *testing.T) {
 	resource := model.NewResource(
 		key,
 		model.Offer,
-		"author",
+		user1.Subject,
 		"Summary",
 		"Description",
 		1,
@@ -216,8 +213,7 @@ func TestGetResourceBadId400(t *testing.T) {
 
 	res := errors.ErrorResponse{}
 	assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &res))
-	assert.Equal(t, errors.ErrUuidParseError, res.Message)
-	assert.Equal(t, errors.ErrUuidParseErrorCode, res.Code)
+	assert.Equal(t, "ErrInvalidResourceKey", res.Code)
 	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 }
 
@@ -237,8 +233,7 @@ func TestGetUnknownResource404(t *testing.T) {
 
 	res := errors.ErrorResponse{}
 	assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &res))
-	assert.Equal(t, fmt.Sprintf(errors.ErrResourceNotFoundMsg, key.String()), res.Message)
-	assert.Equal(t, errors.ErrResourceNotFoundCode, res.Code)
+	assert.Equal(t, "ErrResourceNotFound", res.Code)
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
 }
@@ -327,4 +322,23 @@ func newRequest(method string, target string, reqJson *string) (*echo.Echo, *htt
 	c := e.NewContext(req, rec)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	return e, req, rec, c
+}
+
+func createResource(t *testing.T, summary string, description string, resType model.ResourceType) web.CreateResourceResponse {
+	js := fmt.Sprintf(`
+	{
+		"resource": {
+			"summary":"%s",
+			"description":"%s",
+			"type":%d
+		}
+	}`, summary, description, resType)
+	rec, c := newCreateResourceRequest(js)
+	err := h.CreateResource(c)
+
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusCreated, rec.Code)
+	resource := web.CreateResourceResponse{}
+	assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &resource))
+	return resource
 }

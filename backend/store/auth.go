@@ -8,11 +8,23 @@ import (
 	"gorm.io/gorm"
 )
 
+type AuthStore struct {
+	db *gorm.DB
+}
+
+var _ auth.Store = &AuthStore{}
+
+func NewAuthStore(db *gorm.DB) *AuthStore {
+	return &AuthStore{
+		db: db,
+	}
+}
+
 type UserStore struct {
 	db *gorm.DB
 }
 
-func (rs *UserStore) GetByKeys(keys []model.UserKey, r []*model.User) error {
+func (rs *AuthStore) GetByKeys(keys []model.UserKey, r []*model.User) error {
 	for i, key := range keys {
 		usr := &model.User{}
 		err := rs.GetByKey(key, usr)
@@ -24,7 +36,7 @@ func (rs *UserStore) GetByKeys(keys []model.UserKey, r []*model.User) error {
 	return nil
 }
 
-func (rs *UserStore) Upsert(key model.UserKey, email string, username string) error {
+func (rs *AuthStore) Upsert(key model.UserKey, email string, username string) error {
 	usr := &model.User{}
 	err := rs.GetByKey(key, usr)
 	if err != nil && errs.IsNotFoundError(err) {
@@ -41,13 +53,12 @@ func (rs *UserStore) Upsert(key model.UserKey, email string, username string) er
 	}
 }
 
-var _ auth.Store = &UserStore{}
-
 // GetByKey Gets a resource by keys
-func (rs *UserStore) GetByKey(key model.UserKey, r *model.User) error {
+func (rs *AuthStore) GetByKey(key model.UserKey, r *model.User) error {
 	if err := rs.db.First(r, "id = ?", key.String()).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errs.NewUserNotFoundError(key.String())
+			response := errs.ErrUserNotFound(key.String())
+			return &response
 		}
 		return err
 	}

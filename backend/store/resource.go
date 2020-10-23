@@ -2,13 +2,10 @@ package store
 
 import (
 	"errors"
-	"fmt"
 	errs "github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/resource"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"os"
 )
 
 type ResourceStore struct {
@@ -19,7 +16,8 @@ type ResourceStore struct {
 func (rs *ResourceStore) GetByKey(key model.ResourceKey, r *model.Resource) error {
 	if err := rs.db.First(r, "id = ?", key.GetUUID().String()).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return errs.NewResourceNotFoundError(key.String())
+			response := errs.ErrResourceNotFound(key.String())
+			return &response
 		}
 		return err
 	}
@@ -74,7 +72,8 @@ func (rs *ResourceStore) Search(query resource.Query) (*resource.QueryResult, er
 func (rs *ResourceStore) Delete(key model.ResourceKey) error {
 	result := rs.db.Delete(&model.Resource{}, "id = ?", key.GetUUID().String())
 	if result.RowsAffected == 0 {
-		return errs.NewResourceNotFoundError(key.String())
+		response := errs.ErrResourceNotFound(key.String())
+		return &response
 	}
 	return result.Error
 }
@@ -89,7 +88,8 @@ func (rs *ResourceStore) Update(resource *model.Resource) error {
 	update := rs.db.Model(resource).Save(resource)
 	if update.RowsAffected == 0 {
 		key := resource.GetKey()
-		return errs.NewResourceNotFoundError(key.String())
+		response := errs.ErrResourceNotFound(key.String())
+		return &response
 	}
 	return update.Error
 }
@@ -100,38 +100,4 @@ func NewResourceStore(db *gorm.DB) *ResourceStore {
 	return &ResourceStore{
 		db: db,
 	}
-}
-func NewAuthStore(db *gorm.DB) *UserStore {
-	return &UserStore{
-		db: db,
-	}
-}
-
-func NewTestDb() *gorm.DB {
-	db, err := gorm.Open(sqlite.Open("./realworld_test.db"), &gorm.Config{})
-	if err != nil {
-		fmt.Println("storage err: ", err)
-	}
-	sqlDB, err := db.DB()
-
-	if err != nil {
-		panic(err)
-	}
-
-	sqlDB.SetMaxIdleConns(3)
-	return db
-}
-
-func AutoMigrate(db *gorm.DB) {
-	db.AutoMigrate(
-		&model.Resource{},
-		&model.User{},
-	)
-}
-
-func DropTestDB() error {
-	if err := os.Remove("./realworld_test.db"); err != nil {
-		return err
-	}
-	return nil
 }
