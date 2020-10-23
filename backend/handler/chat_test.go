@@ -59,7 +59,6 @@ func TestSendMessage(t *testing.T) {
 
 	js, _ = json.MarshalIndent(user1Threads, "", "   ")
 	fmt.Println("user 1 messages", string(js))
-
 	assert.Equal(t, 2, len(user1Messages))
 
 	js, _ = json.MarshalIndent(user1Messages, "", "   ")
@@ -69,7 +68,7 @@ func TestSendMessage(t *testing.T) {
 
 func newSendMessageRequest(js string, topicId string) (*httptest.ResponseRecorder, echo.Context) {
 	_, _, rec, c := newRequest(echo.POST, fmt.Sprintf("/api/chat/%s", topicId), &js)
-	c.SetParamNames("topic")
+	c.SetParamNames("id")
 	c.SetParamValues(topicId)
 	return rec, c
 }
@@ -78,9 +77,6 @@ func sendMessage(t *testing.T, topicId string, message string) {
 	js := fmt.Sprintf(`{ "message" : "%s" }`, message)
 	rec, c := newSendMessageRequest(js, topicId)
 	assert.NoError(t, h.SendMessage(c))
-
-	fmt.Println(string(rec.Body.Bytes()))
-
 	assert.Equal(t, http.StatusAccepted, rec.Code)
 }
 
