@@ -39,9 +39,10 @@ export class ConversationThreadComponent implements OnInit {
     this.triggerSubject.next(null);
   }
 
-  sendMessage(content: string){
-    this.backend.sendMessage(this.topicSubject.value, content);
-    this.refresh();
+  sendMessage(content: string) {
+    this.backend.sendMessage(this.topicSubject.value, content).subscribe(() => {
+      this.refresh();
+    });
   }
 
 
