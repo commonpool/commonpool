@@ -26,7 +26,7 @@ var (
 	e  *echo.Echo
 )
 
-// @title resources api
+// @title commonpool api
 // @version 1.0
 // @description resources api
 // @termsOfService http://swagger.io/terms

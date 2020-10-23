@@ -10,12 +10,18 @@ func (h *Handler) Register(v1 *echo.Group) {
 	resources.GET("/:id", h.GetResource)
 	resources.POST("", h.CreateResource)
 	resources.PUT("/:id", h.UpdateResource)
+	resources.POST("/:id/inquire", h.InquireAboutResource)
 
 	users := v1.Group("/users", h.authorization.Authenticate(false))
 	users.GET("/:id", h.GetUserInfo)
 
 	meta := v1.Group("/meta", h.authorization.Authenticate(false))
 	meta.GET("/who-am-i", h.WhoAmI)
+
+	chat := v1.Group("/chat", h.authorization.Authenticate(true))
+	chat.GET("/messages", h.GetMessages)
+	chat.GET("/threads", h.GetLatestThreads)
+	chat.POST("/:id", h.SendMessage)
 
 	blas := v1.Group("/bla", h.authorization.Authenticate(true))
 	blas.GET("", func(context echo.Context) error {

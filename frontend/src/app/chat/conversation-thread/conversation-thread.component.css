@@ -1,0 +1,19 @@
+.thread {
+  display: flex;
+  flex-direction: column-reverse;
+}
+
+.message {
+  border: 1px solid black;
+  padding: 1rem;
+  border-radius: 1rem;
+  display: inline-block;
+  max-width: 75vw;
+  box-shadow: #00000022 0.5rem 0.5rem 0rem;
+}
+
+.message.sentByMe {
+  align-self: flex-start;
+  background-color: black;
+  color: white;
+}

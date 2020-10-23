@@ -17,7 +17,7 @@ import (
 // @Produce json
 // @Success 200 {object} web.UserInfoResponse
 // @Failure 400 {object} utils.Error
-// @Router /resources [get]
+// @Router /users/:id [get]
 func (h *Handler) GetUserInfo(c echo.Context) error {
 
 	userId := c.Param("id")

@@ -48,6 +48,14 @@ var (
 	}
 )
 
+func NewError(message string, code string, statusCode int) ErrorResponse {
+	return ErrorResponse{
+		Message:    message,
+		Code:       code,
+		StatusCode: statusCode,
+	}
+}
+
 type ErrorResponse struct {
 	Message    string
 	Code       string
@@ -57,15 +65,6 @@ type ErrorResponse struct {
 func (r *ErrorResponse) Error() string {
 	return r.Message
 }
-
-func NewError(message string, code string, statusCode int) ErrorResponse {
-	return ErrorResponse{
-		Message:    message,
-		Code:       code,
-		StatusCode: statusCode,
-	}
-}
-
 func (r *ErrorResponse) IsNotFoundError() bool {
 	return r.StatusCode == http.StatusNotFound
 }

@@ -104,11 +104,11 @@ func newGetMessagesRequest(thread string) (*httptest.ResponseRecorder, echo.Cont
 	return rec, c
 }
 
-func getThreadMessages(t *testing.T, threadId string) web.GetThreadMessagesResponse {
+func getThreadMessages(t *testing.T, threadId string) web.GetTopicMessagesResponse {
 	rec, c := newGetMessagesRequest(threadId)
 	assert.NoError(t, h.GetMessages(c))
 	assert.Equal(t, http.StatusOK, rec.Code)
-	messages := web.GetThreadMessagesResponse{}
+	messages := web.GetTopicMessagesResponse{}
 	assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &messages))
 	return messages
 

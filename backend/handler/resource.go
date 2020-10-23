@@ -18,12 +18,13 @@ import (
 // @Tags resources
 // @Accept json
 // @Produce json
-// @Param query query string true "Search text"
-// @Param type query string true "Resource type" Enums(0,1)
-// @Param created_by query string true "Created by"
+// @Param query query string false "Search text"
+// @Param type query string false "Resource type" Enums(0,1)
+// @Param created_by query string false "Created by"
 // @Param take query int false "Number of resources to take" minimum(0) maximum(100) default(10)
 // @Param skip query int false "Number of resources to skip" minimum(0) default(0)
 // @Success 200 {object} web.SearchResourcesResponse
+// @Failure 401 {object} errors.ErrorResponse
 // @Failure 400 {object} utils.Error
 // @Router /resources [get]
 func (h *Handler) SearchResources(c echo.Context) error {
@@ -355,8 +356,4 @@ func NewErrResponse(c echo.Context, err error) error {
 		return c.JSON(statusCode, NewError("Server error", "", statusCode))
 	}
 	return c.JSON(res.StatusCode, res)
-}
-
-func NewErrorResponse(c echo.Context, err ErrorResponse) error {
-	return c.JSON(err.StatusCode, err)
 }

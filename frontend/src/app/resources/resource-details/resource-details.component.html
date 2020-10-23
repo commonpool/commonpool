@@ -12,7 +12,7 @@
         <button>Delete</button>
       </div>
       <div *ngIf="session.id !== resource.createdById">
-        <button>Contact</button>
+        <button [routerLink]="'/resources/' + resource.id + '/inquire'" >Contact</button>
       </div>
 
     </div>

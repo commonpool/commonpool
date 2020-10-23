@@ -1,0 +1,7 @@
+<div class="thread">
+  <ng-container *ngIf="messages$| async; let messages">
+    <div *ngFor="let message of messages.messages" class="message" [ngClass]="{sentByMe: message.sentByMe}">
+      {{message.sentByUsername}}: {{message.content}}
+    </div>
+  </ng-container>
+</div>

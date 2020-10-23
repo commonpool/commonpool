@@ -70,7 +70,6 @@ func (h *Handler) GetLatestThreads(c echo.Context) error {
 		items[i] = web.Thread{
 			TopicID:             thread.TopicID.String(),
 			RecipientID:         thread.UserID,
-			RecipientUsername:   user.Username,
 			LastChars:           thread.LastMessageChars,
 			HasUnreadMessages:   thread.LastTimeRead.Before(thread.LastMessageAt),
 			LastMessageAt:       thread.LastMessageAt,
@@ -86,16 +85,16 @@ func (h *Handler) GetLatestThreads(c echo.Context) error {
 }
 
 // GetMessages
-// @Summary Gets thread messages
-// @Description This endpoint returns the messages for the given threads.
-// @ID getThreadMessages
+// @Summary Gets topic messages
+// @Description This endpoint returns the messages for the given topic.
+// @ID getMessages
 // @Param take query int false "Number of messages to take" minimum(0) maximum(100) default(10)
 // @Param skip query int false "Number of messages to skip" minimum(0) default(0)
-// @Param topic query string thread "Topic id"
+// @Param topic query string true "Topic id"
 // @Tags chat
 // @Accept json
 // @Produce json
-// @Success 200 {object} web.GetThreadMessagesResponse
+// @Success 200 {object} web.GetTopicMessagesResponse
 // @Failure 400 {object} utils.Error
 // @Router /chat/messages [get]
 func (h *Handler) GetMessages(c echo.Context) error {
@@ -105,7 +104,8 @@ func (h *Handler) GetMessages(c echo.Context) error {
 	authUser := h.authorization.GetAuthUserSession(c)
 	userKey := model.NewUserKey(authUser.Subject)
 
-	topicStr := c.Param("topic")
+	topicStr := c.QueryParam("topic")
+	c.Logger().Info("TOPIC QRY PARAM: "+ topicStr, c.ParamNames(), c.ParamValues())
 	if topicStr == "" {
 		return fmt.Errorf("'topic' query param is required")
 	}
@@ -154,11 +154,12 @@ func (h *Handler) GetMessages(c echo.Context) error {
 			Content:        message.Content,
 			SentBy:         message.AuthorID,
 			SentByUsername: authors[message.AuthorID],
+			SentByMe:       userKey == message.GetAuthorKey(),
 		}
 		items[i] = item
 	}
 
-	return c.JSON(http.StatusOK, web.GetThreadMessagesResponse{
+	return c.JSON(http.StatusOK, web.GetTopicMessagesResponse{
 		Messages: items,
 	})
 }
@@ -168,7 +169,8 @@ func (h *Handler) GetMessages(c echo.Context) error {
 // @Description This endpoint sends a message to the resource owner
 // @ID inquireAboutResource
 // @Param message body web.InquireAboutResourceRequest true "Message to send"
-// @Tags chat
+// @Param id path string true "Resource id"
+// @Tags resources
 // @Accept json
 // @Success 202
 // @Failure 400 {object} utils.Error
@@ -247,10 +249,11 @@ func (h *Handler) InquireAboutResource(c echo.Context) error {
 }
 
 // SendMessage
-// @Summary Sends a message to a thread
+// @Summary Sends a message to a topic
 // @Description This endpoint sends a message to the given thread
 // @ID sendMessage
 // @Param message body web.SendMessageRequest true "Message to send"
+// @Param id path string true "Topic id"
 // @Tags chat
 // @Accept json
 // @Success 202

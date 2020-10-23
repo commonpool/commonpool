@@ -76,9 +76,8 @@ type GetLatestThreadsResponse struct {
 }
 
 type Thread struct {
-	TopicID             string    `json:"id"`
+	TopicID             string    `json:"topicId"`
 	RecipientID         string    `json:"recipientId"`
-	RecipientUsername   string    `json:"recipientUsername"`
 	LastChars           string    `json:"lastChars"`
 	HasUnreadMessages   bool      `json:"hasUnreadMessages"`
 	LastMessageAt       time.Time `json:"lastMessageAt"`
@@ -100,13 +99,14 @@ type GetLatestMessageThreadsResponse struct {
 
 type Message struct {
 	ID             string    `json:"id"`
-	SentAt         time.Time `json:"sentAt"`
-	SentBy         string    `json:"sentBy"`
 	TopicID        string    `json:"topicId"`
-	Content        string    `json:"content"`
+	SentBy         string    `json:"sentBy"`
 	SentByUsername string    `json:"sentByUsername"`
+	SentByMe       bool      `json:"sentByMe"`
+	SentAt         time.Time `json:"sentAt"`
+	Content        string    `json:"content"`
 }
 
-type GetThreadMessagesResponse struct {
+type GetTopicMessagesResponse struct {
 	Messages []Message `json:"messages"`
 }

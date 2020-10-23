@@ -15,7 +15,7 @@ import (
 // @Produce json
 // @Success 200 {object} web.UserAuthResponse
 // @Failure 400 {object} utils.Error
-// @Router /resources [get]
+// @Router /meta/who-am-i [get]
 func (h *Handler) WhoAmI(c echo.Context) error {
 	userAuth := h.authorization.GetAuthUserSession(c)
 	response := web.UserAuthResponse{
