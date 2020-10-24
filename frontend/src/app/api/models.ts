@@ -122,10 +122,15 @@ export class ErrorResponse {
   }
 
   static fromHttpResponse(res: HttpResponse<any>): ErrorResponse {
-    if (res.body.code && res.body.message && res.body.statusCode) {
+    if (res?.body?.code && res?.body?.message && res?.body?.statusCode) {
       return new ErrorResponse(res.body.message, res.body.code, res.body.statusCode);
     }
-    return new ErrorResponse(res.body, '', res.status);
+    if (res.body) {
+      return new ErrorResponse(res.body, '', res.status);
+    }
+    return new ErrorResponse(res.statusText, '', res.status);
+    ;
+
   }
 }
 

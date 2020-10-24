@@ -26,8 +26,11 @@ export class ResourceInquiryComponent implements OnInit {
     this.error = undefined;
     this.backend.inquireAboutResource(resource, content).subscribe((res) => {
         this.pending = false;
-        this.router.navigateByUrl('/messages');
+        this.router.navigateByUrl('/messages').then(() => {
+          console.log('OK!');
+        });
       }, err => {
+        console.error(err);
         this.pending = false;
         this.error = err;
       }

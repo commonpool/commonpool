@@ -179,6 +179,8 @@ func (a *OidcAuthenticator) Authenticate(redirectOnError bool) echo.MiddlewareFu
 				"scope":         []string{"openid email profile"},
 			}
 
+
+
 			// post-ing to identity server
 			res, err := http.PostForm(a.oidcProvider.Endpoint().TokenURL, formValues)
 			if err != nil {

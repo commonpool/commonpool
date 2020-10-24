@@ -41,7 +41,7 @@ func main() {
 
 	r := router.NewRouter()
 
-	r.GET("/swagger/*", echoSwagger.WrapHandler)
+	r.GET("/api/swagger/*", echoSwagger.WrapHandler)
 
 	db := getDb(appConfig)
 	store.AutoMigrate(db)
