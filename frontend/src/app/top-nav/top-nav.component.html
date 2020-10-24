@@ -2,6 +2,7 @@
   <ul>
     <li><a [routerLink]="'/'">search ads</a></li>
     <li><a [routerLink]="'/resources/new'">post ad</a></li>
+    <li><a [routerLink]="'/messages'">messages</a></li>
     <li>
       <ng-container *ngIf="auth.session$ | async; let session">
         <a *ngIf="session.isAuthenticated" [routerLink]="'/profiles/' + session.id">my profile</a>

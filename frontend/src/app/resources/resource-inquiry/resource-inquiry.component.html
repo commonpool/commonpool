@@ -1,0 +1,8 @@
+<label for="content">Message</label><br>
+
+<div>{{error | json}}</div>
+
+<div *ngIf="resource$ | async; let resource">
+  <textarea #contentArea [(ngModel)]="content" id="content" name="content" cols="40" rows="20"></textarea><br>
+  <button [disabled]="content == '' || pending === true" (click)="submit(contentArea.value, resource)">Submit</button>
+</div>

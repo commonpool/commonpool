@@ -26,6 +26,174 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/chat/:id": {
+            "post": {
+                "description": "This endpoint sends a message to the given thread",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chat"
+                ],
+                "summary": "Sends a message to a topic",
+                "operationId": "sendMessage",
+                "parameters": [
+                    {
+                        "description": "Message to send",
+                        "name": "message",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/web.SendMessageRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "Topic id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "202": {},
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/messages": {
+            "get": {
+                "description": "This endpoint returns the messages for the given topic.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chat"
+                ],
+                "summary": "Gets topic messages",
+                "operationId": "getMessages",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Number of messages to take",
+                        "name": "take",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Number of messages to skip",
+                        "name": "skip",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Topic id",
+                        "name": "topic",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.GetTopicMessagesResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/threads": {
+            "get": {
+                "description": "This endpoint returns the latest messaging threads for the currently logged in user.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chat"
+                ],
+                "summary": "Returns the latest user message threads",
+                "operationId": "getLatestThreads",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Number of threads to take",
+                        "name": "take",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Number of threads to skip",
+                        "name": "skip",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.GetLatestThreadsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/meta/who-am-i": {
+            "get": {
+                "description": "Returns information about the currently authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Returns information about myself",
+                "operationId": "whoAmI",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.UserAuthResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Error"
+                        }
+                    }
+                }
+            }
+        },
         "/resources": {
             "get": {
                 "description": "Search for resources",
@@ -45,8 +213,7 @@ var doc = `{
                         "type": "string",
                         "description": "Search text",
                         "name": "query",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "enum": [
@@ -56,8 +223,13 @@ var doc = `{
                         "type": "string",
                         "description": "Resource type",
                         "name": "type",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Created by",
+                        "name": "created_by",
+                        "in": "query"
                     },
                     {
                         "type": "integer",
@@ -85,6 +257,12 @@ var doc = `{
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/utils.Error"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorResponse"
                         }
                     }
                 }
@@ -215,9 +393,103 @@ var doc = `{
                     }
                 }
             }
+        },
+        "/resources/:id/inquire": {
+            "post": {
+                "description": "This endpoint sends a message to the resource owner",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "resources"
+                ],
+                "summary": "Sends a message to the user about a resource",
+                "operationId": "inquireAboutResource",
+                "parameters": [
+                    {
+                        "description": "Message to send",
+                        "name": "message",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/web.InquireAboutResourceRequest"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "Resource id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "202": {},
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Error"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/:id": {
+            "get": {
+                "description": "Returns information about the given user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Returns information about a user",
+                "operationId": "getUserInfo",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "User id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/web.UserInfoResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/utils.Error"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "errors.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "statusCode": {
+                    "type": "integer"
+                }
+            }
+        },
         "utils.Error": {
             "type": "object",
             "properties": {
@@ -233,19 +505,16 @@ var doc = `{
                 "description": {
                     "type": "string"
                 },
-                "exchangeValue": {
-                    "type": "integer"
-                },
-                "necessityLevel": {
-                    "type": "integer"
-                },
                 "summary": {
                     "type": "string"
                 },
-                "timeSensitivity": {
+                "type": {
                     "type": "integer"
                 },
-                "type": {
+                "valueInHoursFrom": {
+                    "type": "integer"
+                },
+                "valueInHoursTo": {
                     "type": "integer"
                 }
             }
@@ -268,6 +537,17 @@ var doc = `{
                 }
             }
         },
+        "web.GetLatestThreadsResponse": {
+            "type": "object",
+            "properties": {
+                "threads": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/web.Thread"
+                    }
+                }
+            }
+        },
         "web.GetResourceResponse": {
             "type": "object",
             "properties": {
@@ -277,28 +557,76 @@ var doc = `{
                 }
             }
         },
-        "web.Resource": {
+        "web.GetTopicMessagesResponse": {
             "type": "object",
             "properties": {
-                "description": {
+                "messages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/web.Message"
+                    }
+                }
+            }
+        },
+        "web.InquireAboutResourceRequest": {
+            "type": "object",
+            "properties": {
+                "message": {
                     "type": "string"
-                },
-                "exchangeValue": {
-                    "type": "integer"
+                }
+            }
+        },
+        "web.Message": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
                 },
-                "necessityLevel": {
-                    "type": "integer"
+                "sentAt": {
+                    "type": "string"
+                },
+                "sentBy": {
+                    "type": "string"
+                },
+                "sentByUsername": {
+                    "type": "string"
+                },
+                "topicId": {
+                    "type": "string"
+                }
+            }
+        },
+        "web.Resource": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "createdBy": {
+                    "type": "string"
+                },
+                "createdById": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
                 },
                 "summary": {
                     "type": "string"
                 },
-                "timeSensitivity": {
+                "type": {
                     "type": "integer"
                 },
-                "type": {
+                "valueInHoursFrom": {
+                    "type": "integer"
+                },
+                "valueInHoursTo": {
                     "type": "integer"
                 }
             }
@@ -323,25 +651,56 @@ var doc = `{
                 }
             }
         },
+        "web.SendMessageRequest": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "web.Thread": {
+            "type": "object",
+            "properties": {
+                "hasUnreadMessages": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "lastChars": {
+                    "type": "string"
+                },
+                "lastMessageAt": {
+                    "type": "string"
+                },
+                "lastMessageUserId": {
+                    "type": "string"
+                },
+                "lastMessageUsername": {
+                    "type": "string"
+                },
+                "recipientId": {
+                    "type": "string"
+                }
+            }
+        },
         "web.UpdateResourcePayload": {
             "type": "object",
             "properties": {
                 "description": {
                     "type": "string"
                 },
-                "exchangeValue": {
-                    "type": "integer"
-                },
-                "necessityLevel": {
-                    "type": "integer"
-                },
                 "summary": {
                     "type": "string"
                 },
-                "timeSensitivity": {
+                "type": {
                     "type": "integer"
                 },
-                "type": {
+                "valueInHoursFrom": {
+                    "type": "integer"
+                },
+                "valueInHoursTo": {
                     "type": "integer"
                 }
             }
@@ -363,6 +722,31 @@ var doc = `{
                     "$ref": "#/definitions/web.Resource"
                 }
             }
+        },
+        "web.UserAuthResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "isAuthenticated": {
+                    "type": "boolean"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "web.UserInfoResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
         }
     }
 }`
@@ -382,7 +766,7 @@ var SwaggerInfo = swaggerInfo{
 	Host:        "127.0.0.1:8585",
 	BasePath:    "/api/v1",
 	Schemes:     []string{},
-	Title:       "resources api",
+	Title:       "commonpool api",
 	Description: "resources api",
 }
 

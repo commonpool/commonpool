@@ -17,3 +17,5 @@
 .env
 .env-export
 tmp/
+
+**/realworld_test.db

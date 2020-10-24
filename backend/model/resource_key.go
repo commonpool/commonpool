@@ -1,6 +1,9 @@
 package model
 
-import uuid "github.com/satori/go.uuid"
+import (
+	errs "github.com/commonpool/backend/errors"
+	uuid "github.com/satori/go.uuid"
+)
 
 type ResourceKey struct {
 	uuid uuid.UUID
@@ -15,7 +18,8 @@ func NewResourceKey() ResourceKey {
 func ParseResourceKey(key string) (*ResourceKey, error) {
 	resourceUuid, err := uuid.FromString(key)
 	if err != nil {
-		return nil, err
+		response := errs.ErrInvalidResourceKey(key)
+		return nil, &response
 	}
 	resourceKey := ResourceKey{
 		uuid: resourceUuid,

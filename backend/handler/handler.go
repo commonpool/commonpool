@@ -2,23 +2,24 @@ package handler
 
 import (
 	"github.com/commonpool/backend/auth"
+	"github.com/commonpool/backend/chat"
 	"github.com/commonpool/backend/resource"
 )
 
 type Handler struct {
 	resourceStore resource.Store
-	userStore     auth.Store
+	authStore     auth.Store
 	authorization auth.IAuth
-	//userStore    user.Store
+	chatStore     chat.Store
+	//authStore    user.Store
 	//articleStore article.Store
 }
 
-func NewHandler(store resource.Store, authStore auth.Store, authorization auth.IAuth) *Handler {
+func NewHandler(rs resource.Store, as auth.Store, cs chat.Store, auth auth.IAuth) *Handler {
 	return &Handler{
-		resourceStore: store,
-		authorization: authorization,
-		userStore:     authStore,
-		//userStore:    us,
-		//articleStore: as,
+		resourceStore: rs,
+		authorization: auth,
+		authStore:     as,
+		chatStore:     cs,
 	}
 }

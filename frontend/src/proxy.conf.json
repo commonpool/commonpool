@@ -3,5 +3,10 @@
     "target": "http://localhost:8585",
     "secure": false,
     "changeOrigin": true
+  },
+  "/swagger": {
+    "target": "http://localhost:8585",
+    "secure": false,
+    "changeOrigin": true
   }
 }

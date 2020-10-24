@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/commonpool/backend/auth"
+	"github.com/commonpool/backend/chat"
 	"github.com/commonpool/backend/config"
 	_ "github.com/commonpool/backend/docs"
 	"github.com/commonpool/backend/handler"
@@ -21,10 +22,11 @@ var (
 	d  *gorm.DB
 	rs resource.Store
 	as auth.Store
+	cs chat.Store
 	e  *echo.Echo
 )
 
-// @title resources api
+// @title commonpool api
 // @version 1.0
 // @description resources api
 // @termsOfService http://swagger.io/terms
@@ -39,17 +41,18 @@ func main() {
 
 	r := router.NewRouter()
 
-	r.GET("/swagger/*", echoSwagger.WrapHandler)
+	r.GET("/api/swagger/*", echoSwagger.WrapHandler)
 
 	db := getDb(appConfig)
 	store.AutoMigrate(db)
 	rs = store.NewResourceStore(db)
 	as = store.NewAuthStore(db)
+	cs := store.NewChatStore(db)
 
 	v1 := r.Group("/api/v1")
 	authorization := auth.NewAuth(v1, appConfig, "/api/v1", as)
 
-	h := handler.NewHandler(rs, as, authorization)
+	h := handler.NewHandler(rs, as, cs, authorization)
 
 	h.Register(v1)
 

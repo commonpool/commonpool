@@ -2,47 +2,59 @@ package errors
 
 import (
 	"fmt"
+	"github.com/labstack/echo/v4"
 	"net/http"
 )
 
-const (
-	ErrUserNotFoundMsg                 = "User with id %s could not be found"
-	ErrUserNotFoundCode                = "USR-1000"
-	ErrResourceNotFoundMsg             = "Resource with id %s could not be found"
-	ErrResourceNotFoundCode            = "RES-PER-1000"
-	ErrCreateResourceCannotBind        = "Cannot process resource"
-	ErrCreateResourceCannotBindCode    = "RES-WEB-1000"
-	ErrUpdateResourceCannotBind        = "Cannot process resource"
-	ErrUpdateResourceCannotBindCode    = "RES-WEB-1001"
-	ErrSummaryEmptyOrNull              = "Summary cannot be empty or null"
-	ErrSummaryEmptyOrNullCode          = "WEB-VAL-1000"
-	ErrSummaryTooLong                  = "Summary is too long"
-	ErrSummaryTooLongCode              = "WEB-VAL-1001"
-	ErrDescriptionTooLong              = "Description is too long"
-	ErrDescriptionTooLongCode          = "WEB-VAL-1002"
-	ErrUuidParseError                  = "Could not parse uuid"
-	ErrUuidParseErrorCode              = "WEB-VAL-1003"
-	ErrInternalServerMsg               = "Internal server error"
-	ErrInternalServerCode              = "S5000"
-	ErrExchangeValueTooLow             = "Exchange value too low"
-	ErrExchangeValueTooLowCode         = "WEB-VAL-1004"
-	ErrExchangeValueTooHigh            = "Exchange value too high"
-	ErrExchangeValueTooHighCode        = "WEB-VAL-1005"
-	ErrTimeSensitivityValueTooLow      = "TimeSensitivity value too low"
-	ErrTimeSensitivityValueTooLowCode  = "WEB-VAL-1006"
-	ErrTimeSensitivityValueTooHigh     = "TimeSensitivity value too high"
-	ErrTimeSensitivityValueTooHighCode = "WEB-VAL-1007"
-	ErrNecessityLevelValueTooLow       = "NecessityLevel value too low"
-	ErrNecessityLevelValueTooLowCode   = "WEB-VAL-1008"
-	ErrNecessityLevelValueTooHigh      = "NecessityLevel value too high"
-	ErrNecessityLevelValueTooHighCode  = "WEB-VAL-1009"
-	ErrInvalidResourceType             = "Invalid resource type"
-	ErrInvalidResourceTypeCode         = "WEB-VAL-1010"
-	ErrInvalidTake                     = "'take' query parameter cannot be converted to int"
-	ErrInvalidTakeCode                 = "WEB-VAL-1011"
-	ErrInvalidSkip                     = "'skip' query parameter cannot be converted to int"
-	ErrInvalidSkipCode                 = "WEB-VAL-1012"
+var (
+	ErrUserNotFound = func(user string) ErrorResponse {
+		return NewError(fmt.Sprintf("user with id '%s' could not be found", user), "ErrUserNotFound", http.StatusNotFound)
+	}
+	ErrResourceNotFound = func(resource string) ErrorResponse {
+		return NewError(fmt.Sprintf("resource with id '%s' could not be found", resource), "ErrResourceNotFound", http.StatusNotFound)
+	}
+	ErrCreateResourceBadRequest = func(err error) ErrorResponse {
+		return NewError("could not process create resource request: "+err.Error(), "ErrCreateResourceBadRequest", http.StatusBadRequest)
+	}
+	ErrUpdateResourceBadRequest = func(err error) ErrorResponse {
+		return NewError("could not process update resource request: "+err.Error(), "ErrUpdateResourceBadRequest", http.StatusBadRequest)
+	}
+	ErrSendResourceMsgBadRequest = func(err error) ErrorResponse {
+		return NewError("could not process send message request: "+err.Error(), "ErrSendResourceMsgBadRequest", http.StatusBadRequest)
+	}
+	ErrValidation = func(msg string) ErrorResponse {
+		return NewError("validation error: "+msg, "ErrValidation", http.StatusBadRequest)
+	}
+	ErrInvalidResourceKey = func(key string) ErrorResponse {
+		return NewError(fmt.Sprintf("invalid resource key: '%s'", key), "ErrInvalidResourceKey", http.StatusBadRequest)
+	}
+	ErrParseSkip = func(err string) ErrorResponse {
+		return NewError(fmt.Sprintf("cannot parse skip: '%s'", err), "ErrParseSkip", http.StatusBadRequest)
+	}
+	ErrParseTake = func(err string) ErrorResponse {
+		return NewError(fmt.Sprintf("cannot parse take: '%s'", err), "ErrParseTake", http.StatusBadRequest)
+	}
+	ErrParseResourceType = func(resType string) ErrorResponse {
+		return NewError(fmt.Sprintf("cannot parse resource type '%s'", resType), "ErrParseResourceType", http.StatusBadRequest)
+	}
+	ErrCannotConvertToInt = func(int string, err string) ErrorResponse {
+		return NewError(fmt.Sprintf("cannot convert '%s' to integer: %s", int, err), "ErrCannotParseInt", http.StatusBadRequest)
+	}
+	ErrCannotInquireAboutOwnResource = func() ErrorResponse {
+		return NewError("cannot inquire about your own resource", "ErrCannotInquireAboutOwnResource", http.StatusForbidden)
+	}
+	ErrInvalidTopicId = func(threadId string) ErrorResponse {
+		return NewError(fmt.Sprintf("invalid thread id: '%s'", threadId), "ErrInvalidTopicId", http.StatusBadRequest)
+	}
 )
+
+func NewError(message string, code string, statusCode int) ErrorResponse {
+	return ErrorResponse{
+		Message:    message,
+		Code:       code,
+		StatusCode: statusCode,
+	}
+}
 
 type ErrorResponse struct {
 	Message    string
@@ -53,36 +65,6 @@ type ErrorResponse struct {
 func (r *ErrorResponse) Error() string {
 	return r.Message
 }
-
-func NewError(message string, code string, statusCode int) *ErrorResponse {
-	return &ErrorResponse{
-		Message:    message,
-		Code:       code,
-		StatusCode: statusCode,
-	}
-}
-
-func NewResourceNotFoundError(key string) *ErrorResponse {
-	return NewError(
-		fmt.Sprintf(ErrResourceNotFoundMsg, key),
-		ErrResourceNotFoundCode,
-		http.StatusNotFound)
-}
-
-func NewUserNotFoundError(key string) *ErrorResponse {
-	return NewError(
-		fmt.Sprintf(ErrUserNotFoundMsg, key),
-		ErrUserNotFoundCode,
-		http.StatusNotFound)
-}
-
-func NewInternalServerError() *ErrorResponse {
-	return NewError(
-		ErrInternalServerMsg,
-		ErrInternalServerCode,
-		http.StatusInternalServerError)
-}
-
 func (r *ErrorResponse) IsNotFoundError() bool {
 	return r.StatusCode == http.StatusNotFound
 }
@@ -93,4 +75,8 @@ func IsNotFoundError(err error) bool {
 		return false
 	}
 	return res.StatusCode == http.StatusNotFound
+}
+
+func ReturnErrorResponse(c echo.Context, err ErrorResponse) error {
+	return c.JSON(err.StatusCode, err)
 }

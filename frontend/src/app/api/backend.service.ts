@@ -5,7 +5,13 @@ import {
   ErrorResponse,
   SessionResponse,
   SearchResourceRequest,
-  SearchResourcesResponse, GetResourceResponse, UserInfoResponse, UpdateResourceResponse, UpdateResourceRequest
+  SearchResourcesResponse,
+  GetResourceResponse,
+  UserInfoResponse,
+  UpdateResourceResponse,
+  UpdateResourceRequest,
+  GetThreadsResponse,
+  GetMessagesResponse
 } from './models';
 import {Observable, of, throwError} from 'rxjs';
 import {HttpClient, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest} from '@angular/common/http';
@@ -88,7 +94,7 @@ export class BackendService {
     if (request.type !== undefined) {
       params.type = request.type.toString();
     }
-    if (request.query !== undefined){
+    if (request.query !== undefined) {
       params.query = request.query;
     }
     console.log(params);
@@ -144,6 +150,58 @@ export class BackendService {
         }
         const body = res.body as UserInfoResponse;
         return new UserInfoResponse(body.id, body.username);
+      })
+    );
+  }
+
+  getThreads(skip: number, take: number): Observable<GetThreadsResponse> {
+    return this.http.get(`${environment.apiUrl}/api/v1/chat/threads`, {
+      observe: 'response'
+    }).pipe(
+      map((res) => {
+        if (res.status !== 200) {
+          throwError(ErrorResponse.fromHttpResponse(res));
+        }
+        return GetThreadsResponse.from(res.body as GetThreadsResponse);
+      })
+    );
+  }
+
+  getMessages(topic: string, skip: number, take: number): Observable<GetMessagesResponse> {
+    return this.http.get(`${environment.apiUrl}/api/v1/chat/messages?topic=${topic}&skip=${skip}&take=${take}`, {
+      observe: 'response'
+    }).pipe(
+      map((res) => {
+        if (res.status !== 200) {
+          throwError(ErrorResponse.fromHttpResponse(res));
+        }
+        return GetMessagesResponse.from(res.body as GetMessagesResponse);
+      })
+    );
+  }
+
+  inquireAboutResource(resource: string, content: string): Observable<void> {
+    return this.http.post(`${environment.apiUrl}/api/v1/resources/${resource}/inquire`, {message: content}, {
+      observe: 'response'
+    }).pipe(
+      map((res) => {
+        if (res.status !== 200) {
+          throwError(ErrorResponse.fromHttpResponse(res));
+        }
+        return;
+      })
+    );
+  }
+
+  sendMessage(topic: string, content: string): Observable<void> {
+    return this.http.post(`${environment.apiUrl}/api/v1/chat/${topic}`, {message: content}, {
+      observe: 'response'
+    }).pipe(
+      map((res) => {
+        if (res.status !== 202) {
+          throwError(ErrorResponse.fromHttpResponse(res));
+        }
+        return;
       })
     );
   }

@@ -1,0 +1,23 @@
+<div *ngIf="threads$ | async; let threads">
+  <div *ngIf="threads.length > 0">
+    <a *ngFor="let thread of threads"
+       [routerLink]="'/messages/' + thread.topicId"
+       [ngClass]="{'unread' : thread.hasUnreadMessages}"
+       class="thread"
+    >
+      <div class="title">{{thread.title}}</div>
+      <div class="last-message">
+        <div class="last-message-author">
+        {{thread.lastMessageUsername}}:
+        </div>
+        <div class="last-message-preview">
+          {{thread.lastChars}}
+        </div>
+      </div>
+
+    </a>
+  </div>
+  <div *ngIf="threads.length ===0 ">
+    No conversations!
+  </div>
+</div>

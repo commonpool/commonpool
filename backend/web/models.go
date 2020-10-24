@@ -2,7 +2,6 @@ package web
 
 import (
 	"github.com/commonpool/backend/model"
-	"github.com/labstack/echo/v4"
 	"time"
 )
 
@@ -72,6 +71,43 @@ type UserInfoResponse struct {
 	Username string `json:"username"`
 }
 
-func (r *CreateResourceRequest) bind(c echo.Context) {
+type GetLatestThreadsResponse struct {
+	Threads []Thread `json:"threads"`
+}
 
+type Thread struct {
+	TopicID             string    `json:"topicId"`
+	RecipientID         string    `json:"recipientId"`
+	LastChars           string    `json:"lastChars"`
+	HasUnreadMessages   bool      `json:"hasUnreadMessages"`
+	LastMessageAt       time.Time `json:"lastMessageAt"`
+	LastMessageUsername string    `json:"lastMessageUsername"`
+	LastMessageUserId   string    `json:"lastMessageUserId"`
+	Title               string    `json:"title"`
+}
+
+type InquireAboutResourceRequest struct {
+	Message string `json:"message"`
+}
+
+type SendMessageRequest struct {
+	Message string `json:"message"`
+}
+
+type GetLatestMessageThreadsResponse struct {
+	Messages []Message `json:"messages"`
+}
+
+type Message struct {
+	ID             string    `json:"id"`
+	TopicID        string    `json:"topicId"`
+	SentBy         string    `json:"sentBy"`
+	SentByUsername string    `json:"sentByUsername"`
+	SentByMe       bool      `json:"sentByMe"`
+	SentAt         time.Time `json:"sentAt"`
+	Content        string    `json:"content"`
+}
+
+type GetTopicMessagesResponse struct {
+	Messages []Message `json:"messages"`
 }

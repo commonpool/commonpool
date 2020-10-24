@@ -24,6 +24,7 @@ const (
 	oauthCallbackPath      = "/oauth2/callback"
 	SubjectKey             = "auth-subject"
 	SubjectUsernameKey     = "auth-preferred-username"
+	SubjectEmailKey        = "auth-email"
 	IsAuthenticatedKey     = "is-authenticated"
 	state                  = "someState"
 )
@@ -32,6 +33,7 @@ const (
 type UserSession struct {
 	Username        string
 	Subject         string
+	Email           string
 	IsAuthenticated bool
 }
 
@@ -90,12 +92,14 @@ func (a *OidcAuthenticator) GetAuthUserSession(c echo.Context) UserSession {
 		return UserSession{
 			Username:        "",
 			Subject:         "",
+			Email:           "",
 			IsAuthenticated: false,
 		}
 	}
 	return UserSession{
 		Username:        c.Get(SubjectUsernameKey).(string),
 		Subject:         c.Get(SubjectKey).(string),
+		Email:           c.Get(SubjectEmailKey).(string),
 		IsAuthenticated: isAuthenticated,
 	}
 }
@@ -174,6 +178,8 @@ func (a *OidcAuthenticator) Authenticate(redirectOnError bool) echo.MiddlewareFu
 				"refresh_token": []string{refreshTokenFromCookie},
 				"scope":         []string{"openid email profile"},
 			}
+
+
 
 			// post-ing to identity server
 			res, err := http.PostForm(a.oidcProvider.Endpoint().TokenURL, formValues)
@@ -254,6 +260,7 @@ func saveAuthenticatedUser(c echo.Context, store Store, sub string, username str
 	SetIsAuthenticated(c, true)
 	setSubject(c, sub)
 	setUsername(c, username)
+	setEmail(c, email)
 	SetIsAuthenticated(c, true)
 	return saveUserInfo(store, sub, email, username)
 }
@@ -517,17 +524,20 @@ func setSubject(e echo.Context, subject string) {
 func setUsername(e echo.Context, username string) {
 	e.Set(SubjectUsernameKey, username)
 }
+func setEmail(e echo.Context, email string) {
+	e.Set(SubjectEmailKey, email)
+}
 func SetIsAuthenticated(e echo.Context, isAuthenticated bool) {
 	e.Set(IsAuthenticatedKey, isAuthenticated)
 }
 
 type MockAuthorizer struct {
-	IsAuthorized          bool
-	MockAuthenticatedUser func() UserSession
+	IsAuthorized       bool
+	MockCurrentSession func() UserSession
 }
 
 func (a *MockAuthorizer) GetAuthUserSession(c echo.Context) UserSession {
-	return a.MockAuthenticatedUser()
+	return a.MockCurrentSession()
 }
 
 var _ IAuth = &MockAuthorizer{}

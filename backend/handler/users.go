@@ -17,17 +17,17 @@ import (
 // @Produce json
 // @Success 200 {object} web.UserInfoResponse
 // @Failure 400 {object} utils.Error
-// @Router /resources [get]
+// @Router /users/:id [get]
 func (h *Handler) GetUserInfo(c echo.Context) error {
 
 	userId := c.Param("id")
 	userKey := model.NewUserKey(userId)
 
 	user := &model.User{}
-	err := h.userStore.GetByKey(userKey, user)
+	err := h.authStore.GetByKey(userKey, user)
 
 	if err != nil {
-		// todo
+		return NewErrResponse(c, err)
 	}
 
 	response := web.UserInfoResponse{

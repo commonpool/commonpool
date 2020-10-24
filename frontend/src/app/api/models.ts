@@ -1,5 +1,5 @@
 import {HttpResponse} from '@angular/common/http';
-import {formatDistanceToNow} from 'date-fns';
+import {formatDistanceToNow, format} from 'date-fns';
 
 export enum ResourceType {
   Offer = 0,
@@ -122,10 +122,15 @@ export class ErrorResponse {
   }
 
   static fromHttpResponse(res: HttpResponse<any>): ErrorResponse {
-    if (res.body.code && res.body.message && res.body.statusCode) {
+    if (res?.body?.code && res?.body?.message && res?.body?.statusCode) {
       return new ErrorResponse(res.body.message, res.body.code, res.body.statusCode);
     }
-    return new ErrorResponse(res.body, '', res.status);
+    if (res.body) {
+      return new ErrorResponse(res.body, '', res.status);
+    }
+    return new ErrorResponse(res.statusText, '', res.status);
+    ;
+
   }
 }
 
@@ -133,3 +138,98 @@ export class UserInfoResponse {
   constructor(public id: string, public username: string) {
   }
 }
+
+
+export class GetThreadsRequest {
+  constructor(public skip: number, public take: number) {
+  }
+}
+
+export class Thread {
+  constructor(
+    public title: string,
+    public hasUnreadMessages: boolean,
+    public topicId: string,
+    public lastChars: string,
+    public lastMessageAt: string,
+    public lastMessageUserId: string,
+    public lastMessageUsername: string) {
+  }
+
+  static from(thread: Thread) {
+    return new Thread(
+      thread.title,
+      thread.hasUnreadMessages,
+      thread.topicId,
+      thread.lastChars,
+      thread.lastMessageAt,
+      thread.lastMessageUserId,
+      thread.lastMessageUsername);
+  }
+}
+
+export class GetThreadsResponse {
+  constructor(public threads: Thread[]) {
+  }
+
+  static from(response: GetThreadsResponse) {
+    return new GetThreadsResponse(response.threads.map(t => Thread.from(t)));
+  }
+}
+
+export class GetMessagesRequest {
+  constructor(public skip: number, public take: number, public topic: string) {
+  }
+}
+
+export class Message {
+  constructor(
+    public content: string,
+    public id: string,
+    public sentAt: string,
+    public sentBy: string,
+    public sentByUsername: string,
+    public topicId: string,
+    public sentByMe: boolean) {
+    const date = new Date(Date.parse(this.sentAt));
+    this.sentAtDistance = formatDistanceToNow(date, {addSuffix: true});
+    this.sentAtHour = format(date, 'hh');
+    this.sentAtDate = date;
+  }
+
+  public sentAtDistance: string;
+  public sentAtHour: string;
+  public sentAtDate: Date;
+
+  static from(message: Message) {
+    return new Message(
+      message.content,
+      message.id,
+      message.sentAt,
+      message.sentBy,
+      message.sentByUsername,
+      message.topicId,
+      message.sentByMe);
+  }
+}
+
+export class GetMessagesResponse {
+  constructor(public messages: Message[]) {
+  }
+
+  static from(response: GetMessagesResponse): GetMessagesResponse {
+    return new GetMessagesResponse(response.messages.map(m => Message.from(m)));
+  }
+}
+
+export class SendMessageRequest {
+  constructor(public topic: string, public content: string) {
+  }
+}
+
+export class InquireAboutResourceRequest {
+  constructor(public resourceId: string, public content: string) {
+  }
+}
+
+

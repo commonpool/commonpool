@@ -43,3 +43,7 @@ func (r *Resource) GetKey() ResourceKey {
 		uuid: r.ID,
 	}
 }
+
+func (r *Resource) GetUserKey() UserKey {
+	return NewUserKey(r.CreatedBy)
+}

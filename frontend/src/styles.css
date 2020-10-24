@@ -3,3 +3,8 @@
 * {
   font-family: Monaco, "Lucida Console", monospace;
 }
+
+body, html {
+  margin: 0;
+  padding: 0;
+}
