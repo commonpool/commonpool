@@ -108,28 +108,95 @@ func (h *Handler) GetLoggedInUserMemberships(c echo.Context) error {
 
 	memberships := getMemberships.Memberships
 
-	groupNames, err := h.getGroupNames(memberships)
+	groupNames, err := h.getGroupNamesForMemberships(memberships)
 	if err != nil {
 		return NewErrResponse(c, err)
 	}
 
-	response := web.NewGetUserMembershipsResponse(getMemberships.Memberships, groupNames)
+	userNames, err := h.getUserNamesForMemberships(memberships)
+	if err != nil {
+		return NewErrResponse(c, err)
+	}
+
+	response := web.NewGetUserMembershipsResponse(getMemberships.Memberships, groupNames, userNames)
 	return c.JSON(http.StatusOK, response)
 
 }
 
-func (h *Handler) getGroupNames(memberships []model.Membership) (web.GroupNames, error) {
-	var groupNames = web.GroupNames{}
+// GetGroup godoc
+// @Summary Gets a group memberships
+// @Description Gets the members of a group
+// @ID getGroupMemberships
+// @Tags groups
+// @Param id path string true "ID of the group" (format:uuid)
+// @Accept json
+// @Produce json
+// @Success 200 {object} web.GetGroupMembershipsResponse
+// @Failure 400 {object} utils.Error
+// @Router /groups/:id/memberships [get]
+func (h *Handler) GetGroupMemberships(c echo.Context) error {
+
+	groupKey, err := model.ParseGroupKey(c.Param("id"))
+	if err != nil {
+		return NewErrResponse(c, err)
+	}
+
+	var getGroupRequest = group.NewGetGroupRequest(groupKey)
+	var getGroup = h.groupStore.GetGroup(getGroupRequest)
+	if getGroup.Error != nil {
+		return NewErrResponse(c, getGroup.Error)
+	}
+
+	getGroupMembershipsRequest := group.NewGetMembershipsForGroupRequest(groupKey)
+	getGroupMemberships := h.groupStore.GetMembershipsForGroup(getGroupMembershipsRequest)
+	if getGroupMemberships.Error != nil {
+		return NewErrResponse(c, err)
+	}
+
+	memberships := getGroupMemberships.Memberships
+
+	userNames, err := h.getUserNamesForMemberships(memberships)
+	if err != nil {
+		return NewErrResponse(c, err)
+	}
+
+	groupNames, err := h.getGroupNamesForMemberships(memberships)
+	if err != nil {
+		return NewErrResponse(c, err)
+	}
+
+	response := web.NewGetUserMembershipsResponse(memberships, groupNames, userNames)
+	return c.JSON(http.StatusOK, response)
+
+}
+
+func (h *Handler) getUserNamesForMemberships(memberships []model.Membership) (model.UserNames, error) {
+	var userNames = model.UserNames{}
+	for _, membership := range memberships {
+		userKey := membership.GetUserKey()
+		_, ok := userNames[userKey]
+		if !ok {
+			username, err := h.authStore.GetUsername(userKey)
+			if err != nil {
+				return userNames, err
+			}
+			userNames[userKey] = username
+		}
+	}
+	return userNames, nil
+}
+
+func (h *Handler) getGroupNamesForMemberships(memberships []model.Membership) (model.GroupNames, error) {
+	var groupNames = model.GroupNames{}
 	for _, membership := range memberships {
 		groupKey := membership.GetGroupKey()
 		_, ok := groupNames[groupKey]
 		if !ok {
-			getGroupRequest := group.NewGetGroupRequest(groupKey)
-			getGroup := h.groupStore.GetGroup(getGroupRequest)
+			getGroup := h.groupStore.GetGroup(group.NewGetGroupRequest(groupKey))
 			if getGroup.Error != nil {
 				return groupNames, getGroup.Error
 			}
-			groupNames[getGroup.Group.GetKey()] = getGroup.Group.Name
+			groupNames[groupKey] = getGroup.Group.Name
 		}
 	}
 	return groupNames, nil

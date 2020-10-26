@@ -27,3 +27,11 @@ type Membership struct {
 func (m *Membership) GetGroupKey() GroupKey {
 	return NewGroupKey(m.GroupID)
 }
+
+func (m *Membership) GetUserKey() UserKey {
+	return NewUserKey(m.UserID)
+}
+
+func (m *Membership) GetKey() MembershipKey {
+	return NewMembershipKey(m.GetGroupKey(), m.GetUserKey())
+}

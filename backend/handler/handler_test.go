@@ -22,10 +22,7 @@ var (
 	as         auth.Store
 	cs         chat.Store
 	ts         trading.Store
-<<<<<<< HEAD
 	gs         group.Store
-=======
->>>>>>> master
 	h          *Handler
 	e          *echo.Echo
 	userSub1   = "user-1-sub"
@@ -65,10 +62,7 @@ func setup() {
 	as = store.NewAuthStore(d)
 	cs = store.NewChatStore(d)
 	ts = store.NewTradingStore(d)
-<<<<<<< HEAD
 	gs := store.NewGroupStore(d)
-=======
->>>>>>> master
 
 	// Mock authorization
 	authorizer := auth.NewTestAuthorizer()
@@ -81,12 +75,8 @@ func setup() {
 		return *authenticatedUser
 	}
 
-<<<<<<< HEAD
 	// Create handler
 	h = NewHandler(rs, as, cs, ts, gs, authorizer)
-=======
-	h = NewHandler(rs, as, cs, ts, authorizer)
->>>>>>> master
 
 	// Create users
 	for _, user := range users {

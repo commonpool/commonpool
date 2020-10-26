@@ -213,6 +213,15 @@ func (g *GroupStore) GetMembershipsForUser(request group.GetMembershipsForUserRe
 	}
 }
 
+func (g *GroupStore) GetMembershipsForGroup(request group.GetMembershipsForGroupRequest) group.GetMembershipsForGroupResponse {
+	var memberships []model.Membership
+	err := g.db.Where("group_id = ?", request.GroupKey.ID.String()).Find(&memberships).Error
+	return group.GetMembershipsForGroupResponse{
+		Error:       err,
+		Memberships: memberships,
+	}
+}
+
 func NewGroupStore(db *gorm.DB) *GroupStore {
 	return &GroupStore{
 		db: db,
