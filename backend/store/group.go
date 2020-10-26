@@ -113,7 +113,7 @@ func (g *GroupStore) Invite(request group.InviteRequest) group.InviteResponse {
 		GroupConfirmed: request.InvitedBy == group.GroupParty,
 		UserConfirmed:  request.InvitedBy == group.UserParty,
 	}
-	err := g.db.Create(membership).Error
+	err := g.db.Create(&membership).Error
 	return group.InviteResponse{
 		Error: err,
 	}
@@ -219,6 +219,19 @@ func (g *GroupStore) GetMembershipsForGroup(request group.GetMembershipsForGroup
 	return group.GetMembershipsForGroupResponse{
 		Error:       err,
 		Memberships: memberships,
+	}
+}
+
+func (g *GroupStore) GetMembership(request group.GetMembershipRequest) group.GetMembershipResponse {
+	var membership model.Membership
+	err := g.db.First(&membership, "user_id = ? AND group_id = ?",
+		request.MembershipKey.UserKey.String(),
+		request.MembershipKey.GroupKey.ID.String()).
+		Error
+
+	return group.GetMembershipResponse{
+		Error:      err,
+		Membership: membership,
 	}
 }
 

@@ -15,7 +15,8 @@
               <span>
                 <span *ngIf="member.isOwner">(owner)</span>
                 <span *ngIf="!member.isOwner && member.isAdmin">(admin)</span>
-                <span *ngIf="!member.isOwner && !member.isAdmin && member.isAdmin">(member)</span>
+                <span *ngIf="!member.isOwner && !member.isAdmin && member.isMember">(member)</span>
+                <span *ngIf="!member.groupConfirmed || !member.userConfirmed">(pending)</span>
               </span>
               <small class="float-right text-muted">joined {{member.createdAtDistance}}</small>
             </li>
@@ -33,11 +34,10 @@
           <div class="card-body">
             <div>
               <div class="d-inline-block">
-                <app-user-picker></app-user-picker>
+                <app-user-picker [fetchUsers]="fetchUsers" [(ngModel)]="inviteUserId"></app-user-picker>
               </div>
             </div>
-
-            <button class="btn btn-primary mt-3">Invite</button>
+            <button class="btn btn-primary mt-3" (click)="inviteUser()">Invite</button>
           </div>
         </div>
       </div>

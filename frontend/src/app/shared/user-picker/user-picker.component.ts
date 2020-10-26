@@ -1,9 +1,11 @@
 import {Component, forwardRef, Input, OnInit} from '@angular/core';
-import {combineLatest, of, Subject} from 'rxjs';
-import {map, pluck, startWith, switchMap, tap, withLatestFrom} from 'rxjs/operators';
+import {combineLatest, Observable, of, Subject} from 'rxjs';
+import {map, pluck, startWith, switchMap, tap} from 'rxjs/operators';
 import {BackendService} from '../../api/backend.service';
 import {SearchUsersQuery, UserInfoResponse} from '../../api/models';
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
+
+export type UserPickerBackend = (skip: number, take: number, query: string) => Observable<UserInfoResponse[]>;
 
 @Component({
   selector: 'app-user-picker',
@@ -26,14 +28,14 @@ export class UserPickerComponent implements OnInit, ControlValueAccessor {
   private predicateSubject = new Subject<(val: string) => boolean>();
   private predicate$ = this.predicateSubject.asObservable().pipe(startWith(() => true));
 
+  // This is the control value
+  _selectedUser: string;
+
+
   @Input()
   set predicate(predicate: (val: string) => boolean) {
     this.predicateSubject.next(predicate);
   }
-
-  // This is the control value
-
-  _selectedUser: string;
 
   get selectedUser() {
     return this._selectedUser;
@@ -48,10 +50,9 @@ export class UserPickerComponent implements OnInit, ControlValueAccessor {
   querySubject = new Subject<string>();
   items$ = this.querySubject.asObservable().pipe(
     startWith(''),
-    switchMap(q => this.backend.searchUsers(new SearchUsersQuery(q, 10, 0))),
-    pluck('users'),
+    switchMap(q => this.fetchUsers(0, 10, q)),
     switchMap((users) => combineLatest([of(users), this.predicate$])),
-    tap(([users, predicate]) => {
+    tap(([_, predicate]) => {
       if (this.selectedUser && predicate && !predicate(this.selectedUser)) {
         setTimeout(() => {
           this.selectedUser = undefined;
@@ -62,7 +63,22 @@ export class UserPickerComponent implements OnInit, ControlValueAccessor {
   );
 
 
+  _fetchUsers: UserPickerBackend;
+  @Input()
+  set fetchUsers(val: UserPickerBackend) {
+    this._fetchUsers = val;
+  }
+
+  get fetchUsers() {
+    return this._fetchUsers;
+  }
+
   constructor(private backend: BackendService) {
+    this.fetchUsers = (skip, take, query) => {
+      return this.backend.searchUsers(new SearchUsersQuery(query, take, skip)).pipe(
+        pluck('users')
+      );
+    };
   }
 
   // Begin OnInit implementation

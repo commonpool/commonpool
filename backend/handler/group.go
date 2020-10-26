@@ -1,9 +1,12 @@
 package handler
 
 import (
+	"fmt"
+	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/utils"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	uuid "github.com/satori/go.uuid"
@@ -200,4 +203,140 @@ func (h *Handler) getGroupNamesForMemberships(memberships []model.Membership) (m
 		}
 	}
 	return groupNames, nil
+}
+
+// GetGroup godoc
+// @Summary User picker for group invite
+// @Description Finds users to invite on a group
+// @ID inviteMemberPicker
+// @Tags groups
+// @Param id path string true "ID of the group" (format:uuid)
+// @Accept json
+// @Produce json
+// @Success 200 {object} web.GetGroupMembershipsResponse
+// @Failure 400 {object} utils.Error
+// @Router /groups/:id/invite-member-picker [get]
+func (h *Handler) GetUsersForGroupInvitePicker(c echo.Context) error {
+	skip, err := utils.ParseSkip(c)
+	if err != nil {
+		return NewErrResponse(c, err)
+	}
+
+	take, err := utils.ParseTake(c, 10, 100)
+	if err != nil {
+		return NewErrResponse(c, err)
+	}
+
+	qry := c.QueryParam("query")
+
+	groupKey, err := model.ParseGroupKey(c.Param("id"))
+	if err != nil {
+		return NewErrResponse(c, err)
+	}
+
+	userQuery := auth.UserQuery{
+		Query:      qry,
+		Skip:       skip,
+		Take:       take,
+		NotInGroup: &groupKey,
+	}
+
+	users, err := h.authStore.Find(userQuery)
+	if err != nil {
+		return NewErrResponse(c, err)
+	}
+
+	responseItems := make([]web.UserInfoResponse, len(users))
+	for i, user := range users {
+		responseItems[i] = web.UserInfoResponse{
+			Id:       user.ID,
+			Username: user.Username,
+		}
+	}
+
+	response := web.GetUsersForGroupInvitePickerResponse{
+		Users: responseItems,
+		Take:  take,
+		Skip:  skip,
+	}
+
+	return c.JSON(http.StatusOK, response)
+
+}
+
+// GetGroup godoc
+// @Summary Invite a user to a group
+// @Description Invite a user to a group
+// @ID inviteUser
+// @Tags groups
+// @Param id path string true "ID of the group" (format:uuid)
+// @Param invite body web.InviteUserRequest true "User to invite"
+// @Accept json
+// @Produce json
+// @Success 200 {object} web.InviteUserResponse
+// @Failure 400 {object} utils.Error
+// @Router /groups/:id/invite [get]
+func (h *Handler) InviteUser(c echo.Context) error {
+
+	authUserKey := h.authorization.GetAuthUserKey(c)
+
+	req := web.InviteUserRequest{}
+	if err := c.Bind(&req); err != nil {
+		return NewErrResponse(c, err)
+	}
+
+	// Retrieve the group
+	groupKey, err := model.ParseGroupKey(c.Param("id"))
+	if err != nil {
+		return NewErrResponse(c, err)
+	}
+	getGroup := h.groupStore.GetGroup(group.NewGetGroupRequest(groupKey))
+	if getGroup.Error != nil {
+		return NewErrResponse(c, getGroup.Error)
+	}
+	groupNames := model.GroupNames{
+		groupKey: getGroup.Group.Name,
+	}
+
+	// Retrieve the invited user key
+	userKey := model.NewUserKey(req.UserID)
+	username, err := h.authStore.GetUsername(userKey)
+	if err != nil {
+		return NewErrResponse(c, err)
+	}
+	userNames := model.UserNames{
+		userKey: username,
+	}
+
+	// Check that inviter can actually invite on that group
+	authMembershipKey := model.NewMembershipKey(groupKey, authUserKey)
+	authPermissions := h.groupStore.GetGroupPermissionsForUser(group.NewGetMembershipPermissionsRequest(authMembershipKey))
+	if authPermissions.Error != nil {
+		return NewErrResponse(c, authPermissions.Error)
+	}
+	if !authPermissions.MembershipPermissions.IsAdmin {
+		return NewErrResponse(c, fmt.Errorf("forbidden"))
+	}
+
+	// Create the membership
+	membershipKey := model.NewMembershipKey(groupKey, userKey)
+	invite := h.groupStore.Invite(group.InviteRequest{
+		MembershipKey: membershipKey,
+		InvitedBy:     group.GroupParty,
+	})
+
+	if invite.Error != nil {
+		return NewErrResponse(c, invite.Error)
+	}
+
+	// Retrieve the created membership
+	getMembership := h.groupStore.GetMembership(group.NewGetMembershipRequest(membershipKey))
+	if getMembership.Error != nil {
+		return NewErrResponse(c, getMembership.Error)
+	}
+
+	// Respond to query
+	response := web.NewInviteUserResponse(getMembership.Membership, groupNames, userNames)
+	return c.JSON(http.StatusAccepted, response)
+
 }

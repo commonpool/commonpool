@@ -78,7 +78,6 @@ func NewGetGroupResponse(group model.Group) GetGroupResponse {
 
 type InviteUserRequest struct {
 	UserID  string `json:"userId"`
-	GroupID string `json:"groupId"`
 }
 
 type InviteUserResponse struct {
@@ -93,7 +92,6 @@ func NewInviteUserResponse(membership model.Membership, groupNames model.GroupNa
 
 type ExcludeUserRequest struct {
 	UserID  string `json:"userId"`
-	GroupID string `json:"groupId"`
 }
 
 type ExcludeUserResponse struct {
@@ -168,4 +166,10 @@ func NewGetGroupMembershipsResponse(memberships []model.Membership, groupNames m
 	return GetGroupMembershipsResponse{
 		Memberships: responseMemberships,
 	}
+}
+
+type GetUsersForGroupInvitePickerResponse struct {
+	Users []UserInfoResponse `json:"users"`
+	Take  int                `json:"take"`
+	Skip  int                `json:"skip"`
 }

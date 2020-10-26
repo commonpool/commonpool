@@ -12,6 +12,7 @@ type Store interface {
 	MarkInvitationAsAccepted(request MarkInvitationAsAcceptedRequest) MarkInvitationAsAcceptedResponse
 	MarkInvitationAsDenied(request MarkInvitationAsDeniedRequest) MarkInvitationAsDeniedResponse
 	GetGroupPermissionsForUser(request GetMembershipPermissionsRequest) GetMembershipPermissionsResponse
+	GetMembership(request GetMembershipRequest) GetMembershipResponse
 	GetMembershipsForUser(request GetMembershipsForUserRequest) GetMembershipsForUserResponse
 	GetMembershipsForGroup(request GetMembershipsForGroupRequest) GetMembershipsForGroupResponse
 }
@@ -180,4 +181,19 @@ func NewGetMembershipsForGroupRequest(groupKey model.GroupKey) GetMembershipsFor
 type GetMembershipsForGroupResponse struct {
 	Error       error
 	Memberships []model.Membership
+}
+
+type GetMembershipRequest struct {
+	MembershipKey model.MembershipKey
+}
+
+func NewGetMembershipRequest(membershipKey model.MembershipKey) GetMembershipRequest {
+	return GetMembershipRequest{
+		MembershipKey: membershipKey,
+	}
+}
+
+type GetMembershipResponse struct {
+	Error error
+	Membership model.Membership
 }

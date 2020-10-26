@@ -81,6 +81,11 @@ func (as *AuthStore) Find(query auth.UserQuery) ([]model.User, error) {
 	if query.Query != "" {
 		chain = chain.Where("username like ?", query.Query+"%")
 	}
+	if query.NotInGroup != nil {
+		chain = chain.
+			Joins("left join memberships on memberships.user_id = users.id ").
+			Where("memberships.group_id != ? or memberships.group_id is null", query.NotInGroup.ID.String())
+	}
 
 	err := chain.Offset(query.Skip).Limit(query.Take).Find(&users).Error
 	return users, err

@@ -1,6 +1,9 @@
 package model
 
-import uuid "github.com/satori/go.uuid"
+import (
+	"fmt"
+	uuid "github.com/satori/go.uuid"
+)
 
 type GroupKey struct {
 	ID uuid.UUID
@@ -13,7 +16,7 @@ func NewGroupKey(id uuid.UUID) GroupKey {
 func ParseGroupKey(value string) (GroupKey, error) {
 	offerId, err := uuid.FromString(value)
 	if err != nil {
-		return GroupKey{}, err
+		return GroupKey{}, fmt.Errorf("cannot parse group key: %s", err.Error())
 	}
 	return NewGroupKey(offerId), err
 }

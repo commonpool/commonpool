@@ -11,7 +11,8 @@ type Store interface {
 }
 
 type UserQuery struct {
-	Query string
-	Skip  int
-	Take  int
+	Query      string
+	Skip       int
+	Take       int
+	NotInGroup *model.GroupKey
 }

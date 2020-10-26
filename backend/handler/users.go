@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/utils"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -53,12 +54,12 @@ func (h *Handler) GetUserInfo(c echo.Context) error {
 // @Failure 400 {object} utils.Error
 // @Router /users [get]
 func (h *Handler) SearchUsers(c echo.Context) error {
-	skip, err := ParseSkip(c)
+	skip, err := utils.ParseSkip(c)
 	if err != nil {
 		return NewErrResponse(c, err)
 	}
 
-	take, err := ParseTake(c, 10, 100)
+	take, err := utils.ParseTake(c, 10, 100)
 	if err != nil {
 		return NewErrResponse(c, err)
 	}
