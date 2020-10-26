@@ -22,6 +22,9 @@ var (
 	ErrSendResourceMsgBadRequest = func(err error) ErrorResponse {
 		return NewError("could not process send message request: "+err.Error(), "ErrSendResourceMsgBadRequest", http.StatusBadRequest)
 	}
+	ErrSendOfferBadRequest = func(err error) ErrorResponse {
+		return NewError("could not process send offer request: "+err.Error(), "ErrSendOfferBadRequest", http.StatusBadRequest)
+	}
 	ErrValidation = func(msg string) ErrorResponse {
 		return NewError("validation error: "+msg, "ErrValidation", http.StatusBadRequest)
 	}
@@ -45,6 +48,9 @@ var (
 	}
 	ErrInvalidTopicId = func(threadId string) ErrorResponse {
 		return NewError(fmt.Sprintf("invalid thread id: '%s'", threadId), "ErrInvalidTopicId", http.StatusBadRequest)
+	}
+	ErrTransactionResourceOwnerMismatch = func() ErrorResponse {
+		return NewError("resource owner doesn't match offer.item[].from", "ErrTransactionResourceOwnerMismatch", http.StatusBadRequest)
 	}
 )
 

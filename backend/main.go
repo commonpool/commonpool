@@ -10,6 +10,7 @@ import (
 	"github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/router"
 	"github.com/commonpool/backend/store"
+	"github.com/commonpool/backend/trading"
 	"github.com/labstack/echo/v4"
 	echoSwagger "github.com/swaggo/echo-swagger"
 	"gorm.io/driver/postgres"
@@ -23,6 +24,7 @@ var (
 	rs resource.Store
 	as auth.Store
 	cs chat.Store
+	ts trading.Store
 	e  *echo.Echo
 )
 
@@ -48,11 +50,12 @@ func main() {
 	rs = store.NewResourceStore(db)
 	as = store.NewAuthStore(db)
 	cs := store.NewChatStore(db)
+	ts := store.NewTradingStore(db)
 
 	v1 := r.Group("/api/v1")
 	authorization := auth.NewAuth(v1, appConfig, "/api/v1", as)
 
-	h := handler.NewHandler(rs, as, cs, authorization)
+	h := handler.NewHandler(rs, as, cs, ts, authorization)
 
 	h.Register(v1)
 

@@ -7,6 +7,9 @@ import {UserProfileComponent} from './user-profile/user-profile.component';
 import {ConversationThreadListComponent} from './chat/conversation-thread-list/conversation-thread-list.component';
 import {ResourceInquiryComponent} from './resources/resource-inquiry/resource-inquiry.component';
 import {ConversationThreadComponent} from './chat/conversation-thread/conversation-thread.component';
+import {OfferListComponent} from './offers/offer-list/offer-list.component';
+import {OfferDetailsComponent} from './offers/offer-details/offer-details.component';
+import {CreateOfferComponent} from './offers/create-offer/create-offer.component';
 
 
 const routes: Routes = [
@@ -34,6 +37,15 @@ const routes: Routes = [
   }, {
     path: 'messages/:id',
     component: ConversationThreadComponent
+  }, {
+    path: 'offers',
+    component: OfferListComponent
+  }, {
+    path: 'offers/new',
+    component: CreateOfferComponent,
+  }, {
+    path: 'offers/:id',
+    component: OfferDetailsComponent
   }
 ];
 

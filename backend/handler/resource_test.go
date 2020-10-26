@@ -8,6 +8,7 @@ import (
 	"github.com/commonpool/backend/router"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
+	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -22,10 +23,10 @@ func TestSearchBySummaryAndType(t *testing.T) {
 	setup()
 
 	// Creating the resource
-	key := model.NewResourceKey()
+	key := model.NewResourceKey(uuid.NewV4())
 	resource := model.NewResource(
 		key,
-		model.Offer,
+		model.ResourceOffer,
 		"author",
 		"a superb summary",
 		"Description",
@@ -75,7 +76,7 @@ func TestCreateResource(t *testing.T) {
 	assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &res))
 	assert.Equal(t, "summary", res.Resource.Summary)
 	assert.Equal(t, "description", res.Resource.Description)
-	assert.Equal(t, model.Offer, res.Resource.Type)
+	assert.Equal(t, model.ResourceOffer, res.Resource.Type)
 }
 
 // TestCreateResourceInvalid400
@@ -168,10 +169,10 @@ func TestGetResource(t *testing.T) {
 	setup()
 
 	// Creating the resource
-	key := model.NewResourceKey()
+	key := model.NewResourceKey(uuid.NewV4())
 	resource := model.NewResource(
 		key,
-		model.Offer,
+		model.ResourceOffer,
 		user1.Subject,
 		"Summary",
 		"Description",
@@ -191,7 +192,7 @@ func TestGetResource(t *testing.T) {
 	assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &res))
 	assert.Equal(t, "Summary", res.Resource.Summary)
 	assert.Equal(t, "Description", res.Resource.Description)
-	assert.Equal(t, model.Offer, res.Resource.Type)
+	assert.Equal(t, model.ResourceOffer, res.Resource.Type)
 	assert.Equal(t, 1, res.Resource.ValueInHoursFrom)
 	assert.Equal(t, 2, res.Resource.ValueInHoursTo)
 
@@ -224,7 +225,7 @@ func TestGetUnknownResource404(t *testing.T) {
 	setup()
 
 	// Setting up the request
-	key := model.NewResourceKey()
+	key := model.NewResourceKey(uuid.NewV4())
 	rec, c := newGetResourceRequest(key.String())
 
 	// Error assertions
@@ -245,10 +246,10 @@ func TestUpdateResource(t *testing.T) {
 	setup()
 
 	// Creating the resource
-	key := model.NewResourceKey()
+	key := model.NewResourceKey(uuid.NewV4())
 	resource := model.NewResource(
 		key,
-		model.Offer,
+		model.ResourceOffer,
 		"author",
 		"Summary",
 		"Description",
@@ -281,7 +282,7 @@ func TestUpdateResource(t *testing.T) {
 	assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &res))
 	assert.Equal(t, "new summary", res.Resource.Summary)
 	assert.Equal(t, "new description", res.Resource.Description)
-	assert.Equal(t, model.Request, res.Resource.Type)
+	assert.Equal(t, model.ResourceRequest, res.Resource.Type)
 	assert.Equal(t, 3, res.Resource.ValueInHoursFrom)
 	assert.Equal(t, 4, res.Resource.ValueInHoursTo)
 }
@@ -292,11 +293,6 @@ func newGetResourceRequest(key string) (*httptest.ResponseRecorder, echo.Context
 	c.SetPath(path)
 	c.SetParamNames("id")
 	c.SetParamValues(key)
-	return rec, c
-}
-
-func newCreateResourceRequest(js string) (*httptest.ResponseRecorder, echo.Context) {
-	_, _, rec, c := newRequest(echo.POST, "/api/resources", &js)
 	return rec, c
 }
 
@@ -322,6 +318,11 @@ func newRequest(method string, target string, reqJson *string) (*echo.Echo, *htt
 	c := e.NewContext(req, rec)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	return e, req, rec, c
+}
+
+func newCreateResourceRequest(js string) (*httptest.ResponseRecorder, echo.Context) {
+	_, _, rec, c := newRequest(echo.POST, "/api/resources", &js)
+	return rec, c
 }
 
 func createResource(t *testing.T, summary string, description string, resType model.ResourceType) web.CreateResourceResponse {

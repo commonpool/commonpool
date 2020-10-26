@@ -155,7 +155,7 @@ func (h *Handler) GetMessages(c echo.Context) error {
 		}
 
 		item := web.Message{
-			ID:             message.ID,
+			ID:             message.ID.String(),
 			SentAt:         message.SentAt,
 			TopicID:        message.TopicId.String(),
 			Content:        message.Content,

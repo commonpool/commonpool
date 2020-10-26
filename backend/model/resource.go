@@ -39,9 +39,7 @@ func NewResource(
 }
 
 func (r *Resource) GetKey() ResourceKey {
-	return ResourceKey{
-		uuid: r.ID,
-	}
+	return NewResourceKey(r.ID)
 }
 
 func (r *Resource) GetUserKey() UserKey {

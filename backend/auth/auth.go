@@ -37,6 +37,10 @@ type UserSession struct {
 	IsAuthenticated bool
 }
 
+func (s *UserSession) GetUserKey() model.UserKey {
+	return model.NewUserKey(s.Subject)
+}
+
 type Nonce struct {
 	DesiredUrl string `json:"des"`
 	State      string `json:"state"`
@@ -73,6 +77,7 @@ type TokenResponse struct {
 type IAuth interface {
 	Authenticate(redirectOnError bool) echo.MiddlewareFunc
 	GetAuthUserSession(c echo.Context) UserSession
+	GetAuthUserKey(c echo.Context) model.UserKey
 }
 
 // IAuth OIDC Implementation
@@ -102,6 +107,10 @@ func (a *OidcAuthenticator) GetAuthUserSession(c echo.Context) UserSession {
 		Email:           c.Get(SubjectEmailKey).(string),
 		IsAuthenticated: isAuthenticated,
 	}
+}
+
+func (a *OidcAuthenticator) GetAuthUserKey(c echo.Context) model.UserKey {
+	return model.NewUserKey(c.Get(SubjectKey).(string))
 }
 
 // Ascertain that OidcAuthenticator implements IAuth
@@ -178,8 +187,6 @@ func (a *OidcAuthenticator) Authenticate(redirectOnError bool) echo.MiddlewareFu
 				"refresh_token": []string{refreshTokenFromCookie},
 				"scope":         []string{"openid email profile"},
 			}
-
-
 
 			// post-ing to identity server
 			res, err := http.PostForm(a.oidcProvider.Endpoint().TokenURL, formValues)
@@ -538,6 +545,10 @@ type MockAuthorizer struct {
 
 func (a *MockAuthorizer) GetAuthUserSession(c echo.Context) UserSession {
 	return a.MockCurrentSession()
+}
+
+func (a *MockAuthorizer) GetAuthUserKey(c echo.Context) model.UserKey {
+	return model.NewUserKey(a.MockCurrentSession().Subject)
 }
 
 var _ IAuth = &MockAuthorizer{}

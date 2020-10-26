@@ -15,7 +15,18 @@ import {UserProfileComponent} from './user-profile/user-profile.component';
 import {ConversationThreadComponent} from './chat/conversation-thread/conversation-thread.component';
 import {ConversationThreadListComponent} from './chat/conversation-thread-list/conversation-thread-list.component';
 import {ScrollingModule} from '@angular/cdk/scrolling';
-import { ResourceInquiryComponent } from './resources/resource-inquiry/resource-inquiry.component';
+import {ResourceInquiryComponent} from './resources/resource-inquiry/resource-inquiry.component';
+import {OfferListComponent} from './offers/offer-list/offer-list.component';
+import {CreateOfferComponent} from './offers/create-offer/create-offer.component';
+import {OfferDetailsComponent} from './offers/offer-details/offer-details.component';
+import {UserPickerComponent} from './shared/user-picker/user-picker.component';
+import {ResourcePickerComponent} from './shared/resource-picker/resource-picker.component';
+import {NgSelectModule} from '@ng-select/ng-select';
+import { PlusSquareIcon } from './icons/plus-square/plus-square.icon';
+import { PlusIcon } from './icons/plus/plus.icon';
+import { UsernameComponent } from './shared/username/username.component';
+import { ResourceNameComponent } from './shared/resource-name/resource-name.component';
+import { TrashIcon } from './icons/trash/trash.icon';
 
 @NgModule({
   declarations: [
@@ -28,6 +39,16 @@ import { ResourceInquiryComponent } from './resources/resource-inquiry/resource-
     ConversationThreadComponent,
     ConversationThreadListComponent,
     ResourceInquiryComponent,
+    OfferListComponent,
+    CreateOfferComponent,
+    OfferDetailsComponent,
+    UserPickerComponent,
+    ResourcePickerComponent,
+    PlusSquareIcon,
+    PlusIcon,
+    UsernameComponent,
+    ResourceNameComponent,
+    TrashIcon,
   ],
   imports: [
     BrowserModule,
@@ -35,7 +56,8 @@ import { ResourceInquiryComponent } from './resources/resource-inquiry/resource-
     FormsModule,
     ReactiveFormsModule,
     HttpClientModule,
-    ScrollingModule
+    ScrollingModule,
+    NgSelectModule
   ],
   providers: [{provide: HTTP_INTERCEPTORS, useClass: AppHttpInterceptor, multi: true}],
   bootstrap: [AppComponent]

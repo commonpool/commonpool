@@ -7,6 +7,7 @@ import (
 	"github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/router"
 	"github.com/commonpool/backend/store"
+	"github.com/commonpool/backend/trading"
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 	"log"
@@ -19,6 +20,7 @@ var (
 	rs         resource.Store
 	as         auth.Store
 	cs         chat.Store
+	ts         trading.Store
 	h          *Handler
 	e          *echo.Echo
 	userSub1   = "user-1-sub"
@@ -54,6 +56,7 @@ func setup() {
 	rs = store.NewResourceStore(d)
 	as = store.NewAuthStore(d)
 	cs = store.NewChatStore(d)
+	ts = store.NewTradingStore(d)
 
 	authorizer := auth.NewTestAuthorizer()
 	authorizer.MockCurrentSession = func() auth.UserSession {
@@ -65,7 +68,7 @@ func setup() {
 		return *authenticatedUser
 	}
 
-	h = NewHandler(rs, as, cs, authorizer)
+	h = NewHandler(rs, as, cs, ts, authorizer)
 
 	for _, user := range users {
 		userKey := model.NewUserKey(user.Subject)

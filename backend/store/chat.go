@@ -111,7 +111,7 @@ func (cs *ChatStore) SendMessage(author model.UserKey, authorUserName string, to
 			}
 
 			senderMessage := model.Message{
-				ID:       uuid.NewV4().String(),
+				ID:       uuid.NewV4(),
 				UserID:   recipientThreadKey.UserKey.String(),
 				TopicId:  recipientThreadKey.TopicKey.ID,
 				SentAt:   sentAt,

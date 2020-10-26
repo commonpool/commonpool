@@ -1,0 +1,73 @@
+<div class="container-fluid mt-3">
+  <div class="row">
+    <div class="col">
+      <h1>Create exchange proposal</h1>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col">
+      <div class="card">
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item" *ngFor="let item of items; let i = index; ">
+            <div class="btn btn-light mr-3" (click)="remove(i)">
+              <app-trash></app-trash>
+            </div>
+            <b>
+              <app-username [id]="item.from"></app-username>
+            </b>
+            gives
+            <b>
+              <span class="badge badge-pill badge-primary">
+                   <app-resource-name [resourceId]="item.resourceId" *ngIf="item.type === 0"></app-resource-name>
+              </span>
+
+              <span *ngIf="item.type === 1">{{item.timeInSeconds / 60 / 60}}h</span>
+            </b>
+            to
+            <b>
+              <app-username [id]="item.to"></app-username>
+            </b>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-2 ">
+    <div class="col">
+      <div class="card shadow">
+        <div class="card-body">
+          <div class="d-flex flex-direction-row align-items-center" id="new-row">
+            <plus-icon></plus-icon>
+            <app-user-picker name="fromUser" [ngModel]="newFrom" (ngModelChange)="setNewFrom($event)"></app-user-picker>
+            <span>sends</span>
+            <span>to</span>
+            <app-user-picker name="toUser" [(ngModel)]="newTo" [predicate]="toPredicate"></app-user-picker>
+            <div class="btn-group" role="group">
+              <button type="button" class="btn btn-light active" [ngClass]="{active: offerItemType === 1}"
+                      (click)="offerItemType = 1">Time
+              </button>
+              <button type="button" class="btn btn-light" [ngClass]="{active: offerItemType === 0}"
+                      (click)="offerItemType = 0">A resource
+              </button>
+            </div>
+            <span *ngIf="offerItemType === 0">Select resource:</span>
+            <app-resource-picker name="resource" [createdBy]="newFrom" [(ngModel)]="resource"
+                                 *ngIf="offerItemType === 0"></app-resource-picker>
+            <input class="form-control" style="width: 7rem" type="number" step="0.25" min="0"
+                   *ngIf="offerItemType === 1" [(ngModel)]="time">
+            <span *ngIf="offerItemType === 1">Hours</span>
+            <button class="btn btn-secondary" (click)="add()">Add</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-2">
+    <div class="col">
+      <button (click)="submit()" [disabled]="pending" class="btn btn-lg btn-primary shadow">Submit proposal</button>
+    </div>
+  </div>
+</div>
