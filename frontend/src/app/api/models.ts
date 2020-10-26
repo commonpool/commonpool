@@ -447,13 +447,20 @@ export class Membership {
     public groupId: string,
     public isAdmin: boolean,
     public isMember: boolean,
+    public isOwner: boolean,
     public groupConfirmed: boolean,
     public userConfirmed: boolean,
     public createdAt: string,
     public isDeactivated: boolean,
-    public groupName: string
+    public groupName: string,
+    public userName: string
   ) {
+    this.createdAtDate = new Date(Date.parse(createdAt));
+    this.createdAtDistance = formatDistanceToNow(this.createdAtDate, {addSuffix: true});
   }
+
+  createdAtDate: Date;
+  createdAtDistance: string;
 
   public static from(m: Membership): Membership {
     return new Membership(
@@ -461,11 +468,13 @@ export class Membership {
       m.groupId,
       m.isAdmin,
       m.isMember,
+      m.isOwner,
       m.groupConfirmed,
       m.userConfirmed,
       m.createdAt,
       m.isDeactivated,
-      m.groupName
+      m.groupName,
+      m.userName
     );
   }
 }
@@ -569,5 +578,20 @@ export class GetMyMembershipsResponse {
 
   public static from(i: GetMyMembershipsResponse): GetMyMembershipsResponse {
     return new GetMyMembershipsResponse(i.memberships.map(m => Membership.from(m)));
+  }
+}
+
+
+export class GetGroupMembershipsRequest {
+  constructor(public id: string) {
+  }
+}
+
+export class GetGroupMembershipsResponse {
+  constructor(public memberships: Membership[]) {
+  }
+
+  public static from(r: GetGroupMembershipsResponse): GetGroupMembershipsResponse {
+    return new GetGroupMembershipsResponse(r.memberships.map(m => Membership.from(m)));
   }
 }

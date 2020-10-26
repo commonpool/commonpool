@@ -37,4 +37,5 @@ func (h *Handler) Register(v1 *echo.Group) {
 	groups := v1.Group("/groups", h.authorization.Authenticate(true))
 	groups.POST("", h.CreateGroup)
 	groups.GET("/:id", h.GetGroup)
+	groups.GET("/:id/memberships", h.GetGroupMemberships)
 }

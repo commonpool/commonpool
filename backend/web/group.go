@@ -26,26 +26,28 @@ type Membership struct {
 	GroupID        string    `json:"groupId"`
 	IsAdmin        bool      `json:"isAdmin"`
 	IsMember       bool      `json:"isMember"`
+	IsOwner        bool      `json:"isOwner"`
 	GroupConfirmed bool      `json:"groupConfirmed"`
 	UserConfirmed  bool      `json:"userConfirmed"`
 	CreatedAt      time.Time `json:"createdAt"`
 	IsDeactivated  bool      `json:"isDeactivated"`
 	GroupName      string    `json:"groupName"`
+	UserName       string    `json:"userName"`
 }
 
-type GroupNames map[model.GroupKey]string
-
-func NewMembership(membership model.Membership, groupNames GroupNames) Membership {
+func NewMembership(membership model.Membership, groupNames model.GroupNames, names model.UserNames) Membership {
 	return Membership{
 		UserID:         membership.UserID,
 		GroupID:        membership.GroupID.String(),
 		IsAdmin:        membership.IsAdmin,
 		IsMember:       membership.IsMember,
+		IsOwner:        membership.IsOwner,
 		GroupConfirmed: membership.GroupConfirmed,
 		UserConfirmed:  membership.UserConfirmed,
 		CreatedAt:      membership.CreatedAt,
 		IsDeactivated:  membership.IsDeactivated,
 		GroupName:      groupNames[membership.GetGroupKey()],
+		UserName:       names[membership.GetUserKey()],
 	}
 }
 
@@ -83,9 +85,9 @@ type InviteUserResponse struct {
 	Membership Membership `json:"membership"`
 }
 
-func NewInviteUserResponse(membership model.Membership, groupNames GroupNames) InviteUserResponse {
+func NewInviteUserResponse(membership model.Membership, groupNames model.GroupNames, userNames model.UserNames) InviteUserResponse {
 	return InviteUserResponse{
-		Membership: NewMembership(membership, groupNames),
+		Membership: NewMembership(membership, groupNames, userNames),
 	}
 }
 
@@ -98,9 +100,9 @@ type ExcludeUserResponse struct {
 	Membership Membership `json:"membership"`
 }
 
-func NewExcludeUserResponse(membership model.Membership, groupNames GroupNames) ExcludeUserResponse {
+func NewExcludeUserResponse(membership model.Membership, groupNames model.GroupNames, userNames model.UserNames) ExcludeUserResponse {
 	return ExcludeUserResponse{
-		Membership: NewMembership(membership, groupNames),
+		Membership: NewMembership(membership, groupNames, userNames),
 	}
 }
 
@@ -114,9 +116,9 @@ type GrantPermissionResponse struct {
 	Membership Membership `json:"membership"`
 }
 
-func NewGrantPermissionResponse(membership model.Membership, groupNames GroupNames) GrantPermissionResponse {
+func NewGrantPermissionResponse(membership model.Membership, groupNames model.GroupNames, userNames model.UserNames) GrantPermissionResponse {
 	return GrantPermissionResponse{
-		Membership: NewMembership(membership, groupNames),
+		Membership: NewMembership(membership, groupNames, userNames),
 	}
 }
 
@@ -130,9 +132,9 @@ type RevokePermissionResponse struct {
 	Membership Membership `json:"membership"`
 }
 
-func NewRevokePermissionResponse(membership model.Membership, groupNames GroupNames) RevokePermissionResponse {
+func NewRevokePermissionResponse(membership model.Membership, groupNames model.GroupNames, userNames model.UserNames) RevokePermissionResponse {
 	return RevokePermissionResponse{
-		Membership: NewMembership(membership, groupNames),
+		Membership: NewMembership(membership, groupNames, userNames),
 	}
 }
 
@@ -144,12 +146,26 @@ type GetUserMembershipsResponse struct {
 	Memberships []Membership `json:"memberships"`
 }
 
-func NewGetUserMembershipsResponse(memberships []model.Membership, groupNames GroupNames) GetUserMembershipsResponse {
+func NewGetUserMembershipsResponse(memberships []model.Membership, groupNames model.GroupNames, userNames model.UserNames) GetUserMembershipsResponse {
 	responseMemberships := make([]Membership, len(memberships))
 	for i, membership := range memberships {
-		responseMemberships[i] = NewMembership(membership, groupNames)
+		responseMemberships[i] = NewMembership(membership, groupNames, userNames)
 	}
 	return GetUserMembershipsResponse{
+		Memberships: responseMemberships,
+	}
+}
+
+type GetGroupMembershipsResponse struct {
+	Memberships []Membership `json:"memberships"`
+}
+
+func NewGetGroupMembershipsResponse(memberships []model.Membership, groupNames model.GroupNames, userNames model.UserNames) GetGroupMembershipsResponse {
+	responseMemberships := make([]Membership, len(memberships))
+	for i, membership := range memberships {
+		responseMemberships[i] = NewMembership(membership, groupNames, userNames)
+	}
+	return GetGroupMembershipsResponse{
 		Memberships: responseMemberships,
 	}
 }

@@ -24,6 +24,9 @@
 
 .group-header a {
   text-decoration: none;
+}
+
+.group-header .menu a {
   color:black;
 }
 
