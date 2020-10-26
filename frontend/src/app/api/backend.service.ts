@@ -32,6 +32,7 @@ import {
   GetGroupRequest,
   GetGroupResponse
 } from './models';
+
 import {Observable, of, throwError} from 'rxjs';
 import {HttpClient, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest} from '@angular/common/http';
 import {catchError, map, tap} from 'rxjs/operators';
@@ -309,6 +310,7 @@ export class BackendService {
 
   declineOffer(offer: DeclineOfferRequest): Observable<DeclineOfferReponse> {
     return this.http.post(`${environment.apiUrl}/api/v1/offers/${offer.id}/decline`, undefined, {
+
       observe: 'response'
     }).pipe(
       map((res) => {

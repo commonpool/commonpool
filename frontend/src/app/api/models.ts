@@ -492,8 +492,9 @@ export class GetGroupRequest {
 export class GetGroupResponse {
   constructor(public group: Group) {
   }
-  public static from(g: GetGroupResponse) : GetGroupResponse{
-    return new GetGroupResponse(Group.from(g.group))
+
+  public static from(g: GetGroupResponse): GetGroupResponse {
+    return new GetGroupResponse(Group.from(g.group));
   }
 }
 
@@ -570,4 +571,3 @@ export class GetMyMembershipsResponse {
     return new GetMyMembershipsResponse(i.memberships.map(m => Membership.from(m)));
   }
 }
-

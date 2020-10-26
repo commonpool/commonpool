@@ -22,21 +22,21 @@ import {OfferDetailsComponent} from './offers/offer-details/offer-details.compon
 import {UserPickerComponent} from './shared/user-picker/user-picker.component';
 import {ResourcePickerComponent} from './shared/resource-picker/resource-picker.component';
 import {NgSelectModule} from '@ng-select/ng-select';
-import { PlusSquareIcon } from './icons/plus-square/plus-square.icon';
-import { PlusIcon } from './icons/plus/plus.icon';
-import { UsernameComponent } from './shared/username/username.component';
-import { ResourceNameComponent } from './shared/resource-name/resource-name.component';
-import { TrashIcon } from './icons/trash/trash.icon';
-import { CreateOrEditGroupComponent } from './groups/create-or-edit-group/create-or-edit-group.component';
-import { RequiredIndicatorComponent } from './shared/required-indicator/required-indicator.component';
-import { GroupViewComponent } from './groups/group-view/group-view.component';
-import { BoxSeamIcon } from './icons/box-seam/box-seam.icon';
-import { PersonIcon } from './icons/person/person.icon';
-import { PeopleIcon } from './icons/people/people.icon';
-import { PentagonIcon } from './icons/pentagon/pentagon.icon';
-import { AsterixIcon } from './icons/asterix/asterix.icon';
-import { GroupMemberViewComponent } from './groups/group-member-view/group-member-view.component';
-import { GroupResourcesViewComponent } from './groups/group-resources-view/group-resources-view.component';
+import {PlusSquareIcon} from './icons/plus-square/plus-square.icon';
+import {PlusIcon} from './icons/plus/plus.icon';
+import {UsernameComponent} from './shared/username/username.component';
+import {ResourceNameComponent} from './shared/resource-name/resource-name.component';
+import {TrashIcon} from './icons/trash/trash.icon';
+import {CreateOrEditGroupComponent} from './groups/create-or-edit-group/create-or-edit-group.component';
+import {RequiredIndicatorComponent} from './shared/required-indicator/required-indicator.component';
+import {GroupViewComponent} from './groups/group-view/group-view.component';
+import {BoxSeamIcon} from './icons/box-seam/box-seam.icon';
+import {PersonIcon} from './icons/person/person.icon';
+import {PeopleIcon} from './icons/people/people.icon';
+import {PentagonIcon} from './icons/pentagon/pentagon.icon';
+import {AsterixIcon} from './icons/asterix/asterix.icon';
+import {GroupMemberViewComponent} from './groups/group-member-view/group-member-view.component';
+import {GroupResourcesViewComponent} from './groups/group-resources-view/group-resources-view.component';
 
 @NgModule({
   declarations: [
