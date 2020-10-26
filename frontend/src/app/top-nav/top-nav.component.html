@@ -4,6 +4,7 @@
     <li><a [routerLink]="'/resources/new'">post ad</a></li>
     <li><a [routerLink]="'/messages'">messages</a></li>
     <li><a [routerLink]="'/offers/new'">new offer</a></li>
+    <li><a [routerLink]="'/groups/new'">new group</a></li>
     <li>
       <ng-container *ngIf="auth.session$ | async; let session">
         <a *ngIf="session.isAuthenticated" [routerLink]="'/profiles/' + session.id">my profile</a>

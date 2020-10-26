@@ -18,7 +18,19 @@ import {
   SendOfferResponse,
   GetOfferRequest,
   GetOfferResponse,
-  GetOffersResponse, AcceptOfferRequest, AcceptOfferResponse, DeclineOfferRequest, DeclineOfferReponse
+  GetOffersResponse,
+  AcceptOfferRequest,
+  AcceptOfferResponse,
+  DeclineOfferRequest,
+  DeclineOfferReponse,
+  CreateGroupRequest,
+  CreateGroupResponse,
+  InviteUserRequest,
+  InviteUserResponse,
+  GetMyMembershipsRequest,
+  GetMyMembershipsResponse,
+  GetGroupRequest,
+  GetGroupResponse
 } from './models';
 import {Observable, of, throwError} from 'rxjs';
 import {HttpClient, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest} from '@angular/common/http';
@@ -282,7 +294,7 @@ export class BackendService {
 
 
   acceptOffer(offer: AcceptOfferRequest): Observable<AcceptOfferResponse> {
-    return this.http.post(`${environment.apiUrl}/api/v1/offers/${offer.id}/accept`, undefined,{
+    return this.http.post(`${environment.apiUrl}/api/v1/offers/${offer.id}/accept`, undefined, {
       observe: 'response'
     }).pipe(
       map((res) => {
@@ -296,7 +308,7 @@ export class BackendService {
 
 
   declineOffer(offer: DeclineOfferRequest): Observable<DeclineOfferReponse> {
-    return this.http.post(`${environment.apiUrl}/api/v1/offers/${offer.id}/decline`, undefined,{
+    return this.http.post(`${environment.apiUrl}/api/v1/offers/${offer.id}/decline`, undefined, {
       observe: 'response'
     }).pipe(
       map((res) => {
@@ -304,6 +316,45 @@ export class BackendService {
           throwError(ErrorResponse.fromHttpResponse(res));
         }
         return DeclineOfferReponse.from(res.body as DeclineOfferReponse);
+      })
+    );
+  }
+
+  createGroup(request: CreateGroupRequest): Observable<CreateGroupResponse> {
+    return this.http.post(`${environment.apiUrl}/api/v1/groups/`, request, {
+      observe: 'response'
+    }).pipe(
+      map((res) => {
+        if (res.status !== 201) {
+          throwError(ErrorResponse.fromHttpResponse(res));
+        }
+        return CreateGroupResponse.from(res.body as CreateGroupResponse);
+      })
+    );
+  }
+
+  getGroup(request: GetGroupRequest): Observable<GetGroupResponse> {
+    return this.http.get(`${environment.apiUrl}/api/v1/groups/${request.id}`, {
+      observe: 'response'
+    }).pipe(
+      map((res) => {
+        if (res.status !== 200) {
+          throwError(ErrorResponse.fromHttpResponse(res));
+        }
+        return GetGroupResponse.from(res.body as GetGroupResponse);
+      })
+    );
+  }
+
+  getMyMemberships(request: GetMyMembershipsRequest): Observable<GetMyMembershipsResponse> {
+    return this.http.get(`${environment.apiUrl}/api/v1/my/memberships`, {
+      observe: 'response'
+    }).pipe(
+      map((res) => {
+        if (res.status !== 200) {
+          throwError(ErrorResponse.fromHttpResponse(res));
+        }
+        return GetMyMembershipsResponse.from(res.body as GetMyMembershipsResponse);
       })
     );
   }

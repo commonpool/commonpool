@@ -3,7 +3,7 @@ import {ActivatedRoute} from '@angular/router';
 import {pluck, switchMap} from 'rxjs/operators';
 import {BackendService} from '../api/backend.service';
 import {BehaviorSubject, Subject} from 'rxjs';
-import {SearchResourceRequest, UserInfoResponse} from '../api/models';
+import {GetMyMembershipsRequest, SearchResourceRequest, UserInfoResponse} from '../api/models';
 
 @Component({
   selector: 'app-user-profile',
@@ -19,6 +19,11 @@ export class UserProfileComponent implements OnInit {
   );
   userInfo$ = this.userId$.pipe(
     switchMap(id => this.backend.getUserInfo(id))
+  );
+
+  memberships$ = this.userId$.pipe(
+    switchMap(id => this.backend.getMyMemberships(new GetMyMembershipsRequest())),
+    pluck('memberships')
   );
 
   constructor(private route: ActivatedRoute, private backend: BackendService) {

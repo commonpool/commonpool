@@ -6,6 +6,7 @@ import (
 	"github.com/commonpool/backend/chat"
 	"github.com/commonpool/backend/config"
 	_ "github.com/commonpool/backend/docs"
+	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/handler"
 	"github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/router"
@@ -25,6 +26,7 @@ var (
 	as auth.Store
 	cs chat.Store
 	ts trading.Store
+	gs group.Store
 	e  *echo.Echo
 )
 
@@ -51,11 +53,12 @@ func main() {
 	as = store.NewAuthStore(db)
 	cs := store.NewChatStore(db)
 	ts := store.NewTradingStore(db)
+	gs := store.NewGroupStore(db)
 
 	v1 := r.Group("/api/v1")
 	authorization := auth.NewAuth(v1, appConfig, "/api/v1", as)
 
-	h := handler.NewHandler(rs, as, cs, ts, authorization)
+	h := handler.NewHandler(rs, as, cs, ts, gs, authorization)
 
 	h.Register(v1)
 

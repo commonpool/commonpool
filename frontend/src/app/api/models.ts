@@ -422,3 +422,152 @@ export class Offer {
       o.decisions.map(d => OfferDecision.from(d)));
   }
 }
+
+export class Group {
+  constructor(
+    public id: string,
+    public createdAt: string,
+    public name: string,
+    public description: string
+  ) {
+  }
+
+  public static from(g: Group): Group {
+    return new Group(
+      g.id,
+      g.createdAt,
+      g.name,
+      g.description);
+  }
+}
+
+export class Membership {
+  constructor(
+    public userId: string,
+    public groupId: string,
+    public isAdmin: boolean,
+    public isMember: boolean,
+    public groupConfirmed: boolean,
+    public userConfirmed: boolean,
+    public createdAt: string,
+    public isDeactivated: boolean,
+    public groupName: string
+  ) {
+  }
+
+  public static from(m: Membership): Membership {
+    return new Membership(
+      m.userId,
+      m.groupId,
+      m.isAdmin,
+      m.isMember,
+      m.groupConfirmed,
+      m.userConfirmed,
+      m.createdAt,
+      m.isDeactivated,
+      m.groupName
+    );
+  }
+}
+
+export class CreateGroupRequest {
+  constructor(public name: string, description: string) {
+  }
+}
+
+export class CreateGroupResponse {
+  constructor(public group: Group) {
+  }
+
+  public static from(r: CreateGroupResponse): CreateGroupResponse {
+    return new CreateGroupResponse(Group.from(r.group));
+  }
+}
+
+export class GetGroupRequest {
+  constructor(public id: string) {
+  }
+}
+
+export class GetGroupResponse {
+  constructor(public group: Group) {
+  }
+  public static from(g: GetGroupResponse) : GetGroupResponse{
+    return new GetGroupResponse(Group.from(g.group))
+  }
+}
+
+export class InviteUserRequest {
+  constructor(public userId: string, public groupId: string) {
+  }
+}
+
+export class InviteUserResponse {
+  constructor(public membership: Membership) {
+  }
+
+  public static from(i: InviteUserResponse): InviteUserResponse {
+    return new InviteUserResponse(Membership.from(i.membership));
+  }
+}
+
+export class ExcludeUserRequest {
+  constructor(public userId: string, public groupId: string) {
+  }
+}
+
+export class ExcludeUserResponse {
+  constructor(public membership: Membership) {
+  }
+
+  public static from(i: ExcludeUserResponse): ExcludeUserResponse {
+    return new ExcludeUserResponse(Membership.from(i.membership));
+  }
+}
+
+export enum PermissionType {
+  MemberPermission,
+  AdminPermission
+}
+
+export class GrantPermissionRequest {
+  constructor(public userId: string, public groupId: string, public permission: PermissionType) {
+  }
+}
+
+export class GrantPermissionResponse {
+  constructor(public membership: Membership) {
+  }
+
+  public static from(i: GrantPermissionResponse): GrantPermissionResponse {
+    return new GrantPermissionResponse(Membership.from(i.membership));
+  }
+}
+
+export class RevokePermissionRequest {
+  constructor(public userId: string, public groupId: string, public permission: PermissionType) {
+  }
+}
+
+export class RevokePermissionResponse {
+  constructor(public membership: Membership) {
+  }
+
+  public static from(i: RevokePermissionResponse): RevokePermissionResponse {
+    return new RevokePermissionResponse(Membership.from(i.membership));
+  }
+}
+
+export class GetMyMembershipsRequest {
+
+}
+
+export class GetMyMembershipsResponse {
+  constructor(public memberships: Membership[]) {
+  }
+
+  public static from(i: GetMyMembershipsResponse): GetMyMembershipsResponse {
+    return new GetMyMembershipsResponse(i.memberships.map(m => Membership.from(m)));
+  }
+}
+

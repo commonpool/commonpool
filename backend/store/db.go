@@ -24,7 +24,7 @@ func NewTestDb() *gorm.DB {
 }
 
 func AutoMigrate(db *gorm.DB) {
-	db.AutoMigrate(
+	err := db.AutoMigrate(
 		&model.Resource{},
 		&model.User{},
 		&model.Thread{},
@@ -34,7 +34,12 @@ func AutoMigrate(db *gorm.DB) {
 		&model.Offer{},
 		&model.OfferItem{},
 		&model.OfferDecision{},
+		&model.Group{},
+		&model.Membership{},
 	)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func DropTestDB() error {

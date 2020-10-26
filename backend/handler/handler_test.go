@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/chat"
+	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/router"
@@ -21,6 +22,7 @@ var (
 	as         auth.Store
 	cs         chat.Store
 	ts         trading.Store
+	gs         group.Store
 	h          *Handler
 	e          *echo.Echo
 	userSub1   = "user-1-sub"
@@ -50,14 +52,19 @@ func mockLoggedInAs(user *auth.UserSession) {
 }
 
 func setup() {
+
+	// Setup and migrate database
 	d = store.NewTestDb()
 	store.AutoMigrate(d)
 
+	// Create the different stores
 	rs = store.NewResourceStore(d)
 	as = store.NewAuthStore(d)
 	cs = store.NewChatStore(d)
 	ts = store.NewTradingStore(d)
+	gs := store.NewGroupStore(d)
 
+	// Mock authorization
 	authorizer := auth.NewTestAuthorizer()
 	authorizer.MockCurrentSession = func() auth.UserSession {
 		if authenticatedUser == nil {
@@ -68,8 +75,10 @@ func setup() {
 		return *authenticatedUser
 	}
 
-	h = NewHandler(rs, as, cs, ts, authorizer)
+	// Create handler
+	h = NewHandler(rs, as, cs, ts, gs, authorizer)
 
+	// Create users
 	for _, user := range users {
 		userKey := model.NewUserKey(user.Subject)
 		err := as.Upsert(userKey, user.Email, user.Username)

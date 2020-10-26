@@ -10,6 +10,8 @@ import {ConversationThreadComponent} from './chat/conversation-thread/conversati
 import {OfferListComponent} from './offers/offer-list/offer-list.component';
 import {OfferDetailsComponent} from './offers/offer-details/offer-details.component';
 import {CreateOfferComponent} from './offers/create-offer/create-offer.component';
+import {CreateOrEditGroupComponent} from './groups/create-or-edit-group/create-or-edit-group.component';
+import {GroupViewComponent} from './groups/group-view/group-view.component';
 
 
 const routes: Routes = [
@@ -46,6 +48,12 @@ const routes: Routes = [
   }, {
     path: 'offers/:id',
     component: OfferDetailsComponent
+  }, {
+    path: 'groups/new',
+    component: CreateOrEditGroupComponent
+  }, {
+    path: 'groups/:id',
+    component: GroupViewComponent
   }
 ];
 
