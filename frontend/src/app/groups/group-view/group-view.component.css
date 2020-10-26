@@ -1,0 +1,36 @@
+.group-header {
+  background-color: #f8f8f8;
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+
+.group-border {
+  border-bottom: 1px solid #dcdcdc;
+}
+
+.group-header ul {
+  display: flex;
+  flex-direction: row;
+  padding: 0;
+  margin: 0;
+}
+
+.group-header li {
+  display: block;
+  padding: 1rem 1rem 0.5rem;
+  border-bottom: 1px solid transparent;
+  transition: all ease-in-out 0.1s;
+}
+
+.group-header a {
+  text-decoration: none;
+  color:black;
+}
+
+.group-header li:hover {
+  border-bottom: 1px solid #00000044;
+}
+
+.group-header li.active {
+  border-bottom: 1px solid #007bff;
+}

@@ -1,0 +1,37 @@
+<ng-container *ngIf="group$ | async; let group">
+
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col">
+        <div class="group-header">
+          <h4 class="my-3">
+            <a [routerLink]=""><app-box-seam></app-box-seam>&nbsp;<b>{{group.name}}</b></a>
+          </h4>
+          <ul>
+            <li class="active" routerLinkActive="active"><a routerLink="members"><app-people></app-people> Members</a></li>
+            <li routerLinkActive="active"><a routerLink="resources"><app-asterix></app-asterix> Resources</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="group-border">
+  </div>
+
+  <div class="container-fluid mt-3">
+    <div class="row">
+      <div class="col">
+        <div class="card">
+          <div class="card-header">
+            Members:
+            <div>{{group.description}}</div>
+          </div>
+          <div class="card-body">
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-container>

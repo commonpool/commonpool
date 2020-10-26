@@ -31,4 +31,10 @@ func (h *Handler) Register(v1 *echo.Group) {
 	offers.POST("/:id/accept", h.AcceptOffer)
 	offers.POST("/:id/decline", h.DeclineOffer)
 
+	my := v1.Group("/my", h.authorization.Authenticate(true))
+	my.GET("/memberships", h.GetLoggedInUserMemberships)
+
+	groups := v1.Group("/groups", h.authorization.Authenticate(true))
+	groups.POST("", h.CreateGroup)
+	groups.GET("/:id", h.GetGroup)
 }
