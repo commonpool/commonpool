@@ -4,11 +4,11 @@ import (
 	. "github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/resource"
+	"github.com/commonpool/backend/utils"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	uuid "github.com/satori/go.uuid"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
@@ -30,12 +30,12 @@ import (
 // @Router /resources [get]
 func (h *Handler) SearchResources(c echo.Context) error {
 
-	skip, err := ParseSkip(c)
+	skip, err := utils.ParseSkip(c)
 	if err != nil {
 		return NewErrResponse(c, err)
 	}
 
-	take, err := ParseTake(c, 0, 100)
+	take, err := utils.ParseTake(c, 0, 100)
 	if err != nil {
 		return NewErrResponse(c, err)
 	}
@@ -246,47 +246,6 @@ func (h *Handler) UpdateResource(c echo.Context) error {
 
 }
 
-func ParseSkip(c echo.Context) (int, error) {
-	skip, err := ParseQueryParamInt(c, "skip", 0)
-	if err != nil {
-		response := ErrParseSkip(err.Error())
-		return 0, &response
-	}
-	if skip < 0 {
-		skip = 0
-	}
-	return skip, nil
-}
-
-func ParseTake(c echo.Context, defaultTake int, maxTake int) (int, error) {
-	take, err := ParseQueryParamInt(c, "take", defaultTake)
-	if err != nil {
-		response := ErrParseTake(err.Error())
-		return 0, &response
-	}
-	if take < 0 {
-		take = 0
-	}
-	if take > maxTake {
-		take = maxTake
-	}
-	return take, nil
-}
-
-func ParseQueryParamInt(c echo.Context, paramName string, defaultValue int) (int, error) {
-	paramAsStr := c.QueryParam(paramName)
-	if paramAsStr != "" {
-		int, err := strconv.Atoi(paramAsStr)
-		if err != nil {
-			response := ErrCannotConvertToInt(paramAsStr, err.Error())
-			return 0, &response
-		}
-		return int, nil
-	} else {
-		return defaultValue, nil
-	}
-}
-
 func sanitizeResource(resource web.CreateResourcePayload) web.CreateResourcePayload {
 	resource.Summary = strings.TrimSpace(resource.Summary)
 	resource.Description = strings.TrimSpace(resource.Description)
@@ -354,7 +313,7 @@ func NewErrResponse(c echo.Context, err error) error {
 	res, ok := err.(*ErrorResponse)
 	if !ok {
 		statusCode := http.StatusInternalServerError
-		return c.JSON(statusCode, NewError("Server error", "", statusCode))
+		return c.JSON(statusCode, NewError(err.Error(), "", statusCode))
 	}
 	return c.JSON(res.StatusCode, res)
 }

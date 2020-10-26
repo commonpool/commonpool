@@ -30,7 +30,11 @@ import {
   GetMyMembershipsRequest,
   GetMyMembershipsResponse,
   GetGroupRequest,
-  GetGroupResponse, GetGroupMembershipsRequest, GetGroupMembershipsResponse
+  GetGroupResponse,
+  GetGroupMembershipsRequest,
+  GetGroupMembershipsResponse,
+  GetUsersForGroupInvitePickerRequest,
+  GetUsersForGroupInvitePickerResponse
 } from './models';
 
 import {Observable, of, throwError} from 'rxjs';
@@ -373,4 +377,44 @@ export class BackendService {
       })
     );
   }
+
+  getUsersForGroupInvitePicker(query: GetUsersForGroupInvitePickerRequest): Observable<GetUsersForGroupInvitePickerResponse> {
+    const params: { [key: string]: string } = {};
+    if (query.skip) {
+      params.skip = query.skip.toString();
+    }
+    if (query.take) {
+      params.take = query.take.toString();
+    }
+    if (query.query) {
+      params.query = query.query.toString();
+    }
+    return this.http.get(`${environment.apiUrl}/api/v1/groups/${query.groupId}/invite-member-picker`, {
+      observe: 'response',
+      params
+    }).pipe(
+      map((res) => {
+        if (res.status !== 200) {
+          throwError(ErrorResponse.fromHttpResponse(res));
+        }
+        return GetUsersForGroupInvitePickerResponse.from(res.body as GetUsersForGroupInvitePickerResponse);
+      })
+    );
+  }
+
+  inviteUser(request: InviteUserRequest): Observable<InviteUserResponse> {
+    return this.http.post(`${environment.apiUrl}/api/v1/groups/${request.groupId}/invite`, {
+      userId: request.userId
+    }, {
+      observe: 'response'
+    }).pipe(
+      map((res) => {
+        if (res.status !== 201) {
+          throwError(ErrorResponse.fromHttpResponse(res));
+        }
+        return InviteUserResponse.from(res.body as InviteUserResponse);
+      })
+    );
+  }
+
 }

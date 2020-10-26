@@ -38,4 +38,7 @@ func (h *Handler) Register(v1 *echo.Group) {
 	groups.POST("", h.CreateGroup)
 	groups.GET("/:id", h.GetGroup)
 	groups.GET("/:id/memberships", h.GetGroupMemberships)
+	groups.GET("/:id/invite-member-picker", h.GetUsersForGroupInvitePicker)
+	groups.POST("/:id/invite", h.InviteUser)
+
 }

@@ -35,9 +35,8 @@ import {PersonIcon} from './icons/person/person.icon';
 import {PeopleIcon} from './icons/people/people.icon';
 import {PentagonIcon} from './icons/pentagon/pentagon.icon';
 import {AsterixIcon} from './icons/asterix/asterix.icon';
-import {GroupMemberViewComponent} from './groups/group-member-view/group-member-view.component';
 import {GroupResourcesViewComponent} from './groups/group-resources-view/group-resources-view.component';
-import { GroupMembersViewComponent } from './groups/group-members-view/group-members-view.component';
+import {GroupMembersViewComponent} from './groups/group-members-view/group-members-view.component';
 
 @NgModule({
   declarations: [
@@ -68,7 +67,6 @@ import { GroupMembersViewComponent } from './groups/group-members-view/group-mem
     PeopleIcon,
     PentagonIcon,
     AsterixIcon,
-    GroupMemberViewComponent,
     GroupResourcesViewComponent,
     GroupMembersViewComponent,
   ],

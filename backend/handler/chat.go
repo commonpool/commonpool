@@ -4,6 +4,7 @@ import (
 	"fmt"
 	. "github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/utils"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	uuid "github.com/satori/go.uuid"
@@ -43,12 +44,12 @@ func (h *Handler) GetLatestThreads(c echo.Context) error {
 	authUser := h.authorization.GetAuthUserSession(c)
 	userKey := model.NewUserKey(authUser.Subject)
 
-	skip, err := ParseSkip(c)
+	skip, err := utils.ParseSkip(c)
 	if err != nil {
 		return err
 	}
 
-	take, err := ParseTake(c, 10, 100)
+	take, err := utils.ParseTake(c, 10, 100)
 	if err != nil {
 		return err
 	}
@@ -117,12 +118,12 @@ func (h *Handler) GetMessages(c echo.Context) error {
 		return fmt.Errorf("'topic' query param is required")
 	}
 
-	skip, err := ParseSkip(c)
+	skip, err := utils.ParseSkip(c)
 	if err != nil {
 		return err
 	}
 
-	take, err := ParseTake(c, 10, 100)
+	take, err := utils.ParseTake(c, 10, 100)
 	if err != nil {
 		return err
 	}

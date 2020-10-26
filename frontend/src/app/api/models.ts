@@ -595,3 +595,17 @@ export class GetGroupMembershipsResponse {
     return new GetGroupMembershipsResponse(r.memberships.map(m => Membership.from(m)));
   }
 }
+
+export class GetUsersForGroupInvitePickerRequest {
+  constructor(public skip: number, public take: number, public query: string, public groupId: string) {
+  }
+}
+
+export class GetUsersForGroupInvitePickerResponse {
+  constructor(public users: UserInfoResponse[], public skip: number, public take: number) {
+  }
+
+  static from(res: GetUsersForGroupInvitePickerResponse): GetUsersForGroupInvitePickerResponse {
+    return new GetUsersForGroupInvitePickerResponse(res.users.map(u => UserInfoResponse.from(u)), res.skip, res.take);
+  }
+}
