@@ -37,6 +37,7 @@ import {PentagonIcon} from './icons/pentagon/pentagon.icon';
 import {AsterixIcon} from './icons/asterix/asterix.icon';
 import {GroupMemberViewComponent} from './groups/group-member-view/group-member-view.component';
 import {GroupResourcesViewComponent} from './groups/group-resources-view/group-resources-view.component';
+import { GroupMembersViewComponent } from './groups/group-members-view/group-members-view.component';
 
 @NgModule({
   declarations: [
@@ -69,6 +70,7 @@ import {GroupResourcesViewComponent} from './groups/group-resources-view/group-r
     AsterixIcon,
     GroupMemberViewComponent,
     GroupResourcesViewComponent,
+    GroupMembersViewComponent,
   ],
   imports: [
     BrowserModule,

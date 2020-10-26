@@ -12,6 +12,8 @@ import {OfferDetailsComponent} from './offers/offer-details/offer-details.compon
 import {CreateOfferComponent} from './offers/create-offer/create-offer.component';
 import {CreateOrEditGroupComponent} from './groups/create-or-edit-group/create-or-edit-group.component';
 import {GroupViewComponent} from './groups/group-view/group-view.component';
+import {GroupMemberViewComponent} from './groups/group-member-view/group-member-view.component';
+import {GroupMembersViewComponent} from './groups/group-members-view/group-members-view.component';
 
 
 const routes: Routes = [
@@ -53,7 +55,11 @@ const routes: Routes = [
     component: CreateOrEditGroupComponent
   }, {
     path: 'groups/:id',
-    component: GroupViewComponent
+    component: GroupViewComponent,
+    children: [
+      {path: '', redirectTo: 'members', pathMatch: 'full'},
+      {path: 'members', component: GroupMembersViewComponent}
+    ]
   }
 ];
 

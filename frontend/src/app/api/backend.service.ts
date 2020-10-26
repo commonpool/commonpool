@@ -30,7 +30,7 @@ import {
   GetMyMembershipsRequest,
   GetMyMembershipsResponse,
   GetGroupRequest,
-  GetGroupResponse
+  GetGroupResponse, GetGroupMembershipsRequest, GetGroupMembershipsResponse
 } from './models';
 
 import {Observable, of, throwError} from 'rxjs';
@@ -357,6 +357,19 @@ export class BackendService {
           throwError(ErrorResponse.fromHttpResponse(res));
         }
         return GetMyMembershipsResponse.from(res.body as GetMyMembershipsResponse);
+      })
+    );
+  }
+
+  getGroupMemberships(request: GetGroupMembershipsRequest): Observable<GetGroupMembershipsResponse> {
+    return this.http.get(`${environment.apiUrl}/api/v1/groups/${request.id}/memberships`, {
+      observe: 'response'
+    }).pipe(
+      map((res) => {
+        if (res.status !== 200) {
+          throwError(ErrorResponse.fromHttpResponse(res));
+        }
+        return GetGroupMembershipsResponse.from(res.body as GetGroupMembershipsResponse);
       })
     );
   }
