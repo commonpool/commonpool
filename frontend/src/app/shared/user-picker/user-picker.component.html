@@ -1,0 +1,5 @@
+<div class="user-picker">
+  <ng-select [typeahead]="querySubject" [(ngModel)]="selectedUser" placeholder="Select person">
+    <ng-option *ngFor="let item of items$ | async" [value]="item.id">{{item.username}}</ng-option>
+  </ng-select>
+</div>

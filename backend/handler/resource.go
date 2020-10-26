@@ -6,6 +6,7 @@ import (
 	"github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
+	uuid "github.com/satori/go.uuid"
 	"net/http"
 	"strconv"
 	"strings"
@@ -149,7 +150,7 @@ func (h *Handler) CreateResource(c echo.Context) error {
 	subject := h.authorization.GetAuthUserSession(c).Subject
 
 	res := model.NewResource(
-		model.NewResourceKey(),
+		model.NewResourceKey(uuid.NewV4()),
 		sanitized.Type,
 		subject,
 		sanitized.Summary,

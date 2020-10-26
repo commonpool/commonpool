@@ -6,7 +6,7 @@ import (
 )
 
 type Message struct {
-	ID       string    `gorm:"primary_key"`
+	ID       uuid.UUID `gorm:"type:uuid;primary_key"`
 	TopicId  uuid.UUID `gorm:"type:uuid"`
 	UserID   string
 	AuthorID string

@@ -9,9 +9,9 @@ type ResourceKey struct {
 	uuid uuid.UUID
 }
 
-func NewResourceKey() ResourceKey {
+func NewResourceKey(id uuid.UUID) ResourceKey {
 	return ResourceKey{
-		uuid: uuid.NewV4(),
+		uuid: id,
 	}
 }
 

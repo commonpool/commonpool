@@ -13,6 +13,7 @@ func (h *Handler) Register(v1 *echo.Group) {
 	resources.POST("/:id/inquire", h.InquireAboutResource)
 
 	users := v1.Group("/users", h.authorization.Authenticate(false))
+	users.GET("", h.SearchUsers)
 	users.GET("/:id", h.GetUserInfo)
 
 	meta := v1.Group("/meta", h.authorization.Authenticate(false))
@@ -23,14 +24,11 @@ func (h *Handler) Register(v1 *echo.Group) {
 	chat.GET("/threads", h.GetLatestThreads)
 	chat.POST("/:id", h.SendMessage)
 
-	blas := v1.Group("/bla", h.authorization.Authenticate(true))
-	blas.GET("", func(context echo.Context) error {
-		session := h.authorization.GetAuthUserSession(context)
-		if session.Username != "" {
-			return context.String(200, "hello, "+session.Username)
-		} else {
-			return context.String(200, "unauthenticated")
-		}
+	offers := v1.Group("/offers", h.authorization.Authenticate(true))
+	offers.POST("", h.SendOffer)
+	offers.GET("/:id", h.GetOffer)
+	offers.GET("", h.GetOffers)
+	offers.POST("/:id/accept", h.AcceptOffer)
+	offers.POST("/:id/decline", h.DeclineOffer)
 
-	})
 }

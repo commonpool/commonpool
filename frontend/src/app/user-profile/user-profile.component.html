@@ -1,14 +1,34 @@
-<div *ngIf="userInfo$ | async; let userInfo">
-  <h2>
-  {{userInfo.username}}
-  </h2>
-</div>
+<div class="container mt-4">
+  <ng-container *ngIf="userInfo$ | async; let userInfo">
+    <div class="row">
+      <div class="col">
+        <h2>
+          user: {{userInfo.username}}
+        </h2>
+      </div>
+    </div>
 
-<h4>Resources</h4>
-<div *ngIf="userResources$ | async; let resources">
-  <div *ngFor="let resource of resources">
-    <a [routerLink]="'/resources/' + resource.id">
-    {{resource.summary}}
-    </a>
-  </div>
+    <div class="row mt-2">
+      <div class="col">
+        <app-offer-list [userId]="userInfo.id"></app-offer-list>
+      </div>
+    </div>
+
+    <div class="row mt-2">
+      <div class="col">
+        <div class="card">
+          <div class="card-header">
+            My Resources
+          </div>
+          <ul class="list-group list-group-flush" *ngIf="userResources$ | async; let resources">
+            <li class="list-group-item" *ngFor="let resource of resources">
+              <a [routerLink]="'/resources/' + resource.id">
+                {{resource.summary}}
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </ng-container>
 </div>

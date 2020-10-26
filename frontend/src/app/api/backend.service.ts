@@ -11,7 +11,14 @@ import {
   UpdateResourceResponse,
   UpdateResourceRequest,
   GetThreadsResponse,
-  GetMessagesResponse
+  GetMessagesResponse,
+  UsersInfoResponse,
+  SearchUsersQuery,
+  SendOfferRequest,
+  SendOfferResponse,
+  GetOfferRequest,
+  GetOfferResponse,
+  GetOffersResponse, AcceptOfferRequest, AcceptOfferResponse, DeclineOfferRequest, DeclineOfferReponse
 } from './models';
 import {Observable, of, throwError} from 'rxjs';
 import {HttpClient, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest} from '@angular/common/http';
@@ -97,7 +104,6 @@ export class BackendService {
     if (request.query !== undefined) {
       params.query = request.query;
     }
-    console.log(params);
     return this.http.get<SearchResourcesResponse>(`${environment.apiUrl}/api/v1/resources`, {
       params,
       observe: 'response'
@@ -113,7 +119,7 @@ export class BackendService {
   }
 
   getResource(id: string): Observable<GetResourceResponse> {
-    return this.http.get(`${environment.apiUrl}/api/v1/resources/` + id, {
+    return this.http.get(`${environment.apiUrl}/api/v1/resources/${id}`, {
       observe: 'response',
     }).pipe(
       map((res) => {
@@ -148,15 +154,46 @@ export class BackendService {
         if (res.status !== 200) {
           throwError(ErrorResponse.fromHttpResponse(res));
         }
-        const body = res.body as UserInfoResponse;
-        return new UserInfoResponse(body.id, body.username);
+        return UserInfoResponse.from(res.body as UserInfoResponse);
+      })
+    );
+  }
+
+  searchUsers(query: SearchUsersQuery): Observable<UsersInfoResponse> {
+    const params: { [key: string]: string } = {};
+    if (query.skip) {
+      params.skip = query.skip.toString();
+    }
+    if (query.take) {
+      params.take = query.take.toString();
+    }
+    if (query.query) {
+      params.query = query.query.toString();
+    }
+    return this.http.get(`${environment.apiUrl}/api/v1/users`, {
+      observe: 'response',
+      params
+    }).pipe(
+      map((res) => {
+        if (res.status !== 200) {
+          throwError(ErrorResponse.fromHttpResponse(res));
+        }
+        return UsersInfoResponse.from(res.body as UsersInfoResponse);
       })
     );
   }
 
   getThreads(skip: number, take: number): Observable<GetThreadsResponse> {
+    const params: { [key: string]: string } = {};
+    if (skip) {
+      params.skip = skip.toString();
+    }
+    if (take) {
+      params.take = take.toString();
+    }
     return this.http.get(`${environment.apiUrl}/api/v1/chat/threads`, {
-      observe: 'response'
+      observe: 'response',
+      params
     }).pipe(
       map((res) => {
         if (res.status !== 200) {
@@ -168,8 +205,19 @@ export class BackendService {
   }
 
   getMessages(topic: string, skip: number, take: number): Observable<GetMessagesResponse> {
-    return this.http.get(`${environment.apiUrl}/api/v1/chat/messages?topic=${topic}&skip=${skip}&take=${take}`, {
-      observe: 'response'
+    const params: { [key: string]: string } = {};
+    if (skip) {
+      params.skip = skip.toString();
+    }
+    if (take) {
+      params.take = take.toString();
+    }
+    if (topic) {
+      params.topic = topic;
+    }
+    return this.http.get(`${environment.apiUrl}/api/v1/chat/messages`, {
+      observe: 'response',
+      params
     }).pipe(
       map((res) => {
         if (res.status !== 200) {
@@ -206,4 +254,57 @@ export class BackendService {
     );
   }
 
+  sendOffer(offer: SendOfferRequest): Observable<SendOfferResponse> {
+    return this.http.post(`${environment.apiUrl}/api/v1/offers`, offer, {
+      observe: 'response'
+    }).pipe(
+      map((res) => {
+        if (res.status !== 202) {
+          throwError(ErrorResponse.fromHttpResponse(res));
+        }
+        return SendOfferResponse.from(res.body as SendOfferResponse);
+      })
+    );
+  }
+
+  getOffers(offer: GetOfferRequest): Observable<GetOffersResponse> {
+    return this.http.get(`${environment.apiUrl}/api/v1/offers`, {
+      observe: 'response'
+    }).pipe(
+      map((res) => {
+        if (res.status !== 200) {
+          throwError(ErrorResponse.fromHttpResponse(res));
+        }
+        return GetOffersResponse.from(res.body as GetOffersResponse);
+      })
+    );
+  }
+
+
+  acceptOffer(offer: AcceptOfferRequest): Observable<AcceptOfferResponse> {
+    return this.http.post(`${environment.apiUrl}/api/v1/offers/${offer.id}/accept`, undefined,{
+      observe: 'response'
+    }).pipe(
+      map((res) => {
+        if (res.status !== 200) {
+          throwError(ErrorResponse.fromHttpResponse(res));
+        }
+        return AcceptOfferResponse.from(res.body as AcceptOfferResponse);
+      })
+    );
+  }
+
+
+  declineOffer(offer: DeclineOfferRequest): Observable<DeclineOfferReponse> {
+    return this.http.post(`${environment.apiUrl}/api/v1/offers/${offer.id}/decline`, undefined,{
+      observe: 'response'
+    }).pipe(
+      map((res) => {
+        if (res.status !== 200) {
+          throwError(ErrorResponse.fromHttpResponse(res));
+        }
+        return DeclineOfferReponse.from(res.body as DeclineOfferReponse);
+      })
+    );
+  }
 }

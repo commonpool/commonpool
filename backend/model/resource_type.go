@@ -7,8 +7,8 @@ import (
 type ResourceType int
 
 const (
-	Offer ResourceType = iota
-	Request
+	ResourceOffer ResourceType = iota
+	ResourceRequest
 )
 
 func ParseResourceType(s string) (*ResourceType, error) {
@@ -17,11 +17,11 @@ func ParseResourceType(s string) (*ResourceType, error) {
 		return nil, nil
 	}
 	if s == "0" {
-		res = Offer
+		res = ResourceOffer
 		return &res, nil
 	}
 	if s == "1" {
-		res = Request
+		res = ResourceRequest
 		return &res, nil
 	}
 

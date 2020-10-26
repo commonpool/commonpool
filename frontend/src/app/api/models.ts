@@ -19,6 +19,19 @@ export class Resource {
     public createdAt: string
   ) {
   }
+
+  public static from(res: Resource): Resource {
+    return new Resource(
+      res.id,
+      res.summary,
+      res.description,
+      res.type,
+      res.valueInHoursFrom,
+      res.valueInHoursTo,
+      res.createdBy,
+      res.createdById,
+      res.createdAt);
+  }
 }
 
 export class ExtendedResource extends Resource {
@@ -46,6 +59,10 @@ export class GetResourceResponse {
 
   constructor(resource: Resource) {
     this.resource = new ExtendedResource(resource);
+  }
+
+  public static from(res: GetResourceResponse): GetResourceResponse {
+    return new GetResourceResponse(Resource.from(res.resource));
   }
 }
 
@@ -129,7 +146,6 @@ export class ErrorResponse {
       return new ErrorResponse(res.body, '', res.status);
     }
     return new ErrorResponse(res.statusText, '', res.status);
-    ;
 
   }
 }
@@ -137,8 +153,25 @@ export class ErrorResponse {
 export class UserInfoResponse {
   constructor(public id: string, public username: string) {
   }
+
+  static from(res: UserInfoResponse): UserInfoResponse {
+    return new UserInfoResponse(res.id, res.username);
+  }
 }
 
+export class UsersInfoResponse {
+  constructor(public users: UserInfoResponse[]) {
+  }
+
+  static from(res: UsersInfoResponse): UsersInfoResponse {
+    return new UsersInfoResponse(res.users.map(u => UserInfoResponse.from(u)));
+  }
+}
+
+export class SearchUsersQuery {
+  constructor(public query: string, public take: number, public skip: number) {
+  }
+}
 
 export class GetThreadsRequest {
   constructor(public skip: number, public take: number) {
@@ -232,4 +265,160 @@ export class InquireAboutResourceRequest {
   }
 }
 
+export class SendOfferRequest {
+  constructor(public offer: SendOfferRequestPayload) {
+  }
 
+  public static from(req: SendOfferRequest): SendOfferRequest {
+    return new SendOfferRequest(SendOfferRequestPayload.from(req.offer));
+  }
+}
+
+export class GetOffersRequest {
+}
+
+export class SendOfferRequestPayload {
+  constructor(public items: SendOfferRequestItem[]) {
+  }
+
+  public static from(req: SendOfferRequestPayload): SendOfferRequestPayload {
+    return new SendOfferRequestPayload(req.items.map(i => SendOfferRequestItem.from(i)));
+  }
+}
+
+export enum OfferItemType {
+  ResourceItem = 0,
+  TimeItem = 1
+}
+
+export class SendOfferRequestItem {
+  constructor(public from: string, public to: string, public type: OfferItemType, public resourceId: string, public timeInSeconds: number) {
+  }
+
+  static from(req: SendOfferRequestItem) {
+    return new SendOfferRequestItem(req.from, req.to, req.type, req.resourceId, req.timeInSeconds);
+  }
+}
+
+export class GetOfferRequest {
+  constructor(id: string) {
+  }
+}
+
+export class GetOfferResponse {
+  constructor(public offer: Offer) {
+  }
+
+  public static from(res: GetOfferResponse): GetOfferResponse {
+    return new GetOfferResponse(Offer.from(res.offer));
+  }
+}
+
+export class GetOffersResponse {
+  constructor(public offers: Offer[]) {
+  }
+
+  public static from(res: GetOffersResponse): GetOffersResponse {
+    return new GetOffersResponse(res.offers.map(o => Offer.from(o)));
+  }
+}
+
+export class SendOfferResponse {
+  constructor(public offer: Offer) {
+  }
+
+  public static from(res: SendOfferResponse): SendOfferResponse {
+    return new SendOfferResponse(Offer.from(res.offer));
+  }
+}
+
+export class AcceptOfferRequest {
+  constructor(public id: string) {
+  }
+}
+
+export class AcceptOfferResponse {
+  constructor(public offer: Offer) {
+  }
+
+  public static from(o: AcceptOfferResponse): AcceptOfferResponse {
+    return new AcceptOfferResponse(Offer.from(o.offer));
+  }
+}
+
+export class DeclineOfferRequest {
+  constructor(public id: string) {
+  }
+}
+
+export class DeclineOfferReponse {
+  constructor(public offer: Offer) {
+  }
+
+  public static from(o: DeclineOfferReponse): DeclineOfferReponse {
+    return new DeclineOfferReponse(Offer.from(o.offer));
+  }
+}
+
+export enum OfferStatus {
+  PendingOffer = 0,
+  AcceptedOffer = 1,
+  CanceledOffer = 2,
+  DeclinedOffer = 3,
+  ExpiredOffer = 4
+}
+
+export class OfferItem {
+  constructor(
+    public id: string,
+    public fromUserId: string,
+    public toUserId: string,
+    public type: OfferItemType,
+    public resourceId: string,
+    public timeInSeconds: number) {
+  }
+
+  public static from(res: OfferItem): OfferItem {
+    return new OfferItem(res.id, res.fromUserId, res.toUserId, res.type, res.resourceId, res.timeInSeconds);
+  }
+}
+
+export enum Decision {
+  PendingDecision = 0,
+  AcceptedDecision = 1,
+  DeclinedDecision = 2
+}
+
+export class OfferDecision {
+  constructor(public offerId: string, public userId: string, public decision: Decision) {
+  }
+
+  public static from(res: OfferDecision): OfferDecision {
+    return new OfferDecision(res.offerId, res.userId, res.decision);
+  }
+}
+
+export class Offer {
+  constructor(
+    public id: string,
+    public createdAt: string,
+    public completedAt: string,
+    public status: OfferStatus,
+    public authorId: string,
+    public authorUsername: string,
+    public items: OfferItem[],
+    public decisions: OfferDecision[]) {
+  }
+
+  public static from(o: Offer): Offer {
+    return new Offer(
+      o.id,
+      o.createdAt,
+      o.completedAt,
+      o.status,
+      o.authorId,
+      o.authorUsername,
+      o.items.map(i => OfferItem.from(i)),
+      o.decisions.map(d => OfferDecision.from(d)));
+  }
+}

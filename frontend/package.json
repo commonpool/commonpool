@@ -22,6 +22,7 @@
     "@angular/platform-browser": "~9.1.11",
     "@angular/platform-browser-dynamic": "~9.1.11",
     "@angular/router": "~9.1.11",
+    "@ng-select/ng-select": "^5.0.8",
     "date-fns": "^2.16.1",
     "rxjs": "~6.5.4",
     "tslib": "^1.10.0",

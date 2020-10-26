@@ -31,6 +31,9 @@ func AutoMigrate(db *gorm.DB) {
 		&model.Message{},
 		&model.Topic{},
 		&model.ResourceTopic{},
+		&model.Offer{},
+		&model.OfferItem{},
+		&model.OfferDecision{},
 	)
 }
 
