@@ -158,11 +158,15 @@ type MarkInvitationAsDeniedResponse struct {
 }
 
 type GetMembershipsForUserRequest struct {
-	UserKey model.UserKey
+	UserKey          model.UserKey
+	MembershipStatus *model.MembershipStatus
 }
 
-func NewGetMembershipsForUserRequest(userKey model.UserKey) GetMembershipsForUserRequest {
-	return GetMembershipsForUserRequest{UserKey: userKey}
+func NewGetMembershipsForUserRequest(userKey model.UserKey, membershipStatus *model.MembershipStatus) GetMembershipsForUserRequest {
+	return GetMembershipsForUserRequest{
+		UserKey:          userKey,
+		MembershipStatus: membershipStatus,
+	}
 }
 
 type GetMembershipsForUserResponse struct {
@@ -194,6 +198,6 @@ func NewGetMembershipRequest(membershipKey model.MembershipKey) GetMembershipReq
 }
 
 type GetMembershipResponse struct {
-	Error error
+	Error      error
 	Membership model.Membership
 }

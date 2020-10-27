@@ -1,9 +1,10 @@
 import {Component, OnInit} from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
 import {BackendService} from '../../api/backend.service';
-import {pluck, switchMap} from 'rxjs/operators';
-import {GetMyMembershipsRequest} from '../../api/models';
+import {map, pluck, shareReplay, switchMap} from 'rxjs/operators';
+import {GetUserMembershipsRequest, MembershipStatus} from '../../api/models';
 import {AuthService} from '../../auth.service';
+import {combineLatest} from 'rxjs';
 
 @Component({
   selector: 'app-user-groups-view',
@@ -16,10 +17,16 @@ export class UserGroupsViewComponent implements OnInit {
   }
 
   userId$ = this.route.parent.params.pipe(pluck('id'));
-  groups$ = this.userId$.pipe(
-    switchMap(id => this.backend.getMyMemberships(new GetMyMembershipsRequest()))
+  memberships$ = this.userId$.pipe(
+    switchMap(id => this.backend.getUserMemberships(new GetUserMembershipsRequest(id, MembershipStatus.ApprovedMembershipStatus))),
+    pluck('memberships'),
+    shareReplay()
   );
-  authUser$ = this.auth.session$.pipe(pluck('id'))
+  authUser$ = this.auth.session$.pipe(pluck('id'));
+  isMyProfile$ = combineLatest([this.userId$, this.authUser$]).pipe(
+    map(([userId, authUserId]) => userId === authUserId),
+    shareReplay()
+  );
 
   ngOnInit(): void {
   }
