@@ -37,6 +37,18 @@ import {PentagonIcon} from './icons/pentagon/pentagon.icon';
 import {AsterixIcon} from './icons/asterix/asterix.icon';
 import {GroupResourcesViewComponent} from './groups/group-resources-view/group-resources-view.component';
 import {GroupMembersViewComponent} from './groups/group-members-view/group-members-view.component';
+import { UserOffersViewComponent } from './users/user-offers-view/user-offers-view.component';
+import { UserResourcesViewComponent } from './users/user-resources-view/user-resources-view.component';
+import { UserGroupsViewComponent } from './users/user-groups-view/user-groups-view.component';
+import { UserViewComponent } from './users/user-view/user-view.component';
+import { UserInvitationsViewComponent } from './users/user-invitations-view/user-invitations-view.component';
+import { MailboxIcon } from './icons/mailbox/mailbox.icon';
+import { EnvelopeIcon } from './icons/envelope/envelope.icon';
+import { CheckIcon } from './icons/check/check.icon';
+import { CrossIcon } from './icons/cross/cross.icon';
+import { DoorOpenIcon } from './icons/door-open/door-open.icon';
+import { ArrowRightIcon } from './icons/arrow-right/arrow-right.icon';
+import { ArrowLeftIcon } from './icons/arrow-left/arrow-left.icon';
 
 @NgModule({
   declarations: [
@@ -69,6 +81,18 @@ import {GroupMembersViewComponent} from './groups/group-members-view/group-membe
     AsterixIcon,
     GroupResourcesViewComponent,
     GroupMembersViewComponent,
+    UserOffersViewComponent,
+    UserResourcesViewComponent,
+    UserGroupsViewComponent,
+    UserViewComponent,
+    UserInvitationsViewComponent,
+    MailboxIcon,
+    EnvelopeIcon,
+    CheckIcon,
+    CrossIcon,
+    DoorOpenIcon,
+    ArrowRightIcon,
+    ArrowLeftIcon,
   ],
   imports: [
     BrowserModule,

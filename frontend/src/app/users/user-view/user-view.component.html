@@ -1,0 +1,42 @@
+<ng-container *ngIf="user$ | async; let user">
+
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col">
+        <div class="group-header">
+          <h4 class="my-3">
+            <a [routerLink]="'/users/' + user.id">
+              <app-person></app-person>&nbsp;<b>{{user.username}}</b>
+            </a>
+          </h4>
+          <ul class="menu">
+            <li routerLinkActive="active">
+              <a routerLink="groups">
+                <app-people></app-people>
+                Groups
+              </a>
+            </li>
+            <li routerLinkActive="active">
+              <a routerLink="resources">
+                <app-asterix></app-asterix>
+                Resources
+              </a>
+            </li>
+            <li routerLinkActive="active">
+              <a routerLink="invitations">
+                <app-mailbox></app-mailbox>
+                Invites
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="group-border">
+  </div>
+
+  <router-outlet></router-outlet>
+
+</ng-container>

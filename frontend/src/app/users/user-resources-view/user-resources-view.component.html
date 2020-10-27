@@ -1,0 +1,20 @@
+<ng-container *ngIf="resources$ | async; let resources">
+  <div class="container-fluid mt-5">
+    <div class="row">
+      <div class="col">
+        <div class="card">
+          <h5 class="card-header">
+            My Resources
+          </h5>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item" *ngFor="let resource of resources.resources">
+              <span>
+                <a [routerLink]="'/resources/' + resource.id">{{resource.summary}}</a>
+              </span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-container>

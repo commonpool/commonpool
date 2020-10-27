@@ -30,7 +30,7 @@ export class AuthService {
 
   public goToMyProfile() {
     if (this.sessionSubject.value !== undefined) {
-      this.router.navigateByUrl('/profiles/' + this.sessionSubject.value.id);
+      this.router.navigateByUrl('/users/' + this.sessionSubject.value.id);
     }
   }
 

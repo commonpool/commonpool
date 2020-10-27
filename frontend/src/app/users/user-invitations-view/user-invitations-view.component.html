@@ -1,0 +1,73 @@
+<ng-container *ngIf="groups$ | async; let groups">
+  <div class="container-fluid mt-5">
+    <div class="row">
+      <div class="col">
+        <div class="card">
+          <h5 class="card-header">
+            Incoming
+            <app-arrow-left></app-arrow-left>
+          </h5>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item" *ngFor="let group of groups.memberships">
+
+              <span>
+                <a [routerLink]="'/groups/' + group.groupId">{{group.groupName}}</a>
+
+              </span>
+
+
+              <div>
+                <small class="text-muted">you received the invite to join them {{group.createdAtDistance}}</small>
+              </div>
+
+              <div class="mt-2">
+                <button class="btn btn-success mr-1 btn-sm shadow-sm">
+                  <app-check></app-check>
+                  Accept
+                </button>
+                <button class="btn btn-outline-danger mr-2 btn-sm  shadow-sm">
+                  <app-cross></app-cross>
+                  Decline
+                </button>
+              </div>
+
+
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="row mt-3">
+      <div class="col">
+        <div class="card">
+          <h5 class="card-header">
+            Outgoing
+            <app-arrow-right></app-arrow-right>
+          </h5>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item" *ngFor="let group of groups.memberships">
+              <span>
+                <a [routerLink]="'/groups/' + group.groupId">{{group.groupName}}</a>
+              </span>
+
+
+              <div>
+                <small class="text-muted">you sent the request {{group.createdAtDistance}}</small>
+              </div>
+
+              <div class="mt-2">
+                <button class="btn btn-outline-danger mr-2 btn-sm  shadow-sm">
+                  <app-cross></app-cross>
+                  Cancel
+                </button>
+              </div>
+
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</ng-container>
