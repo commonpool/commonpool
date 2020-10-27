@@ -25,7 +25,7 @@
             <b><a [routerLink]="'/resources/' + resource.id">{{resource.summary}}</a></b>
           </div>
           <div><span *ngIf="resource.type === 0">offering </span> by <b><a
-            [routerLink]="'/profiles/' + resource.createdById">{{resource.createdBy}}</a></b>
+            [routerLink]="'/users/' + resource.createdById">{{resource.createdBy}}</a></b>
             for {{resource.valueInHoursFrom}}h-{{resource.valueInHoursTo}}h
           </div>
           <div>{{resource.description}}</div>

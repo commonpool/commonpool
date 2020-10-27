@@ -15,6 +15,7 @@ func (h *Handler) Register(v1 *echo.Group) {
 	users := v1.Group("/users", h.authorization.Authenticate(false))
 	users.GET("", h.SearchUsers)
 	users.GET("/:id", h.GetUserInfo)
+	users.GET("/:id/memberships", h.GetUserMemberships)
 
 	meta := v1.Group("/meta", h.authorization.Authenticate(false))
 	meta.GET("/who-am-i", h.WhoAmI)

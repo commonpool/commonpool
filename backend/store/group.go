@@ -206,7 +206,21 @@ func (g *GroupStore) updateInvitationAcceptance(membershipKey model.MembershipKe
 
 func (g *GroupStore) GetMembershipsForUser(request group.GetMembershipsForUserRequest) group.GetMembershipsForUserResponse {
 	var memberships []model.Membership
-	err := g.db.Where("user_id = ?", request.UserKey.String()).Find(&memberships).Error
+	chain := g.db.Where("user_id = ?", request.UserKey.String())
+
+	if request.MembershipStatus != nil {
+		if *request.MembershipStatus == model.ApprovedMembershipStatus {
+			chain = chain.Where("group_confirmed = true AND user_confirmed = true")
+		} else if *request.MembershipStatus == model.PendingGroupMembershipStatus {
+			chain = chain.Where("group_confirmed = false AND user_confirmed = true")
+		} else if *request.MembershipStatus == model.PendingUserMembershipStatus {
+			chain = chain.Where("group_confirmed = true AND user_confirmed = false")
+		} else if *request.MembershipStatus == model.PendingStatus {
+			chain = chain.Where("group_confirmed = false OR user_confirmed = false")
+		}
+	}
+
+	err := chain.Find(&memberships).Error
 	return group.GetMembershipsForUserResponse{
 		Error:       err,
 		Memberships: memberships,

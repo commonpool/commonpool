@@ -4,7 +4,7 @@
     <h1>{{resource.summary}}</h1>
     <h3>{{resource.description}}</h3>
     <p>Value: {{resource.valueInHoursFrom}}h - {{resource.valueInHoursTo}}h </p>
-    <p>Created by <a [routerLink]="'/profiles/' + resource.createdById">{{resource.createdBy}}</a> {{resource.createdAtDistanceAgo}}</p>
+    <p>Created by <a [routerLink]="'/users/' + resource.createdById">{{resource.createdBy}}</a> {{resource.createdAtDistanceAgo}}</p>
 
     <div *ngIf="auth.session$ | async; let session">
       <div *ngIf="session.id === resource.createdById">

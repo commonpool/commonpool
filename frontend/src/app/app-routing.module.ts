@@ -13,6 +13,10 @@ import {CreateOfferComponent} from './offers/create-offer/create-offer.component
 import {CreateOrEditGroupComponent} from './groups/create-or-edit-group/create-or-edit-group.component';
 import {GroupViewComponent} from './groups/group-view/group-view.component';
 import {GroupMembersViewComponent} from './groups/group-members-view/group-members-view.component';
+import {UserViewComponent} from './users/user-view/user-view.component';
+import {UserGroupsViewComponent} from './users/user-groups-view/user-groups-view.component';
+import {UserResourcesViewComponent} from './users/user-resources-view/user-resources-view.component';
+import {UserInvitationsViewComponent} from './users/user-invitations-view/user-invitations-view.component';
 
 
 const routes: Routes = [
@@ -32,8 +36,14 @@ const routes: Routes = [
     path: 'resources/:id/edit',
     component: CreateOrEditResourceComponent
   }, {
-    path: 'profiles/:id',
-    component: UserProfileComponent
+    path: 'users/:id',
+    component: UserViewComponent,
+    children: [
+      {path: '', redirectTo: 'groups', pathMatch: 'full'},
+      {path: 'groups', component: UserGroupsViewComponent},
+      {path: 'resources', component: UserResourcesViewComponent},
+      {path: 'invitations', component: UserInvitationsViewComponent}
+    ]
   }, {
     path: 'messages',
     component: ConversationThreadListComponent

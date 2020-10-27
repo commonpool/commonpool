@@ -89,7 +89,7 @@ func (h *Handler) GetGroup(c echo.Context) error {
 
 }
 
-// GetGroup godoc
+// GetLoggedInUserMemberships godoc
 // @Summary Gets currently logged in user memberships
 // @Description Gets the memberships for the currently logged in user
 // @ID getLoggedInUserMemberships
@@ -103,7 +103,56 @@ func (h *Handler) GetLoggedInUserMemberships(c echo.Context) error {
 
 	authUserKey := h.authorization.GetAuthUserKey(c)
 
-	getMembershipsRequest := group.NewGetMembershipsForUserRequest(authUserKey)
+	getMembershipsRequest := group.NewGetMembershipsForUserRequest(authUserKey, model.AnyMembershipStatus())
+	getMemberships := h.groupStore.GetMembershipsForUser(getMembershipsRequest)
+	if getMemberships.Error != nil {
+		return NewErrResponse(c, getMemberships.Error)
+	}
+
+	memberships := getMemberships.Memberships
+
+	groupNames, err := h.getGroupNamesForMemberships(memberships)
+	if err != nil {
+		return NewErrResponse(c, err)
+	}
+
+	userNames, err := h.getUserNamesForMemberships(memberships)
+	if err != nil {
+		return NewErrResponse(c, err)
+	}
+
+	response := web.NewGetUserMembershipsResponse(getMemberships.Memberships, groupNames, userNames)
+	return c.JSON(http.StatusOK, response)
+
+}
+
+// GetUserMemberships godoc
+// @Summary Gets memberships for a given user
+// @Description Gets the memberships for a given user
+// @ID getUserMemberships
+// @Param id path string true "ID of the user" (format:uuid)
+// @Param status status MembershipStatus true "status of the membership"
+// @Tags groups
+// @Accept json
+// @Produce json
+// @Success 200 {object} web.GetUserMembershipsResponse
+// @Failure 400 {object} utils.Error
+// @Router /users/:id/memberships [get]
+func (h *Handler) GetUserMemberships(c echo.Context) error {
+
+	var membershipStatus = model.AnyMembershipStatus()
+	statusStr := c.QueryParam("status")
+	if statusStr != "" {
+		ms, err := model.ParseMembershipStatus(statusStr)
+		if err != nil {
+			return NewErrResponse(c, err)
+		}
+		membershipStatus = &ms
+	}
+
+	userKey := model.NewUserKey(c.Param("id"))
+
+	getMembershipsRequest := group.NewGetMembershipsForUserRequest(userKey, membershipStatus)
 	getMemberships := h.groupStore.GetMembershipsForUser(getMembershipsRequest)
 	if getMemberships.Error != nil {
 		return NewErrResponse(c, getMemberships.Error)

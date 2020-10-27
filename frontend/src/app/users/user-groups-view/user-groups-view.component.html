@@ -1,0 +1,40 @@
+<ng-container *ngIf="memberships$ | async; let memberships">
+  <div class="container-fluid mt-5">
+    <div class="row">
+      <div class="col">
+        <div class="card">
+          <h5 class="card-header">
+            Groups
+          </h5>
+          <div class="card-body" *ngIf="memberships.length === 0">
+            No groups!
+          </div>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item" *ngFor="let membership of memberships">
+              <span>
+                <a [routerLink]="'/groups/' + membership.groupId">{{membership.groupName}}</a>
+              </span>
+
+              <div class="float-right" *ngIf="isMyProfile$ | async">
+                <button class="btn btn-light mr-2 btn-sm  shadow-sm" [disabled]="membership.isOwner">
+                  <app-door-open></app-door-open>
+                  Leave Group
+                </button>
+              </div>
+
+              <div>
+                <small class="text-muted">joined {{membership.createdAtDistance}}</small>
+              </div>
+
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="row mt-4" *ngIf="isMyProfile$ | async">
+      <div class="col">
+        <button class="btn btn-success shadow" [routerLink]="'/groups/new'">Create your own group</button>
+      </div>
+    </div>
+  </div>
+</ng-container>

@@ -581,6 +581,27 @@ export class GetMyMembershipsResponse {
   }
 }
 
+export enum MembershipStatus {
+  ApprovedMembershipStatus,
+  PendingStatus,
+  PendingGroupMembershipStatus,
+  PendingUserMembershipStatus
+}
+
+export class GetUserMembershipsRequest {
+  constructor(public userId: string, public membershipStatus?: MembershipStatus) {
+  }
+}
+
+export class GetUserMembershipsResponse {
+  constructor(public memberships: Membership[]) {
+  }
+
+  public static from(i: GetUserMembershipsResponse): GetUserMembershipsResponse {
+    return new GetUserMembershipsResponse(i.memberships.map(m => Membership.from(m)));
+  }
+}
+
 
 export class GetGroupMembershipsRequest {
   constructor(public id: string) {

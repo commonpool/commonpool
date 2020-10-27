@@ -34,7 +34,7 @@ import {
   GetGroupMembershipsRequest,
   GetGroupMembershipsResponse,
   GetUsersForGroupInvitePickerRequest,
-  GetUsersForGroupInvitePickerResponse
+  GetUsersForGroupInvitePickerResponse, GetUserMembershipsRequest, GetUserMembershipsResponse
 } from './models';
 
 import {Observable, of, throwError} from 'rxjs';
@@ -364,6 +364,25 @@ export class BackendService {
       })
     );
   }
+
+  getUserMemberships(request: GetUserMembershipsRequest): Observable<GetUserMembershipsResponse> {
+    const params: { [key: string]: string } = {};
+    if (request.membershipStatus !== undefined) {
+      params.status = request.membershipStatus.toString();
+    }
+    return this.http.get(`${environment.apiUrl}/api/v1/users/${request.userId}/memberships`, {
+      observe: 'response',
+      params
+    }).pipe(
+      map((res) => {
+        if (res.status !== 200) {
+          throwError(ErrorResponse.fromHttpResponse(res));
+        }
+        return GetUserMembershipsResponse.from(res.body as GetUserMembershipsResponse);
+      })
+    );
+  }
+
 
   getGroupMemberships(request: GetGroupMembershipsRequest): Observable<GetGroupMembershipsResponse> {
     return this.http.get(`${environment.apiUrl}/api/v1/groups/${request.id}/memberships`, {
