@@ -19,15 +19,25 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b50bce1a-5445-4a69-8265-74993e439f0e" name="Default Changelist" comment="" />
+    <list default="true" id="b50bce1a-5445-4a69-8265-74993e439f0e" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/Makefile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/user_key.go" beforeDir="false" afterPath="$PROJECT_DIR$/model/user_key.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/web/group.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/package-lock.json" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="GOROOT" path="$PROJECT_DIR$/../../../../linuxbrew/.linuxbrew/Cellar/go/1.15.2/libexec" />
+  <component name="GOROOT" path="$PROJECT_DIR$/../../../../linuxbrew/.linuxbrew/Cellar/go/1.15.3/libexec" />
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="GoLibraries">
+    <option name="indexEntireGoPath" value="false" />
   </component>
   <component name="KubernetesApiPersistence">
     <option name="context" value="us-east-1.staging.app.commonpool.net" />
@@ -42,8 +52,33 @@
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="go.import.settings.migrated" value="true" />
     <property name="go.sdk.automatically.set" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="go.tried.to.enable.integration.vgo.integrator" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/main.go" />
+  </component>
+  <component name="RunManager">
+    <configuration name="go build backend main.go" type="GoApplicationRunConfiguration" factoryName="Go Application" nameIsGenerated="true">
+      <module name="backend" />
+      <working_directory value="$PROJECT_DIR$" />
+      <go_parameters value="-i" />
+      <EXTENSION ID="net.ashald.envfile">
+        <option name="IS_ENABLED" value="true" />
+        <option name="IS_SUBST" value="false" />
+        <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
+        <option name="IS_IGNORE_MISSING_FILES" value="false" />
+        <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
+        <ENTRIES>
+          <ENTRY IS_ENABLED="true" PARSER="runconfig" />
+          <ENTRY IS_ENABLED="true" PARSER="env" PATH=".env" />
+        </ENTRIES>
+      </EXTENSION>
+      <kind value="PACKAGE" />
+      <filePath value="$PROJECT_DIR$/../backend|$PROJECT_DIR$/main.go" />
+      <package value="github.com/commonpool/backend" />
+      <directory value="$PROJECT_DIR$" />
+      <method v="2" />
+    </configuration>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
@@ -56,6 +91,9 @@
     </task>
     <servers />
   </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
       <map>
@@ -66,5 +104,55 @@
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="VgoProject">
+    <integration-enabled>true</integration-enabled>
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="898" y="1108" width="568" height="141" key="#GOROOT" timestamp="1603893345041">
+      <screen x="0" y="27" width="3840" height="2133" />
+    </state>
+    <state x="898" y="1108" width="568" height="141" key="#GOROOT/0.27.3840.2133@0.27.3840.2133" timestamp="1603893345041" />
+    <state x="1023" y="829" width="1084" height="711" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1603893485300">
+      <screen x="0" y="27" width="3840" height="2133" />
+    </state>
+    <state x="1023" y="829" width="1084" height="711" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.27.3840.2133@0.27.3840.2133" timestamp="1603893485300" />
+    <state x="902" y="976" width="549" height="406" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1603893275126">
+      <screen x="0" y="27" width="3840" height="2133" />
+    </state>
+    <state x="902" y="976" width="549" height="406" key="#com.intellij.fileTypes.FileTypeChooser/0.27.3840.2133@0.27.3840.2133" timestamp="1603893275126" />
+    <state x="1167" y="644" width="1424" height="1045" key="DiffContextDialog" timestamp="1603897680958">
+      <screen x="0" y="27" width="3840" height="2133" />
+    </state>
+    <state x="1167" y="644" width="1424" height="1045" key="DiffContextDialog/0.27.3840.2133@0.27.3840.2133" timestamp="1603897680958" />
+    <state x="1408" y="937" width="664" height="501" key="EnvironmentVariablesDialog" timestamp="1603893434430">
+      <screen x="0" y="27" width="3840" height="2133" />
+    </state>
+    <state x="1408" y="937" width="664" height="501" key="EnvironmentVariablesDialog/0.27.3840.2133@0.27.3840.2133" timestamp="1603893434430" />
+    <state x="1348" y="942" width="424" height="491" key="FileChooserDialogImpl" timestamp="1603893475009">
+      <screen x="0" y="27" width="3840" height="2133" />
+    </state>
+    <state x="1348" y="942" width="424" height="491" key="FileChooserDialogImpl/0.27.3840.2133@0.27.3840.2133" timestamp="1603893475009" />
+    <state width="1578" height="651" key="GridCell.Tab.0.bottom" timestamp="1603897641841">
+      <screen x="0" y="27" width="3840" height="2133" />
+    </state>
+    <state width="1578" height="651" key="GridCell.Tab.0.bottom/0.27.3840.2133@0.27.3840.2133" timestamp="1603897641841" />
+    <state width="1578" height="651" key="GridCell.Tab.0.center" timestamp="1603897641841">
+      <screen x="0" y="27" width="3840" height="2133" />
+    </state>
+    <state width="1578" height="651" key="GridCell.Tab.0.center/0.27.3840.2133@0.27.3840.2133" timestamp="1603897641841" />
+    <state width="1578" height="651" key="GridCell.Tab.0.left" timestamp="1603897641840">
+      <screen x="0" y="27" width="3840" height="2133" />
+    </state>
+    <state width="1578" height="651" key="GridCell.Tab.0.left/0.27.3840.2133@0.27.3840.2133" timestamp="1603897641840" />
+    <state width="1578" height="651" key="GridCell.Tab.0.right" timestamp="1603897641841">
+      <screen x="0" y="27" width="3840" height="2133" />
+    </state>
+    <state width="1578" height="651" key="GridCell.Tab.0.right/0.27.3840.2133@0.27.3840.2133" timestamp="1603897641841" />
+    <state x="845" y="833" width="672" height="678" key="search.everywhere.popup" timestamp="1603893270295">
+      <screen x="0" y="27" width="3840" height="2133" />
+    </state>
+    <state x="845" y="833" width="672" height="678" key="search.everywhere.popup/0.27.3840.2133@0.27.3840.2133" timestamp="1603893270295" />
   </component>
 </project>
