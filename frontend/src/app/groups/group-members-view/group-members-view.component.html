@@ -18,7 +18,15 @@
                 <span *ngIf="!member.isOwner && !member.isAdmin && member.isMember">(member)</span>
                 <span *ngIf="!member.groupConfirmed || !member.userConfirmed">(pending)</span>
               </span>
-              <small class="float-right text-muted">joined {{member.createdAtDistance}}</small>
+              <div class="float-right">
+                <app-kick-or-leave-group-button
+                  [membership]="member"
+                  (left)="refreshSubject.next(true)"
+                ></app-kick-or-leave-group-button>
+              </div>
+              <div>
+                <small class="text-muted">joined {{member.createdAtDistance}}</small>
+              </div>
             </li>
           </ul>
         </div>

@@ -41,5 +41,9 @@ func (h *Handler) Register(v1 *echo.Group) {
 	groups.GET("/:id/memberships", h.GetGroupMemberships)
 	groups.GET("/:id/invite-member-picker", h.GetUsersForGroupInvitePicker)
 	groups.POST("/:id/invite", h.InviteUser)
+	groups.GET("/:groupId/memberships/:userId", h.GetMembership)
+	groups.POST("/:groupId/memberships/:userId/accept", h.AcceptInvitation)
+	groups.POST("/:groupId/memberships/:userId/decline", h.DeclineInvitation)
+	groups.DELETE("/:groupId/memberships/:userId", h.LeaveGroup)
 
 }

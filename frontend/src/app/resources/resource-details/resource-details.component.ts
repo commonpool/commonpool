@@ -1,7 +1,7 @@
 import {Component, OnInit} from '@angular/core';
 import {BackendService} from '../../api/backend.service';
 import {ActivatedRoute, Router} from '@angular/router';
-import {distinctUntilChanged, pluck, switchMap} from 'rxjs/operators';
+import {distinctUntilChanged, filter, pluck, switchMap, tap} from 'rxjs/operators';
 import {AuthService} from '../../auth.service';
 
 @Component({
@@ -11,8 +11,12 @@ import {AuthService} from '../../auth.service';
 })
 export class ResourceDetailsComponent implements OnInit {
 
-  resourceId$ = this.route.params.pipe(pluck('id'), distinctUntilChanged());
+  resourceId$ = this.route.params.pipe(
+    pluck('resourceId'),
+    filter(r => !!r),
+    distinctUntilChanged());
   resource$ = this.resourceId$.pipe(
+    tap(console.log),
     switchMap(id => this.backend.getResource(id)),
     pluck('resource')
   );

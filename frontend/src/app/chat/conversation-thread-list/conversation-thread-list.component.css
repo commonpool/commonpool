@@ -1,25 +1,29 @@
-.thread {
-  display: block;
-  padding: 1rem;
-  border: 1px solid black;
-  margin-left: 1rem;
-  margin-right: 1rem;
-  margin-bottom: 0.125rem;
-  color: black;
-  text-decoration: none
+
+.message-container {
+  display: flex;
+  flex-direction: row;
+  margin:0;
+  padding: 0.5rem 0.5rem;
+  cursor: pointer;
 }
 
-.thread:not(.unread) {
+.message-container .message-content{
+  flex-grow: 1
+
+}
+
+.message-container .message-icon {
+  align-self: center;
+  margin-left: 1rem;
+  margin-right: 1em;
+  opacity: 0;
+}
+
+.message-container.unread .message-icon {
+  opacity: 1;
+}
+
+.message-container.unread .title, .message-container.unread .last-message {
   font-weight: bold;
 }
 
-.thread .last-message-author {
-  display: inline-block;
-  width: 5rem;
-}
-
-.thread .last-message-preview {
-  display: inline-block;
-  font-style: italic;
-  color: #555;
-}

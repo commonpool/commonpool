@@ -162,14 +162,14 @@ func (g *GroupStore) MarkInvitationAsAccepted(request group.MarkInvitationAsAcce
 	return group.MarkInvitationAsAcceptedResponse{}
 }
 
-func (g *GroupStore) MarkInvitationAsDenied(request group.MarkInvitationAsDeniedRequest) group.MarkInvitationAsDeniedResponse {
+func (g *GroupStore) MarkInvitationAsDeclined(request group.MarkInvitationAsDeclinedRequest) group.MarkInvitationAsDeclinedResponse {
 	err := g.updateInvitationAcceptance(request.MembershipKey, false, request.From)
 	if err != nil {
-		return group.MarkInvitationAsDeniedResponse{
+		return group.MarkInvitationAsDeclinedResponse{
 			Error: err,
 		}
 	}
-	return group.MarkInvitationAsDeniedResponse{}
+	return group.MarkInvitationAsDeclinedResponse{}
 }
 
 func (g *GroupStore) updateInvitationAcceptance(membershipKey model.MembershipKey, isAccepted bool, decisionFrom group.MembershipParty) error {
@@ -207,18 +207,7 @@ func (g *GroupStore) updateInvitationAcceptance(membershipKey model.MembershipKe
 func (g *GroupStore) GetMembershipsForUser(request group.GetMembershipsForUserRequest) group.GetMembershipsForUserResponse {
 	var memberships []model.Membership
 	chain := g.db.Where("user_id = ?", request.UserKey.String())
-
-	if request.MembershipStatus != nil {
-		if *request.MembershipStatus == model.ApprovedMembershipStatus {
-			chain = chain.Where("group_confirmed = true AND user_confirmed = true")
-		} else if *request.MembershipStatus == model.PendingGroupMembershipStatus {
-			chain = chain.Where("group_confirmed = false AND user_confirmed = true")
-		} else if *request.MembershipStatus == model.PendingUserMembershipStatus {
-			chain = chain.Where("group_confirmed = true AND user_confirmed = false")
-		} else if *request.MembershipStatus == model.PendingStatus {
-			chain = chain.Where("group_confirmed = false OR user_confirmed = false")
-		}
-	}
+	chain = g.filterMembershipStatus(chain, request.MembershipStatus)
 
 	err := chain.Find(&memberships).Error
 	return group.GetMembershipsForUserResponse{
@@ -227,9 +216,26 @@ func (g *GroupStore) GetMembershipsForUser(request group.GetMembershipsForUserRe
 	}
 }
 
+func (g *GroupStore) filterMembershipStatus(chain *gorm.DB, membershipStatus *model.MembershipStatus) *gorm.DB {
+	if membershipStatus != nil {
+		if *membershipStatus == model.ApprovedMembershipStatus {
+			chain = chain.Where("group_confirmed = true AND user_confirmed = true")
+		} else if *membershipStatus == model.PendingGroupMembershipStatus {
+			chain = chain.Where("group_confirmed = false AND user_confirmed = true")
+		} else if *membershipStatus == model.PendingUserMembershipStatus {
+			chain = chain.Where("group_confirmed = true AND user_confirmed = false")
+		} else if *membershipStatus == model.PendingStatus {
+			chain = chain.Where("group_confirmed = false OR user_confirmed = false")
+		}
+	}
+	return chain
+}
+
 func (g *GroupStore) GetMembershipsForGroup(request group.GetMembershipsForGroupRequest) group.GetMembershipsForGroupResponse {
 	var memberships []model.Membership
-	err := g.db.Where("group_id = ?", request.GroupKey.ID.String()).Find(&memberships).Error
+	chain := g.db.Where("group_id = ?", request.GroupKey.ID.String())
+	chain = g.filterMembershipStatus(chain, request.MembershipStatus)
+	err := chain.Find(&memberships).Error
 	return group.GetMembershipsForGroupResponse{
 		Error:       err,
 		Memberships: memberships,
@@ -247,6 +253,22 @@ func (g *GroupStore) GetMembership(request group.GetMembershipRequest) group.Get
 		Error:      err,
 		Membership: membership,
 	}
+}
+
+func (g *GroupStore) DeleteMembership(request group.DeleteMembershipRequest) group.DeleteMembershipResponse {
+	req := g.db.Delete(&model.Membership{}, "user_id = ? AND group_id = ?", request.MembershipKey.UserKey.String(), request.MembershipKey.GroupKey.ID.String())
+	err := req.Error
+	if err != nil {
+		return group.DeleteMembershipResponse{
+			Error: err,
+		}
+	}
+	if req.RowsAffected == 0 {
+		return group.DeleteMembershipResponse{
+			Error: fmt.Errorf("cannot delete invitation: not found"),
+		}
+	}
+	return group.DeleteMembershipResponse{}
 }
 
 func NewGroupStore(db *gorm.DB) *GroupStore {

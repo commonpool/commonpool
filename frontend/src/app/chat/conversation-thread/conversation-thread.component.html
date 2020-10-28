@@ -1,19 +1,35 @@
-<div class="thread">
-
-  <ng-container *ngIf="messages$| async; let messages">
-    <div *ngFor="let message of messages.messages" class="message" [ngClass]="{sentByMe: message.sentByMe}">
-      <div class="header">
-        <a class="sender" [routerLink]="'/users/' + message.sentBy">{{message.sentByUsername}}</a>&nbsp;<span class="sent-at">{{message.sentAtDate | date:'h:mmaaa'}}</span>
-      </div>
-      <div class="content">
-        {{message.content}}
+<div class="a-thread">
+  <div class="input-section">
+    <div class="textarea-container">
+      <textarea class="form-control" [(ngModel)]="content" (keydown.enter)="sendMessage($event)"></textarea>
+      <div class="send">
+        <button class="btn btn-primary ml-2" (click)="sendMessage($event)">
+          <app-arrow-right></app-arrow-right>
+        </button>
       </div>
     </div>
-  </ng-container>
+  </div>
+  <div class="messages">
+    <ng-container *ngIf="messageGroups$ | async; let messageGroups">
+      <ng-container *ngFor="let messageGroup of messageGroups; trackBy:trackMessageGroup">
 
-</div>
 
-<div class="inputBox">
-  <textarea [(ngModel)]="content" class="input" rows="1" (keydown.enter)="sendMessage()"></textarea>
-  <button (click)="sendMessage()" class="submit">submit</button>
+        <div class="message" *ngFor="let message of messageGroup.messages; trackBy: trackMessage" [ngClass]="{sentByMe: message.sentByMe}">
+          <div class="header">
+            <a class="sender" [routerLink]="'/users/' + message.sentBy">{{message.sentByUsername}}</a>&nbsp;<span
+            class="sent-at">{{message.sentAtDate | date:'h:mmaaa'}}</span>
+          </div>
+          <div class="content">
+            {{message.content}}
+          </div>
+        </div>
+
+        <div class="message-date">
+          {{messageGroup.dateStr }}
+        </div>
+
+
+      </ng-container>
+    </ng-container>
+  </div>
 </div>

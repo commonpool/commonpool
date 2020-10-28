@@ -10,7 +10,7 @@
 
 .group-header ul {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   padding: 0;
   margin: 0;
 }

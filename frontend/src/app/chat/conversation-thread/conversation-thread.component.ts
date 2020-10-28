@@ -1,8 +1,15 @@
 import {Component, OnInit} from '@angular/core';
 import {BehaviorSubject, combineLatest, Subject} from 'rxjs';
-import {pluck, startWith, switchMap} from 'rxjs/operators';
+import {map, pluck, startWith, switchMap} from 'rxjs/operators';
 import {ActivatedRoute} from '@angular/router';
 import {BackendService} from '../../api/backend.service';
+import {Message} from '../../api/models';
+import {format} from 'date-fns';
+
+class MessageGroup {
+  constructor(public date: Date, public dateStr: string, public messages: Message[]) {
+  }
+}
 
 @Component({
   selector: 'app-conversation-thread',
@@ -29,11 +36,60 @@ export class ConversationThreadComponent implements OnInit {
     return this.backend.getMessages(topic, skip, take);
   }));
 
+  public messageGroups$ = this.messages$.pipe(
+    pluck('messages'),
+    map((messages) => {
+
+      const messageGroups: MessageGroup[] = [];
+      let lastDate: Date = undefined;
+      let lastDateYear: number;
+      let lastDateMonth: number;
+      let lastDateDay: number;
+
+
+      for (const message of messages) {
+        if (lastDate === undefined
+          || lastDate.getFullYear() !== message.sentAtDate.getFullYear()
+          || lastDate.getMonth() !== message.sentAtDate.getMonth()
+          || lastDate.getDate() !== message.sentAtDate.getDate()) {
+
+          lastDate = message.sentAtDate;
+          lastDateYear = message.sentAtDate.getFullYear();
+          lastDateMonth = message.sentAtDate.getMonth();
+          lastDateDay = message.sentAtDate.getDate();
+
+          let dateStr = format(lastDate, 'EEEE LLL. Mo.');
+
+          if (this.isToday(lastDate)) {
+            dateStr = 'today';
+          } else if (this.isYesterday(lastDate)) {
+            dateStr = 'yesterday';
+          }
+
+          const newMessageGroup = new MessageGroup(lastDate, dateStr, []);
+          messageGroups.push(newMessageGroup);
+        }
+        messageGroups[messageGroups.length - 1].messages.push(message);
+      }
+
+      return messageGroups;
+    })
+  );
+
+  trackMessage(i, o: Message) {
+    return o.id;
+  };
+
+  trackMessageGroup(i, o: MessageGroup) {
+    return o.date.toISOString();
+  }
+
+
   constructor(private route: ActivatedRoute, private backend: BackendService) {
   }
 
   ngOnInit(): void {
-    setInterval(() => this.refresh(), 1000)
+    setInterval(() => this.refresh(), 1000);
   }
 
   refresh() {
@@ -41,11 +97,27 @@ export class ConversationThreadComponent implements OnInit {
   }
 
 
-  sendMessage() {
+  sendMessage(event: any) {
+    event.preventDefault();
     this.backend.sendMessage(this.topicSubject.value, this.content).subscribe(() => {
       this.content = '';
       this.refresh();
     });
+  }
+
+  isToday(someDate) {
+    const today = new Date();
+    return someDate.getDate() === today.getDate() &&
+      someDate.getMonth() === today.getMonth() &&
+      someDate.getFullYear() === today.getFullYear();
+  }
+
+  isYesterday(someDate) {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    return someDate.getDate() === yesterday.getDate() &&
+      someDate.getMonth() === yesterday.getMonth() &&
+      someDate.getFullYear() === yesterday.getFullYear();
   }
 
 

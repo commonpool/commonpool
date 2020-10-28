@@ -604,7 +604,7 @@ export class GetUserMembershipsResponse {
 
 
 export class GetGroupMembershipsRequest {
-  constructor(public id: string) {
+  constructor(public groupId: string, public membershipStatus?: MembershipStatus) {
   }
 }
 
@@ -614,6 +614,20 @@ export class GetGroupMembershipsResponse {
 
   public static from(r: GetGroupMembershipsResponse): GetGroupMembershipsResponse {
     return new GetGroupMembershipsResponse(r.memberships.map(m => Membership.from(m)));
+  }
+}
+
+export class GetMembershipRequest {
+  constructor(public userId: string, public groupId: string) {
+  }
+}
+
+export class GetMembershipResponse {
+  constructor(public membership: Membership) {
+  }
+
+  public static from(r: GetMembershipResponse): GetMembershipResponse {
+    return new GetMembershipResponse(Membership.from(r.membership));
   }
 }
 
@@ -630,3 +644,47 @@ export class GetUsersForGroupInvitePickerResponse {
     return new GetUsersForGroupInvitePickerResponse(res.users.map(u => UserInfoResponse.from(u)), res.skip, res.take);
   }
 }
+
+export class AcceptInvitationRequest {
+  constructor(public userId: string, public groupId: string) {
+  }
+}
+
+export class AcceptInvitationResponse {
+  constructor(public membership: Membership) {
+  }
+
+  public static from(r: AcceptInvitationResponse): AcceptInvitationResponse {
+    return new AcceptInvitationResponse(Membership.from(r.membership));
+  }
+}
+
+
+export class DeclineInvitationRequest {
+  constructor(public userId: string, public groupId: string) {
+  }
+}
+
+export class DeclineInvitationResponse {
+  constructor(public membership: Membership) {
+  }
+
+  public static from(r: DeclineInvitationResponse): DeclineInvitationResponse {
+    return new DeclineInvitationResponse(Membership.from(r.membership));
+  }
+}
+
+export class LeaveGroupRequest {
+  constructor(public userId: string, public groupId: string) {
+  }
+}
+
+export class LeaveGroupResponse {
+  constructor(public membership: Membership) {
+  }
+
+  public static from(r: LeaveGroupResponse): LeaveGroupResponse {
+    return new LeaveGroupResponse(Membership.from(r.membership));
+  }
+}
+

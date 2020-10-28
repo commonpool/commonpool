@@ -41,7 +41,6 @@ import { UserOffersViewComponent } from './users/user-offers-view/user-offers-vi
 import { UserResourcesViewComponent } from './users/user-resources-view/user-resources-view.component';
 import { UserGroupsViewComponent } from './users/user-groups-view/user-groups-view.component';
 import { UserViewComponent } from './users/user-view/user-view.component';
-import { UserInvitationsViewComponent } from './users/user-invitations-view/user-invitations-view.component';
 import { MailboxIcon } from './icons/mailbox/mailbox.icon';
 import { EnvelopeIcon } from './icons/envelope/envelope.icon';
 import { CheckIcon } from './icons/check/check.icon';
@@ -49,6 +48,10 @@ import { CrossIcon } from './icons/cross/cross.icon';
 import { DoorOpenIcon } from './icons/door-open/door-open.icon';
 import { ArrowRightIcon } from './icons/arrow-right/arrow-right.icon';
 import { ArrowLeftIcon } from './icons/arrow-left/arrow-left.icon';
+import { GroupInvitesViewComponent } from './groups/group-invites-view/group-invites-view.component';
+import { IncomingInvitationComponent } from './users/incoming-invitation/incoming-invitation.component';
+import { KickOrLeaveGroupButtonComponent } from './groups/kick-or-leave-group-button/kick-or-leave-group-button.component';
+import { CircleFillIcon } from './icons/circle-fill/circle-fill.icon';
 
 @NgModule({
   declarations: [
@@ -85,7 +88,6 @@ import { ArrowLeftIcon } from './icons/arrow-left/arrow-left.icon';
     UserResourcesViewComponent,
     UserGroupsViewComponent,
     UserViewComponent,
-    UserInvitationsViewComponent,
     MailboxIcon,
     EnvelopeIcon,
     CheckIcon,
@@ -93,6 +95,10 @@ import { ArrowLeftIcon } from './icons/arrow-left/arrow-left.icon';
     DoorOpenIcon,
     ArrowRightIcon,
     ArrowLeftIcon,
+    GroupInvitesViewComponent,
+    IncomingInvitationComponent,
+    KickOrLeaveGroupButtonComponent,
+    CircleFillIcon,
   ],
   imports: [
     BrowserModule,

@@ -10,7 +10,8 @@ type Store interface {
 	Invite(request InviteRequest) InviteResponse
 	Exclude(request ExcludeRequest) ExcludeResponse
 	MarkInvitationAsAccepted(request MarkInvitationAsAcceptedRequest) MarkInvitationAsAcceptedResponse
-	MarkInvitationAsDenied(request MarkInvitationAsDeniedRequest) MarkInvitationAsDeniedResponse
+	MarkInvitationAsDeclined(request MarkInvitationAsDeclinedRequest) MarkInvitationAsDeclinedResponse
+	DeleteMembership(request DeleteMembershipRequest) DeleteMembershipResponse
 	GetGroupPermissionsForUser(request GetMembershipPermissionsRequest) GetMembershipPermissionsResponse
 	GetMembership(request GetMembershipRequest) GetMembershipResponse
 	GetMembershipsForUser(request GetMembershipsForUserRequest) GetMembershipsForUserResponse
@@ -144,16 +145,24 @@ type MarkInvitationAsAcceptedRequest struct {
 	From          MembershipParty
 }
 
+func NewMarkInvitationAsAcceptedRequest(membershipKey model.MembershipKey, from MembershipParty) MarkInvitationAsAcceptedRequest {
+	return MarkInvitationAsAcceptedRequest{MembershipKey: membershipKey, From: from}
+}
+
 type MarkInvitationAsAcceptedResponse struct {
 	Error error
 }
 
-type MarkInvitationAsDeniedRequest struct {
+type MarkInvitationAsDeclinedRequest struct {
 	MembershipKey model.MembershipKey
 	From          MembershipParty
 }
 
-type MarkInvitationAsDeniedResponse struct {
+func NewMarkInvitationAsDeniedRequest(membershipKey model.MembershipKey, from MembershipParty) MarkInvitationAsDeclinedRequest {
+	return MarkInvitationAsDeclinedRequest{MembershipKey: membershipKey, From: from}
+}
+
+type MarkInvitationAsDeclinedResponse struct {
 	Error error
 }
 
@@ -175,11 +184,15 @@ type GetMembershipsForUserResponse struct {
 }
 
 type GetMembershipsForGroupRequest struct {
-	GroupKey model.GroupKey
+	GroupKey         model.GroupKey
+	MembershipStatus *model.MembershipStatus
 }
 
-func NewGetMembershipsForGroupRequest(groupKey model.GroupKey) GetMembershipsForGroupRequest {
-	return GetMembershipsForGroupRequest{GroupKey: groupKey}
+func NewGetMembershipsForGroupRequest(groupKey model.GroupKey, status *model.MembershipStatus) GetMembershipsForGroupRequest {
+	return GetMembershipsForGroupRequest{
+		GroupKey:         groupKey,
+		MembershipStatus: status,
+	}
 }
 
 type GetMembershipsForGroupResponse struct {
@@ -200,4 +213,16 @@ func NewGetMembershipRequest(membershipKey model.MembershipKey) GetMembershipReq
 type GetMembershipResponse struct {
 	Error      error
 	Membership model.Membership
+}
+
+type DeleteMembershipRequest struct {
+	MembershipKey model.MembershipKey
+}
+
+func NewDeleteMembershipRequest(membershipKey model.MembershipKey) DeleteMembershipRequest {
+	return DeleteMembershipRequest{MembershipKey: membershipKey}
+}
+
+type DeleteMembershipResponse struct {
+	Error error
 }

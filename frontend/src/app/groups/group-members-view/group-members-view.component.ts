@@ -1,10 +1,10 @@
 import {Component, OnInit} from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
-import {pluck, switchMap} from 'rxjs/operators';
+import {map, pluck, startWith, switchMap} from 'rxjs/operators';
 import {BackendService} from '../../api/backend.service';
-import {GetGroupMembershipsRequest, GetUsersForGroupInvitePickerRequest, InviteUserRequest} from '../../api/models';
+import {GetGroupMembershipsRequest, GetUsersForGroupInvitePickerRequest, InviteUserRequest, MembershipStatus} from '../../api/models';
 import {UserPickerBackend} from '../../shared/user-picker/user-picker.component';
-import {BehaviorSubject} from 'rxjs';
+import {BehaviorSubject, combineLatest, Subject} from 'rxjs';
 
 @Component({
   selector: 'app-group-members-view',
@@ -17,11 +17,16 @@ export class GroupMembersViewComponent implements OnInit {
     this.fetchUsers = this.fetchUsers.bind(this);
   }
 
+  refreshSubject = new Subject<boolean>();
+  refresh$ = this.refreshSubject.asObservable().pipe(startWith(true));
   groupIdSubject = new BehaviorSubject(null as string);
   groupId$ = this.groupIdSubject.asObservable();
-  members$ = this.groupId$.pipe(
-    switchMap(id => this.backend.getGroupMemberships(new GetGroupMembershipsRequest(id)))
+  members$ = combineLatest([this.refresh$, this.groupId$]).pipe(
+    map(([_, groupId]) => groupId),
+    switchMap(id => this.backend.getGroupMemberships(new GetGroupMembershipsRequest(id, MembershipStatus.ApprovedMembershipStatus)))
   );
+
+
   sub = this.route.parent.params.pipe(pluck('id')).subscribe(id => {
     this.groupIdSubject.next(id);
   });
@@ -45,6 +50,7 @@ export class GroupMembersViewComponent implements OnInit {
     this.backend.inviteUser(new InviteUserRequest(this.inviteUserId, this.groupIdSubject.value)).subscribe((res) => {
       this.pending = false;
       this.inviteUserId = null;
+      this.refreshSubject.next(true);
     }, err => {
       this.pending = false;
       this.error = err;

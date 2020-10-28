@@ -1,20 +1,47 @@
-
-<div id="resource-details">
-  <div *ngIf="resource$ | async; let resource">
-    <h1>{{resource.summary}}</h1>
-    <h3>{{resource.description}}</h3>
-    <p>Value: {{resource.valueInHoursFrom}}h - {{resource.valueInHoursTo}}h </p>
-    <p>Created by <a [routerLink]="'/users/' + resource.createdById">{{resource.createdBy}}</a> {{resource.createdAtDistanceAgo}}</p>
-
-    <div *ngIf="auth.session$ | async; let session">
-      <div *ngIf="session.id === resource.createdById">
-        <button (click)="editResource(resource.id)">Edit</button>
-        <button>Delete</button>
+<div class="container-fluid mt-5" *ngIf="resource$ | async; let resource">
+  <div class="row">
+    <div class="col">
+      <div class="card">
+        <div class="card-body">
+          <a [routerLink]="'..'">
+          < Resources
+          </a>
+        </div>
       </div>
-      <div *ngIf="session.id !== resource.createdById">
-        <button [routerLink]="'/resources/' + resource.id + '/inquire'" >Contact</button>
+    </div>
+  </div>
+  <div class="row mt-2">
+    <div class="col">
+      <div class="card">
+        <h1 class="display-1 card-header">
+          {{resource.summary}}
+        </h1>
+        <div class="card-body" id="resource-details">
+          <div>
+            <p class="lead">
+              {{resource.description}}
+            </p>
+            <code>
+Value: {{resource.valueInHoursFrom}}h - {{resource.valueInHoursTo}}h
+            </code>
+            <p class="text-muted mt-3">Created by <a
+              [routerLink]="'/users/' + resource.createdById">{{resource.createdBy}}</a> {{resource.createdAtDistanceAgo}}
+            </p>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div *ngIf="auth.session$ | async; let session">
+            <div *ngIf="session.id === resource.createdById">
+              <button class="btn btn-outline-secondary mr-2" (click)="editResource(resource.id)">Edit</button>
+              <button class="btn btn-outline-danger">Delete</button>
+            </div>
+            <div class="btn-group" role="group">
+              <button *ngIf="session.id !== resource.createdById" class="btn btn-outline-secondary" [routerLink]="'/resources/' + resource.id + '/inquire'">Contact</button>
+              <button  *ngIf="session.id !== resource.createdById" class="btn btn-outline-secondary" [routerLink]="'/resources/' + resource.id + '/inquire'">Make Offer</button>
+            </div>
+          </div>
+        </div>
       </div>
-
     </div>
   </div>
 </div>

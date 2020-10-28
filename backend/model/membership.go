@@ -24,6 +24,21 @@ type Membership struct {
 	IsDeactivated  bool
 }
 
+func NewEmptyMembership(
+	membershipKey MembershipKey,
+) Membership {
+	return Membership{
+		GroupID:        membershipKey.GroupKey.ID,
+		UserID:         membershipKey.UserKey.String(),
+		IsMember:       false,
+		IsAdmin:        false,
+		IsOwner:        false,
+		GroupConfirmed: false,
+		UserConfirmed:  false,
+		IsDeactivated:  false,
+	}
+}
+
 func (m *Membership) GetGroupKey() GroupKey {
 	return NewGroupKey(m.GroupID)
 }

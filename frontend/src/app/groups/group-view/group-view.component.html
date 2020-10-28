@@ -9,12 +9,24 @@
               <app-box-seam></app-box-seam>&nbsp;<b>{{group.name}}</b></a>
           </h4>
           <ul class="menu">
-            <li class="active" routerLinkActive="active"><a routerLink="members">
-              <app-people></app-people>
-              Members</a></li>
-            <li routerLinkActive="active"><a routerLink="resources">
-              <app-asterix></app-asterix>
-              Resources</a></li>
+            <li routerLinkActive="active">
+              <a routerLink="members">
+                <app-people></app-people>
+                {{group.name}}'s Members
+              </a>
+            </li>
+            <li routerLinkActive="active">
+              <a routerLink="resources">
+                <app-asterix></app-asterix>
+                {{group.name}}'s Resources
+              </a>
+            </li>
+            <li routerLinkActive="active">
+              <a routerLink="invitations">
+                <app-mailbox></app-mailbox>
+                {{group.name}}'s Invites
+              </a>
+            </li>
           </ul>
         </div>
       </div>
