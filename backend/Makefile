@@ -8,7 +8,7 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
-CONTAINER=$(shell command -v docker && echo docker || echo podman)
+CONTAINER=$(shell command -v docker || command -v podman || exit 1)
 SHELL=bash
 
 # define standard colors

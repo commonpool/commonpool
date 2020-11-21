@@ -6,14 +6,23 @@
           <h5 class="card-header">
             Resources
           </h5>
+
+          <!-- resource list section -->
           <ul class="list-group list-group-flush">
-            <li class="list-group-item" *ngFor="let resource of resources.resources">
-              <span>
-                <a
-                  [routerLink]="'/users/' + resource.createdById + '/resources/' + resource.id">{{resource.summary}}</a>
-              </span>
+            <li class="list-group-item" *ngFor="let resource of resources">
+              <app-resource-link [resource]="resource"></app-resource-link>
             </li>
           </ul>
+
+          <!-- -->
+          <div class="card-body" *ngIf="resources.length === 0">
+
+            <ng-container *ngIf="(isOffers$ | async) && (isMyProfile$ | async)">
+              <p>You are not offering anything yet</p>
+              <p class="text-muted">Add some stuff to your profile</p>
+            </ng-container>
+          </div>
+
         </div>
       </div>
     </div>

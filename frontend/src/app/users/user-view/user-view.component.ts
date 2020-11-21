@@ -1,25 +1,36 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
-import {BackendService} from '../../api/backend.service';
-import {pluck, switchMap, tap} from 'rxjs/operators';
+import {pluck} from 'rxjs/operators';
+import {UserInfoService} from '../user-info.service';
+import {Observable, Subscription} from 'rxjs';
+import {UserInfoResponse} from '../../api/models';
 
 @Component({
   selector: 'app-user-view',
   templateUrl: './user-view.component.html',
   styleUrls: ['./user-view.component.css']
 })
-export class UserViewComponent implements OnInit {
+export class UserViewComponent implements OnInit, OnDestroy {
 
-  constructor(private route: ActivatedRoute, private backend: BackendService) {
+  userSubscription: Subscription;
+  user$: Observable<UserInfoResponse>;
 
+  constructor(private route: ActivatedRoute, public userService: UserInfoService) {
+    this.user$ = this.userService.getUserInfo();
   }
 
-  userId$ = this.route.params.pipe(pluck('id'));
-  user$ = this.userId$.pipe(
-    switchMap(id => this.backend.getUserInfo(id))
-  );
-
   ngOnInit(): void {
+    this.userSubscription = this.route.params.pipe(
+      pluck('id')
+    ).subscribe(id => {
+      this.userService.setUserId(id);
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.userSubscription) {
+      this.userSubscription.unsubscribe();
+    }
   }
 
 }

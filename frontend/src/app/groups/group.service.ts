@@ -1,8 +1,9 @@
 import {Injectable} from '@angular/core';
-import {Observable} from 'rxjs';
-import {GetMembershipRequest, Membership} from '../api/models';
+import {combineLatest, Observable, ReplaySubject, Subject} from 'rxjs';
+import {GetMembershipRequest, Group, Membership} from '../api/models';
 import {BackendService} from '../api/backend.service';
-import {pluck, shareReplay} from 'rxjs/operators';
+import {pluck, shareReplay, switchMap} from 'rxjs/operators';
+import {AuthService} from '../auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -11,7 +12,31 @@ export class GroupService {
 
   private permissionMap: { [userKey: string]: { [groupId: string]: Observable<Membership> } } = {};
 
-  constructor(private backend: BackendService) {
+  private readonly groupIdSubject: Subject<string>;
+  private readonly groupId$: Observable<string>;
+  private readonly groupSubject: Subject<Group>;
+  private readonly group$: Observable<Group>;
+  private readonly myMembership$: Observable<Membership>;
+
+  constructor(private backend: BackendService, private auth: AuthService) {
+    this.groupIdSubject = new ReplaySubject(1);
+    this.groupId$ = this.groupIdSubject.asObservable();
+    this.groupSubject = new ReplaySubject(1);
+    this.group$ = this.groupSubject.asObservable();
+    this.myMembership$ = combineLatest([
+      this.groupId$,
+      this.auth.getUserAuthId()
+    ]).pipe(
+      switchMap(([groupId, userAuthId]) => this.getPermission(userAuthId, groupId))
+    );
+  }
+
+  public setGroupId(groupId: string) {
+    this.groupIdSubject.next(groupId);
+  }
+
+  public getMyMembership(): Observable<Membership> {
+    return this.myMembership$;
   }
 
   public getPermission(userId: string, groupId: string): Observable<Membership> {
