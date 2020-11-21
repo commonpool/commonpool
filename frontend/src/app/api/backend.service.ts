@@ -34,7 +34,16 @@ import {
   GetGroupMembershipsRequest,
   GetGroupMembershipsResponse,
   GetUsersForGroupInvitePickerRequest,
-  GetUsersForGroupInvitePickerResponse, GetUserMembershipsRequest, GetUserMembershipsResponse
+  GetUsersForGroupInvitePickerResponse,
+  GetUserMembershipsRequest,
+  GetUserMembershipsResponse,
+  GetMembershipRequest,
+  GetMembershipResponse,
+  AcceptInvitationRequest,
+  AcceptInvitationResponse,
+  DeclineInvitationRequest,
+  DeclineInvitationResponse,
+  LeaveGroupRequest, LeaveGroupResponse
 } from './models';
 
 import {Observable, of, throwError} from 'rxjs';
@@ -385,14 +394,32 @@ export class BackendService {
 
 
   getGroupMemberships(request: GetGroupMembershipsRequest): Observable<GetGroupMembershipsResponse> {
-    return this.http.get(`${environment.apiUrl}/api/v1/groups/${request.id}/memberships`, {
-      observe: 'response'
+    const params: { [key: string]: string } = {};
+    if (request.membershipStatus !== undefined) {
+      params.status = request.membershipStatus.toString();
+    }
+    return this.http.get(`${environment.apiUrl}/api/v1/groups/${request.groupId}/memberships`, {
+      observe: 'response',
+      params
     }).pipe(
       map((res) => {
         if (res.status !== 200) {
           throwError(ErrorResponse.fromHttpResponse(res));
         }
         return GetGroupMembershipsResponse.from(res.body as GetGroupMembershipsResponse);
+      })
+    );
+  }
+
+  getMembership(request: GetMembershipRequest): Observable<GetMembershipResponse> {
+    return this.http.get(`${environment.apiUrl}/api/v1/groups/${request.groupId}/memberships/${request.userId}`, {
+      observe: 'response'
+    }).pipe(
+      map((res) => {
+        if (res.status !== 200) {
+          throwError(ErrorResponse.fromHttpResponse(res));
+        }
+        return GetMembershipResponse.from(res.body as GetMembershipResponse);
       })
     );
   }
@@ -435,5 +462,49 @@ export class BackendService {
       })
     );
   }
+
+  acceptInvitation(request: AcceptInvitationRequest): Observable<AcceptInvitationResponse> {
+    return this.http.post(`${environment.apiUrl}/api/v1/groups/${request.groupId}/memberships/${request.userId}/accept`, {
+      userId: request.userId
+    }, {
+      observe: 'response'
+    }).pipe(
+      map((res) => {
+        if (res.status !== 200) {
+          throwError(ErrorResponse.fromHttpResponse(res));
+        }
+        return AcceptInvitationResponse.from(res.body as AcceptInvitationResponse);
+      })
+    );
+  }
+
+  declineInvitation(request: DeclineInvitationRequest): Observable<DeclineInvitationResponse> {
+    return this.http.post(`${environment.apiUrl}/api/v1/groups/${request.groupId}/memberships/${request.userId}/decline`, {
+      userId: request.userId
+    }, {
+      observe: 'response'
+    }).pipe(
+      map((res) => {
+        if (res.status !== 200) {
+          throwError(ErrorResponse.fromHttpResponse(res));
+        }
+        return DeclineInvitationResponse.from(res.body as DeclineInvitationResponse);
+      })
+    );
+  }
+
+  leaveGroup(request: LeaveGroupRequest): Observable<LeaveGroupResponse> {
+    return this.http.delete(`${environment.apiUrl}/api/v1/groups/${request.groupId}/memberships/${request.userId}`, {
+      observe: 'response'
+    }).pipe(
+      map((res) => {
+        if (res.status !== 200) {
+          throwError(ErrorResponse.fromHttpResponse(res));
+        }
+        return LeaveGroupResponse.from(res.body as LeaveGroupResponse);
+      })
+    );
+  }
+
 
 }

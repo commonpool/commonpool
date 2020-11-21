@@ -13,19 +13,25 @@
             <li routerLinkActive="active">
               <a routerLink="groups">
                 <app-people></app-people>
-                Groups
+                Groups <b>{{user.username}}</b> is part of
               </a>
             </li>
             <li routerLinkActive="active">
-              <a routerLink="resources">
+              <a routerLink="offers">
                 <app-asterix></app-asterix>
-                Resources
+                Stuff <b>{{user.username}}</b> is offering
               </a>
             </li>
             <li routerLinkActive="active">
-              <a routerLink="invitations">
-                <app-mailbox></app-mailbox>
-                Invites
+              <a routerLink="needs">
+                <app-asterix></app-asterix>
+                Stuff <b>{{user.username}}</b> would need
+              </a>
+            </li>
+            <li routerLinkActive="active">
+              <a routerLink="transactions">
+                <app-asterix></app-asterix>
+                <b>&nbsp;{{user.username}}</b>'s transactions
               </a>
             </li>
           </ul>

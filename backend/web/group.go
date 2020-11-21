@@ -77,7 +77,7 @@ func NewGetGroupResponse(group model.Group) GetGroupResponse {
 }
 
 type InviteUserRequest struct {
-	UserID  string `json:"userId"`
+	UserID string `json:"userId"`
 }
 
 type InviteUserResponse struct {
@@ -91,7 +91,7 @@ func NewInviteUserResponse(membership model.Membership, groupNames model.GroupNa
 }
 
 type ExcludeUserRequest struct {
-	UserID  string `json:"userId"`
+	UserID string `json:"userId"`
 }
 
 type ExcludeUserResponse struct {
@@ -172,4 +172,44 @@ type GetUsersForGroupInvitePickerResponse struct {
 	Users []UserInfoResponse `json:"users"`
 	Take  int                `json:"take"`
 	Skip  int                `json:"skip"`
+}
+
+type GetMembershipResponse struct {
+	Membership Membership `json:"membership"`
+}
+
+func NewGetMembershipResponse(membership model.Membership, groupNames model.GroupNames, userNames model.UserNames) GetMembershipResponse {
+	return GetMembershipResponse{
+		Membership: NewMembership(membership, groupNames, userNames),
+	}
+}
+
+type AcceptInvitationResponse struct {
+	Membership Membership `json:"membership"`
+}
+
+func NewAcceptInvitationResponse(membership model.Membership, groupNames model.GroupNames, userNames model.UserNames) AcceptInvitationResponse {
+	return AcceptInvitationResponse{
+		Membership: NewMembership(membership, groupNames, userNames),
+	}
+}
+
+type DeclineInvitationResponse struct {
+	Membership Membership `json:"membership"`
+}
+
+func NewDeclineInvitationResponse(membership model.Membership, groupNames model.GroupNames, userNames model.UserNames) DeclineInvitationResponse {
+	return DeclineInvitationResponse{
+		Membership: NewMembership(membership, groupNames, userNames),
+	}
+}
+
+type LeaveGroupResponse struct {
+	Membership Membership `json:"membership"`
+}
+
+func NewLeaveGroupResponse(membership model.Membership, groupNames model.GroupNames, userNames model.UserNames) LeaveGroupResponse {
+	return LeaveGroupResponse{
+		Membership: NewMembership(membership, groupNames, userNames),
+	}
 }

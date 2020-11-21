@@ -1,69 +1,56 @@
-.thread {
+.a-thread {
+  height: calc(100vh - 3.5rem);
   display: flex;
   flex-direction: column-reverse;
-  height: calc(100vh - 6rem);
-  max-height: calc(100vh - 6rem);
-  overflow-y: scroll;
-  background: #eee;
+  padding: 0;
+  margin: 0;
+  overflow-y: auto;
 }
 
-.message:first-child {
-  margin-bottom: 1rem;
+.input-section {
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  height: 3rem;
+}
+
+textarea {
+  border-radius: 0.5rem;
+  width: 100%;
+  height: 2.5rem;
+  resize: none;
+}
+
+.textarea-container {
+  padding: 0.25rem;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+}
+
+.send {
+  align-self: center;
+}
+
+.messages {
+  margin: 0 0.5rem;
+  display: flex;
+  flex-direction: column-reverse;
 }
 
 .message {
-  display: block;
-  margin-left: 2rem;
-  padding: 0.25rem;
-  background: white;
-  width: 100%;
-  max-width: calc(100% - 5rem)
-}
-.message:hover {
-  background: #f8f8f8;
-}
-
-.message .header {
-  margin-bottom: 0.5rem;
-}
-
-.message .sent-at {
-  color: #999;
-  font-size: 80%;
-}
-
-.message .sender {
-  font-weight: bold;
-  text-decoration: none;
-}
-
-.message .sender, .message .sender a {
-  color: black;
+  margin-top: 0.5rem;
 }
 
 .message .content {
-  color: #333;
-  font-family: "DejaVu Sans", serif
+  margin-left: 1rem
 }
 
-.inputBox{
-  color: black;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100vw;
-  border-top: 1px solid black;
-  padding: 0;
-  display: flex;
-}
-
-.inputBox .input {
-  margin:0;
-  padding: 0.5rem;
-  flex-grow: 1;
-  max-height: 5rem;
-}
-
-.inputBox .submit {
-  width: 5rem;
+.message-date {
+  text-align: center;
+  width: 100%;
+  border-bottom: 1px solid #dc3545;
+  color: #dc3545;
+  opacity: 0.7;
 }

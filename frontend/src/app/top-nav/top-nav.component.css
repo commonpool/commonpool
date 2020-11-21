@@ -12,8 +12,10 @@ ul {
   padding: 0;
 }
 li {
+  display: block;
   padding: 1rem;
 }
+
 a {
   color: white!important;
 }

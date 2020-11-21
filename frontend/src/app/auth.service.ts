@@ -1,20 +1,20 @@
-import {Injectable} from '@angular/core';
-import {BehaviorSubject, Subject} from 'rxjs';
-import {switchMap} from 'rxjs/operators';
+import {Injectable, OnDestroy} from '@angular/core';
+import {BehaviorSubject, Observable, Subject} from 'rxjs';
+import {pluck, switchMap} from 'rxjs/operators';
 import {BackendService} from './api/backend.service';
-import {SessionResponse} from './api/models';
+import {SessionResponse, UserInfoResponse} from './api/models';
 import {Router} from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
 })
-export class AuthService {
+export class AuthService implements OnDestroy {
 
   constructor(private backend: BackendService, private router: Router) {
   }
 
-  loginRequestSubject$ = new Subject();
-  reqSub = this.loginRequestSubject$.asObservable()
+  loginSubject = new Subject();
+  loginSubscription = this.loginSubject.asObservable()
     .pipe(
       switchMap(a => this.backend.getSession())
     ).subscribe(value => {
@@ -23,9 +23,10 @@ export class AuthService {
 
   private sessionSubject = new BehaviorSubject<SessionResponse>(undefined);
   public session$ = this.sessionSubject.asObservable();
+  public authUserId$ = this.session$.pipe(pluck('id'));
 
   public checkLoggedIn() {
-    this.loginRequestSubject$.next(true);
+    this.loginSubject.next(true);
   }
 
   public goToMyProfile() {
@@ -34,5 +35,18 @@ export class AuthService {
     }
   }
 
+  public getUserAuthInfo(): Observable<UserInfoResponse> {
+    return this.session$;
+  }
+
+  public getUserAuthId(): Observable<string> {
+    return this.authUserId$;
+  }
+
+  ngOnDestroy(): void {
+    if (this.loginSubscription) {
+      this.loginSubscription.unsubscribe();
+    }
+  }
 
 }

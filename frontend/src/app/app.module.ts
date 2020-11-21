@@ -37,18 +37,24 @@ import {PentagonIcon} from './icons/pentagon/pentagon.icon';
 import {AsterixIcon} from './icons/asterix/asterix.icon';
 import {GroupResourcesViewComponent} from './groups/group-resources-view/group-resources-view.component';
 import {GroupMembersViewComponent} from './groups/group-members-view/group-members-view.component';
-import { UserOffersViewComponent } from './users/user-offers-view/user-offers-view.component';
-import { UserResourcesViewComponent } from './users/user-resources-view/user-resources-view.component';
-import { UserGroupsViewComponent } from './users/user-groups-view/user-groups-view.component';
-import { UserViewComponent } from './users/user-view/user-view.component';
-import { UserInvitationsViewComponent } from './users/user-invitations-view/user-invitations-view.component';
-import { MailboxIcon } from './icons/mailbox/mailbox.icon';
-import { EnvelopeIcon } from './icons/envelope/envelope.icon';
-import { CheckIcon } from './icons/check/check.icon';
-import { CrossIcon } from './icons/cross/cross.icon';
-import { DoorOpenIcon } from './icons/door-open/door-open.icon';
-import { ArrowRightIcon } from './icons/arrow-right/arrow-right.icon';
-import { ArrowLeftIcon } from './icons/arrow-left/arrow-left.icon';
+import {UserOffersViewComponent} from './users/user-offers-view/user-offers-view.component';
+import {UserResourcesViewComponent} from './users/user-resources-view/user-resources-view.component';
+import {UserGroupsViewComponent} from './users/user-groups-view/user-groups-view.component';
+import {UserViewComponent} from './users/user-view/user-view.component';
+import {MailboxIcon} from './icons/mailbox/mailbox.icon';
+import {EnvelopeIcon} from './icons/envelope/envelope.icon';
+import {CheckIcon} from './icons/check/check.icon';
+import {CrossIcon} from './icons/cross/cross.icon';
+import {DoorOpenIcon} from './icons/door-open/door-open.icon';
+import {ArrowRightIcon} from './icons/arrow-right/arrow-right.icon';
+import {ArrowLeftIcon} from './icons/arrow-left/arrow-left.icon';
+import {GroupInvitesViewComponent} from './groups/group-invites-view/group-invites-view.component';
+import {IncomingInvitationComponent} from './users/incoming-invitation/incoming-invitation.component';
+import {KickOrLeaveGroupButtonComponent} from './groups/kick-or-leave-group-button/kick-or-leave-group-button.component';
+import {CircleFillIcon} from './icons/circle-fill/circle-fill.icon';
+import { GroupLinkComponent } from './shared/group-link/group-link.component';
+import { ResourceLinkComponent } from './shared/resource-link/resource-link.component';
+import { AcceptInvitationComponent } from './groups/accept-invitation/accept-invitation.component';
 
 @NgModule({
   declarations: [
@@ -85,7 +91,6 @@ import { ArrowLeftIcon } from './icons/arrow-left/arrow-left.icon';
     UserResourcesViewComponent,
     UserGroupsViewComponent,
     UserViewComponent,
-    UserInvitationsViewComponent,
     MailboxIcon,
     EnvelopeIcon,
     CheckIcon,
@@ -93,6 +98,13 @@ import { ArrowLeftIcon } from './icons/arrow-left/arrow-left.icon';
     DoorOpenIcon,
     ArrowRightIcon,
     ArrowLeftIcon,
+    GroupInvitesViewComponent,
+    IncomingInvitationComponent,
+    KickOrLeaveGroupButtonComponent,
+    CircleFillIcon,
+    GroupLinkComponent,
+    ResourceLinkComponent,
+    AcceptInvitationComponent,
   ],
   imports: [
     BrowserModule,

@@ -3,6 +3,7 @@ import {ActivatedRoute} from '@angular/router';
 import {pluck, switchMap} from 'rxjs/operators';
 import {BackendService} from '../../api/backend.service';
 import {GetGroupRequest} from '../../api/models';
+import {GroupService} from '../group.service';
 
 @Component({
   selector: 'app-group-view',
@@ -11,8 +12,8 @@ import {GetGroupRequest} from '../../api/models';
 })
 export class GroupViewComponent implements OnInit {
 
-  constructor(private route: ActivatedRoute, private backend: BackendService) {
-
+  constructor(private route: ActivatedRoute, private backend: BackendService, private groupService: GroupService) {
+    this.groupId$.subscribe(id => this.groupService.setGroupId(id));
   }
 
   groupId$ = this.route.params.pipe(pluck('id'));

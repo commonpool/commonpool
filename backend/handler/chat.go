@@ -72,7 +72,7 @@ func (h *Handler) GetLatestThreads(c echo.Context) error {
 		fmt.Println(thread.LastTimeRead)
 		fmt.Println(thread.LastMessageAt)
 
-		before := !thread.LastMessageAt.After(thread.LastTimeRead)
+		before := thread.LastMessageAt.After(thread.LastTimeRead)
 		fmt.Println("Has unread : ", before)
 
 		items[i] = web.Thread{

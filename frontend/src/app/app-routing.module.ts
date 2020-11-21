@@ -16,7 +16,8 @@ import {GroupMembersViewComponent} from './groups/group-members-view/group-membe
 import {UserViewComponent} from './users/user-view/user-view.component';
 import {UserGroupsViewComponent} from './users/user-groups-view/user-groups-view.component';
 import {UserResourcesViewComponent} from './users/user-resources-view/user-resources-view.component';
-import {UserInvitationsViewComponent} from './users/user-invitations-view/user-invitations-view.component';
+import {GroupInvitesViewComponent} from './groups/group-invites-view/group-invites-view.component';
+import {GroupResourcesViewComponent} from './groups/group-resources-view/group-resources-view.component';
 
 
 const routes: Routes = [
@@ -26,9 +27,6 @@ const routes: Routes = [
   }, {
     path: 'resources/new',
     component: CreateOrEditResourceComponent
-  }, {
-    path: 'resources/:id',
-    component: ResourceDetailsComponent
   }, {
     path: 'resources/:id/inquire',
     component: ResourceInquiryComponent
@@ -41,8 +39,10 @@ const routes: Routes = [
     children: [
       {path: '', redirectTo: 'groups', pathMatch: 'full'},
       {path: 'groups', component: UserGroupsViewComponent},
-      {path: 'resources', component: UserResourcesViewComponent},
-      {path: 'invitations', component: UserInvitationsViewComponent}
+      {path: 'needs', component: UserResourcesViewComponent},
+      {path: 'offers', component: UserResourcesViewComponent},
+      {path: 'needs/:resourceId', component: ResourceDetailsComponent},
+      {path: 'offers/:resourceId', component: ResourceDetailsComponent}
     ]
   }, {
     path: 'messages',
@@ -67,7 +67,9 @@ const routes: Routes = [
     component: GroupViewComponent,
     children: [
       {path: '', redirectTo: 'members', pathMatch: 'full'},
-      {path: 'members', component: GroupMembersViewComponent}
+      {path: 'members', component: GroupMembersViewComponent},
+      {path: 'invitations', component: GroupInvitesViewComponent},
+      {path: 'resources', component: GroupResourcesViewComponent},
     ]
   }
 ];

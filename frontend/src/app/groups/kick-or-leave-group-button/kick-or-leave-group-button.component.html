@@ -1,0 +1,20 @@
+<ng-container *ngIf="membership$ | async; let membership">
+  <button class="btn btn-light btn-sm mr-2 shadow-sm"
+          *ngIf="(iAmAdmin$ | async) || (isMyMembership$ | async)"
+          (click)="kickOut(membership.groupId, membership.userId)"
+          [disabled]="pending || ((isMyMembership$ | async) && (isOwner$ | async))"
+          [ngClass]="{'btn-outline-danger': (isPending$ | async)}"
+  >
+    <span *ngIf="isActive$ | async"><app-door-open></app-door-open>&nbsp;</span>
+    <span *ngIf="!(isActive$ | async)"><app-cross></app-cross>&nbsp;</span>
+
+    <span *ngIf="(isMyMembership$ | async) && (isActive$ | async)">Leave Group</span>
+    <span *ngIf="!(isMyMembership$ | async)  && (isActive$ | async) && (iAmAdmin$ | async)">Kick out</span>
+
+    <span *ngIf="(isMyMembership$ | async) && (isPending$ | async) && (groupConfirmed$ | async)">Decline</span>
+    <span *ngIf="(isMyMembership$ | async) && (isPending$ | async) && (userConfirmed$ | async)">Cancel</span>
+
+    <span *ngIf="!(isMyMembership$ | async) && (isPending$ | async) && (groupConfirmed$ | async)">Cancel</span>
+
+  </button>
+</ng-container>

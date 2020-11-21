@@ -2,7 +2,8 @@
 FROM node:12.7-alpine AS build
 WORKDIR /usr/src/app
 COPY package.json package-lock.json ./
-RUN npm install
+ENV NG_CLI_ANALYTICS="false"
+RUN npm ci
 COPY . .
 RUN npm run build:prod
 

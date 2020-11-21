@@ -22,7 +22,10 @@
       <div class="resource-shadow">
         <div class="resource" *ngFor="let resource of resources">
           <div class="resource-title">
-            <b><a [routerLink]="'/resources/' + resource.id">{{resource.summary}}</a></b>
+            <b>
+              <a *ngIf="resource.type === 0" [routerLink]="'/users/' + resource.createdById + '/offers/' + resource.id">{{resource.summary}}</a>
+              <a *ngIf="resource.type === 1" [routerLink]="'/users/' + resource.createdById + '/needs/' + resource.id">{{resource.summary}}</a>
+            </b>
           </div>
           <div><span *ngIf="resource.type === 0">offering </span> by <b><a
             [routerLink]="'/users/' + resource.createdById">{{resource.createdBy}}</a></b>

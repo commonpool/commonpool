@@ -1,13 +1,12 @@
 <div id="top-nav">
   <ul>
-    <li><a [routerLink]="'/'">search ads</a></li>
-    <li><a [routerLink]="'/resources/new'">post ad</a></li>
-    <li><a [routerLink]="'/messages'">messages</a></li>
+    <li><a [routerLink]="'/'">search</a></li>
+    <li><a [routerLink]="'/resources/new'">post</a></li>
     <li><a [routerLink]="'/offers/new'">new offer</a></li>
-    <li>
-      <ng-container *ngIf="auth.session$ | async; let session">
-        <a *ngIf="session.isAuthenticated" [routerLink]="'/users/' + session.id">my profile</a>
-      </ng-container>
-    </li>
+    <li class="flex-grow-1"></li>
+    <ng-container *ngIf="auth.session$ | async; let session">
+      <li><a *ngIf="session.isAuthenticated" [routerLink]="'/messages'"><app-envelope></app-envelope> messages</a></li>
+      <li><a *ngIf="session.isAuthenticated" [routerLink]="'/users/' + session.id">▼ {{session.username}}</a></li>
+    </ng-container>
   </ul>
 </div>

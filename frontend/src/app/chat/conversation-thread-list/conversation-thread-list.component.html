@@ -1,23 +1,35 @@
-<div *ngIf="threads$ | async; let threads">
-  <div *ngIf="threads.length > 0">
-    <a *ngFor="let thread of threads"
-       [routerLink]="'/messages/' + thread.topicId"
-       [ngClass]="{'unread' : thread.hasUnreadMessages}"
-       class="thread"
-    >
-      <div class="title">{{thread.title}}</div>
-      <div class="last-message">
-        <div class="last-message-author">
-        {{thread.lastMessageUsername}}:
-        </div>
-        <div class="last-message-preview">
-          {{thread.lastChars}}
-        </div>
-      </div>
 
-    </a>
-  </div>
-  <div *ngIf="threads.length ===0 ">
-    No conversations!
+<div class="row no-gutters">
+  <div class="col">
+    <ul class="list-group list-group-flush">
+      <ng-container *ngIf="threads$ | async; let threads">
+        <ng-container *ngIf="threads.length > 0">
+          <li
+            class="list-group-item list-group-item-action rounded-0 message-container"
+            *ngFor="let thread of threads"
+            [routerLink]="'/messages/' + thread.topicId"
+            [ngClass]="{'unread' : thread.hasUnreadMessages}"
+          >
+            <div class="message-content">
+              <div class="title font-weight-bold">{{thread.title}}</div>
+              <div class="last-message">
+                <div class="last-message-preview">
+                  {{thread.lastChars}}
+                </div>
+              </div>
+            </div>
+            <div class="message-icon">
+              <app-circle-fill height="0.5em" width="0.5em" class="text-primary"></app-circle-fill>
+            </div>
+          </li>
+        </ng-container>
+        <li *ngIf="threads.length == 0" class="list-group-item rounded-0 message-container ">
+          <div class="title font-weight-bold p-3">
+            No Messages
+          </div>
+        </li>
+      </ng-container>
+    </ul>
   </div>
 </div>
+
