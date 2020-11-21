@@ -28,8 +28,15 @@
       <change beforePath="$PROJECT_DIR$/../frontend/Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/Makefile" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../frontend/src/app/app.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/app.module.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../frontend/src/app/auth.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/auth.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/app/chat/conversation-thread-list/conversation-thread-list.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/chat/conversation-thread-list/conversation-thread-list.component.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/app/groups/group-members-view/group-members-view.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/groups/group-members-view/group-members-view.component.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/app/groups/group-members-view/group-members-view.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/groups/group-members-view/group-members-view.component.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/app/groups/group-view/group-view.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/groups/group-view/group-view.component.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/app/groups/group.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/groups/group.service.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../frontend/src/app/users/user-groups-view/user-groups-view.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/users/user-groups-view/user-groups-view.component.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../frontend/src/app/users/user-groups-view/user-groups-view.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/users/user-groups-view/user-groups-view.component.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/app/users/user-resources-view/user-resources-view.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/users/user-resources-view/user-resources-view.component.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/app/users/user-resources-view/user-resources-view.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/users/user-resources-view/user-resources-view.component.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../frontend/src/app/users/user-view/user-view.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/users/user-view/user-view.component.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -60,7 +67,7 @@
     <property name="go.import.settings.migrated" value="true" />
     <property name="go.sdk.automatically.set" value="true" />
     <property name="go.tried.to.enable.integration.vgo.integrator" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../backbone" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
   </component>
   <component name="RunManager">
     <configuration name="go build backend main.go" type="GoApplicationRunConfiguration" factoryName="Go Application" nameIsGenerated="true">

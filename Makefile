@@ -57,7 +57,7 @@ pull-request: ## Creates a pr for the current branch
    		exit; \
 	fi; \
 	echo "Found remote branch $${branchName}"; \
-	echo "Creating PR for branch ${BLUE}$${branch}${RESET}"; \x
+	echo "Creating PR for branch ${BLUE}$${branch}${RESET}"; \
 	echo "Issue number ${BLUE}$${issueNumber}${RESET}"; \
 	echo "Issue name ${BLUE}$${issueName}${RESET}"; \
 	echo; \
