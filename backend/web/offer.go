@@ -39,17 +39,17 @@ type GetOffersResponse struct {
 }
 
 type SendOfferRequest struct {
-	Offer SendOfferPayload `json:"offer"`
+	Offer SendOfferPayload `json:"offer" validate:"required"`
 }
 
 type SendOfferPayload struct {
-	Items []SendOfferPayloadItem `json:"items"`
+	Items []SendOfferPayloadItem `json:"items" validate:"min=1"`
 }
 
 type SendOfferPayloadItem struct {
-	From          string              `json:"from"`
-	To            string              `json:"to"`
-	Type          model.OfferItemType `json:"type"`
-	ResourceId    *string             `json:"resourceId"`
+	From          string              `json:"from" validate:"required,uuid"`
+	To            string              `json:"to" validate:"required,uuid"`
+	Type          model.OfferItemType `json:"type" validate:"required,min=0,max=1"`
+	ResourceId    *string             `json:"resourceId" validate:"required,uuid"`
 	TimeInSeconds *int64              `json:"timeInSeconds"`
 }

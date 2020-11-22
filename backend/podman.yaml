@@ -7,11 +7,11 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  creationTimestamp: "2020-10-28T14:17:01Z"
   labels:
     app: commonpool-dev
   name: commonpool-dev
 spec:
+  restartPolicy: OnFailure
   containers:
     - command:
         - docker-entrypoint.sh
@@ -45,7 +45,7 @@ spec:
         - containerPort: 5432
           hostPort: 5432
           protocol: TCP
-      resources: {}
+      resources: { }
       securityContext:
         allowPrivilegeEscalation: true
         capabilities:
@@ -54,14 +54,5 @@ spec:
             - CAP_NET_RAW
         privileged: false
         readOnlyRootFilesystem: false
-        seLinuxOptions: {}
+        seLinuxOptions: { }
       workingDir: /
-  restartPolicy: Never
-status: {}
----
-metadata:
-  creationTimestamp: null
-spec: {}
-status:
-  loadBalancer: {}
-

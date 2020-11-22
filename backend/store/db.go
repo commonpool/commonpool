@@ -26,6 +26,7 @@ func NewTestDb() *gorm.DB {
 func AutoMigrate(db *gorm.DB) {
 	err := db.AutoMigrate(
 		&model.Resource{},
+		&model.ResourceSharing{},
 		&model.User{},
 		&model.Thread{},
 		&model.Message{},

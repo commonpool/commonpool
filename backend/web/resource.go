@@ -5,16 +5,26 @@ import (
 	"time"
 )
 
+type InputResourceSharing struct {
+	GroupID string `json:"groupId" validate:"required,uuid"`
+}
+
+type OutputResourceSharing struct {
+	GroupID   string `json:"groupId"`
+	GroupName string `json:"groupName"`
+}
+
 type Resource struct {
-	Id               string             `json:"id"`
-	Summary          string             `json:"summary"`
-	Description      string             `json:"description"`
-	Type             model.ResourceType `json:"type"`
-	CreatedAt        time.Time          `json:"createdAt"`
-	CreatedBy        string             `json:"createdBy"`
-	CreatedById      string             `json:"createdById"`
-	ValueInHoursFrom int                `json:"valueInHoursFrom"`
-	ValueInHoursTo   int                `json:"valueInHoursTo"`
+	Id               string                  `json:"id"`
+	Summary          string                  `json:"summary"`
+	Description      string                  `json:"description"`
+	Type             model.ResourceType      `json:"type"`
+	CreatedAt        time.Time               `json:"createdAt"`
+	CreatedBy        string                  `json:"createdBy"`
+	CreatedById      string                  `json:"createdById"`
+	ValueInHoursFrom int                     `json:"valueInHoursFrom"`
+	ValueInHoursTo   int                     `json:"valueInHoursTo"`
+	SharedWith       []OutputResourceSharing `json:"sharedWith"`
 }
 
 type SearchResourcesResponse struct {
@@ -33,11 +43,12 @@ type CreateResourceRequest struct {
 }
 
 type CreateResourcePayload struct {
-	Summary          string             `json:"summary"`
-	Description      string             `json:"description"`
-	Type             model.ResourceType `json:"type"`
-	ValueInHoursFrom int                `json:"valueInHoursFrom"`
-	ValueInHoursTo   int                `json:"valueInHoursTo"`
+	Summary          string                 `json:"summary" validate:"required,max=100"`
+	Description      string                 `json:"description" validate:"required"`
+	Type             model.ResourceType     `json:"type" validate:"min=0,max=1"`
+	ValueInHoursFrom int                    `json:"valueInHoursFrom" validate:"required"`
+	ValueInHoursTo   int                    `json:"valueInHoursTo" validate:"required"`
+	SharedWith       []InputResourceSharing `json:"sharedWith"`
 }
 
 type CreateResourceResponse struct {
@@ -49,11 +60,12 @@ type UpdateResourceRequest struct {
 }
 
 type UpdateResourcePayload struct {
-	Summary          string             `json:"summary"`
-	Description      string             `json:"description"`
-	Type             model.ResourceType `json:"type"`
-	ValueInHoursFrom int                `json:"valueInHoursFrom"`
-	ValueInHoursTo   int                `json:"valueInHoursTo"`
+	Summary          string                 `json:"summary"`
+	Description      string                 `json:"description"`
+	Type             model.ResourceType     `json:"type"`
+	ValueInHoursFrom int                    `json:"valueInHoursFrom"`
+	ValueInHoursTo   int                    `json:"valueInHoursTo"`
+	SharedWith       []InputResourceSharing `json:"sharedWith"`
 }
 
 type UpdateResourceResponse struct {

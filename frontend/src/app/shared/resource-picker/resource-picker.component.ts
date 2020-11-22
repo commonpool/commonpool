@@ -36,7 +36,7 @@ export class ResourcePickerComponent implements OnInit, ControlValueAccessor {
   query$ = this.querySubject.asObservable().pipe(startWith(''));
   items$ = combineLatest([this.query$, this.createdBy$])
     .pipe(
-      switchMap(([q, c]) => this.backend.searchResources(new SearchResourceRequest(q, ResourceType.Offer, c, 10, 0))),
+      switchMap(([q, c]) => this.backend.searchResources(new SearchResourceRequest(q, ResourceType.Offer, c, undefined, 10, 0))),
       pluck('resources')
     );
 

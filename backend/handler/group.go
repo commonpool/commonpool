@@ -204,7 +204,7 @@ func (h *Handler) GetMembership(c echo.Context) error {
 		return NewErrResponse(c, getMemberships.Error)
 	}
 
-	var memberships = []model.Membership{getMemberships.Membership}
+	var memberships = model.NewMemberships([]model.Membership{getMemberships.Membership})
 
 	groupNames, err := h.getGroupNamesForMemberships(memberships)
 	if err != nil {
@@ -279,9 +279,9 @@ func (h *Handler) GetGroupMemberships(c echo.Context) error {
 
 }
 
-func (h *Handler) getUserNamesForMemberships(memberships []model.Membership) (model.UserNames, error) {
+func (h *Handler) getUserNamesForMemberships(memberships model.Memberships) (model.UserNames, error) {
 	var userNames = model.UserNames{}
-	for _, membership := range memberships {
+	for _, membership := range memberships.Items {
 		userKey := membership.GetUserKey()
 		_, ok := userNames[userKey]
 		if !ok {
@@ -295,9 +295,9 @@ func (h *Handler) getUserNamesForMemberships(memberships []model.Membership) (mo
 	return userNames, nil
 }
 
-func (h *Handler) getGroupNamesForMemberships(memberships []model.Membership) (model.GroupNames, error) {
+func (h *Handler) getGroupNamesForMemberships(memberships model.Memberships) (model.GroupNames, error) {
 	var groupNames = model.GroupNames{}
-	for _, membership := range memberships {
+	for _, membership := range memberships.Items {
 		groupKey := membership.GetGroupKey()
 		_, ok := groupNames[groupKey]
 		if !ok {
@@ -525,7 +525,7 @@ func (h *Handler) AcceptInvitation(c echo.Context) error {
 		return NewErrResponse(c, getMembershipResponse.Error)
 	}
 
-	memberships := []model.Membership{getMembershipResponse.Membership}
+	memberships := model.NewMemberships([]model.Membership{getMembershipResponse.Membership})
 
 	userNames, err := h.getUserNamesForMemberships(memberships)
 	if err != nil {
@@ -613,7 +613,7 @@ func (h *Handler) DeclineInvitation(c echo.Context) error {
 
 	}
 
-	memberships := []model.Membership{model.NewEmptyMembership(membershipKey)}
+	memberships := model.NewMemberships([]model.Membership{model.NewEmptyMembership(membershipKey)})
 
 	userNames, err := h.getUserNamesForMemberships(memberships)
 	if err != nil {
@@ -689,7 +689,7 @@ func (h *Handler) LeaveGroup(c echo.Context) error {
 
 	}
 
-	memberships := []model.Membership{model.NewEmptyMembership(membershipKey)}
+	memberships := model.NewMemberships([]model.Membership{model.NewEmptyMembership(membershipKey)})
 
 	userNames, err := h.getUserNamesForMemberships(memberships)
 	if err != nil {

@@ -6,6 +6,24 @@ export enum ResourceType {
   Request = 1
 }
 
+export class SharedWithOutput {
+  public constructor(public groupId: string, public groupName: string) {
+  }
+
+  public static from(sharedWithOutput: SharedWithOutput): SharedWithOutput {
+    return new SharedWithOutput(sharedWithOutput.groupId, sharedWithOutput.groupName);
+  }
+}
+
+export class SharedWithInput {
+  public constructor(public groupId: string) {
+  }
+
+  public static from(sharedWithInput: SharedWithInput): SharedWithInput {
+    return new SharedWithInput(sharedWithInput.groupId);
+  }
+}
+
 export class Resource {
   constructor(
     public id: string,
@@ -16,7 +34,8 @@ export class Resource {
     public valueInHoursTo: number,
     public createdBy: string,
     public createdById: string,
-    public createdAt: string
+    public createdAt: string,
+    public sharedWith: SharedWithOutput[]
   ) {
   }
 
@@ -30,7 +49,8 @@ export class Resource {
       res.valueInHoursTo,
       res.createdBy,
       res.createdById,
-      res.createdAt);
+      res.createdAt,
+      res.sharedWith.map(s => SharedWithOutput.from(s)));
   }
 }
 
@@ -48,14 +68,15 @@ export class ExtendedResource extends Resource {
       resource.valueInHoursTo,
       resource.createdBy,
       resource.createdById,
-      resource.createdAt);
+      resource.createdAt,
+      resource.sharedWith);
     this.createdAtDistance = formatDistanceToNow(Date.parse(resource.createdAt));
     this.createdAtDistanceAgo = formatDistanceToNow(Date.parse(resource.createdAt), {addSuffix: true});
   }
 }
 
 export class GetResourceResponse {
-  public resource: Resource;
+  public resource: ExtendedResource;
 
   constructor(resource: Resource) {
     this.resource = new ExtendedResource(resource);
@@ -75,7 +96,7 @@ export class SearchResourcesResponse {
 }
 
 export class SearchResourceRequest {
-  constructor(public query: string, public type: ResourceType, public createdBy: string, public take: number, public skip: number) {
+  constructor(public query: string, public type: ResourceType, public createdBy: string, public groupId, public take: number, public skip: number) {
   }
 }
 
@@ -83,9 +104,10 @@ export class CreateResourcePayload {
   constructor(
     public summary: string,
     public description: string,
-    public resourceType: ResourceType,
+    public type: ResourceType,
     public valueInHoursFrom: number,
-    public valueInHoursTo: number) {
+    public valueInHoursTo: number,
+    public sharedWith: SharedWithInput[]) {
   }
 }
 
@@ -93,9 +115,10 @@ export class UpdateResourcePayload {
   constructor(
     public summary: string,
     public description: string,
-    public resourceType: ResourceType,
+    public type: ResourceType,
     public valueInHoursFrom: number,
-    public valueInHoursTo: number) {
+    public valueInHoursTo: number,
+    public sharedWith: SharedWithInput[]) {
   }
 }
 
@@ -602,7 +625,6 @@ export class GetUserMembershipsResponse {
   }
 }
 
-
 export class GetGroupMembershipsRequest {
   constructor(public groupId: string, public membershipStatus?: MembershipStatus) {
   }
@@ -658,7 +680,6 @@ export class AcceptInvitationResponse {
     return new AcceptInvitationResponse(Membership.from(r.membership));
   }
 }
-
 
 export class DeclineInvitationRequest {
   constructor(public userId: string, public groupId: string) {

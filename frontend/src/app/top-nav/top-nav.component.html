@@ -1,12 +1,22 @@
 <div id="top-nav">
   <ul>
-    <li><a [routerLink]="'/'">search</a></li>
-    <li><a [routerLink]="'/resources/new'">post</a></li>
-    <li><a [routerLink]="'/offers/new'">new offer</a></li>
-    <li class="flex-grow-1"></li>
+    <li><a [routerLink]="'/'">Commonpool</a></li>
     <ng-container *ngIf="auth.session$ | async; let session">
-      <li><a *ngIf="session.isAuthenticated" [routerLink]="'/messages'"><app-envelope></app-envelope> messages</a></li>
-      <li><a *ngIf="session.isAuthenticated" [routerLink]="'/users/' + session.id">▼ {{session.username}}</a></li>
+      <ng-container *ngIf="session.isAuthenticated">
+        <li><a [routerLink]="'/resources'">search</a></li>
+        <li><a [routerLink]="'/resources/new'">post</a></li>
+        <li><a [routerLink]="'/offers/new'">new offer</a></li>
+        <li class="flex-grow-1"></li>
+        <li>
+          <a [routerLink]="'/messages'">
+            <app-envelope></app-envelope>
+            messages
+          </a>
+        </li>
+        <li><a [routerLink]="'/users/' + session.id">▼ {{session.username}}</a></li>
+        <li><a href="#" (click)="backend.logout()">logout</a></li>
+      </ng-container>
     </ng-container>
+
   </ul>
 </div>

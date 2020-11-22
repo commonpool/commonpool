@@ -1,8 +1,15 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {BackendService} from '../../api/backend.service';
-import {CreateResourcePayload, CreateResourceRequest, ResourceType, UpdateResourcePayload, UpdateResourceRequest} from '../../api/models';
+import {
+  CreateResourcePayload,
+  CreateResourceRequest, ExtendedResource, GetMyMembershipsRequest, GetMyMembershipsResponse,
+  GetResourceResponse, Membership,
+  ResourceType, SharedWithInput,
+  UpdateResourcePayload,
+  UpdateResourceRequest
+} from '../../api/models';
 import {ActivatedRoute, Router} from '@angular/router';
-import {filter, map, pluck, shareReplay, switchMap} from 'rxjs/operators';
+import {filter, map, pluck, shareReplay, switchMap, tap} from 'rxjs/operators';
 import {AuthService} from '../../auth.service';
 import {combineLatest} from 'rxjs';
 
@@ -17,13 +24,14 @@ export class CreateOrEditResourceComponent implements OnInit, OnDestroy {
   resource$ = this.resourceId$.pipe(
     filter(id => !!id),
     switchMap(id => this.api.getResource(id)),
-    pluck('resource'),
+    pluck<GetResourceResponse, ExtendedResource>('resource'),
     shareReplay()
   );
 
-  isOwnerSub = combineLatest([this.resource$, this.auth.session$]).pipe(map(([resource, session]) => {
-    return resource.createdById === session.id;
-  })).subscribe(isResourceOwner => {
+  isOwnerSub = combineLatest([this.resource$, this.auth.session$]).pipe(
+    map(([resource, session]) => {
+      return session && resource.createdById === session.id;
+    })).subscribe(isResourceOwner => {
     this.isResourceOwner = isResourceOwner;
   });
 
@@ -34,7 +42,16 @@ export class CreateOrEditResourceComponent implements OnInit, OnDestroy {
     this.resourceType = res.type;
     this.valueInHoursFrom = res.valueInHoursFrom;
     this.valueInHoursTo = res.valueInHoursTo;
+    this.sharedWith = res.sharedWith.map(s => s.groupId);
   });
+
+  groups$ = this.auth.session$.pipe(
+    filter(s => !!s),
+    pluck('id'),
+    switchMap(id => this.api.getMyMemberships(new GetMyMembershipsRequest())),
+    pluck<GetMyMembershipsResponse, Membership[]>('memberships'),
+    map<Membership[], Membership[]>(ms => ms.filter(m => m.userConfirmed && m.groupConfirmed)),
+  );
 
   public id: string;
   public summary: string;
@@ -46,7 +63,7 @@ export class CreateOrEditResourceComponent implements OnInit, OnDestroy {
   public error: any;
   public success = false;
   public pending = false;
-
+  public sharedWith: string[] = [];
 
   constructor(private api: BackendService, private route: ActivatedRoute, private auth: AuthService) {
   }
@@ -54,13 +71,13 @@ export class CreateOrEditResourceComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
   }
 
-
   ngOnDestroy(): void {
     this.resourceSub.unsubscribe();
     this.isOwnerSub.unsubscribe();
   }
 
   submit() {
+
     this.error = undefined;
     this.success = undefined;
     this.pending = true;
@@ -72,12 +89,13 @@ export class CreateOrEditResourceComponent implements OnInit, OnDestroy {
           this.description,
           this.resourceType,
           this.valueInHoursFrom,
-          this.valueInHoursTo
+          this.valueInHoursTo,
+          this.sharedWith.map(s => new SharedWithInput(s))
         ));
 
       this.api.createResource(request).subscribe(res => {
         this.success = true;
-        this.auth.goToMyProfile();
+        this.auth.goToMyResource(res.resource.id, res.resource.type);
       }, err => {
         this.error = err;
         this.success = false;
@@ -91,12 +109,13 @@ export class CreateOrEditResourceComponent implements OnInit, OnDestroy {
           this.description,
           this.resourceType,
           this.valueInHoursFrom,
-          this.valueInHoursTo
+          this.valueInHoursTo,
+          this.sharedWith.map(s => new SharedWithInput(s))
         ));
 
       this.api.updateResource(request).subscribe(res => {
         this.success = true;
-        this.auth.goToMyProfile();
+        this.auth.goToMyResource(res.resource.id, res.resource.type);
       }, err => {
         this.error = err;
         this.success = false;
@@ -104,8 +123,17 @@ export class CreateOrEditResourceComponent implements OnInit, OnDestroy {
       });
     }
 
-
   }
 
-
+  toggleGroup(groupId: string) {
+    console.log(groupId)
+    if (this.sharedWith.includes(groupId)) {
+      this.sharedWith.splice(this.sharedWith.indexOf(groupId), 1);
+      this.sharedWith = [...this.sharedWith];
+    } else {
+      this.sharedWith.push(groupId);
+      this.sharedWith = [...this.sharedWith];
+    }
+    console.log(this.sharedWith)
+  }
 }

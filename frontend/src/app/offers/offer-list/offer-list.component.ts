@@ -1,6 +1,10 @@
 import {Component, Input, OnInit} from '@angular/core';
 import {BackendService} from '../../api/backend.service';
 import {AcceptOfferRequest, DeclineOfferRequest, GetOffersRequest, Offer} from '../../api/models';
+import {ActivatedRoute} from '@angular/router';
+import {AuthService} from '../../auth.service';
+import {distinctUntilChanged, filter, pluck, shareReplay, switchMap, tap} from 'rxjs/operators';
+import {ReplaySubject, Subject} from 'rxjs';
 
 @Component({
   selector: 'app-offer-list',
@@ -9,49 +13,42 @@ import {AcceptOfferRequest, DeclineOfferRequest, GetOffersRequest, Offer} from '
 })
 export class OfferListComponent implements OnInit {
 
-  constructor(private backend: BackendService) {
+  constructor(private backend: BackendService, private route: ActivatedRoute, private auth: AuthService) {
 
   }
 
-  offers: Offer[] = [];
+  userId$ = this.auth.authUserId$.pipe(
+    filter(uid => !!uid),
+    distinctUntilChanged(),
+    tap((uid) => this.refresh()),
+    shareReplay()
+  );
 
-  private _userId: string;
-  @Input()
-  set userId(val: string) {
-    this._userId = val;
-    this.refresh();
-  }
-
-  get userId() {
-    return this._userId;
-  }
+  refreshSubject = new ReplaySubject();
+  offers$ = this.refreshSubject.asObservable().pipe(
+    switchMap(() => this.backend.getOffers(new GetOffersRequest())),
+    pluck('offers'),
+    shareReplay()
+  );
 
   ngOnInit(): void {
+    this.refresh();
   }
 
   accept(id: string) {
     this.backend.acceptOffer(new AcceptOfferRequest(id)).subscribe(res => {
-      console.log(res);
-      this.refresh();
+      this.refreshSubject.next();
     });
   }
 
   decline(id: string) {
     this.backend.declineOffer(new DeclineOfferRequest(id)).subscribe(res => {
-      console.log(res);
-      this.refresh();
+      this.refreshSubject.next();
     });
   }
 
   refresh() {
-    if (!this.userId) {
-      this.offers = [];
-      return;
-    }
-    this.backend.getOffers(new GetOffersRequest()).subscribe(offers => {
-      console.log(offers);
-      this.offers = offers.offers;
-    });
+    this.refreshSubject.next();
   }
 
 }

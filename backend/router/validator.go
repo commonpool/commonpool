@@ -1,12 +1,29 @@
 package router
 
 import (
-	"gopkg.in/go-playground/validator.v9"
+	"github.com/go-playground/locales/en"
+	ut "github.com/go-playground/universal-translator"
+	"github.com/go-playground/validator/v10"
+	en_translations "github.com/go-playground/validator/v10/translations/en"
 )
 
+var Trans ut.Translator
+
 func NewValidator() *Validator {
+
+	var (
+		validate = validator.New()
+		enLocale = en.New()
+		uni      = ut.New(enLocale, enLocale)
+		trans, _ = uni.GetTranslator("en")
+	)
+
+	Trans = trans
+
+	_ = en_translations.RegisterDefaultTranslations(validate, trans)
+
 	return &Validator{
-		validator: validator.New(),
+		validator: validate,
 	}
 }
 

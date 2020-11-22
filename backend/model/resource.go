@@ -45,3 +45,11 @@ func (r *Resource) GetKey() ResourceKey {
 func (r *Resource) GetUserKey() UserKey {
 	return NewUserKey(r.CreatedBy)
 }
+
+type Resources struct {
+	Items []Resource
+}
+
+func NewResources(items []Resource) *Resources {
+	return &Resources{Items: items}
+}

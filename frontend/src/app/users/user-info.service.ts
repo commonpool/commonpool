@@ -1,7 +1,7 @@
 import {Injectable, OnInit} from '@angular/core';
 import {combineLatest, Observable, of, ReplaySubject, Subject} from 'rxjs';
 import {BackendService} from '../api/backend.service';
-import {map, shareReplay, switchMap, tap} from 'rxjs/operators';
+import {map, shareReplay, startWith, switchMap, tap} from 'rxjs/operators';
 import {UserInfoResponse} from '../api/models';
 import {AuthService} from '../auth.service';
 
@@ -30,7 +30,8 @@ export class UserInfoService {
     );
     this.isMyProfile$ = combineLatest([this.getUserId(), this.auth.authUserId$]).pipe(
       map(([userId, authUserId]) => userId === authUserId),
-      shareReplay()
+      shareReplay(),
+      startWith(false)
     );
   }
 

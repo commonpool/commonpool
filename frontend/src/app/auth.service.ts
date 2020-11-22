@@ -2,7 +2,7 @@ import {Injectable, OnDestroy} from '@angular/core';
 import {BehaviorSubject, Observable, Subject} from 'rxjs';
 import {pluck, switchMap} from 'rxjs/operators';
 import {BackendService} from './api/backend.service';
-import {SessionResponse, UserInfoResponse} from './api/models';
+import {ResourceType, SessionResponse, UserInfoResponse} from './api/models';
 import {Router} from '@angular/router';
 
 @Injectable({
@@ -32,6 +32,14 @@ export class AuthService implements OnDestroy {
   public goToMyProfile() {
     if (this.sessionSubject.value !== undefined) {
       this.router.navigateByUrl('/users/' + this.sessionSubject.value.id);
+    }
+  }
+
+  public goToMyResource(resourceId: string, resourceType: ResourceType) {
+    if (this.sessionSubject.value !== undefined) {
+      const typeUrl = resourceType === ResourceType.Offer ? 'offers' : 'needs';
+      const url = '/users/' + this.sessionSubject.value.id + '/' + typeUrl + '/' + resourceId;
+      this.router.navigateByUrl(url);
     }
   }
 

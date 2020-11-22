@@ -2,9 +2,36 @@ package group
 
 import "github.com/commonpool/backend/model"
 
+type GetGroupsByKeysQuery struct {
+	GroupKeys []model.GroupKey
+}
+
+func NewGetGroupsByKeysQuery(groupKeys []model.GroupKey) *GetGroupsByKeysQuery {
+	return &GetGroupsByKeysQuery{
+		GroupKeys: groupKeys,
+	}
+}
+
+type GetGroupsByKeysResponse struct {
+	Items []model.Group
+	Error error
+}
+
+func NewGetGroupsByKeysResponseSuccess(items []model.Group) *GetGroupsByKeysResponse {
+	return &GetGroupsByKeysResponse{
+		Items: items,
+	}
+}
+func NewGetGroupsByKeysResponseError(err error) *GetGroupsByKeysResponse {
+	return &GetGroupsByKeysResponse{
+		Error: err,
+	}
+}
+
 type Store interface {
 	CreateGroup(request CreateGroupRequest) CreateGroupResponse
 	GetGroup(request GetGroupRequest) GetGroupResult
+	GetGroupsByKeys(request *GetGroupsByKeysQuery) *GetGroupsByKeysResponse
 	GrantPermission(request GrantPermissionRequest) GrantPermissionResult
 	RevokePermission(request RevokePermissionRequest) RevokePermissionResult
 	Invite(request InviteRequest) InviteResponse
@@ -180,7 +207,7 @@ func NewGetMembershipsForUserRequest(userKey model.UserKey, membershipStatus *mo
 
 type GetMembershipsForUserResponse struct {
 	Error       error
-	Memberships []model.Membership
+	Memberships model.Memberships
 }
 
 type GetMembershipsForGroupRequest struct {
@@ -197,7 +224,7 @@ func NewGetMembershipsForGroupRequest(groupKey model.GroupKey, status *model.Mem
 
 type GetMembershipsForGroupResponse struct {
 	Error       error
-	Memberships []model.Membership
+	Memberships model.Memberships
 }
 
 type GetMembershipRequest struct {

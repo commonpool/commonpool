@@ -8,7 +8,7 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
-CONTAINER=$(shell command -v docker || command -v podman || exit 1)
+CONTAINER ?= $(shell command -v docker || command -v podman || exit 1)
 SHELL=bash
 
 # define standard colors
@@ -51,7 +51,7 @@ push:
 up:
 	@whoami
 	@echo "> > > ${BLUE}Setting up commonpool backend environment...${RESET}"
-	@if [ $$(command -v docker) ] ; then \
+	@if [ $$(command -v docker) ] && [ $$(command -v docker-compose) ] ; then \
 		docker-compose up; \
 	else \
 		if [ "$$(podman pod ps | grep commonpool-dev | wc -l)" == "0" ] ; then \
@@ -60,7 +60,7 @@ up:
 		else \
 			read -p "Development pod is already running. Re-create it? [yN]" yn; \
 			case $$yn in \
-				[Yy]* )podman pod rm commonpool-dev -f; 	podman play kube podman.yaml;; \
+				[Yy]* )podman pod rm commonpool-dev -f; podman play kube podman.yaml;; \
 				""|[Nn]* ) exit;; \
 				* ) echo "Please answer yes or no.";; \
 			esac \
@@ -78,6 +78,7 @@ down:
 		fi \
 	fi
 
+.PHONY: .env-export
 .env-export:
 	sed -ne '/^export / {p;d}; /.*=/ s/^/export / p' .env > .env-export
 

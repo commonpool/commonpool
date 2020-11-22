@@ -2,19 +2,21 @@
   <div class="card-header">
     Offers I'm part of
   </div>
-  <ul class="list-group list-group-flush">
-    <li class="list-group-item" *ngFor="let offer of offers" [ngClass]="{declined: offer.status > 1, accepted: offer.status === 1}">
-      <div>
-        <span>Status: </span>
-        <span class="badge badge-pill badge-light shadow-sm mr-2" *ngIf="offer.status === 0">Pending</span>
-        <span class="badge badge-pill badge-success shadow-sm mr-2" *ngIf="offer.status === 1">Accepted</span>
-        <span class="badge badge-pill badge-light shadow-sm mr-2" *ngIf="offer.status === 2">Canceled</span>
-        <span class="badge badge-pill badge-light shadow-sm mr-2" *ngIf="offer.status === 3">Declined</span>
-        <span class="badge badge-pill badge-light shadow-sm mr-2" *ngIf="offer.status === 4">Expired</span>
+  <ng-container *ngIf="userId$ | async; let userId">
+    <ul class="list-group list-group-flush">
+      <li class="list-group-item" *ngFor="let offer of offers$ | async"
+          [ngClass]="{declined: offer.status > 1, accepted: offer.status === 1}">
         <div>
-          <span>Users: </span>
-          <ng-container *ngFor="let decision of offer.decisions">
-            <ng-container *ngIf="decision.userId != userId">
+          <span>Status: </span>
+          <span class="badge badge-pill badge-light shadow-sm mr-2" *ngIf="offer.status === 0">Pending</span>
+          <span class="badge badge-pill badge-success shadow-sm mr-2" *ngIf="offer.status === 1">Accepted</span>
+          <span class="badge badge-pill badge-light shadow-sm mr-2" *ngIf="offer.status === 2">Canceled</span>
+          <span class="badge badge-pill badge-light shadow-sm mr-2" *ngIf="offer.status === 3">Declined</span>
+          <span class="badge badge-pill badge-light shadow-sm mr-2" *ngIf="offer.status === 4">Expired</span>
+          <div>
+            <span>Users: </span>
+            <ng-container *ngFor="let decision of offer.decisions">
+              <ng-container *ngIf="decision.userId != userId">
             <span class="badge badge-pill badge-secondary shadow-sm mr-2">
             <app-username [id]="decision.userId"></app-username>
             :
@@ -22,12 +24,12 @@
               <span class="font-weight-normal" *ngIf="decision.decision === 1">Accepted</span>
               <span class="font-weight-normal" *ngIf="decision.decision === 2">Declined</span>
             </span>
+              </ng-container>
             </ng-container>
-          </ng-container>
-        </div>
+          </div>
 
-        <span>Resources: </span>
-        <ng-container *ngFor="let item of offer.items">
+          <span>Resources: </span>
+          <ng-container *ngFor="let item of offer.items">
         <span class="badge badge-pill shadow-sm mr-2"
               [ngClass]="{
                 'badge-danger': item.fromUserId === userId,
@@ -43,50 +45,52 @@
           <span *ngIf="item.fromUserId === userId">-> <app-username [id]="item.toUserId"></app-username></span>
           <span *ngIf="item.fromUserId !== userId"><- <app-username [id]="item.fromUserId"></app-username></span>
         </span>
-        </ng-container>
-      </div>
-      <ng-container *ngFor="let decision of offer.decisions">
-        <ng-container *ngIf="decision.userId === userId">
-          <div class="mt-2">
-            <button class="btn btn-secondary btn-sm" disabled *ngIf="decision.decision === 2">
-              Declined
-            </button>
-            <button class="btn btn-success btn-sm" disabled *ngIf="decision.decision === 1">
-              Accepted
-            </button>
-            <div class="btn-group" role="group" aria-label="Basic example" *ngIf="offer.status == 0 && decision.decision !== 2">
-              <button class="btn btn-sm btn-primary"
-                      [ngClass]="{'active shadow-inset': decision.decision === 2}"
-                      (click)="decline(offer.id)"
-                      role="button"
-                      [attr.aria-pressed]="decision.decision === 2"
-              >
+          </ng-container>
+        </div>
+        <ng-container *ngFor="let decision of offer.decisions">
+          <ng-container *ngIf="decision.userId === userId">
+            <div class="mt-2">
+              <button class="btn btn-secondary btn-sm" disabled *ngIf="decision.decision === 2">
+                Declined
+              </button>
+              <button class="btn btn-success btn-sm" disabled *ngIf="decision.decision === 1">
+                Accepted
+              </button>
+              <div class="btn-group" role="group" aria-label="Basic example"
+                   *ngIf="offer.status == 0 && decision.decision !== 2">
+                <button class="btn btn-sm btn-primary"
+                        [ngClass]="{'active shadow-inset': decision.decision === 2}"
+                        (click)="decline(offer.id)"
+                        role="button"
+                        [attr.aria-pressed]="decision.decision === 2"
+                >
                 <span *ngIf="decision.decision !== 2">
                   Decline
                 </span>
-                <span *ngIf="decision.decision === 2">
+                  <span *ngIf="decision.decision === 2">
                   Declined
                 </span>
-              </button>
+                </button>
 
-              <button
-                class="btn btn-sm btn-primary"
-                [ngClass]="{'active shadow-inset': decision.decision === 1}"
-                (click)="accept(offer.id)"
-                role="button"
-                [attr.aria-pressed]="decision.decision === 1"
-              >
+                <button
+                  class="btn btn-sm btn-primary"
+                  [ngClass]="{'active shadow-inset': decision.decision === 1}"
+                  (click)="accept(offer.id)"
+                  role="button"
+                  [attr.aria-pressed]="decision.decision === 1"
+                >
                 <span *ngIf="decision.decision !== 1">
                   Accept
                 </span>
-                <span *ngIf="decision.decision === 1">
+                  <span *ngIf="decision.decision === 1">
                   Accepted
                 </span>
-              </button>
+                </button>
+              </div>
             </div>
-          </div>
+          </ng-container>
         </ng-container>
-      </ng-container>
-    </li>
-  </ul>
+      </li>
+    </ul>
+  </ng-container>
 </div>

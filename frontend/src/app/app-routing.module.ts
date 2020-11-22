@@ -3,7 +3,6 @@ import {Routes, RouterModule} from '@angular/router';
 import {ResourceListViewComponent} from './resources/resource-list-view/resource-list-view.component';
 import {CreateOrEditResourceComponent} from './resources/create-or-edit-resource/create-or-edit-resource.component';
 import {ResourceDetailsComponent} from './resources/resource-details/resource-details.component';
-import {UserProfileComponent} from './user-profile/user-profile.component';
 import {ConversationThreadListComponent} from './chat/conversation-thread-list/conversation-thread-list.component';
 import {ResourceInquiryComponent} from './resources/resource-inquiry/resource-inquiry.component';
 import {ConversationThreadComponent} from './chat/conversation-thread/conversation-thread.component';
@@ -18,13 +17,18 @@ import {UserGroupsViewComponent} from './users/user-groups-view/user-groups-view
 import {UserResourcesViewComponent} from './users/user-resources-view/user-resources-view.component';
 import {GroupInvitesViewComponent} from './groups/group-invites-view/group-invites-view.component';
 import {GroupResourcesViewComponent} from './groups/group-resources-view/group-resources-view.component';
-
+import {HomePageComponent} from './home/home-page/home-page.component';
 
 const routes: Routes = [
   {
     path: '',
+    component: HomePageComponent
+  },
+  {
+    path: 'resources',
     component: ResourceListViewComponent
-  }, {
+  },
+  {
     path: 'resources/new',
     component: CreateOrEditResourceComponent
   }, {
@@ -39,10 +43,20 @@ const routes: Routes = [
     children: [
       {path: '', redirectTo: 'groups', pathMatch: 'full'},
       {path: 'groups', component: UserGroupsViewComponent},
-      {path: 'needs', component: UserResourcesViewComponent},
-      {path: 'offers', component: UserResourcesViewComponent},
-      {path: 'needs/:resourceId', component: ResourceDetailsComponent},
-      {path: 'offers/:resourceId', component: ResourceDetailsComponent}
+      {path: 'needs', component: UserResourcesViewComponent, data: {accountType: 'user', resourceType: 'needs'}},
+      {path: 'offers', component: UserResourcesViewComponent, data: {accountType: 'user', resourceType: 'offers'}},
+      {
+        path: 'needs/:resourceId',
+        component: ResourceDetailsComponent,
+        data: {accountType: 'user', resourceType: 'needs'}
+      },
+      {
+        path: 'offers/:resourceId',
+        component: ResourceDetailsComponent,
+        data: {accountType: 'user', resourceType: 'offers'}
+      },
+      {path: 'transactions', component: OfferListComponent},
+      {path: 'transactions/:id', component: OfferDetailsComponent},
     ]
   }, {
     path: 'messages',
@@ -70,6 +84,18 @@ const routes: Routes = [
       {path: 'members', component: GroupMembersViewComponent},
       {path: 'invitations', component: GroupInvitesViewComponent},
       {path: 'resources', component: GroupResourcesViewComponent},
+      {path: 'needs', component: UserResourcesViewComponent, data: {accountType: 'group', resourceType: 'needs'}},
+      {path: 'offers', component: UserResourcesViewComponent, data: {accountType: 'group', resourceType: 'offers'}},
+      {
+        path: 'needs/:resourceId',
+        component: ResourceDetailsComponent,
+        data: {accountType: 'group', resourceType: 'needs'}
+      },
+      {
+        path: 'offers/:resourceId',
+        component: ResourceDetailsComponent,
+        data: {accountType: 'group', resourceType: 'offers'}
+      }
     ]
   }
 ];

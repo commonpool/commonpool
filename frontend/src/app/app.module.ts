@@ -11,7 +11,6 @@ import {CreateOrEditResourceComponent} from './resources/create-or-edit-resource
 import {AuthService} from './auth.service';
 import {AppHttpInterceptor} from './api/backend.service';
 import {ResourceDetailsComponent} from './resources/resource-details/resource-details.component';
-import {UserProfileComponent} from './user-profile/user-profile.component';
 import {ConversationThreadComponent} from './chat/conversation-thread/conversation-thread.component';
 import {ConversationThreadListComponent} from './chat/conversation-thread-list/conversation-thread-list.component';
 import {ScrollingModule} from '@angular/cdk/scrolling';
@@ -55,6 +54,7 @@ import {CircleFillIcon} from './icons/circle-fill/circle-fill.icon';
 import { GroupLinkComponent } from './shared/group-link/group-link.component';
 import { ResourceLinkComponent } from './shared/resource-link/resource-link.component';
 import { AcceptInvitationComponent } from './groups/accept-invitation/accept-invitation.component';
+import { HomePageComponent } from './home/home-page/home-page.component';
 
 @NgModule({
   declarations: [
@@ -63,7 +63,6 @@ import { AcceptInvitationComponent } from './groups/accept-invitation/accept-inv
     TopNavComponent,
     CreateOrEditResourceComponent,
     ResourceDetailsComponent,
-    UserProfileComponent,
     ConversationThreadComponent,
     ConversationThreadListComponent,
     ResourceInquiryComponent,
@@ -105,6 +104,7 @@ import { AcceptInvitationComponent } from './groups/accept-invitation/accept-inv
     GroupLinkComponent,
     ResourceLinkComponent,
     AcceptInvitationComponent,
+    HomePageComponent,
   ],
   imports: [
     BrowserModule,

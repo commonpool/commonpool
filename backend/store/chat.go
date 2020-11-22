@@ -150,11 +150,11 @@ func (cs *ChatStore) GetOrCreateResourceTopicMapping(rk model.ResourceKey, uk mo
 
 		err = cs.db.Transaction(func(tx *gorm.DB) error {
 
-			var res model.Resource
-			err = rs.GetByKey(rk, &res)
-			if err != nil {
-				return err
+			getResourceByKeyResponse := rs.GetByKey(resource.NewGetResourceByKeyQuery(rk))
+			if getResourceByKeyResponse.Error != nil {
+				return getResourceByKeyResponse.Error
 			}
+			res := getResourceByKeyResponse.Resource
 
 			newResourceTopic := model.ResourceTopic{
 				TopicId:    uuid.NewV4(),

@@ -33,7 +33,7 @@ func NewTimeOfferItem(key OfferItemKey, fromUser UserKey, toUser UserKey, offere
 	}
 }
 
-func NewResourceOffer(key OfferItemKey, fromUser UserKey, toUser UserKey, offeredResource ResourceKey) OfferItem {
+func NewResourceOfferItem(key OfferItemKey, fromUser UserKey, toUser UserKey, offeredResource ResourceKey) OfferItem {
 	return OfferItem{
 		ID:                   key.ID,
 		ItemType:             ResourceItem,

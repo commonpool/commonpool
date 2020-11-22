@@ -4,6 +4,7 @@ import (
 	"fmt"
 	. "github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/utils"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
@@ -228,14 +229,15 @@ func (h *Handler) InquireAboutResource(c echo.Context) error {
 	}
 
 	// retrieve the resource
-	resource := &model.Resource{}
-	err = h.resourceStore.GetByKey(*resourceKey, resource)
-	if err != nil {
-		return err
+
+	getResourceByKeyResponse := h.resourceStore.GetByKey(resource.NewGetResourceByKeyQuery(*resourceKey))
+	if getResourceByKeyResponse.Error != nil {
+		return getResourceByKeyResponse.Error
 	}
+	res := getResourceByKeyResponse.Resource
 
 	// make sure auth user is not resource owner
-	if resource.GetUserKey() == userKey {
+	if res.GetUserKey() == userKey {
 		err := ErrCannotInquireAboutOwnResource()
 		return NewErrResponse(c, &err)
 	}

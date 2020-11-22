@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/utils"
 	"gorm.io/gorm"
+	"strings"
 )
 
 type GroupStore struct {
@@ -59,6 +61,45 @@ func (g *GroupStore) GetGroup(request group.GetGroupRequest) group.GetGroupResul
 	return group.GetGroupResult{
 		Group: grp,
 	}
+}
+
+func (g *GroupStore) GetGroupsByKeys(request *group.GetGroupsByKeysQuery) *group.GetGroupsByKeysResponse {
+
+	var result []model.Group
+
+	err := utils.Partition(len(request.GroupKeys), 999, func(i1 int, i2 int) error {
+
+		qryParts := make([]string, i2-i1)
+		qryParams := make([]interface{}, i2-i1)
+
+		for i, item := range request.GroupKeys[i1:i2] {
+			qryParts[i] = "?"
+			qryParams[i] = item.ID.String()
+		}
+
+		qry := "id in (" + strings.Join(qryParts, ",") + ")"
+
+		var partition []model.Group
+		qryResult := g.db.Model(model.Group{}).Where(qry, qryParams...).Find(&partition)
+		if qryResult.Error != nil {
+			return qryResult.Error
+		}
+		for _, item := range partition {
+			result = append(result, item)
+		}
+		return nil
+	})
+
+	if err != nil {
+		return &group.GetGroupsByKeysResponse{
+			Error: err,
+		}
+	}
+
+	return &group.GetGroupsByKeysResponse{
+		Items: result,
+	}
+
 }
 
 func (g *GroupStore) GrantPermission(request group.GrantPermissionRequest) group.GrantPermissionResult {
@@ -212,7 +253,7 @@ func (g *GroupStore) GetMembershipsForUser(request group.GetMembershipsForUserRe
 	err := chain.Find(&memberships).Error
 	return group.GetMembershipsForUserResponse{
 		Error:       err,
-		Memberships: memberships,
+		Memberships: model.NewMemberships(memberships),
 	}
 }
 
@@ -238,7 +279,7 @@ func (g *GroupStore) GetMembershipsForGroup(request group.GetMembershipsForGroup
 	err := chain.Find(&memberships).Error
 	return group.GetMembershipsForGroupResponse{
 		Error:       err,
-		Memberships: memberships,
+		Memberships: model.NewMemberships(memberships),
 	}
 }
 

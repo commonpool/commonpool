@@ -10,6 +10,7 @@ import (
 	"github.com/commonpool/backend/utils"
 	"github.com/coreos/go-oidc"
 	echo "github.com/labstack/echo/v4"
+	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/oauth2"
 	"io/ioutil"
 	"net/http"
@@ -75,6 +76,8 @@ type TokenResponse struct {
 
 // Interface for authorization module
 type IAuth interface {
+	Login() echo.HandlerFunc
+	Logout() echo.HandlerFunc
 	Authenticate(redirectOnError bool) echo.MiddlewareFunc
 	GetAuthUserSession(c echo.Context) UserSession
 	GetAuthUserKey(c echo.Context) model.UserKey
@@ -92,7 +95,7 @@ type OidcAuthenticator struct {
 
 // GetAuthenticatedUser gets the current authenticated user
 func (a *OidcAuthenticator) GetAuthUserSession(c echo.Context) UserSession {
-	var isAuthenticated bool = c.Get(IsAuthenticatedKey).(bool)
+	var isAuthenticated = c.Get(IsAuthenticatedKey).(bool)
 	if !isAuthenticated {
 		return UserSession{
 			Username:        "",
@@ -126,10 +129,33 @@ type RedirectResponse struct {
 	Meta RedirectResponseMeta `json:"meta"`
 }
 
+func (a *OidcAuthenticator) Login() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		SetIsAuthenticated(c, false)
+		return a.RedirectToAuth(c)
+	}
+}
+
+func (a *OidcAuthenticator) Logout() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		SetIsAuthenticated(c, false)
+		clearCookies(c)
+		v := url.Values{
+			"redirect_uri": {a.appConfig.BaseUri},
+		}
+		url := a.appConfig.OidcDiscoveryUrl + "/protocol/openid-connect/logout?" + v.Encode()
+		response := &RedirectResponse{
+			RedirectResponseMeta{
+				RedirectTo: url,
+			},
+		}
+		return c.JSON(http.StatusOK, response)
+	}
+}
+
 // Authenticate will check and user accessTokens or refreshTokens and save user info to context
 func (a *OidcAuthenticator) Authenticate(redirectOnError bool) echo.MiddlewareFunc {
 	ctx := context.Background()
-
 	return func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 
 		return func(c echo.Context) error {
@@ -143,7 +169,7 @@ func (a *OidcAuthenticator) Authenticate(redirectOnError bool) echo.MiddlewareFu
 
 			if rawAccessToken == "" {
 				// access token not present
-				return a.redirectOrNext(c, redirectOnError, handlerFunc, a.redirectToAuth)
+				return a.redirectOrNext(c, redirectOnError, handlerFunc, a.RedirectToAuth)
 			}
 
 			// verify id token
@@ -175,7 +201,7 @@ func (a *OidcAuthenticator) Authenticate(redirectOnError bool) echo.MiddlewareFu
 			refreshTokenCookie := utils.FindCookie(c, refreshTokenCookieName)
 			if refreshTokenCookie == nil {
 				clearCookies(c)
-				return a.redirectOrNext(c, redirectOnError, handlerFunc, a.redirectToAuth)
+				return a.redirectOrNext(c, redirectOnError, handlerFunc, a.RedirectToAuth)
 			}
 
 			// prepare and send refresh token request
@@ -194,7 +220,7 @@ func (a *OidcAuthenticator) Authenticate(redirectOnError bool) echo.MiddlewareFu
 				clearCookies(c)
 				err = fmt.Errorf("impossible to use refresh token: %s", err)
 				c.Logger().Error(err)
-				return a.redirectOrNext(c, redirectOnError, handlerFunc, a.redirectToAuth)
+				return a.redirectOrNext(c, redirectOnError, handlerFunc, a.RedirectToAuth)
 			}
 
 			// reading response
@@ -203,7 +229,7 @@ func (a *OidcAuthenticator) Authenticate(redirectOnError bool) echo.MiddlewareFu
 				clearCookies(c)
 				err = fmt.Errorf("impossible to read refresh token response: %d, %s", res.StatusCode, string(body))
 				c.Logger().Error(err)
-				return a.redirectOrNext(c, redirectOnError, handlerFunc, a.redirectToAuth)
+				return a.redirectOrNext(c, redirectOnError, handlerFunc, a.RedirectToAuth)
 			}
 
 			// checking status code
@@ -211,7 +237,7 @@ func (a *OidcAuthenticator) Authenticate(redirectOnError bool) echo.MiddlewareFu
 				clearCookies(c)
 				err = fmt.Errorf("unexpected refresh token response code: %d, %s", res.StatusCode, string(body))
 				c.Logger().Error(err)
-				return a.redirectOrNext(c, redirectOnError, handlerFunc, a.redirectToAuth)
+				return a.redirectOrNext(c, redirectOnError, handlerFunc, a.RedirectToAuth)
 			}
 
 			// unmarshal response
@@ -221,7 +247,7 @@ func (a *OidcAuthenticator) Authenticate(redirectOnError bool) echo.MiddlewareFu
 				clearCookies(c)
 				err = fmt.Errorf("impossible to unmarshal refresh token response: %s, %s", err.Error(), string(body))
 				c.Logger().Error(err)
-				return a.redirectOrNext(c, redirectOnError, handlerFunc, a.redirectToAuth)
+				return a.redirectOrNext(c, redirectOnError, handlerFunc, a.RedirectToAuth)
 			}
 
 			// verify id token
@@ -230,7 +256,7 @@ func (a *OidcAuthenticator) Authenticate(redirectOnError bool) echo.MiddlewareFu
 				clearCookies(c)
 				err = fmt.Errorf("impossible to verify refreshed token: %s", err.Error())
 				c.Logger().Error(err)
-				return a.redirectOrNext(c, redirectOnError, handlerFunc, a.redirectToAuth)
+				return a.redirectOrNext(c, redirectOnError, handlerFunc, a.RedirectToAuth)
 			}
 
 			// retrieve claims
@@ -347,8 +373,8 @@ func decodeState(state string) (*Nonce, error) {
 	return nonce, nil
 }
 
-// redirectToAuth sends redirect request to authenticate
-func (a *OidcAuthenticator) redirectToAuth(c echo.Context) error {
+// RedirectToAuth sends redirect request to authenticate
+func (a *OidcAuthenticator) RedirectToAuth(c echo.Context) error {
 	st, err := newState(c, state)
 	if err != nil {
 		return err
@@ -359,9 +385,7 @@ func (a *OidcAuthenticator) redirectToAuth(c echo.Context) error {
 			RedirectTo: codeURL,
 		},
 	}
-
 	return c.JSON(http.StatusUnauthorized, response)
-
 }
 
 // redirectToHome sends redirect request to homepage
@@ -399,6 +423,7 @@ func NewAuth(e *echo.Group, appConfig *config.AppConfig, groupPrefix string, as 
 
 		st, err := decodeState(c.Request().URL.Query().Get("state"))
 		if err != nil {
+			log.Error(err)
 			return err
 		}
 
@@ -490,14 +515,6 @@ func setAccessTokenCookie(c echo.Context, accessToken string, appConfig *config.
 }
 
 func setTokenCookie(c echo.Context, cookieName string, value string, appConfig *config.AppConfig) {
-
-	cookie, err := c.Cookie(cookieName)
-	if err == nil {
-		if cookie.Value == value {
-			return
-		}
-	}
-
 	jwtCookie := new(http.Cookie)
 	jwtCookie.Name = cookieName
 	jwtCookie.Value = value
@@ -515,13 +532,15 @@ func clearCookies(c echo.Context) {
 }
 
 func clearCookie(c echo.Context, cookieName string) error {
-	refreshTokenCookie, err := c.Cookie(cookieName)
-	if err != nil {
-		return err
-	}
-	refreshTokenCookie.MaxAge = 0
-	refreshTokenCookie.Expires = time.Unix(0, 0)
-	c.SetCookie(refreshTokenCookie)
+	ck := new(http.Cookie)
+	ck.Name = cookieName
+	ck.Value = ""
+	ck.MaxAge = 0
+	ck.Expires = time.Unix(0, 0)
+	ck.Path = "/"
+	ck.HttpOnly = true
+	ck.Secure = true
+	c.SetCookie(ck)
 	return nil
 }
 
@@ -549,6 +568,18 @@ func (a *MockAuthorizer) GetAuthUserSession(c echo.Context) UserSession {
 
 func (a *MockAuthorizer) GetAuthUserKey(c echo.Context) model.UserKey {
 	return model.NewUserKey(a.MockCurrentSession().Subject)
+}
+
+func (a *MockAuthorizer) Login() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		return c.String(http.StatusOK, "")
+	}
+}
+
+func (a *MockAuthorizer) Logout() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		return c.String(http.StatusOK, "")
+	}
 }
 
 var _ IAuth = &MockAuthorizer{}

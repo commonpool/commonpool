@@ -1,10 +1,6 @@
 VERSION ?= latest
 IMG ?= commonpool/frontend:$(VERSION)
-
-CONTAINER=$(shell command -v docker || command -v podman || exit 1)
-
-BUILD_CONTAINER=$(shell (command -v docker && echo build . -t $(IMG)) || (command -v podman && echo build . -t $(IMG)) || (command -v buildah && echo bud -t $(IMG) .))
-PUSH_CONTAINER=$(shell (command -v docker && echo push $(IMG)) || (command -v podman && echo push $(IMG)) || (command -v buildah && echo push $(IMG)))
+CONTAINER ?= $(shell command -v docker || command -v podman || exit 1)
 
 .PHONY: start
 start:
@@ -36,8 +32,8 @@ e2e-watch:
 
 .PHONY: pack
 pack:
-	$(BUILD_CONTAINER)
+	$(CONTAINER) build . -t $(IMG)
 
 .PHONY: push
 push:
-	$(PUSH_CONTAINER)
+	$(CONTAINER) push $(IMG)

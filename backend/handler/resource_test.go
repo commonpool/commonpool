@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/router"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
@@ -24,7 +25,7 @@ func TestSearchBySummaryAndType(t *testing.T) {
 
 	// Creating the resource
 	key := model.NewResourceKey(uuid.NewV4())
-	resource := model.NewResource(
+	r := model.NewResource(
 		key,
 		model.ResourceOffer,
 		"author",
@@ -33,7 +34,9 @@ func TestSearchBySummaryAndType(t *testing.T) {
 		1,
 		2,
 	)
-	assert.NoError(t, rs.Create(&resource))
+	rq := resource.NewCreateResourceQuery(&r)
+
+	assert.NoError(t, rs.Create(rq).Error)
 
 	_, _, rec, c := newRequest(echo.GET, "/api/resources?take=10&skip=0&query=superb&type=0", nil)
 	err := h.SearchResources(c)
@@ -63,7 +66,9 @@ func TestCreateResource(t *testing.T) {
 		"resource": {
 			"summary":"summary",
 			"description":"description",
-			"type":0
+			"type":0,
+			"valueInHoursFrom":1,
+			"valueInHoursTo":3
 		}
 	}`
 	rec, c := newCreateResourceRequest(js)
@@ -91,7 +96,9 @@ func TestCreateResourceInvalid400(t *testing.T) {
 		"resource": {
 			"summary":123,
 			"description":456,
-			"type":0
+			"type":0,
+			"valueInHoursFrom":1,
+			"valueInHoursTo":3
 		}
 	}`)
 	err := h.CreateResource(c)
@@ -116,23 +123,19 @@ func TestCreateResourceEmptyName400(t *testing.T) {
 		"resource": {
 			"summary":"",
 			"description":"description",
-			"type":0
+			"type":0,
+			"valueInHoursFrom":1,
+			"valueInHoursTo":3
 		}
 	}`)
 	err := h.CreateResource(c)
 
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
-
-	res := errors.ErrorResponse{}
-	assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &res))
-	assert.Equal(t, "ErrValidation", res.Code)
-	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-	fmt.Println(string(rec.Body.Bytes()))
 }
 
-// TestCreateResourceEmptyName400
-// Should return 400 if summary is empty
+// TestCreateResourceLongSummary400
+// Should return 400 if summary is too long
 func TestCreateResourceLongSummary400(t *testing.T) {
 	tearDown()
 	setup()
@@ -147,19 +150,15 @@ func TestCreateResourceLongSummary400(t *testing.T) {
 		"resource": {
 			"summary":"` + a + `",
 			"description":"description",
-			"type":0
+			"type":0,
+			"valueInHoursFrom":1,
+			"valueInHoursTo":3
 		}
 	}`)
 	err := h.CreateResource(c)
 
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
-
-	res := errors.ErrorResponse{}
-	assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &res))
-	assert.Equal(t, "ErrValidation", res.Code)
-	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-	fmt.Println(string(rec.Body.Bytes()))
 }
 
 // TestGetResource
@@ -170,7 +169,7 @@ func TestGetResource(t *testing.T) {
 
 	// Creating the resource
 	key := model.NewResourceKey(uuid.NewV4())
-	resource := model.NewResource(
+	r := model.NewResource(
 		key,
 		model.ResourceOffer,
 		user1.Subject,
@@ -178,7 +177,8 @@ func TestGetResource(t *testing.T) {
 		"Description",
 		1,
 		2)
-	assert.NoError(t, rs.Create(&resource))
+	rq := resource.NewCreateResourceQuery(&r)
+	assert.NoError(t, rs.Create(rq).Error)
 
 	// Getting the resource
 	rec, c := newGetResourceRequest(key.String())
@@ -240,22 +240,25 @@ func TestGetUnknownResource404(t *testing.T) {
 }
 
 // TestUpdateResource
-// Should be able to update a resource summary, description and type
+// Should be able to update a resource summary, description
 func TestUpdateResource(t *testing.T) {
 	tearDown()
 	setup()
 
+	mockLoggedInAs(user1)
+
 	// Creating the resource
 	key := model.NewResourceKey(uuid.NewV4())
-	resource := model.NewResource(
+	r := model.NewResource(
 		key,
 		model.ResourceOffer,
-		"author",
+		user1.Subject,
 		"Summary",
 		"Description",
 		1,
 		2)
-	assert.NoError(t, rs.Create(&resource))
+	rq := resource.NewCreateResourceQuery(&r)
+	assert.NoError(t, rs.Create(rq).Error)
 
 	// Setting up the request
 	js := `
@@ -263,10 +266,6 @@ func TestUpdateResource(t *testing.T) {
 		"resource":{
 			"summary":"new summary",
 			"description":"new description",
-			"type":1,
-			"timeSensitivity":20,
-			"exchangeValue":30,
-			"necessityLevel":40,
 			"valueInHoursFrom":3,
 			"valueInHoursTo":4
 		}
@@ -282,7 +281,6 @@ func TestUpdateResource(t *testing.T) {
 	assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &res))
 	assert.Equal(t, "new summary", res.Resource.Summary)
 	assert.Equal(t, "new description", res.Resource.Description)
-	assert.Equal(t, model.ResourceRequest, res.Resource.Type)
 	assert.Equal(t, 3, res.Resource.ValueInHoursFrom)
 	assert.Equal(t, 4, res.Resource.ValueInHoursTo)
 }
@@ -326,16 +324,21 @@ func newCreateResourceRequest(js string) (*httptest.ResponseRecorder, echo.Conte
 }
 
 func createResource(t *testing.T, summary string, description string, resType model.ResourceType) web.CreateResourceResponse {
-	js := fmt.Sprintf(`
-	{
-		"resource": {
-			"summary":"%s",
-			"description":"%s",
-			"type":%d
-		}
-	}`, summary, description, resType)
-	rec, c := newCreateResourceRequest(js)
-	err := h.CreateResource(c)
+	payload := web.CreateResourceRequest{
+		Resource: web.CreateResourcePayload{
+			Summary:          summary,
+			Description:      description,
+			Type:             resType,
+			ValueInHoursFrom: 1,
+			ValueInHoursTo:   3,
+			SharedWith:       []web.InputResourceSharing{},
+		},
+	}
+	js, err := json.Marshal(payload)
+	assert.NoError(t, err)
+
+	rec, c := newCreateResourceRequest(string(js))
+	err = h.CreateResource(c)
 
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusCreated, rec.Code)

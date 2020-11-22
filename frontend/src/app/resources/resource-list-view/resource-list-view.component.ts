@@ -30,7 +30,7 @@ export class ResourceListViewComponent {
         this.resourceType$
       ]
     ).pipe(
-      map(([query, type]) => new SearchResourceRequest(query, type, undefined, 10, 0)),
+      map(([query, type]) => new SearchResourceRequest(query, type, undefined, undefined, 10, 0)),
       tap(() => {
         this.pendingSubject.next(true);
       }),

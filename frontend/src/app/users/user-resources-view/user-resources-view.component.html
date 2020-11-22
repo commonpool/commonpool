@@ -1,8 +1,11 @@
 <ng-container *ngIf="resources$ | async; let resources">
   <div class="container-fluid mt-5">
+
     <div class="row">
       <div class="col">
         <div class="card">
+
+
           <h5 class="card-header">
             Resources
           </h5>
@@ -10,7 +13,8 @@
           <!-- resource list section -->
           <ul class="list-group list-group-flush">
             <li class="list-group-item" *ngFor="let resource of resources">
-              <app-resource-link [resource]="resource"></app-resource-link>
+              <app-resource-link [resource]="resource"
+                                 [groupId]="(ownerType$ | async) === 'group' ? (accountId$ | async) : undefined "></app-resource-link>
             </li>
           </ul>
 
@@ -21,6 +25,12 @@
               <p>You are not offering anything yet</p>
               <p class="text-muted">Add some stuff to your profile</p>
             </ng-container>
+
+            <ng-container *ngIf="(isNeeds$ | async) && (isMyProfile$ | async)">
+              <p>You are not asking for anything yet</p>
+              <p class="text-muted">Add some stuff to your profile</p>
+            </ng-container>
+
           </div>
 
         </div>

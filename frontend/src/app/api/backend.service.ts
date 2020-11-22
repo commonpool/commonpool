@@ -62,7 +62,13 @@ export class AppHttpInterceptor implements HttpInterceptor {
   ): Observable<HttpEvent<any>> {
     return next.handle(req).pipe(
       tap(evt => {
-
+        console.log(evt)
+        const bla = evt as any
+        if (bla?.body?.meta?.redirectTo){
+          setTimeout(() => {
+            window.location = bla.body.meta.redirectTo;
+          }, 1000);
+        }
       }),
       catchError((err: any) => {
         console.log(err);
@@ -83,6 +89,22 @@ export class BackendService {
 
   constructor(private http: HttpClient) {
 
+  }
+
+  login() {
+    this.http.post(`${environment.apiUrl}/api/v1/auth/login`, undefined, {
+      observe: 'response'
+    }).subscribe(() => {
+      console.log('logging in');
+    });
+  }
+
+  logout() {
+    this.http.post(`${environment.apiUrl}/api/v1/auth/logout`, undefined, {
+      observe: 'response'
+    }).subscribe(() => {
+      console.log('logging out');
+    });
   }
 
   createResource(request: CreateResourceRequest): Observable<CreateResourceResponse> {
@@ -117,6 +139,9 @@ export class BackendService {
     const params: any = {};
     if (request.createdBy !== undefined) {
       params.created_by = request.createdBy;
+    }
+    if (request.groupId !== undefined) {
+      params.group_id = request.groupId;
     }
     if (request.take !== undefined) {
       params.take = request.take.toString();
@@ -153,7 +178,7 @@ export class BackendService {
           throwError(ErrorResponse.fromHttpResponse(res));
         }
         const body = res.body as GetResourceResponse;
-        return new GetResourceResponse(body.resource);
+        return GetResourceResponse.from(body);
       })
     );
   }
@@ -306,7 +331,6 @@ export class BackendService {
     );
   }
 
-
   acceptOffer(offer: AcceptOfferRequest): Observable<AcceptOfferResponse> {
     return this.http.post(`${environment.apiUrl}/api/v1/offers/${offer.id}/accept`, undefined, {
       observe: 'response'
@@ -319,7 +343,6 @@ export class BackendService {
       })
     );
   }
-
 
   declineOffer(offer: DeclineOfferRequest): Observable<DeclineOfferReponse> {
     return this.http.post(`${environment.apiUrl}/api/v1/offers/${offer.id}/decline`, undefined, {
@@ -391,7 +414,6 @@ export class BackendService {
       })
     );
   }
-
 
   getGroupMemberships(request: GetGroupMembershipsRequest): Observable<GetGroupMembershipsResponse> {
     const params: { [key: string]: string } = {};
@@ -505,6 +527,5 @@ export class BackendService {
       })
     );
   }
-
 
 }

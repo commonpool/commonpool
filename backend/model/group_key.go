@@ -9,6 +9,10 @@ type GroupKey struct {
 	ID uuid.UUID
 }
 
+func (k GroupKey) Equals(g GroupKey) bool {
+	return k.ID == g.ID
+}
+
 func NewGroupKey(id uuid.UUID) GroupKey {
 	return GroupKey{ID: id}
 }

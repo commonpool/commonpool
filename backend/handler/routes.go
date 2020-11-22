@@ -5,6 +5,11 @@ import (
 )
 
 func (h *Handler) Register(v1 *echo.Group) {
+
+	auth := v1.Group("/auth")
+	auth.Any("/login", h.authorization.Login())
+	auth.Any("/logout", h.authorization.Logout())
+
 	resources := v1.Group("/resources", h.authorization.Authenticate(true))
 	resources.GET("", h.SearchResources)
 	resources.GET("/:id", h.GetResource)

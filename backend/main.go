@@ -63,7 +63,6 @@ func main() {
 	h.Register(v1)
 
 	r.Logger.Info("Secure Cookies", appConfig.SecureCookies)
-
 	r.Logger.Fatal(r.Start("0.0.0.0:8585"))
 }
 

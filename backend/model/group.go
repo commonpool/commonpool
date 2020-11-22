@@ -16,3 +16,8 @@ type Group struct {
 func (o *Group) GetKey() GroupKey {
 	return NewGroupKey(o.ID)
 }
+
+type Groups struct {
+	items map[GroupKey]Group
+	order []int
+}

@@ -25,6 +25,7 @@ func TestSendMessage(t *testing.T) {
 	// user 2 sends message about resource
 	mockLoggedInAs(user2)
 	inquireAboutResource(t, res.Resource.Id, "hello!")
+
 	user2Threads := getLatestThreads(t, 0, 10).Threads
 	assert.Equal(t, 1, len(user2Threads))
 	user2Messages := getThreadMessages(t, user2Threads[0].TopicID).Messages

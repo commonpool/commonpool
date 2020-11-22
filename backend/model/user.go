@@ -10,3 +10,7 @@ type User struct {
 	Username  string     `gorm:"not null"`
 	Email     string     `gorm:"not null"`
 }
+
+func (u *User) GetKey() UserKey {
+	return NewUserKey(u.ID)
+}

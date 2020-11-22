@@ -144,9 +144,9 @@ type GetUserMembershipsResponse struct {
 	Memberships []Membership `json:"memberships"`
 }
 
-func NewGetUserMembershipsResponse(memberships []model.Membership, groupNames model.GroupNames, userNames model.UserNames) GetUserMembershipsResponse {
-	responseMemberships := make([]Membership, len(memberships))
-	for i, membership := range memberships {
+func NewGetUserMembershipsResponse(memberships model.Memberships, groupNames model.GroupNames, userNames model.UserNames) GetUserMembershipsResponse {
+	responseMemberships := make([]Membership, len(memberships.Items))
+	for i, membership := range memberships.Items {
 		responseMemberships[i] = NewMembership(membership, groupNames, userNames)
 	}
 	return GetUserMembershipsResponse{
