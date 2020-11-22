@@ -709,3 +709,340 @@ export class LeaveGroupResponse {
   }
 }
 
+export enum SurfaceType {
+  Modals = 'modals',
+  Messages = 'messages',
+  Home = 'home',
+  Tabs = 'tabs',
+}
+
+export enum BlockType {
+  Actions = 'actions',
+  Context = 'context',
+  Divider = 'divider',
+  File = 'file',
+  Header = 'header',
+  Image = 'image',
+  Input = 'input',
+  Section = 'section'
+}
+
+export enum ElementType {
+  ButtonElement = 'button',
+  PlainTextInputElement = 'plain_text_input',
+  ImageElement = 'image',
+  CheckboxesElement = 'checkboxes',
+  DatepickerElement = 'datepicker',
+  RadioButtonsElement = 'radio_buttons',
+}
+
+export enum ButtonStyle {
+  Primary = 'primary',
+  Danger = 'danger'
+}
+
+export enum TextType {
+  PlainTextType = 'plain_text',
+  MarkdownTextType = 'mrkdwn'
+}
+
+export enum FileSource {
+  Remote = 'remote'
+}
+
+export const BlockTypeCompatibility: { [BlockType]: SurfaceType[] } = {};
+BlockTypeCompatibility[BlockType.Actions] = [SurfaceType.Modals, SurfaceType.Messages, SurfaceType.Home, SurfaceType.Tabs];
+BlockTypeCompatibility[BlockType.Context] = [SurfaceType.Modals, SurfaceType.Messages, SurfaceType.Home, SurfaceType.Tabs];
+BlockTypeCompatibility[BlockType.Divider] = [SurfaceType.Modals, SurfaceType.Messages, SurfaceType.Home, SurfaceType.Tabs];
+BlockTypeCompatibility[BlockType.File] = [SurfaceType.Messages];
+BlockTypeCompatibility[BlockType.Header] = [SurfaceType.Modals, SurfaceType.Messages, SurfaceType.Home, SurfaceType.Tabs];
+BlockTypeCompatibility[BlockType.Image] = [SurfaceType.Modals, SurfaceType.Messages, SurfaceType.Home, SurfaceType.Tabs];
+BlockTypeCompatibility[BlockType.Input] = [SurfaceType.Modals, SurfaceType.Home, SurfaceType.Tabs];
+BlockTypeCompatibility[BlockType.Section] = [SurfaceType.Modals, SurfaceType.Messages, SurfaceType.Home, SurfaceType.Tabs];
+
+export const BlockElementCompatibility: { [ElementType]: BlockType[] } = {};
+BlockElementCompatibility[ElementType.ButtonElement] = [BlockType.Section, BlockType.Actions];
+BlockElementCompatibility[ElementType.CheckboxesElement] = [BlockType.Section, BlockType.Actions, BlockType.Input];
+BlockElementCompatibility[ElementType.DatepickerElement] = [BlockType.Section, BlockType.Actions, BlockType.Input];
+BlockElementCompatibility[ElementType.ImageElement] = [BlockType.Section, BlockType.Context];
+BlockElementCompatibility[ElementType.PlainTextInputElement] = [BlockType.Section, BlockType.Actions, BlockType.Input];
+BlockElementCompatibility[ElementType.RadioButtonsElement] = [BlockType.Section, BlockType.Actions, BlockType.Input];
+
+export class TextObject {
+  constructor(public type: TextType, public emoji: boolean) {
+  }
+
+  public static from(textObject: TextObject): TextObject {
+    return new TextObject(textObject.type, textObject.emoji);
+  }
+}
+
+export class OptionObject {
+  public constructor(public text: TextObject, public value: string, public description: TextObject) {
+  }
+
+  public static from(optionObject: OptionObject): OptionObject {
+    return new OptionObject(TextObject.from(optionObject.text), optionObject.value, TextObject.from(optionObject.description));
+  }
+}
+
+export class OptionGroupObject {
+  public constructor(public text: TextObject, public options: OptionObject[]) {
+  }
+
+  public static from(optionGroupObject: OptionGroupObject): OptionGroupObject {
+    return new OptionGroupObject(TextObject.from(optionGroupObject.text), optionGroupObject.options);
+  }
+}
+
+export class Block {
+  public constructor(
+    public type: BlockType,
+    public text?: TextObject,
+    public elements?: BlockElement[],
+    public imageUrl?: string,
+    public altText?: string,
+    public title?: TextObject,
+    public fields?: TextObject[],
+    public accessory?: BlockElement[],
+    public blockId?: string,
+    public externalId?: string,
+    public source?: FileSource) {
+  }
+}
+
+export class ActionsBlock {
+  public type: BlockType = BlockType.Actions;
+
+  public constructor(public elements: BlockElement[], public blockId?: string) {
+  }
+
+  public static from(b: Block): ActionsBlock {
+    if (b.type !== BlockType.Actions) {
+      throw new Error('invalid block type');
+    }
+    return new ActionsBlock(b.elements, b.blockId);
+  }
+}
+
+export class ContextBlock {
+  public type: BlockType = BlockType.Context;
+
+  public constructor(public elements: BlockElement[], public blockId?: string) {
+  }
+
+  public static from(b: Block): ContextBlock {
+    if (b.type !== BlockType.Context) {
+      throw new Error('invalid block type');
+    }
+    return new ContextBlock(b.elements, b.blockId);
+  }
+}
+
+export class DividerBlock {
+  public type: BlockType = BlockType.Divider;
+
+  public constructor(public blockId?: string) {
+  }
+
+  public static from(b: Block): DividerBlock {
+    if (b.type !== BlockType.Divider) {
+      throw new Error('invalid block type');
+    }
+    return new DividerBlock(b.blockId);
+  }
+}
+
+export class FileBlock {
+  public type: BlockType = BlockType.File;
+
+  public constructor(public externalId: string, public source: FileSource, public blockId?: string) {
+  }
+
+  public static from(b: Block): DividerBlock {
+    if (b.type !== BlockType.File) {
+      throw new Error('invalid block type');
+    }
+    return new FileBlock(b.externalId, b.source, b.blockId);
+  }
+}
+
+export class HeaderBlock {
+  public type: BlockType = BlockType.Header;
+
+  public constructor(public text: TextObject, public blockId?: string) {
+  }
+
+  public static from(b: Block): HeaderBlock {
+    if (b.type !== BlockType.Header) {
+      throw new Error('invalid block type');
+    }
+    return new HeaderBlock(b.text, b.blockId);
+  }
+}
+
+export class ImageBlock {
+  public type: BlockType = BlockType.Image;
+
+  public constructor(public imageUrl: string, public altText: string, public title?: TextObject, public blockId?: string) {
+  }
+
+  public static from(b: Block): ImageBlock {
+    if (b.type !== BlockType.Image) {
+      throw new Error('invalid block type');
+    }
+    return new ImageBlock(b.imageUrl, b.altText, b.title ? TextObject.from(b.title) : undefined, b.blockId);
+  }
+}
+
+export class SectionBlock {
+  public type: BlockType = BlockType.Section;
+
+  public constructor(
+    public text: TextObject,
+    public fields?: TextObject[],
+    public accessory?: BlockElement[],
+    public blockId?: string) {
+  }
+
+  public static from(b: Block): SectionBlock {
+    if (b.type !== BlockType.Section) {
+      throw new Error('invalid block type');
+    }
+    return new SectionBlock(b.text, b.fields, b.accessory, b.blockId);
+  }
+}
+
+export class BlockElement {
+  public constructor(
+    public type: ElementType,
+    public text: TextObject,
+    public actionId: string,
+    public url: string,
+    public value: string,
+    public style: ButtonStyle,
+    public confirm: boolean,
+    public options: OptionObject[],
+    public initialOptions: OptionObject[],
+    public placeholder: TextObject,
+    public initialDate: string,
+    public imageUrl: string,
+    public altText: string
+  ) {
+  }
+
+  public static from(b: BlockElement): BlockElement {
+    return new BlockElement(
+      b.type,
+      TextObject.from(b.text),
+      b.actionId,
+      b.url,
+      b.value,
+      b.style,
+      b.confirm,
+      b.options.map(o => OptionObject.from(o)),
+      b.initialOptions.map(o => OptionObject.from(o)),
+      TextObject.from(b.placeholder),
+      b.initialDate,
+      b.imageUrl,
+      b.altText
+    );
+  }
+}
+
+export class ButtonElement {
+  public type: ElementType = ElementType.ButtonElement;
+
+  public constructor(
+    public text: TextObject,
+    public actionId: string,
+    public  url?: string,
+    public  value?: string,
+    public  style?: ButtonStyle,
+    public confirm?: boolean) {
+  }
+
+  public static from(b: BlockElement): ButtonElement {
+    if (b.type !== ElementType.ButtonElement) {
+      throw new Error('invalid block type');
+    }
+    return new ButtonElement(TextObject.from(b.text), b.actionId, b.url, b.value, b.style, b.confirm);
+  }
+}
+
+export class CheckboxesElement {
+  public type: ElementType = ElementType.CheckboxesElement;
+
+  public constructor(
+    public actionId: string,
+    public options: OptionObject[],
+    public initialOptions?: OptionObject[],
+    public confirm?: boolean) {
+  }
+
+  public static from(b: BlockElement): CheckboxesElement {
+    if (b.type !== ElementType.CheckboxesElement) {
+      throw new Error('invalid block type');
+    }
+    return new CheckboxesElement(
+      b.actionId,
+      b.options.map(o => OptionObject.from(o)),
+      b.initialOptions?.map(o => OptionObject.from(o)),
+      b.confirm);
+  }
+}
+
+export class DatePickerElement {
+  public type: ElementType = ElementType.DatepickerElement;
+
+  public constructor(public actionId: string, public placeholder?: TextObject, public initialDate?: string, public confirm?: boolean) {
+  }
+
+  public static from(b: BlockElement): DatePickerElement {
+    if (b.type !== ElementType.DatepickerElement) {
+      throw new Error('invalid block type');
+    }
+    return new DatePickerElement(
+      b.actionId,
+      b.placeholder ? TextObject.from(b.placeholder) : undefined,
+      b.initialDate,
+      b.confirm
+    );
+  }
+}
+
+export class ImageElement {
+  public type: ElementType = ElementType.ImageElement;
+
+  public constructor(public imageUrl: string, public altText: string) {
+  }
+
+  public static from(b: BlockElement): ImageElement {
+    if (b.type !== ElementType.ImageElement) {
+      throw new Error('invalid block type');
+    }
+    return new ImageElement(b.imageUrl, b.altText);
+  }
+}
+
+export class RadioButtonsElement {
+  public type: ElementType = ElementType.RadioButtonsElement;
+
+  public constructor(
+    public actionId: string,
+    public options: OptionObject[],
+    public initialOptions?: OptionObject[],
+    public confirm?: boolean) {
+  }
+
+  public static from(b: BlockElement): RadioButtonsElement {
+    if (b.type !== ElementType.RadioButtonsElement) {
+      throw new Error('invalid block type');
+    }
+    return new RadioButtonsElement(
+      b.actionId,
+      b.options.map(o => OptionObject.from(o)),
+      b.initialOptions?.map(o => OptionObject.from(o)),
+      b.confirm);
+  }
+}
