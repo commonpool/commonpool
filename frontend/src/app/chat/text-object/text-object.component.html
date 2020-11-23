@@ -1,0 +1,10 @@
+<span [class.text-muted]="subtle" [ngStyle]="{'font-size': small ? '0.875rem' : ''}">
+  <ng-container *ngIf="textObject.type === 'plain_text'" style="white-space: pre-wrap">
+    <span [innerText]="textObject.value">
+
+    </span>
+  </ng-container>
+  <ng-container *ngIf="textObject.type === 'mrkdwn'">
+    <markdown emoji [data]="textObject.value"></markdown>
+  </ng-container>
+</span>

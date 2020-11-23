@@ -5,7 +5,7 @@ import uuid "github.com/satori/go.uuid"
 type ResourceTopic struct {
 	ResourceId uuid.UUID `gorm:"type:uuid;primary_key"`
 	UserId     string    `gorm:"primary_key"`
-	TopicId    uuid.UUID `gorm:"type:uuid"`
+	TopicId    string
 }
 
 func (r *ResourceTopic) GetTopicKey() TopicKey {

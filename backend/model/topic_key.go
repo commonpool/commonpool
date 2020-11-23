@@ -1,17 +1,15 @@
 package model
 
-import uuid "github.com/satori/go.uuid"
-
 type TopicKey struct {
-	ID uuid.UUID
+	ID string
 }
 
 func (tk *TopicKey) String() string {
-	return tk.ID.String()
+	return tk.ID
 }
 
-func NewTopicKey(id uuid.UUID) TopicKey {
+func NewTopicKey(key string) TopicKey {
 	return TopicKey{
-		ID: id,
+		ID: key,
 	}
 }

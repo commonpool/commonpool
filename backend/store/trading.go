@@ -14,7 +14,7 @@ type TradingStore struct {
 	db *gorm.DB
 }
 
-func (t TradingStore) SaveOffer(offer model.Offer, items []model.OfferItem) error {
+func (t TradingStore) SaveOffer(offer model.Offer, items *model.OfferItems) error {
 
 	err := t.db.Create(&offer).Error
 	if err != nil {
@@ -22,7 +22,7 @@ func (t TradingStore) SaveOffer(offer model.Offer, items []model.OfferItem) erro
 	}
 
 	userKeys := map[string]bool{}
-	for _, item := range items {
+	for _, item := range items.Items {
 		err := t.db.Create(item).Error
 		if err != nil {
 			return err
@@ -52,10 +52,10 @@ func (t TradingStore) GetOffer(key model.OfferKey) (model.Offer, error) {
 	return offer, err
 }
 
-func (t TradingStore) GetItems(key model.OfferKey) ([]model.OfferItem, error) {
+func (t TradingStore) GetItems(key model.OfferKey) (*model.OfferItems, error) {
 	var items []model.OfferItem
 	err := t.db.Find(&items, "offer_id = ?", key.ID.String()).Error
-	return items, err
+	return model.NewOfferItems(items), err
 }
 
 func (t TradingStore) GetOffers(qry trading.GetOffersQuery) (trading.GetOffersResult, error) {

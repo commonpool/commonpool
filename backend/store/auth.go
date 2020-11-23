@@ -27,7 +27,7 @@ type UserStore struct {
 	db *gorm.DB
 }
 
-func (as *AuthStore) GetByKeys(keys []model.UserKey) ([]model.User, error) {
+func (as *AuthStore) GetByKeys(keys []model.UserKey) (model.Users, error) {
 
 	var result []model.User
 	usedKeys := map[model.UserKey]bool{}
@@ -60,10 +60,10 @@ func (as *AuthStore) GetByKeys(keys []model.UserKey) ([]model.User, error) {
 	})
 
 	if err != nil {
-		return nil, err
+		return model.Users{}, err
 	}
 
-	return result, nil
+	return model.NewUsers(result), nil
 }
 
 func (as *AuthStore) Upsert(key model.UserKey, email string, username string) error {

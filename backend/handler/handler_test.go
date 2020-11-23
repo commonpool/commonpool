@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/chat"
+	"github.com/commonpool/backend/config"
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/resource"
@@ -76,7 +77,7 @@ func setup() {
 	}
 
 	// Create handler
-	h = NewHandler(rs, as, cs, ts, gs, authorizer)
+	h = NewHandler(rs, as, cs, ts, gs, authorizer, config.AppConfig{})
 
 	// Create users
 	for _, user := range users {

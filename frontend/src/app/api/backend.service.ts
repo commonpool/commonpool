@@ -62,16 +62,14 @@ export class AppHttpInterceptor implements HttpInterceptor {
   ): Observable<HttpEvent<any>> {
     return next.handle(req).pipe(
       tap(evt => {
-        console.log(evt)
-        const bla = evt as any
-        if (bla?.body?.meta?.redirectTo){
+        const bla = evt as any;
+        if (bla?.body?.meta?.redirectTo) {
           setTimeout(() => {
             window.location = bla.body.meta.redirectTo;
           }, 1000);
         }
       }),
       catchError((err: any) => {
-        console.log(err);
         if (err?.error?.meta?.redirectTo) {
           setTimeout(() => {
             window.location = err.error.meta.redirectTo;

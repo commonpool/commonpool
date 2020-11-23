@@ -10,22 +10,35 @@
     </div>
   </div>
   <div class="messages">
-    <ng-container *ngIf="messageGroups$ | async; let messageGroups">
-      <ng-container *ngFor="let messageGroup of messageGroups; trackBy:trackMessageGroup">
+    <ng-container *ngIf="displayElements$ | async; let displayElements">
+      <ng-container *ngFor="let displayElement of displayElements;">
+        <ng-container *ngIf="displayElement.type === 'userMessages'">
+          <div class="message" *ngFor="let message of displayElement.messages">
 
+            <div class="header">
+              <a class="sender" [routerLink]="'/users/' + message.userId">
+              <span class="badge badge-secondary"
+                    style="width: 1.25rem">{{message.sentByUsername.substr(0, 1).toUpperCase()}}</span>
+              </a>&nbsp;
 
-        <div class="message" *ngFor="let message of messageGroup.messages; trackBy: trackMessage" [ngClass]="{sentByMe: message.sentByMe}">
-          <div class="header">
-            <a class="sender" [routerLink]="'/users/' + message.sentBy">{{message.sentByUsername}}</a>&nbsp;<span
-            class="sent-at">{{message.sentAtDate | date:'h:mmaaa'}}</span>
+              <a class="sender text-dark" style="font-size: 0.85rem" [routerLink]="'/users/' + message.userId">
+                {{message.sentByUsername}}
+              </a>&nbsp;
+
+              <small class="sent-at text-muted" style="font-size: 0.75rem">
+                {{message.sentAtDate | date:'h:mmaaa'}}
+              </small>
+            </div>
+
+            <div style="margin-left: 1.75rem">
+              <app-blocks [message]="message"></app-blocks>
+            </div>
+
           </div>
-          <div class="content">
-            {{message.content}}
-          </div>
-        </div>
+        </ng-container>
 
-        <div class="message-date">
-          {{messageGroup.dateStr }}
+        <div class="message-date d-relative" *ngIf="displayElement.type === 'date'">
+          <div class="badge badge-pill badge-light border" >{{displayElement.dateStr }}</div>
         </div>
 
 

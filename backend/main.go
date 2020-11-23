@@ -58,7 +58,7 @@ func main() {
 	v1 := r.Group("/api/v1")
 	authorization := auth.NewAuth(v1, appConfig, "/api/v1", as)
 
-	h := handler.NewHandler(rs, as, cs, ts, gs, authorization)
+	h := handler.NewHandler(rs, as, cs, ts, gs, authorization, *appConfig)
 
 	h.Register(v1)
 

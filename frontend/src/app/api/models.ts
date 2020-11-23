@@ -240,13 +240,19 @@ export class GetMessagesRequest {
 
 export class Message {
   constructor(
-    public content: string,
     public id: string,
+    public topidId: string,
+    public messageType: string,
+    public messageSubType: string,
+    public userId: string,
+    public botId: string,
     public sentAt: string,
+    public text: string,
+    public blocks: Block[],
+    public attachments: Attachment[],
     public sentBy: string,
     public sentByUsername: string,
-    public topicId: string,
-    public sentByMe: boolean) {
+    public isPersonal: boolean) {
     const date = new Date(Date.parse(this.sentAt));
     this.sentAtDistance = formatDistanceToNow(date, {addSuffix: true});
     this.sentAtHour = format(date, 'hh');
@@ -257,15 +263,22 @@ export class Message {
   public sentAtHour: string;
   public sentAtDate: Date;
 
-  static from(message: Message) {
+  static from(m: Message) {
     return new Message(
-      message.content,
-      message.id,
-      message.sentAt,
-      message.sentBy,
-      message.sentByUsername,
-      message.topicId,
-      message.sentByMe);
+      m.id,
+      m.topidId,
+      m.messageType,
+      m.messageSubType,
+      m.userId,
+      m.botId,
+      m.sentAt,
+      m.text,
+      m.blocks ? m.blocks.map(b => Block.from(b)) : undefined,
+      m.attachments ? m.attachments.map(a => Attachment.from(a)) : undefined,
+      m.sentBy,
+      m.sentByUsername,
+      m.isPersonal
+    );
   }
 }
 
@@ -750,7 +763,7 @@ export enum FileSource {
   Remote = 'remote'
 }
 
-export const BlockTypeCompatibility: { [BlockType]: SurfaceType[] } = {};
+export const BlockTypeCompatibility: { [key: string]: SurfaceType[] } = {};
 BlockTypeCompatibility[BlockType.Actions] = [SurfaceType.Modals, SurfaceType.Messages, SurfaceType.Home, SurfaceType.Tabs];
 BlockTypeCompatibility[BlockType.Context] = [SurfaceType.Modals, SurfaceType.Messages, SurfaceType.Home, SurfaceType.Tabs];
 BlockTypeCompatibility[BlockType.Divider] = [SurfaceType.Modals, SurfaceType.Messages, SurfaceType.Home, SurfaceType.Tabs];
@@ -760,7 +773,7 @@ BlockTypeCompatibility[BlockType.Image] = [SurfaceType.Modals, SurfaceType.Messa
 BlockTypeCompatibility[BlockType.Input] = [SurfaceType.Modals, SurfaceType.Home, SurfaceType.Tabs];
 BlockTypeCompatibility[BlockType.Section] = [SurfaceType.Modals, SurfaceType.Messages, SurfaceType.Home, SurfaceType.Tabs];
 
-export const BlockElementCompatibility: { [ElementType]: BlockType[] } = {};
+export const BlockElementCompatibility: { [key: string]: BlockType[] } = {};
 BlockElementCompatibility[ElementType.ButtonElement] = [BlockType.Section, BlockType.Actions];
 BlockElementCompatibility[ElementType.CheckboxesElement] = [BlockType.Section, BlockType.Actions, BlockType.Input];
 BlockElementCompatibility[ElementType.DatepickerElement] = [BlockType.Section, BlockType.Actions, BlockType.Input];
@@ -769,11 +782,11 @@ BlockElementCompatibility[ElementType.PlainTextInputElement] = [BlockType.Sectio
 BlockElementCompatibility[ElementType.RadioButtonsElement] = [BlockType.Section, BlockType.Actions, BlockType.Input];
 
 export class TextObject {
-  constructor(public type: TextType, public emoji: boolean) {
+  constructor(public type: TextType, public value: string, public emoji?: boolean) {
   }
 
   public static from(textObject: TextObject): TextObject {
-    return new TextObject(textObject.type, textObject.emoji);
+    return new TextObject(textObject.type, textObject.value, textObject.emoji);
   }
 }
 
@@ -799,22 +812,44 @@ export class Block {
   public constructor(
     public type: BlockType,
     public text?: TextObject,
-    public elements?: BlockElement[],
+    public elements?: (BlockElement | TextObject)[],
     public imageUrl?: string,
     public altText?: string,
     public title?: TextObject,
     public fields?: TextObject[],
-    public accessory?: BlockElement[],
+    public accessory?: BlockElement,
     public blockId?: string,
     public externalId?: string,
     public source?: FileSource) {
+  }
+
+  public static from(b: Block): Block {
+    return new Block(
+      b.type,
+      b.text ? TextObject.from(b.text) : undefined,
+      b.elements ? b.elements.map(e => {
+        if (e.type === TextType.MarkdownTextType || e.type === TextType.PlainTextType) {
+          return TextObject.from(e as TextObject);
+        } else {
+          return BlockElement.from(e as BlockElement);
+        }
+      }) : undefined,
+      b.imageUrl,
+      b.altText,
+      b.title ? TextObject.from(b.title) : undefined,
+      b.fields ? b.fields.map(f => TextObject.from(f)) : undefined,
+      b.accessory ? BlockElement.from(b.accessory) : undefined,
+      b.blockId,
+      b.externalId,
+      b.source
+    );
   }
 }
 
 export class ActionsBlock {
   public type: BlockType = BlockType.Actions;
 
-  public constructor(public elements: BlockElement[], public blockId?: string) {
+  public constructor(public elements: (BlockElement | TextObject)[], public blockId?: string) {
   }
 
   public static from(b: Block): ActionsBlock {
@@ -828,7 +863,7 @@ export class ActionsBlock {
 export class ContextBlock {
   public type: BlockType = BlockType.Context;
 
-  public constructor(public elements: BlockElement[], public blockId?: string) {
+  public constructor(public elements: (BlockElement | TextObject)[], public blockId?: string) {
   }
 
   public static from(b: Block): ContextBlock {
@@ -901,7 +936,7 @@ export class SectionBlock {
   public constructor(
     public text: TextObject,
     public fields?: TextObject[],
-    public accessory?: BlockElement[],
+    public accessory?: BlockElement,
     public blockId?: string) {
   }
 
@@ -916,33 +951,33 @@ export class SectionBlock {
 export class BlockElement {
   public constructor(
     public type: ElementType,
-    public text: TextObject,
-    public actionId: string,
-    public url: string,
-    public value: string,
-    public style: ButtonStyle,
-    public confirm: boolean,
-    public options: OptionObject[],
-    public initialOptions: OptionObject[],
-    public placeholder: TextObject,
-    public initialDate: string,
-    public imageUrl: string,
-    public altText: string
+    public text?: TextObject,
+    public actionId?: string,
+    public url?: string,
+    public value?: string,
+    public style?: ButtonStyle,
+    public confirm?: boolean,
+    public options?: OptionObject[],
+    public initialOptions?: OptionObject[],
+    public placeholder?: TextObject,
+    public initialDate?: string,
+    public imageUrl?: string,
+    public altText?: string
   ) {
   }
 
   public static from(b: BlockElement): BlockElement {
     return new BlockElement(
       b.type,
-      TextObject.from(b.text),
+      b.text ? TextObject.from(b.text) : undefined,
       b.actionId,
       b.url,
       b.value,
       b.style,
       b.confirm,
-      b.options.map(o => OptionObject.from(o)),
-      b.initialOptions.map(o => OptionObject.from(o)),
-      TextObject.from(b.placeholder),
+      b.options?.map(o => OptionObject.from(o)),
+      b.initialOptions?.map(o => OptionObject.from(o)),
+      b.placeholder ? TextObject.from(b.placeholder) : undefined,
       b.initialDate,
       b.imageUrl,
       b.altText
@@ -955,10 +990,10 @@ export class ButtonElement {
 
   public constructor(
     public text: TextObject,
-    public actionId: string,
-    public  url?: string,
-    public  value?: string,
-    public  style?: ButtonStyle,
+    public style?: ButtonStyle,
+    public actionId?: string,
+    public url?: string,
+    public value?: string,
     public confirm?: boolean) {
   }
 
@@ -966,7 +1001,7 @@ export class ButtonElement {
     if (b.type !== ElementType.ButtonElement) {
       throw new Error('invalid block type');
     }
-    return new ButtonElement(TextObject.from(b.text), b.actionId, b.url, b.value, b.style, b.confirm);
+    return new ButtonElement(TextObject.from(b.text), b.style, b.actionId, b.url, b.value, b.confirm);
   }
 }
 
@@ -974,6 +1009,7 @@ export class CheckboxesElement {
   public type: ElementType = ElementType.CheckboxesElement;
 
   public constructor(
+    text: TextObject,
     public actionId: string,
     public options: OptionObject[],
     public initialOptions?: OptionObject[],
@@ -985,8 +1021,9 @@ export class CheckboxesElement {
       throw new Error('invalid block type');
     }
     return new CheckboxesElement(
+      b.text,
       b.actionId,
-      b.options.map(o => OptionObject.from(o)),
+      b.options?.map(o => OptionObject.from(o)),
       b.initialOptions?.map(o => OptionObject.from(o)),
       b.confirm);
   }
@@ -1041,8 +1078,19 @@ export class RadioButtonsElement {
     }
     return new RadioButtonsElement(
       b.actionId,
-      b.options.map(o => OptionObject.from(o)),
+      b.options?.map(o => OptionObject.from(o)),
       b.initialOptions?.map(o => OptionObject.from(o)),
       b.confirm);
   }
 }
+
+export class Attachment {
+  public constructor(public color: string, public blocks: Block[]) {
+  }
+
+  public static from(a: Attachment): Attachment {
+    return new Attachment(a.color, a.blocks.map(b => Block.from(b)));
+  }
+}
+
+

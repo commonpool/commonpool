@@ -55,6 +55,12 @@ import { GroupLinkComponent } from './shared/group-link/group-link.component';
 import { ResourceLinkComponent } from './shared/resource-link/resource-link.component';
 import { AcceptInvitationComponent } from './groups/accept-invitation/accept-invitation.component';
 import { HomePageComponent } from './home/home-page/home-page.component';
+import { MarkdownModule } from 'ngx-markdown';
+import { BlocksComponent } from './chat/blocks/blocks.component';
+import { TextObjectComponent } from './chat/text-object/text-object.component';
+import { ButtonComponent } from './chat/button/button.component';
+import { BlockComponent } from './chat/block/block.component';
+import { AttachmentComponent } from './chat/attachment/attachment.component';
 
 @NgModule({
   declarations: [
@@ -105,6 +111,11 @@ import { HomePageComponent } from './home/home-page/home-page.component';
     ResourceLinkComponent,
     AcceptInvitationComponent,
     HomePageComponent,
+    BlocksComponent,
+    TextObjectComponent,
+    ButtonComponent,
+    BlockComponent,
+    AttachmentComponent,
   ],
   imports: [
     BrowserModule,
@@ -113,7 +124,8 @@ import { HomePageComponent } from './home/home-page/home-page.component';
     ReactiveFormsModule,
     HttpClientModule,
     ScrollingModule,
-    NgSelectModule
+    NgSelectModule,
+    MarkdownModule.forRoot()
   ],
   providers: [{provide: HTTP_INTERCEPTORS, useClass: AppHttpInterceptor, multi: true}],
   bootstrap: [AppComponent]

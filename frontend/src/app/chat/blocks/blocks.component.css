@@ -1,0 +1,31 @@
+.blocks-container > div:not(:first-child) {
+  margin-top:0.25rem;
+}
+
+.attachments .block-header{
+  font-size: 90%;
+  margin-bottom: 0;
+}
+
+img[alt=icon]{
+  height: 1rem;
+}
+
+.block-actions {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.attachments > .attachment:not(:first-child){
+  margin-top: 0.5rem
+}
+
+a {
+  font-weight: bold;
+  text-decoration: none;
+  font-size: 100%;
+}
+
+a:hover {
+  text-decoration: none;
+}

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"github.com/commonpool/backend/chat"
 	errs "github.com/commonpool/backend/errors"
 	. "github.com/commonpool/backend/model"
 	resource2 "github.com/commonpool/backend/resource"
@@ -60,6 +61,14 @@ func NewValidError(validerr validator.ValidationErrors) ValidErrors {
 
 }
 
+type PersonOffer struct {
+	OfferItem OfferItem
+	Resource  Resource
+	Time      int64
+	FromUser  User
+	ToUser    User
+}
+
 func (h *Handler) SendOffer(c echo.Context) error {
 	c.Logger().Info("SendOffer")
 
@@ -69,7 +78,8 @@ func (h *Handler) SendOffer(c echo.Context) error {
 	// > Getting Logged In User
 	//
 	c.Logger().Debug("SendOffer: getting logged in user key")
-	authUserKey := h.authorization.GetAuthUserKey(c)
+	loggedInUser := h.authorization.GetAuthUserSession(c)
+	loggedInUserKey := loggedInUser.GetUserKey()
 
 	//
 	// > Unmarshaling Request Body
@@ -98,18 +108,36 @@ func (h *Handler) SendOffer(c echo.Context) error {
 	c.Logger().Debugf("SendOffer: new offer key is %s", offerKey.ID.String())
 
 	// keep track of resources so that one resource is not traded twice in the same transaction
-	var usedResources = map[string]bool{}
-
-	var foundParticipants = map[UserKey]bool{}
+	var usedResources = NewResources([]Resource{})
+	var participants = NewUsers([]User{})
 
 	//
 	// > Process each offer item
 	//
 	itemCount := len(req.Offer.Items)
-	items := make([]OfferItem, itemCount)
+	items := NewOfferItems([]OfferItem{})
+
 	c.Logger().Debugf("SendOffer: processing %d offer items...", itemCount)
 	for i, reqItem := range req.Offer.Items {
 		c.Logger().Debugf("SendOffer: %d/%d processing offer item...", i+1, itemCount)
+
+		var resourceKey *ResourceKey
+
+		if reqItem.Type == ResourceItem {
+			resourceKey, err = ParseResourceKey(*reqItem.ResourceId)
+			if err != nil {
+				return NewErrResponse(c, err)
+			}
+			//
+			// > A resource can only appears once in an offer
+			//
+			c.Logger().Debugf("SendOffer: %d/%d checking if resource %s appear only once in offer...", i+1, itemCount, *reqItem.ResourceId)
+			if usedResources.ContainsKey(*resourceKey) {
+				err := fmt.Errorf("resources can only appear once in a transaction")
+				c.Logger().Errorf("SendOffer: %d/%d %v", i+1, itemCount, err)
+				return NewErrResponse(c, err)
+			}
+		}
 
 		//
 		// > Getting participants
@@ -122,50 +150,8 @@ func (h *Handler) SendOffer(c echo.Context) error {
 		// > Making sure participants exist
 		//
 		c.Logger().Debugf("SendOffer: %d/%d making sure participants exist...", i+1, itemCount)
-		fromUserFound := false
-		if foundParticipants[fromUser] {
-			c.Logger().Debugf("SendOffer: %d/%d item.from participant was already found...", i+1, itemCount)
-			fromUserFound = true
-		}
-		toUserFound := false
-		if foundParticipants[toUser] {
-			c.Logger().Debugf("SendOffer: %d/%d item.to participant was already found...", i+1, itemCount)
-			toUserFound = true
-		}
-
-		if !fromUserFound || !toUserFound {
-			c.Logger().Debugf("SendOffer: %d/%d some participants not found yet. Making sure they exist...", i+1, itemCount)
-
-			expectedUserCount := 0
-			var userKeys []UserKey
-			if !fromUserFound {
-				userKeys = append(userKeys, fromUser)
-				expectedUserCount += 1
-			}
-			if !toUserFound {
-				userKeys = append(userKeys, toUser)
-				expectedUserCount += 1
-			}
-
-			c.Logger().Debugf("SendOffer: %d/%d expecting %d participant from query...", i+1, itemCount, expectedUserCount)
-
-			users, err := h.authStore.GetByKeys(userKeys)
-			if err != nil {
-				c.Logger().Errorf("SendOffer: %d/%d %v", i+1, itemCount, err)
-				return c.JSON(http.StatusInternalServerError, err.Error())
-			}
-
-			userQueryCount := len(users)
-			c.Logger().Debugf("SendOffer: %d/%d got %d participant from query...", i+1, itemCount, userQueryCount)
-			if userQueryCount != expectedUserCount {
-				err := fmt.Errorf("participant not found")
-				c.Logger().Errorf("SendOffer: %d/%d %v", i+1, itemCount, err)
-				return c.JSON(http.StatusNotFound, err.Error())
-			}
-			for _, user := range users {
-				foundParticipants[user.GetKey()] = true
-			}
-		}
+		fromUserFound := items.HasItemsForUser(fromUser)
+		toUserFound := items.HasItemsForUser(toUser)
 
 		//
 		// > Make sure offer item.from != item.to
@@ -177,17 +163,33 @@ func (h *Handler) SendOffer(c echo.Context) error {
 			return err
 		}
 
-		//
-		// > A resource can only appears once in an offer
-		//
-		if reqItem.Type == ResourceItem {
-			c.Logger().Debugf("SendOffer: %d/%d checking if resource %s appear only once in offer...", i+1, itemCount, *reqItem.ResourceId)
-			id := reqItem.ResourceId
-			if _, ok := usedResources[*id]; ok {
-				err := fmt.Errorf("resources can only appear once in a transaction")
-				c.Logger().Errorf("SendOffer: %d/%d %v", i+1, itemCount, err)
-				return NewErrResponse(c, err)
+		if !fromUserFound || !toUserFound {
+			c.Logger().Debugf("SendOffer: %d/%d some participants not found yet. Making sure they exist...", i+1, itemCount)
+
+			var userKeys []UserKey
+			if !fromUserFound {
+				userKeys = append(userKeys, fromUser)
 			}
+			if !toUserFound {
+				userKeys = append(userKeys, toUser)
+			}
+
+			c.Logger().Debugf("SendOffer: %d/%d expecting %d participant from query...", i+1, itemCount, len(userKeys))
+
+			foundUsers, err := h.authStore.GetByKeys(userKeys)
+			if err != nil {
+				c.Logger().Errorf("SendOffer: %d/%d %v", i+1, itemCount, err)
+				return c.JSON(http.StatusInternalServerError, err.Error())
+			}
+
+			userQueryCount := len(foundUsers.Items)
+			c.Logger().Debugf("SendOffer: %d/%d got %d participant from query...", i+1, itemCount, userQueryCount)
+			if userQueryCount != len(userKeys) {
+				err := fmt.Errorf("participant not found")
+				c.Logger().Errorf("SendOffer: %d/%d %v", i+1, itemCount, err)
+				return c.JSON(http.StatusNotFound, err.Error())
+			}
+			participants.AppendAll(foundUsers)
 		}
 
 		var item OfferItem
@@ -219,22 +221,17 @@ func (h *Handler) SendOffer(c echo.Context) error {
 			item = NewTimeOfferItem(itemKey, fromUser, toUser, *seconds)
 
 		} else if reqItem.Type == ResourceItem {
+
 			//
 			// > Resource Item is a ResourceItem
 			//
 			c.Logger().Debugf("SendOffer: %d/%d offer item is a ResourceItem. Valiating...", i+1, itemCount)
 
 			//
-			// > Marking this resource as used in a temporary map
-			//
-			rsId := reqItem.ResourceId
-			usedResources[*rsId] = true
-
-			//
 			// > Retrieving the resource key
 			//
 			c.Logger().Debugf("SendOffer: %d/%d getting ResourceItem resource key...", i+1, itemCount)
-			resourceId, err := uuid.FromString(*rsId)
+			resourceId, err := uuid.FromString(*reqItem.ResourceId)
 			if err != nil {
 				c.Logger().Debugf("SendOffer: %d/%d %v", i+1, itemCount, err)
 				return NewErrResponse(c, err)
@@ -251,6 +248,7 @@ func (h *Handler) SendOffer(c echo.Context) error {
 				return getResourceByKeyResponse.Error
 			}
 			resource := getResourceByKeyResponse.Resource
+			usedResources.Append(*resource)
 
 			//
 			// > Making sure the Item.From = Resource.Owner
@@ -267,6 +265,7 @@ func (h *Handler) SendOffer(c echo.Context) error {
 			// > Building the Resource Offer item
 			//
 			item = NewResourceOfferItem(itemKey, fromUser, toUser, resourceKey)
+
 		} else {
 
 			//
@@ -281,7 +280,7 @@ func (h *Handler) SendOffer(c echo.Context) error {
 		//
 		// > Appending the built item to the list of items
 		//
-		items[i] = item
+		items = items.Append(item)
 		c.Logger().Debugf("SendOffer: %d/%d processing offer item... done!", i+1, itemCount)
 
 	}
@@ -290,10 +289,116 @@ func (h *Handler) SendOffer(c echo.Context) error {
 	// > Saving Offer
 	//
 	c.Logger().Debug("SendOffer: saving offer...")
-	err = h.tradingStore.SaveOffer(NewOffer(offerKey, authUserKey, nil), items)
+	err = h.tradingStore.SaveOffer(NewOffer(offerKey, loggedInUserKey, nil), items)
 	if err != nil {
 		c.Logger().Errorf("SendOffer: %v", err)
 		return NewErrResponse(c, err)
+	}
+
+	//
+	// Sending message to concerned users
+	//
+	c.Logger().Debug("SendOffer: sending offer to chat...")
+	createTopicRequest := chat.NewGetOrCreateConversationTopicRequest(participants.GetUserKeys())
+	topicResponse := h.chatStore.GetOrCreateConversationTopic(&createTopicRequest)
+	if topicResponse.Error != nil {
+		return NewErrResponse(c, topicResponse.Error)
+	}
+
+	c.Logger().Debugf("SendOffer: sending offer to %d people", participants.GetUserCount())
+	for _, userKey := range items.GetUserKeys().Items {
+
+		offerItemsForUser := items.GetOfferItemsForUser(userKey)
+
+		// Will contain the formatted message
+		var blocks []Block
+
+		// Adding a descriptive header
+		blocks = append(blocks, *NewHeaderBlock(NewMarkdownObject(fmt.Sprintf("%s is proposing an exchange", loggedInUser.Username)), nil))
+
+		// Looping through each item to construct the message
+		c.Logger().Debugf("SendOffer: processing %d items for user %s", offerItemsForUser.ItemCount(), userKey.String())
+		for _, offerItemForUser := range offerItemsForUser.Items {
+
+			toUser, err := participants.GetUser(offerItemForUser.GetToUserKey())
+			if err != nil {
+				return NewErrResponse(c, err)
+			}
+
+			fromUser, err := participants.GetUser(offerItemForUser.GetFromUserKey())
+			if err != nil {
+				return NewErrResponse(c, err)
+			}
+
+			if offerItemForUser.GetFromUserKey() == userKey {
+				c.Logger().Debug("SendOffer: user is giving that item")
+
+				if offerItemForUser.IsTimeExchangeItem() {
+					c.Logger().Debug("SendOffer: item is time exchange")
+
+					message := fmt.Sprintf("**%s** would like **%s** of your time", toUser.Username, offerItemForUser.FormatOfferedTimeInSeconds())
+					block := NewSectionBlock(NewMarkdownObject(message), nil, nil, nil)
+					blocks = append(blocks, *block)
+
+				} else if offerItemForUser.IsResourceExchangeItem() {
+					c.Logger().Debug("SendOffer: item is resource exchange")
+
+					resource, err := usedResources.GetResource(offerItemForUser.GetResourceKey())
+					if err != nil {
+						return NewErrResponse(c, err)
+					}
+
+					message := fmt.Sprintf("**%s** would like **%s**", fromUser.Username, resource.Summary)
+					block := NewSectionBlock(NewMarkdownObject(message), nil, nil, nil)
+					blocks = append(blocks, *block)
+				}
+
+			} else {
+				c.Logger().Debug("SendOffer: user is receiving that item")
+
+				if offerItemForUser.IsTimeExchangeItem() {
+					c.Logger().Debug("SendOffer: item is time exchange")
+
+					message := fmt.Sprintf("you would get **%s** of time bank credits from **%s**", offerItemForUser.FormatOfferedTimeInSeconds(), fromUser.Username)
+					block := NewSectionBlock(NewMarkdownObject(message), nil, nil, nil)
+					blocks = append(blocks, *block)
+
+				} else if offerItemForUser.IsResourceExchangeItem() {
+					c.Logger().Debug("SendOffer: item is resource exchange")
+
+					resource, err := usedResources.GetResource(offerItemForUser.GetResourceKey())
+					if err != nil {
+						return NewErrResponse(c, err)
+					}
+
+					message := fmt.Sprintf("you would get **%s** from **%s**", resource.Summary, toUser.Username)
+					block := NewSectionBlock(NewMarkdownObject(message), nil, nil, nil)
+					blocks = append(blocks, *block)
+				}
+			}
+		}
+		primaryButtonStyle := Primary
+		dangerButtonStyle := Danger
+		acceptButton := NewButtonElement(NewPlainTextObject("Accept"), &primaryButtonStyle, nil, nil, nil, nil)
+		declineButton := NewButtonElement(NewPlainTextObject("Decline"), &dangerButtonStyle, nil, nil, nil, nil)
+		actionBlock := NewActionBlock([]BlockElement{
+			acceptButton,
+			declineButton,
+		}, nil)
+		blocks = append(blocks, *actionBlock)
+		threadKey := NewThreadKey(topicResponse.TopicKey, userKey)
+		sendMsgRequest := chat.NewSendMessageToThreadRequest(
+			threadKey,
+			loggedInUserKey,
+			loggedInUser.Username,
+			"New offer",
+			blocks,
+			[]Attachment{},
+		)
+		sendMsgResponse := h.chatStore.SendMessageToThread(&sendMsgRequest)
+		if sendMsgResponse.Error != nil {
+			return NewErrResponse(c, err)
+		}
 	}
 
 	//
@@ -670,7 +775,7 @@ func (h *Handler) getWebOffer(c echo.Context, statusCode int, offerKey OfferKey)
 	return c.JSON(statusCode, response)
 }
 
-func (h *Handler) mapToWebOffer(offer Offer, items []OfferItem, decisions []OfferDecision) (*web.Offer, error) {
+func (h *Handler) mapToWebOffer(offer Offer, items *OfferItems, decisions []OfferDecision) (*web.Offer, error) {
 
 	authorUsername, err := h.authStore.GetUsername(offer.GetAuthorKey())
 	if err != nil {
@@ -687,9 +792,9 @@ func (h *Handler) mapToWebOffer(offer Offer, items []OfferItem, decisions []Offe
 		AuthorUsername: authorUsername,
 	}
 
-	var responseItems = make([]web.OfferItem, len(items))
+	var responseItems = make([]web.OfferItem, items.ItemCount())
 
-	for i, offerItem := range items {
+	for i, offerItem := range items.Items {
 		webItem := web.OfferItem{
 			ID:         offerItem.ID.String(),
 			FromUserID: offerItem.FromUserID,

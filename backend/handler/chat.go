@@ -1,14 +1,15 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/commonpool/backend/chat"
 	. "github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/utils"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
-	uuid "github.com/satori/go.uuid"
 	"net/http"
 )
 
@@ -77,7 +78,7 @@ func (h *Handler) GetLatestThreads(c echo.Context) error {
 		fmt.Println("Has unread : ", before)
 
 		items[i] = web.Thread{
-			TopicID:             thread.TopicID.String(),
+			TopicID:             thread.TopicID,
 			RecipientID:         thread.UserID,
 			LastChars:           thread.LastMessageChars,
 			HasUnreadMessages:   before,
@@ -129,12 +130,7 @@ func (h *Handler) GetMessages(c echo.Context) error {
 		return err
 	}
 
-	topicId, err := uuid.FromString(topicStr)
-	if err != nil {
-		return err
-	}
-
-	topicKey := model.NewTopicKey(topicId)
+	topicKey := model.NewTopicKey(topicStr)
 	threadKey := model.NewThreadKey(topicKey, userKey)
 
 	messages, err := h.chatStore.GetThreadMessages(threadKey, take, skip)
@@ -147,7 +143,7 @@ func (h *Handler) GetMessages(c echo.Context) error {
 	items := make([]web.Message, len(messages))
 	for i, message := range messages {
 
-		if _, ok := authors[message.AuthorID]; !ok {
+		if message.MessageType == model.NormalMessage && message.MessageSubType == model.UserMessage {
 			author := model.User{}
 			err = h.authStore.GetByKey(message.GetAuthorKey(), &author)
 			if err != nil {
@@ -156,14 +152,26 @@ func (h *Handler) GetMessages(c echo.Context) error {
 			authors[author.ID] = author.Username
 		}
 
+		var blocks []model.Block
+		_ = json.Unmarshal([]byte(message.Blocks), &blocks)
+
+		var attachments []model.Attachment
+		_ = json.Unmarshal([]byte(message.Attachments), &attachments)
+
 		item := web.Message{
 			ID:             message.ID.String(),
 			SentAt:         message.SentAt,
-			TopicID:        message.TopicId.String(),
-			Content:        message.Content,
-			SentBy:         message.AuthorID,
-			SentByUsername: authors[message.AuthorID],
-			SentByMe:       userKey == message.GetAuthorKey(),
+			TopicID:        message.TopicID,
+			Blocks:         blocks,
+			Attachments:    attachments,
+			MessageType:    message.MessageType,
+			MessageSubType: message.MessageSubType,
+			Text:           message.Text,
+			UserID:         message.UserID,
+			BotID:          message.BotID,
+			IsPersonal:     message.IsPersonal,
+			SentBy:         message.SentBy,
+			SentByUsername: message.SentByUsername,
 		}
 		items[i] = item
 	}
@@ -207,8 +215,8 @@ func (h *Handler) InquireAboutResource(c echo.Context) error {
 	var err error
 
 	// Get current user
-	authUser := h.authorization.GetAuthUserSession(c)
-	userKey := model.NewUserKey(authUser.Subject)
+	loggedInUser := h.authorization.GetAuthUserSession(c)
+	loggedInUserKey := model.NewUserKey(loggedInUser.Subject)
 
 	// Unmarshal request
 	req := web.InquireAboutResourceRequest{}
@@ -229,7 +237,6 @@ func (h *Handler) InquireAboutResource(c echo.Context) error {
 	}
 
 	// retrieve the resource
-
 	getResourceByKeyResponse := h.resourceStore.GetByKey(resource.NewGetResourceByKeyQuery(*resourceKey))
 	if getResourceByKeyResponse.Error != nil {
 		return getResourceByKeyResponse.Error
@@ -237,21 +244,56 @@ func (h *Handler) InquireAboutResource(c echo.Context) error {
 	res := getResourceByKeyResponse.Resource
 
 	// make sure auth user is not resource owner
-	if res.GetUserKey() == userKey {
+	// doesn't make sense for one to inquire about his own stuff
+	if res.GetUserKey() == loggedInUserKey {
 		err := ErrCannotInquireAboutOwnResource()
 		return NewErrResponse(c, &err)
 	}
 
 	// get or create the (interested user ⋅ resource) → topic mapping
-	userResourceTopic, err := h.chatStore.GetOrCreateResourceTopicMapping(*resourceKey, userKey, h.resourceStore)
+	userResourceTopic, err := h.chatStore.GetOrCreateResourceTopicMapping(*resourceKey, loggedInUserKey, h.resourceStore)
 	if err != nil {
 		return err
 	}
 
 	// send a message on that topic
-	err = h.chatStore.SendMessage(userKey, authUser.Username, userResourceTopic.GetTopicKey(), req.Message)
-	if err != nil {
-		return NewErrResponse(c, err)
+	sendMessageToThreadRequest := chat.NewSendMessageToThreadRequest(
+		model.NewThreadKey(userResourceTopic.GetTopicKey(), res.GetUserKey()),
+		loggedInUserKey,
+		loggedInUser.Username,
+		req.Message,
+		[]model.Block{
+			*model.NewHeaderBlock(model.NewMarkdownObject("Someone is interested in your stuff!"), nil),
+			*model.NewContextBlock([]model.BlockElement{
+				model.NewMarkdownObject(
+					fmt.Sprintf("[%s](%s) is interested by your post [%s](%s).",
+						loggedInUser.Username,
+						h.config.BaseUri+"/users/"+loggedInUser.Subject,
+						res.Summary,
+						h.config.BaseUri+"/users/"+res.CreatedBy+"/"+res.ID.String(),
+					),
+				),
+			}, nil),
+		},
+		[]model.Attachment{},
+	)
+	sendMessageToThreadResponse := h.chatStore.SendMessageToThread(&sendMessageToThreadRequest)
+	if sendMessageToThreadResponse.Error != nil {
+		return sendMessageToThreadResponse.Error
+	}
+
+	sendMessageRequest := chat.NewSendMessageRequest(
+		userResourceTopic.GetTopicKey(),
+		loggedInUserKey,
+		loggedInUser.Username,
+		req.Message,
+		[]model.Block{},
+		[]model.Attachment{},
+	)
+	sendMessageResponse := h.chatStore.SendMessage(&sendMessageRequest)
+
+	if sendMessageResponse.Error != nil {
+		return NewErrResponse(c, sendMessageResponse.Error)
 	}
 
 	return c.NoContent(http.StatusAccepted)
@@ -272,12 +314,8 @@ func (h *Handler) InquireAboutResource(c echo.Context) error {
 func (h *Handler) SendMessage(c echo.Context) error {
 
 	/**
-
 	In this method, the user is replying to an existing topic.
-
 	*/
-
-	var err error
 
 	// Get current user
 	authUser := h.authorization.GetAuthUserSession(c)
@@ -296,20 +334,39 @@ func (h *Handler) SendMessage(c echo.Context) error {
 
 	// retrieve the thread
 	topicIdStr := c.Param("id")
-	topicId, err := uuid.FromString(topicIdStr)
-	if err != nil {
-		err := ErrInvalidTopicId(topicIdStr)
-		return NewErrResponse(c, &err)
-	}
-	topicKey := model.NewTopicKey(topicId)
+	topicKey := model.NewTopicKey(topicIdStr)
 
 	// todo verify that user has permission to post on topic
 
-	err = h.chatStore.SendMessage(userKey, authUser.Username, topicKey, req.Message)
-	if err != nil {
-		return NewErrResponse(c, err)
+	block := model.NewSectionBlock(model.NewPlainTextObject(req.Message), nil, nil, nil)
+	sendMessageRequest := chat.NewSendMessageRequest(
+		topicKey,
+		userKey,
+		authUser.Username,
+		req.Message,
+		[]model.Block{*block},
+		[]model.Attachment{},
+	)
+
+	sendMessageResponse := h.chatStore.SendMessage(&sendMessageRequest)
+	if sendMessageResponse.Error != nil {
+		return NewErrResponse(c, sendMessageResponse.Error)
 	}
 
 	return c.NoContent(http.StatusAccepted)
+
+}
+
+
+func (h *Handler) SubmitInteraction(c echo.Context) error {
+
+	authUser := h.authorization.GetAuthUserSession(c)
+	userKey := model.NewUserKey(authUser.Subject)
+
+	// Unmarshal request
+	req := web.Message{}
+
+
+	return nil
 
 }

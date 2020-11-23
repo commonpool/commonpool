@@ -1,13 +1,12 @@
 package model
 
 import (
-	uuid "github.com/satori/go.uuid"
 	"time"
 )
 
 type Thread struct {
-	UserID              string    `gorm:"primaryKey"`
-	TopicID             uuid.UUID `gorm:"type:uuid;primaryKey"`
+	UserID              string `gorm:"primaryKey"`
+	TopicID             string `gorm:"primaryKey"`
 	CreatedAt           time.Time
 	LastMessageAt       time.Time
 	LastTimeRead        time.Time

@@ -1,0 +1,13 @@
+.actions-container > :not(:first-child) {
+  margin-left:0.125rem;
+}
+
+
+.block-context{
+  font-size: 0.75rem;
+  color: gray;
+}
+
+* {
+  font-size: 95%;
+}

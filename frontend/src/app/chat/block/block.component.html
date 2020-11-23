@@ -1,0 +1,57 @@
+<ng-container [ngSwitch]="block.type">
+
+  <div *ngSwitchCase="'section'" class="block block-section">
+    <div>
+      <ng-container *ngIf="block.text">
+        <app-text-object [textObject]="block.text"></app-text-object>
+      </ng-container>
+    </div>
+  </div>
+
+  <div *ngSwitchCase="'context'" class="block block-context">
+    <div class="d-flex">
+      <ng-container *ngFor="let e of block.elements; let i = index">
+        <div [class.pl-1]="i !== 0">
+          <ng-container *ngIf="e.type === 'image'">
+            <img style="max-height: 1.25rem" class="d-inline-block" [src]="e.imageUrl"
+                 [alt]="e.altText">
+          </ng-container>
+          <ng-container *ngIf="e.type === 'text' || e.type === 'mrkdwn'">
+            <app-text-object [textObject]="e" [small]="true"></app-text-object>
+          </ng-container>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+
+  <div *ngSwitchCase="'actions'" class="block block-actions d-flex actions-container">
+    <ng-container *ngFor="let element of block.elements; let i = index">
+      <ng-container *ngIf="element.type === 'button'">
+        <app-button [buttonElement]="element"></app-button>
+      </ng-container>
+    </ng-container>
+  </div>
+
+
+  <div *ngSwitchCase="'divider'" class="block block-divider">
+    <hr>
+  </div>
+
+
+  <div *ngSwitchCase="'image'" class="block block-images">
+    <ng-container *ngIf="block.title">
+      <div class="my-1">
+        <app-text-object [textObject]="block.title" [subtle]="true" [small]="true"></app-text-object>
+      </div>
+    </ng-container>
+    <img [src]="block.imageUrl" style="max-height: 16rem" class="rounded border shadow-sm">
+  </div>
+
+
+  <h5 class="font-weight-bold block-header mt-2" *ngSwitchCase="'header'">
+    <app-text-object [textObject]="block.text"></app-text-object>
+  </h5>
+
+
+
+</ng-container>

@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	uuid "github.com/satori/go.uuid"
 	"time"
 )
@@ -47,9 +48,39 @@ func (r *Resource) GetUserKey() UserKey {
 }
 
 type Resources struct {
-	Items []Resource
+	ItemMap map[ResourceKey]Resource
+	Items   []Resource
 }
 
 func NewResources(items []Resource) *Resources {
-	return &Resources{Items: items}
+	rsMap := map[ResourceKey]Resource{}
+	for _, item := range items {
+		rsMap[item.GetKey()] = item
+	}
+	return &Resources{
+		Items:   items,
+		ItemMap: rsMap,
+	}
+}
+
+func (r *Resources) GetResource(key ResourceKey) (Resource, error) {
+	rs, ok := r.ItemMap[key]
+	if !ok {
+		return Resource{}, fmt.Errorf("resource not found")
+	}
+	return rs, nil
+}
+
+func (r *Resources) Append(resource Resource) *Resources {
+	items := append(r.Items, resource)
+	return NewResources(items)
+}
+
+func (r *Resources) Contains(resource Resource) bool {
+	return r.ContainsKey(resource.GetKey())
+}
+
+func (r *Resources) ContainsKey(key ResourceKey) bool {
+	_, ok := r.ItemMap[key]
+	return ok
 }

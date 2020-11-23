@@ -11,6 +11,7 @@ require (
 	github.com/labstack/echo-contrib v0.9.0
 	github.com/labstack/echo/v4 v4.1.17
 	github.com/labstack/gommon v0.3.0
+	github.com/mitchellh/mapstructure v1.3.3 // indirect
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/pquerna/cachecontrol v0.0.0-20200921180117-858c6e7e6b7e // indirect
 	github.com/satori/go.uuid v1.2.0

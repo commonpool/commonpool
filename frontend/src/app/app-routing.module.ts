@@ -18,6 +18,7 @@ import {UserResourcesViewComponent} from './users/user-resources-view/user-resou
 import {GroupInvitesViewComponent} from './groups/group-invites-view/group-invites-view.component';
 import {GroupResourcesViewComponent} from './groups/group-resources-view/group-resources-view.component';
 import {HomePageComponent} from './home/home-page/home-page.component';
+import {BlocksComponent} from './chat/blocks/blocks.component';
 
 const routes: Routes = [
   {
@@ -97,6 +98,10 @@ const routes: Routes = [
         data: {accountType: 'group', resourceType: 'offers'}
       }
     ]
+  },
+  {
+    path: 'sample',
+    component: BlocksComponent
   }
 ];
 

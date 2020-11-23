@@ -106,18 +106,15 @@ func (h *Handler) SearchResources(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
 
-	userMap := map[model.UserKey]model.User{}
-	for _, user := range createdByUsers {
-		userMap[user.GetKey()] = user
-	}
-
 	// building response body
 	resources := searchResourcesResponse.Resources.Items
 	var resourcesResponse = make([]web.Resource, len(resources))
 	for i, item := range resources {
 
-		// todo: refactor get users in batch instead of 1 by 1
-		createdBy := userMap[model.NewUserKey(item.CreatedBy)]
+		createdBy, err := createdByUsers.GetUser(model.NewUserKey(item.CreatedBy))
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, getGroupsResponse.Error.Error())
+		}
 
 		// building list of groups that the resource is shared with
 		var groups []model.Group

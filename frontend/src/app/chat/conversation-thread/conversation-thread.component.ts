@@ -1,13 +1,35 @@
 import {Component, OnInit} from '@angular/core';
-import {BehaviorSubject, combineLatest, Subject} from 'rxjs';
+import {BehaviorSubject, combineLatest, Observable, Subject} from 'rxjs';
 import {map, pluck, startWith, switchMap} from 'rxjs/operators';
 import {ActivatedRoute} from '@angular/router';
 import {BackendService} from '../../api/backend.service';
-import {Message} from '../../api/models';
+import {GetMessagesResponse, Message, SectionBlock, TextObject, TextType} from '../../api/models';
 import {format} from 'date-fns';
 
 class MessageGroup {
   constructor(public date: Date, public dateStr: string, public messages: Message[]) {
+  }
+}
+
+enum DisplayType {
+  Date = 'date',
+  UserMessages = 'userMessages'
+}
+
+class DisplayElement {
+  constructor(public type: DisplayType) {
+  }
+}
+
+class DateSeparator extends DisplayElement {
+  constructor(public date: Date, public dateStr: string) {
+    super(DisplayType.Date);
+  }
+}
+
+class UserMessages extends DisplayElement {
+  constructor(public username: string, public userID: string, public messages: Message[]) {
+    super(DisplayType.UserMessages);
   }
 }
 
@@ -30,28 +52,50 @@ export class ConversationThreadComponent implements OnInit {
   });
 
   private triggerSubject = new Subject<void>();
-  private trigger$ = this.triggerSubject.asObservable().pipe(startWith(undefined));
+  private trigger$ = this.triggerSubject.asObservable().pipe(startWith([undefined]));
 
-  public messages$ = combineLatest([this.skip$, this.take$, this.topic$, this.trigger$]).pipe(switchMap(([skip, take, topic]) => {
-    return this.backend.getMessages(topic, skip, take);
-  }));
+  public messages$: Observable<GetMessagesResponse> = combineLatest([this.skip$, this.take$, this.topic$, this.trigger$])
+    .pipe(
+      switchMap(([s, t, topic, _]) => {
+        return this.backend.getMessages(topic, s, t);
+      }),
+    );
 
-  public messageGroups$ = this.messages$.pipe(
-    pluck('messages'),
-    map((messages) => {
+  public displayElements$ = this.messages$.pipe(
+    pluck<GetMessagesResponse, Message[]>('messages'),
+    map((messages: Message[]) => {
+      return messages.map(m => {
+        if (((!m.blocks || m.blocks.length === 0) && m.text)) {
+          m.blocks = [
+            new SectionBlock(new TextObject(TextType.PlainTextType, m.text))
+          ];
+        }
+        return m;
+      });
+    }),
+    map((messages: Message[]) => {
 
-      const messageGroups: MessageGroup[] = [];
-      let lastDate: Date = undefined;
+      const messageGroups: DisplayElement[] = [];
+
+      let lastDate: Date;
       let lastDateYear: number;
       let lastDateMonth: number;
       let lastDateDay: number;
+      let lastUser: string;
+      let currentUserMsgGrp: UserMessages;
 
+      for (let i = 0; i < messages.length; i++) {
 
-      for (const message of messages) {
-        if (lastDate === undefined
-          || lastDate.getFullYear() !== message.sentAtDate.getFullYear()
-          || lastDate.getMonth() !== message.sentAtDate.getMonth()
-          || lastDate.getDate() !== message.sentAtDate.getDate()) {
+        const message = messages[i];
+
+        if (i === 0) {
+          lastDate = message.sentAtDate;
+          lastDateYear = lastDate.getFullYear();
+          lastDateMonth = lastDate.getMonth();
+          lastDateDay = lastDate.getDate();
+        }
+
+        if (this.isDifferentDate(lastDate, message.sentAtDate) || (messages.length - 1 === i)) {
 
           lastDate = message.sentAtDate;
           lastDateYear = message.sentAtDate.getFullYear();
@@ -66,36 +110,50 @@ export class ConversationThreadComponent implements OnInit {
             dateStr = 'yesterday';
           }
 
-          const newMessageGroup = new MessageGroup(lastDate, dateStr, []);
-          messageGroups.push(newMessageGroup);
+          const newDateGroup = new DateSeparator(lastDate, dateStr);
+          console.log(newDateGroup);
+          messageGroups.push(newDateGroup);
+
         }
-        messageGroups[messageGroups.length - 1].messages.push(message);
+
+        if (currentUserMsgGrp === undefined || lastUser !== message.sentBy) {
+          currentUserMsgGrp = new UserMessages(message.sentByUsername, message.sentBy, []);
+          lastUser = message.sentBy;
+          messageGroups.push(currentUserMsgGrp);
+        }
+
+        currentUserMsgGrp.messages.push(message);
       }
 
       return messageGroups;
     })
   );
 
-  trackMessage(i, o: Message) {
-    return o.id;
-  };
+  private isDifferentDate(date1: Date, date2: Date) {
+    return (date1 && date1.getFullYear() !== date2.getFullYear())
+      || (date1 && date1.getMonth() !== date2.getMonth())
+      || (date1 && date1.getDate() !== date2.getDate());
 
-  trackMessageGroup(i, o: MessageGroup) {
-    return o.date.toISOString();
   }
 
+  trackMessage(i, o: Message) {
+    return o.id;
+  }
+
+  trackMessageGroup(i, o: MessageGroup) {
+    return o?.date?.toISOString();
+  }
 
   constructor(private route: ActivatedRoute, private backend: BackendService) {
   }
 
   ngOnInit(): void {
-    setInterval(() => this.refresh(), 1000);
+    setInterval(() => this.refresh(), 5000);
   }
 
   refresh() {
     this.triggerSubject.next(null);
   }
-
 
   sendMessage(event: any) {
     event.preventDefault();
@@ -119,6 +177,5 @@ export class ConversationThreadComponent implements OnInit {
       someDate.getMonth() === yesterday.getMonth() &&
       someDate.getFullYear() === yesterday.getFullYear();
   }
-
 
 }

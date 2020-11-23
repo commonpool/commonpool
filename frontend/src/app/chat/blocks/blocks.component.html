@@ -1,0 +1,13 @@
+<div class="blocks-container">
+  <div class="blocks" *ngIf="message.blocks">
+    <app-block *ngFor="let block of message.blocks" [block]="block"></app-block>
+  </div>
+  <div class="attachments" *ngIf="message.attachments">
+    <div *ngFor="let attachment of message.attachments" class="attachment">
+      <app-attachment [attachment]="attachment"></app-attachment>
+    </div>
+  </div>
+  <div *ngIf="message.isPersonal">
+    <small class="text-muted">only you can see this</small>
+  </div>
+</div>
