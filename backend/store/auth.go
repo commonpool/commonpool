@@ -128,19 +128,21 @@ func (as *AuthStore) GetUsername(key model.UserKey) (string, error) {
 
 func (as *AuthStore) Find(query auth.UserQuery) ([]auth.User, error) {
 	var users []auth.User
-	chain := as.db
+	chain := as.db.Order("username asc")
 	if query.Query != "" {
 		chain = chain.Where("username like ?", query.Query+"%")
 	}
+
 	if query.NotInGroup != nil {
 		chain = chain.
-			Joins("left join memberships on memberships.user_id = users.id ").
-			Where("memberships.group_id != ? or memberships.group_id is null", query.NotInGroup.ID.String())
+			Joins("LEFT OUTER JOIN memberships ON (memberships.user_id = users.id and memberships.group_id = ?)", query.NotInGroup.ID.String()).
+			Where("group_id IS NULL")
 	}
 
 	err := chain.Offset(query.Skip).Limit(query.Take).Find(&users).Error
 	if err != nil {
 		log.Error(err, "Find: could not find users")
+		return nil, err
 	}
 
 	return users, err

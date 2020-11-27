@@ -2,7 +2,7 @@ package auth
 
 import (
 	"context"
-	"fmt"
+	"github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
 	"github.com/labstack/echo/v4"
 )
@@ -60,12 +60,11 @@ func GetUserSession(ctx context.Context) (*UserSession, error) {
 	valIntf := ctx.Value(IsAuthenticatedKey)
 
 	if valIntf == nil {
-		err := fmt.Errorf("user is not authenticated")
-		return nil, err
+		return nil, errors.ErrUnauthorized
 	}
 
 	if !valIntf.(bool) {
-		return nil, fmt.Errorf("user is not authenticated")
+		return nil, errors.ErrUnauthorized
 	}
 	return &UserSession{
 		Username:        ctx.Value(SubjectUsernameKey).(string),

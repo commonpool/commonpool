@@ -56,12 +56,6 @@ type EventContainer struct {
 	Event Event
 }
 
-type AmqpAcknowledger interface {
-	Ack(tag uint64, multiple bool) error
-	Nack(tag uint64, multiple bool, requeue bool) error
-	Reject(tag uint64, requeue bool) error
-}
-
 type AmqpDelivery struct {
 	Acknowledger AmqpAcknowledger // the channel from which this delivery arrived
 	Headers      AmqpArgs         // Application or header exchange table

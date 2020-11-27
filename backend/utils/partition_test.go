@@ -33,3 +33,21 @@ func TestPartition(t *testing.T) {
 	assert.Equal(t, 2, i)
 
 }
+
+func TestPartitionSinglItem(t *testing.T) {
+	slice := []int{1}
+	i := -1
+	err := Partition(len(slice), 999, func(i1 int, i2 int) error {
+		i++
+		if i == 0 {
+			assert.Equal(t, 0, i1)
+			assert.Equal(t, 0, i2)
+		} else {
+			t.FailNow()
+		}
+		return nil
+	})
+
+	assert.NoError(t, err)
+	assert.Equal(t, 0, i)
+}

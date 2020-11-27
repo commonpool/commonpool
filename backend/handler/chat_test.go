@@ -3,7 +3,9 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/commonpool/backend/config"
 	"github.com/commonpool/backend/resource"
+	"github.com/commonpool/backend/router"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
@@ -11,6 +13,30 @@ import (
 	"net/http/httptest"
 	"testing"
 )
+
+func TestGetRecentlyActiveSubscriptions(t *testing.T) {
+
+	e := router.NewRouter()
+	httpRequest := httptest.NewRequest(http.MethodGet, "", nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(httpRequest, rec)
+
+	h := Handler{
+		amqp:           nil,
+		resourceStore:  nil,
+		authStore:      nil,
+		authorization:  nil,
+		chatStore:      nil,
+		tradingStore:   nil,
+		groupService:   nil,
+		config:         config.AppConfig{},
+		chatService:    nil,
+		tradingService: nil,
+	}
+
+	h.GetRecentlyActiveSubscriptions()
+
+}
 
 // TestCreateResource
 // Should be able to create a resource

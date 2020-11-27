@@ -6,6 +6,55 @@ import (
 	"net/http"
 )
 
+type WebServiceException struct {
+	Status  int
+	Code    string
+	Message string
+}
+
+func (e WebServiceException) Error() string {
+	return e.Message
+}
+
+func (e WebServiceException) Is(err error) bool {
+	a, ok := err.(WebServiceException)
+	if !ok {
+		return false
+	}
+	return e.Code == a.Code
+}
+
+func NewWebServiceException(message string, code string, status int) error {
+	e := WebServiceException{
+		Status:  status,
+		Code:    code,
+		Message: message,
+	}
+	return &e
+}
+
+type ErrorIs interface {
+	Is(error) bool
+}
+
+var ErrUnauthorized = NewWebServiceException("unauthorized", "ErrUnauthorized", http.StatusUnauthorized)
+
+func ReturnException(c echo.Context, err error) error {
+	ws, ok := err.(*WebServiceException)
+	if !ok {
+		return c.JSON(http.StatusInternalServerError, &ErrorResponse{
+			Message:    "Internal server error",
+			Code:       "ErrInternalServerError",
+			StatusCode: http.StatusInternalServerError,
+		})
+	}
+	return c.JSON(ws.Status, &ErrorResponse{
+		Message:    ws.Message,
+		Code:       ws.Code,
+		StatusCode: ws.Status,
+	})
+}
+
 var (
 	ErrUserNotFound = func(user string) ErrorResponse {
 		return NewError(fmt.Sprintf("user with id '%s' could not be found", user), "ErrUserNotFound", http.StatusNotFound)
@@ -25,8 +74,9 @@ var (
 	ErrSendOfferBadRequest = func(err error) ErrorResponse {
 		return NewError("could not process send offer request: "+err.Error(), "ErrSendOfferBadRequest", http.StatusBadRequest)
 	}
-	ErrValidation = func(msg string) ErrorResponse {
-		return NewError("validation error: "+msg, "ErrValidation", http.StatusBadRequest)
+	ErrValidation = func(msg string) *ErrorResponse {
+		err := NewError("validation error: "+msg, "ErrValidation", http.StatusBadRequest)
+		return &err
 	}
 	ErrInvalidResourceKey = func(key string) ErrorResponse {
 		return NewError(fmt.Sprintf("invalid resource key: '%s'", key), "ErrInvalidResourceKey", http.StatusBadRequest)

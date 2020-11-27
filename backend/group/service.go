@@ -13,33 +13,31 @@ type Service interface {
 	GetMembership(ctx context.Context, request *GetMembershipRequest) (*GetMembershipResponse, error)
 	GetUserMemberships(ctx context.Context, request *GetMembershipsForUserRequest) (*GetMembershipsForUserResponse, error)
 	GetGroupsMemberships(ctx context.Context, request *GetMembershipsForGroupRequest) (*GetMembershipsForGroupResponse, error)
-	AcceptInvitation(ctx context.Context, request *AcceptInvitationRequest) (*AcceptInvitationResponse, error)
-	DeclineInvitation(ctx context.Context, request *DeclineInvitationRequest) error
-	LeaveGroup(ctx context.Context, request *LeaveGroupRequest) error
-	SendGroupInvitation(ctx context.Context, request *InviteRequest) (*InviteResponse, error)
+	CreateOrAcceptInvitation(ctx context.Context, request *CreateOrAcceptInvitationRequest) (*CreateOrAcceptInvitationResponse, error)
+	CancelOrDeclineInvitation(ctx context.Context, request *CancelOrDeclineInvitationRequest) error
 	RegisterUserAmqpSubscriptions(ctx context.Context) error
 }
 
-type AcceptInvitationRequest struct {
+type CreateOrAcceptInvitationRequest struct {
 	MembershipKey model.MembershipKey
 }
 
-func NewAcceptInvitationRequest(membershipKey model.MembershipKey) *AcceptInvitationRequest {
-	return &AcceptInvitationRequest{
+func NewAcceptInvitationRequest(membershipKey model.MembershipKey) *CreateOrAcceptInvitationRequest {
+	return &CreateOrAcceptInvitationRequest{
 		MembershipKey: membershipKey,
 	}
 }
 
-type AcceptInvitationResponse struct {
+type CreateOrAcceptInvitationResponse struct {
 	Membership *Membership
 }
 
-type DeclineInvitationRequest struct {
+type CancelOrDeclineInvitationRequest struct {
 	MembershipKey model.MembershipKey
 }
 
-func NewDelineInvitationRequest(membershipKey model.MembershipKey) *DeclineInvitationRequest {
-	return &DeclineInvitationRequest{
+func NewDelineInvitationRequest(membershipKey model.MembershipKey) *CancelOrDeclineInvitationRequest {
+	return &CancelOrDeclineInvitationRequest{
 		MembershipKey: membershipKey,
 	}
 }

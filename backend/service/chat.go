@@ -116,7 +116,11 @@ func (c ChatService) SubscribeToChannel(ctx context.Context, channelSubscription
 	}
 	defer amqpChannel.Close()
 
-	userExchangeName := channelSubscriptionKey.UserKey.GetExchangeName()
+	userExchangeName, err := c.CreateUserExchange(ctx, channelSubscriptionKey.UserKey)
+	if err != nil {
+		return nil, err
+	}
+
 	headers := c.getChannelBindingHeaders(channelSubscriptionKey)
 	err = amqpChannel.ExchangeBind(ctx, userExchangeName, "", amqp.WebsocketMessagesExchange, false, headers)
 	if err != nil {
@@ -629,7 +633,7 @@ func (c ChatService) createSubscriptionAndMqBindingForUserConversation(
 	defer amqpChannel.Close()
 
 	headers := c.getChannelBindingHeaders(subscription.GetKey())
-	userExchangeName := c.GetUserExchangeName(ctx, user.GetUserKey())
+	userExchangeName, err := c.CreateUserExchange(ctx, user.GetUserKey())
 	err = amqpChannel.ExchangeBind(ctx, userExchangeName, "", amqp.WebsocketMessagesExchange, false, headers)
 	if err != nil {
 		l.Error("could not register user channel binding", zap.Error(err))

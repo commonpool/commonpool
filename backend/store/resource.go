@@ -205,6 +205,11 @@ func getResourceSharings(db *gorm.DB, resources []model.ResourceKey) (*resource.
 
 	var sharings []resource.ResourceSharing
 
+	if len(resources) == 0 {
+		rs, _ := resource.NewResourceSharings([]resource.ResourceSharing{})
+		return rs, nil
+	}
+
 	err := utils.Partition(len(resources), 999, func(i1 int, i2 int) error {
 		var qryPart []string
 		var qryParam []interface{}
@@ -225,6 +230,10 @@ func getResourceSharings(db *gorm.DB, resources []model.ResourceKey) (*resource.
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	if sharings == nil {
+		sharings = []resource.ResourceSharing{}
 	}
 
 	return resource.NewResourceSharings(sharings)

@@ -47,7 +47,15 @@ import {
 } from './models';
 
 import {Observable, of, Subject, throwError} from 'rxjs';
-import {HttpClient, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest} from '@angular/common/http';
+import {
+  HttpClient,
+  HttpEvent,
+  HttpHandler,
+  HttpHeaders,
+  HttpInterceptor,
+  HttpRequest,
+  HttpResponse
+} from '@angular/common/http';
 import {catchError, map, retry, switchAll, tap} from 'rxjs/operators';
 import {environment} from '../../environments/environment';
 import {WebSocketSubject} from 'rxjs/internal-compatibility';
@@ -101,10 +109,14 @@ export class BackendService {
 
     const socketObserver = new Observable(observer => {
       try {
+
         const subject = webSocket(`${environment.apiUrl
           .replace('https://', 'wss://')
           .replace('http://', 'wss://')
         }/api/v1/ws`);
+
+        //const subject = webSocket(`ws://localhost:8585/api/v1/ws`);
+
         const subscription = subject.asObservable()
           .subscribe(data =>
               observer.next(data),
@@ -392,7 +404,6 @@ export class BackendService {
 
   declineOffer(offer: DeclineOfferRequest): Observable<DeclineOfferReponse> {
     return this.http.post(`${environment.apiUrl}/api/v1/offers/${offer.id}/decline`, undefined, {
-
       observe: 'response'
     }).pipe(
       map((res) => {
@@ -517,8 +528,9 @@ export class BackendService {
   }
 
   inviteUser(request: InviteUserRequest): Observable<InviteUserResponse> {
-    return this.http.post(`${environment.apiUrl}/api/v1/groups/${request.groupId}/invite`, {
-      userId: request.userId
+    return this.http.post(`${environment.apiUrl}/api/v1/memberships`, {
+      userId: request.userId,
+      groupId: request.groupId
     }, {
       observe: 'response'
     }).pipe(
@@ -532,27 +544,20 @@ export class BackendService {
   }
 
   acceptInvitation(request: AcceptInvitationRequest): Observable<AcceptInvitationResponse> {
-    return this.http.post(`${environment.apiUrl}/api/v1/groups/${request.groupId}/memberships/${request.userId}/accept`, {
-      userId: request.userId
-    }, {
-      observe: 'response'
-    }).pipe(
-      map((res) => {
-        if (res.status !== 200) {
-          throwError(ErrorResponse.fromHttpResponse(res));
-        }
-        return AcceptInvitationResponse.from(res.body as AcceptInvitationResponse);
-      })
-    );
+    return this.inviteUser(new InviteUserRequest(request.userId, request.groupId));
   }
 
   declineInvitation(request: DeclineInvitationRequest): Observable<DeclineInvitationResponse> {
-    return this.http.post(`${environment.apiUrl}/api/v1/groups/${request.groupId}/memberships/${request.userId}/decline`, {
-      userId: request.userId
-    }, {
-      observe: 'response'
+    return this.http.request('DELETE', `${environment.apiUrl}/api/v1/memberships`, {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json'
+      }),
+      body: {
+        userId: request.userId,
+        groupId: request.groupId
+      },
     }).pipe(
-      map((res) => {
+      map((res: HttpResponse<object>) => {
         if (res.status !== 200) {
           throwError(ErrorResponse.fromHttpResponse(res));
         }
@@ -562,16 +567,7 @@ export class BackendService {
   }
 
   leaveGroup(request: LeaveGroupRequest): Observable<LeaveGroupResponse> {
-    return this.http.delete(`${environment.apiUrl}/api/v1/groups/${request.groupId}/memberships/${request.userId}`, {
-      observe: 'response'
-    }).pipe(
-      map((res) => {
-        if (res.status !== 200) {
-          throwError(ErrorResponse.fromHttpResponse(res));
-        }
-        return LeaveGroupResponse.from(res.body as LeaveGroupResponse);
-      })
-    );
+    return this.declineInvitation(new DeclineInvitationRequest(request.userId, request.groupId));
   }
 
   submitMessageInteraction(request: SubmitInteractionRequest): Observable<any> {

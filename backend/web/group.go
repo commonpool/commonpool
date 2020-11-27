@@ -77,66 +77,6 @@ func NewGetGroupResponse(group *group.Group) GetGroupResponse {
 	}
 }
 
-type InviteUserRequest struct {
-	UserID string `json:"userId"`
-}
-
-type InviteUserResponse struct {
-	Membership Membership `json:"membership"`
-}
-
-func NewInviteUserResponse(membership *group.Membership, groupNames group.GroupNames, userNames auth.UserNames) InviteUserResponse {
-	return InviteUserResponse{
-		Membership: NewMembership(membership, groupNames, userNames),
-	}
-}
-
-type ExcludeUserRequest struct {
-	UserID string `json:"userId"`
-}
-
-type ExcludeUserResponse struct {
-	Membership Membership `json:"membership"`
-}
-
-func NewExcludeUserResponse(membership group.Membership, groupNames group.GroupNames, userNames auth.UserNames) ExcludeUserResponse {
-	return ExcludeUserResponse{
-		Membership: NewMembership(&membership, groupNames, userNames),
-	}
-}
-
-type GrantPermissionRequest struct {
-	Permission group.PermissionType `json:"permission"`
-	UserID     string               `json:"userId"`
-	GroupID    string               `json:"groupId"`
-}
-
-type GrantPermissionResponse struct {
-	Membership Membership `json:"membership"`
-}
-
-func NewGrantPermissionResponse(membership group.Membership, groupNames group.GroupNames, userNames auth.UserNames) GrantPermissionResponse {
-	return GrantPermissionResponse{
-		Membership: NewMembership(&membership, groupNames, userNames),
-	}
-}
-
-type RevokePermissionRequest struct {
-	Permission group.PermissionType `json:"permission"`
-	UserID     string               `json:"userId"`
-	GroupID    string               `json:"groupId"`
-}
-
-type RevokePermissionResponse struct {
-	Membership Membership `json:"membership"`
-}
-
-func NewRevokePermissionResponse(membership group.Membership, groupNames group.GroupNames, userNames auth.UserNames) RevokePermissionResponse {
-	return RevokePermissionResponse{
-		Membership: NewMembership(&membership, groupNames, userNames),
-	}
-}
-
 type GetUserGroupsResponse struct {
 	Groups []Group `json:"groups"`
 }
@@ -179,38 +119,52 @@ type GetMembershipResponse struct {
 	Membership Membership `json:"membership"`
 }
 
-func NewGetMembershipResponse(membership *group.Membership, groupNames group.GroupNames, userNames auth.UserNames) GetMembershipResponse {
-	return GetMembershipResponse{
+func NewGetMembershipResponse(membership *group.Membership, groupNames group.GroupNames, userNames auth.UserNames) *GetMembershipResponse {
+	return &GetMembershipResponse{
 		Membership: NewMembership(membership, groupNames, userNames),
 	}
 }
 
-type AcceptInvitationResponse struct {
+type CreateOrAcceptInvitationResponse struct {
 	Membership Membership `json:"membership"`
 }
 
-func NewAcceptInvitationResponse(membership *group.Membership, groupNames group.GroupNames, userNames auth.UserNames) *AcceptInvitationResponse {
-	return &AcceptInvitationResponse{
+func NewCreateOrAcceptInvitationResponse(membership *group.Membership, groupNames group.GroupNames, userNames auth.UserNames) *CreateOrAcceptInvitationResponse {
+	return &CreateOrAcceptInvitationResponse{
 		Membership: NewMembership(membership, groupNames, userNames),
 	}
 }
 
-type DeclineInvitationResponse struct {
+type CreateOrAcceptInvitationRequest struct {
+	UserID  string `json:"userId"`
+	GroupID string `json:"groupId"`
+}
+
+func NewCreateOrAcceptInvitationRequest(userId string, groupId string) *CreateOrAcceptInvitationRequest {
+	return &CreateOrAcceptInvitationRequest{
+		UserID:  userId,
+		GroupID: groupId,
+	}
+}
+
+type CancelOrDeclineInvitationResponse struct {
 	Membership Membership `json:"membership"`
 }
 
-func NewDeclineInvitationResponse(membership group.Membership, groupNames group.GroupNames, userNames auth.UserNames) DeclineInvitationResponse {
-	return DeclineInvitationResponse{
+func NewCancelOrDeclineInvitationResponse(membership group.Membership, groupNames group.GroupNames, userNames auth.UserNames) CancelOrDeclineInvitationResponse {
+	return CancelOrDeclineInvitationResponse{
 		Membership: NewMembership(&membership, groupNames, userNames),
 	}
 }
 
-type LeaveGroupResponse struct {
-	Membership Membership `json:"membership"`
+type CancelOrDeclineInvitationRequest struct {
+	UserID  string `json:"userId"`
+	GroupID string `json:"groupId"`
 }
 
-func NewLeaveGroupResponse(membership group.Membership, groupNames group.GroupNames, userNames auth.UserNames) LeaveGroupResponse {
-	return LeaveGroupResponse{
-		Membership: NewMembership(&membership, groupNames, userNames),
+func NewCancelOrDeclineInvitationRequest(userId string, groupId string) *CancelOrDeclineInvitationRequest {
+	return &CancelOrDeclineInvitationRequest{
+		UserID:  userId,
+		GroupID: groupId,
 	}
 }

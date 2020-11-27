@@ -253,8 +253,7 @@ func (h *Handler) InquireAboutResource(c echo.Context) error {
 
 	if err := c.Validate(req); err != nil {
 		l.Warn("bad request payload", zap.Error(err))
-		response := ErrValidation(err.Error())
-		return &response
+		return ErrValidation(err.Error())
 	}
 
 	// todo: send the channel id back to the client so he can redirect
@@ -297,8 +296,7 @@ func (h *Handler) SendMessage(c echo.Context) error {
 	l.Debug("validating request")
 
 	if err := c.Validate(req); err != nil {
-		response := ErrValidation(err.Error())
-		return &response
+		return ErrValidation(err.Error())
 	}
 
 	l.Debug("getting channel 'id' query param")
@@ -347,8 +345,7 @@ func (h *Handler) SubmitInteraction(c echo.Context) error {
 	}
 	if err := c.Validate(req); err != nil {
 		l.Warn("error validating request", zap.Error(err))
-		response := ErrValidation(err.Error())
-		return &response
+		return ErrValidation(err.Error())
 	}
 
 	// Getting the message

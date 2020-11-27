@@ -75,7 +75,7 @@ func (h *Handler) SearchResources(c echo.Context) error {
 	var groupKey *model.GroupKey
 	groupStr := c.QueryParam("group_id")
 	if groupStr != "" {
-		groupKey2, err := model.ParseGroupKey(groupStr)
+		groupKey2, err := group.ParseGroupKey(groupStr)
 		if err != nil {
 			message := "SearchResource: could not parse group key"
 			l.Error(message)
@@ -339,8 +339,7 @@ func (h *Handler) UpdateResource(c echo.Context) error {
 	// Validates the UpdateResourceRequest
 	if err := c.Validate(req); err != nil {
 		c.Logger().Warn(err, "UpdateResource: error validating updateResourceRequest")
-		response := ErrValidation(err.Error())
-		return NewErrResponse(c, &response)
+		return NewErrResponse(c, ErrValidation(err.Error()))
 	}
 
 	// Gets the resource id
@@ -392,7 +391,7 @@ func (h *Handler) UpdateResource(c echo.Context) error {
 	// get shared with keys
 	var groupKeys []model.GroupKey
 	for _, sharing := range req.Resource.SharedWith {
-		groupKey, err := model.ParseGroupKey(sharing.GroupID)
+		groupKey, err := group.ParseGroupKey(sharing.GroupID)
 		if err != nil {
 			message := "UpdateResource: could not parse groupKey"
 			c.Logger().Error(err, message)
@@ -467,7 +466,7 @@ func (h *Handler) parseGroupKeys(c echo.Context, sharedWith []web.InputResourceS
 	sharedWithGroupKeys := make([]model.GroupKey, len(sharedWith))
 	for i := range sharedWith {
 		groupKeyStr := sharedWith[i].GroupID
-		groupKey, err := model.ParseGroupKey(groupKeyStr)
+		groupKey, err := group.ParseGroupKey(groupKeyStr)
 		if err != nil {
 			return nil, c.String(http.StatusBadRequest, "invalid group key : "+groupKeyStr), true
 		}

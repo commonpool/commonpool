@@ -49,7 +49,36 @@ func mockLoggedInAs(user *auth.UserSession) {
 	authenticatedUser = user
 }
 
+type TestBench struct {
+}
+
+/**type Handler struct {
+	amqp           amqp.AmqpClient
+	resourceStore  resource.Store
+	authStore      auth.Store
+	authorization  auth.IAuth
+	chatStore      chat.Store
+	tradingStore   trading.Store
+	groupService   group.Service
+	config         config.AppConfig
+	chatService    chat.Service
+	tradingService trading.Service
+}
+
+/**
+resourceStore = store.NewResourceStore(db)
+	authStore = store.NewAuthStore(db)
+	chatStore := store.NewChatStore(db, authStore, amqpCli)
+	tradingStore := store.NewTradingStore(db)
+	groupStore := store.NewGroupStore(db, amqpCli)
+
+	chatService := service.NewChatService(authStore, groupStore, resourceStore, amqpCli, chatStore)
+	tradingService := service.NewTradingService(tradingStore, resourceStore, authStore, chatService)
+	groupService := service.NewGroupService(groupStore, amqpCli, chatService, authStore)
+*/
+
 func setup() {
+
 	//
 	// fakeServer := amqpServer.NewServer("amqp://localhost:5672/%2f")
 	// err := fakeServer.Start()

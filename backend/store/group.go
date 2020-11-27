@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/commonpool/backend/amqp"
 	"github.com/commonpool/backend/group"
@@ -53,13 +54,7 @@ func (g *GroupStore) GetGroups(take int, skip int) ([]group.Group, int64, error)
 
 func (g *GroupStore) CreateGroup(ctx context.Context, groupKey model.GroupKey, createdBy model.UserKey, name string, description string) (*group.Group, error) {
 
-	ctx, l := GetCtx(ctx, "GroupStore", "CreateGroup")
-
-	l = l.With(
-		zap.Object("group", groupKey),
-		zap.Object("user", createdBy))
-
-	l.Debug("creating group")
+	ctx, _ = GetCtx(ctx, "GroupStore", "CreateGroup")
 
 	grp := group.Group{
 		ID:          groupKey.ID,
@@ -69,7 +64,6 @@ func (g *GroupStore) CreateGroup(ctx context.Context, groupKey model.GroupKey, c
 	}
 	err := g.db.Create(&grp).Error
 	if err != nil {
-		l.Error("could not create group")
 		return nil, err
 	}
 
@@ -338,6 +332,13 @@ func (g *GroupStore) updateInvitationAcceptance(ctx context.Context, membershipK
 		First(&membership).
 		Error
 
+	if membership.GroupConfirmed && membership.UserConfirmed {
+		err = g.db.Model(&membership).Update("is_member", true).Error
+		if err != nil {
+			return err
+		}
+	}
+
 	if err != nil {
 		l.Error("could not get membership", zap.Error(err))
 		return err
@@ -425,6 +426,10 @@ func (g *GroupStore) GetMembership(ctx context.Context, membershipKey model.Memb
 		membershipKey.UserKey.String(),
 		membershipKey.GroupKey.ID.String()).
 		Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, group.ErrMembershipNotFound
+	}
 
 	if err != nil {
 		l.Error("could not get membership", zap.Error(err))

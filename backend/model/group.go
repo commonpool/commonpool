@@ -1,7 +1,6 @@
 package model
 
 import (
-	"fmt"
 	"github.com/commonpool/backend/utils"
 	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap/zapcore"
@@ -26,14 +25,6 @@ func (k GroupKey) GetChannelKey() ChannelKey {
 
 func NewGroupKey(id uuid.UUID) GroupKey {
 	return GroupKey{ID: id}
-}
-
-func ParseGroupKey(value string) (GroupKey, error) {
-	offerId, err := uuid.FromString(value)
-	if err != nil {
-		return GroupKey{}, fmt.Errorf("cannot parse group key: %s", err.Error())
-	}
-	return NewGroupKey(offerId), err
 }
 
 func (k GroupKey) MarshalLogObject(encoder zapcore.ObjectEncoder) error {

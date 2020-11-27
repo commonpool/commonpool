@@ -29,6 +29,12 @@ type AmqpChannel interface {
 	Publish(ctx context.Context, exchange string, key string, mandatory bool, immediate bool, publishing AmqpPublishing) error
 }
 
+type AmqpAcknowledger interface {
+	Ack(tag uint64, multiple bool) error
+	Nack(tag uint64, multiple bool, requeue bool) error
+	Reject(tag uint64, requeue bool) error
+}
+
 type RabbitMqChannel struct {
 	channel *amqp.Channel
 	msg     <-chan amqp.Delivery

@@ -46,11 +46,11 @@ func (h *Handler) Register(v1 *echo.Group) {
 	groups.GET("/:id", h.GetGroup)
 	groups.GET("/:id/memberships", h.GetGroupMemberships)
 	groups.GET("/:id/invite-member-picker", h.GetUsersForGroupInvitePicker)
-	groups.POST("/:id/invite", h.InviteUser)
 	groups.GET("/:groupId/memberships/:userId", h.GetMembership)
-	groups.POST("/:groupId/memberships/:userId/accept", h.AcceptInvitation)
-	groups.POST("/:groupId/memberships/:userId/decline", h.DeclineInvitation)
-	groups.DELETE("/:groupId/memberships/:userId", h.LeaveGroup)
+
+	memberships := v1.Group("/memberships", h.authorization.Authenticate(true))
+	memberships.POST("", h.CreateOrAcceptMembership)
+	memberships.DELETE("", h.CancelOrDeclineInvitation)
 
 	v1.POST("/chatback", h.Chatback, h.authorization.Authenticate(true))
 	v1.GET("/ws", h.Websocket, h.authorization.Authenticate(true))

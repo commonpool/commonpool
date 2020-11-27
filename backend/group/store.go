@@ -5,20 +5,6 @@ import (
 	"github.com/commonpool/backend/model"
 )
 
-type GetGroupsByKeysQuery struct {
-	GroupKeys []model.GroupKey
-}
-
-func NewGetGroupsByKeysQuery(groupKeys []model.GroupKey) *GetGroupsByKeysQuery {
-	return &GetGroupsByKeysQuery{
-		GroupKeys: groupKeys,
-	}
-}
-
-type GetGroupsByKeysResponse struct {
-	Items []Group
-}
-
 type GetGroupsRequest struct {
 	Take int
 	Skip int
@@ -79,63 +65,6 @@ func NewGetGroupRequest(key model.GroupKey) *GetGroupRequest {
 	return &GetGroupRequest{Key: key}
 }
 
-type GrantPermissionRequest struct {
-	MembershipKey model.MembershipKey
-	Permission    PermissionType
-}
-
-type GrantPermissionResult struct {
-}
-
-func NewGrantPermissionRequest(membershipKey model.MembershipKey, permission PermissionType) GrantPermissionRequest {
-	return GrantPermissionRequest{
-		MembershipKey: membershipKey,
-		Permission:    permission,
-	}
-}
-
-type RevokePermissionRequest struct {
-	MembershipKey model.MembershipKey
-	Permission    PermissionType
-}
-
-type RevokePermissionResult struct {
-}
-
-func NewRevokePermissionRequest(membershipKey model.MembershipKey, permission PermissionType) RevokePermissionRequest {
-	return RevokePermissionRequest{
-		MembershipKey: membershipKey,
-		Permission:    permission,
-	}
-}
-
-type InviteRequest struct {
-	MembershipKey model.MembershipKey
-}
-
-type InviteResponse struct {
-	Membership *Membership
-}
-
-func NewInviteRequest(membershipKey model.MembershipKey) *InviteRequest {
-	return &InviteRequest{
-		MembershipKey: membershipKey,
-	}
-}
-
-type ExcludeRequest struct {
-	MembershipKey model.MembershipKey
-}
-
-type ExcludeResponse struct {
-}
-
-func NewExcludeRequest(membershipKey model.MembershipKey) ExcludeRequest {
-	return ExcludeRequest{
-		MembershipKey: membershipKey,
-	}
-}
-
 type MembershipPermissions struct {
 	MembershipKey model.MembershipKey
 	IsMember      bool
@@ -148,33 +77,6 @@ const (
 	GroupParty MembershipParty = iota
 	UserParty
 )
-
-type MarkInvitationAsAcceptedRequest struct {
-	UserKey  model.UserKey
-	GroupKey model.GroupKey
-}
-
-func NewMarkInvitationAsAcceptedRequest(groupKey model.GroupKey, userKey model.UserKey) *MarkInvitationAsAcceptedRequest {
-	return &MarkInvitationAsAcceptedRequest{
-		UserKey:  userKey,
-		GroupKey: groupKey,
-	}
-}
-
-type MarkInvitationAsAcceptedResponse struct {
-}
-
-type MarkInvitationAsDeclinedRequest struct {
-	MembershipKey model.MembershipKey
-	From          MembershipParty
-}
-
-func NewMarkInvitationAsDeniedRequest(membershipKey model.MembershipKey, from MembershipParty) MarkInvitationAsDeclinedRequest {
-	return MarkInvitationAsDeclinedRequest{MembershipKey: membershipKey, From: from}
-}
-
-type MarkInvitationAsDeclinedResponse struct {
-}
 
 type GetMembershipsForUserRequest struct {
 	UserKey          model.UserKey
@@ -220,15 +122,4 @@ func NewGetMembershipRequest(membershipKey model.MembershipKey) *GetMembershipRe
 
 type GetMembershipResponse struct {
 	Membership *Membership
-}
-
-type DeleteMembershipRequest struct {
-	MembershipKey model.MembershipKey
-}
-
-func NewDeleteMembershipRequest(membershipKey model.MembershipKey) DeleteMembershipRequest {
-	return DeleteMembershipRequest{MembershipKey: membershipKey}
-}
-
-type DeleteMembershipResponse struct {
 }

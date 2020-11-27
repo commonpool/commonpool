@@ -17,8 +17,8 @@ type TradingStore struct {
 
 var _ trading.Store = TradingStore{}
 
-func NewTradingStore(db *gorm.DB) trading.Store {
-	return TradingStore{db: db}
+func NewTradingStore(db *gorm.DB) *TradingStore {
+	return &TradingStore{db: db}
 }
 
 func (t TradingStore) SaveOfferStatus(key model.OfferKey, status trading.OfferStatus) error {

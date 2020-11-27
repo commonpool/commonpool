@@ -88,6 +88,19 @@ func main() {
 		tradingService,
 		groupService)
 
+	var users []auth.User
+	err = db.Model(auth.User{}).Find(&users).Error
+	if err != nil {
+		panic(err)
+	}
+
+	for _, user := range users {
+		_, err = chatService.CreateUserExchange(ctx, user.GetUserKey())
+		if err != nil {
+			panic(err)
+		}
+	}
+
 	h.Register(v1)
 
 	// Start server

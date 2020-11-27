@@ -28,31 +28,25 @@ import (
 // @Router /groups [post]
 func (h *Handler) CreateGroup(c echo.Context) error {
 
-	ctx, l := GetEchoContext(c, "CreateGroup")
-
-	l.Debug("creating group")
+	ctx, _ := GetEchoContext(c, "CreateGroup")
 
 	req := web.CreateGroupRequest{}
 	if err := c.Bind(&req); err != nil {
-		l.Error("could not bind CreateGroupRequest", zap.Error(err))
-		return NewErrResponse(c, err)
+		return errors.ReturnException(c, err)
 	}
 
 	req.Name = strings.TrimSpace(req.Name)
 	req.Description = strings.TrimSpace(req.Description)
 
 	if req.Name == "" {
-		response := errors.ErrValidation("name is required")
-		return NewErrResponse(c, &response)
+		return NewErrResponse(c, errors.ErrValidation("name is required"))
 	}
 
 	var groupKey = model.NewGroupKey(uuid.NewV4())
 
-	var createGroupRequest = group.NewCreateGroupRequest(groupKey, req.Name, req.Description)
-	createGroupResponse, err := h.groupService.CreateGroup(ctx, createGroupRequest)
+	createGroupResponse, err := h.groupService.CreateGroup(ctx, group.NewCreateGroupRequest(groupKey, req.Name, req.Description))
 	if err != nil {
-		l.Error("could not create group", zap.Error(err))
-		return err
+		return errors.ReturnException(c, err)
 	}
 
 	var response = web.NewCreateGroupResponse(createGroupResponse.Group)
@@ -77,7 +71,7 @@ func (h *Handler) GetGroup(c echo.Context) error {
 
 	l.Debug("getting group")
 
-	groupKey, err := model.ParseGroupKey(c.Param("id"))
+	groupKey, err := group.ParseGroupKey(c.Param("id"))
 	if err != nil {
 		l.Error("could not parse group key", zap.Error(err))
 		return NewErrResponse(c, err)
@@ -214,7 +208,7 @@ func (h *Handler) GetMembership(c echo.Context) error {
 
 	userKey := model.NewUserKey(c.Param("userId"))
 
-	groupKey, err := model.ParseGroupKey(c.Param("groupId"))
+	groupKey, err := group.ParseGroupKey(c.Param("groupId"))
 	if err != nil {
 		l.Error("could not parse group key", zap.Error(err))
 		return NewErrResponse(c, err)
@@ -274,7 +268,7 @@ func (h *Handler) GetGroupMemberships(c echo.Context) error {
 		membershipStatus = &ms
 	}
 
-	groupKey, err := model.ParseGroupKey(c.Param("id"))
+	groupKey, err := group.ParseGroupKey(c.Param("id"))
 	if err != nil {
 		l.Error("could not parse group key", zap.Error(err))
 		return NewErrResponse(c, err)
@@ -377,7 +371,7 @@ func (h *Handler) GetUsersForGroupInvitePicker(c echo.Context) error {
 
 	qry := c.QueryParam("query")
 
-	groupKey, err := model.ParseGroupKey(c.Param("id"))
+	groupKey, err := group.ParseGroupKey(c.Param("id"))
 	if err != nil {
 		return NewErrResponse(c, err)
 	}
@@ -412,183 +406,84 @@ func (h *Handler) GetUsersForGroupInvitePicker(c echo.Context) error {
 
 }
 
-// GetGroup godoc
-// @Summary Invite a user to a group
-// @Description Invite a user to a group
-// @ID inviteUser
-// @Tags groups
-// @Param id path string true "ID of the group" (format:uuid)
-// @Param invite body web.InviteUserRequest true "User to invite"
-// @Accept json
-// @Produce json
-// @Success 200 {object} web.InviteUserResponse
-// @Failure 400 {object} utils.Error
-// @Router /groups/:id/invite [get]
-func (h *Handler) InviteUser(c echo.Context) error {
-
-	ctx, l := GetEchoContext(c, "InviteUser")
-
-	l.Debug("inviting user to group")
-
-	req := web.InviteUserRequest{}
-	if err := c.Bind(&req); err != nil {
-		l.Error("could not bind web.InviteUserRequest", zap.Error(err))
-		return NewErrResponse(c, err)
-	}
-
-	groupKey, err := model.ParseGroupKey(c.Param("id"))
-	if err != nil {
-		l.Error("could not parse group key", zap.String("group_id", c.Param("id")))
-		return NewErrResponse(c, err)
-	}
-
-	invitedUserKey := model.NewUserKey(req.UserID)
-	newMembershipKey := model.NewMembershipKey(groupKey, invitedUserKey)
-
-	membership, err := h.groupService.SendGroupInvitation(ctx, group.NewInviteRequest(newMembershipKey))
-	if err != nil {
-		l.Error("could not send invitation", zap.Error(err))
-		return err
-	}
-
-	getGroup, err := h.groupService.GetGroup(ctx, group.NewGetGroupRequest(groupKey))
-	if err != nil {
-		l.Error("could not get group", zap.Error(err))
-		return NewErrResponse(c, err)
-	}
-	groupNames := group.GroupNames{
-		groupKey: getGroup.Group.Name,
-	}
-
-	username, err := h.authStore.GetUsername(membership.Membership.GetUserKey())
-	if err != nil {
-		l.Error("could not get username", zap.Error(err))
-		return NewErrResponse(c, err)
-	}
-	userNames := auth.UserNames{
-		newMembershipKey.UserKey: username,
-	}
-
-	// Respond to query
-	response := web.NewInviteUserResponse(membership.Membership, groupNames, userNames)
-	return c.JSON(http.StatusAccepted, response)
-
-}
-
-// AcceptInvitation godoc
+// CreateOrAcceptMembership godoc
 // @Summary Accept a group invitation
 // @Description Accept a group invitation
 // @ID acceptInvitation
 // @Tags groups
-// @Param groupId path string true "ID of the group" (format:uuid)
-// @Param userId path string true "ID of the user"
 // @Accept json
 // @Produce json
-// @Success 200 {object} web.AcceptInvitationResponse
+// @Success 200 {object} web.CreateOrAcceptInvitationResponse
 // @Failure 400 {object} utils.Error
-// @Router /groups/:groupId/memberships/:userId/accept [post]
-func (h *Handler) AcceptInvitation(c echo.Context) error {
+// @Router /groups/memberships [post]
+func (h *Handler) CreateOrAcceptMembership(c echo.Context) error {
 
-	ctx, l := GetEchoContext(c, "AcceptInvitation")
+	ctx, l := GetEchoContext(c, "CreateOrAcceptInvitation")
 
-	groupKey, err := model.ParseGroupKey(c.Param("groupId"))
-	if err != nil {
-		l.Error("could not parse group key", zap.Error(err))
-		return NewErrResponse(c, err)
+	req := web.CreateOrAcceptInvitationRequest{}
+	if err := c.Bind(&req); err != nil {
+		return errors.ReturnException(c, err)
 	}
-	userKey := model.NewUserKey(c.Param("userId"))
+
+	groupKey, err := group.ParseGroupKey(req.GroupID)
+	if err != nil {
+		return errors.ReturnException(c, err)
+	}
+	userKey := model.NewUserKey(req.UserID)
 
 	l = l.With(zap.Object("user", userKey), zap.Object("group", groupKey))
 
 	membershipKey := model.NewMembershipKey(groupKey, userKey)
-	acceptInvitationResponse, err := h.groupService.AcceptInvitation(ctx, group.NewAcceptInvitationRequest(membershipKey))
+	acceptInvitationResponse, err := h.groupService.CreateOrAcceptInvitation(ctx, group.NewAcceptInvitationRequest(membershipKey))
 	if err != nil {
-		l.Error("could not accept invitation", zap.Error(err))
-		return err
+		return errors.ReturnException(c, err)
 	}
 
 	memberships := group.NewMemberships([]group.Membership{*acceptInvitationResponse.Membership})
 
 	userNames, err := h.getUserNamesForMemberships(ctx, memberships)
 	if err != nil {
-		l.Error("could not get user names for memberships", zap.Error(err))
-		return NewErrResponse(c, err)
+		return errors.ReturnException(c, err)
 	}
 
 	groupNames, err := h.getGroupNamesForMemberships(ctx, memberships)
 	if err != nil {
-		l.Error("could not get group names for memberships", zap.Error(err))
-		return NewErrResponse(c, err)
+		return errors.ReturnException(c, err)
 	}
 
-	response := web.NewAcceptInvitationResponse(acceptInvitationResponse.Membership, groupNames, userNames)
+	response := web.NewCreateOrAcceptInvitationResponse(acceptInvitationResponse.Membership, groupNames, userNames)
 	return c.JSON(http.StatusOK, response)
 
 }
 
-// DeclineInvitation godoc
+// CancelOrDeclineInvitation godoc
 // @Summary declines a group invitation
 // @Description declines a group invitation
 // @ID declineInvitation
 // @Tags groups
-// @Param groupId path string true "ID of the group" (format:uuid)
-// @Param userId path string true "ID of the user"
 // @Accept json
 // @Produce json
-// @Success 200 {object} web.DeclineInvitationResponse
+// @Success 202 {object} web.CancelOrDeclineInvitationResponse
 // @Failure 400 {object} utils.Error
-// @Router /groups/:groupId/memberships/:userId/decline [post]
-func (h *Handler) DeclineInvitation(c echo.Context) error {
+// @Router /memberships [delete]
+func (h *Handler) CancelOrDeclineInvitation(c echo.Context) error {
 
-	ctx, l := GetEchoContext(c, "DeclineInvitation")
+	ctx, l := GetEchoContext(c, "CancelOrDeclineInvitation")
 
-	l.Debug("declining invitation")
-
-	groupKey, err := model.ParseGroupKey(c.Param("groupId"))
-	if err != nil {
-		return NewErrResponse(c, err)
+	req := web.CancelOrDeclineInvitationRequest{}
+	if err := c.Bind(&req); err != nil {
+		return errors.ReturnException(c, err)
 	}
 
-	userKey := model.NewUserKey(c.Param("userId"))
+	groupKey, err := group.ParseGroupKey(req.GroupID)
+	if err != nil {
+		return errors.ReturnException(c, err)
+	}
+	userKey := model.NewUserKey(req.UserID)
+
 	membershipKey := model.NewMembershipKey(groupKey, userKey)
 
-	err = h.groupService.DeclineInvitation(ctx, group.NewDelineInvitationRequest(membershipKey))
-	if err != nil {
-		l.Error("could not decline invitation", zap.Error(err))
-		return err
-	}
-
-	return c.NoContent(http.StatusAccepted)
-
-}
-
-// LeaveGroup godoc
-// @Summary leave group
-// @Description declines a group invitation
-// @ID leaveGroup
-// @Tags groups
-// @Param groupId path string true "ID of the group" (format:uuid)
-// @Param userId path string true "ID of the user"
-// @Accept json
-// @Produce json
-// @Success 200 {object} web.LeaveGroupResponse
-// @Failure 400 {object} utils.Error
-// @Router /groups/:groupId/memberships/:userId [delete]
-func (h *Handler) LeaveGroup(c echo.Context) error {
-
-	ctx, l := GetEchoContext(c, "LeaveGroup")
-
-	l.Debug("leaving group")
-
-	groupKey, err := model.ParseGroupKey(c.Param("groupId"))
-	if err != nil {
-		return NewErrResponse(c, err)
-	}
-
-	userKey := model.NewUserKey(c.Param("userId"))
-	membershipKey := model.NewMembershipKey(groupKey, userKey)
-
-	err = h.groupService.LeaveGroup(ctx, group.NewLeaveGroupRequest(membershipKey))
+	err = h.groupService.CancelOrDeclineInvitation(ctx, group.NewDelineInvitationRequest(membershipKey))
 	if err != nil {
 		l.Error("could not decline invitation", zap.Error(err))
 		return err
