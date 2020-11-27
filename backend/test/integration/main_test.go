@@ -7,8 +7,10 @@ import (
 	"github.com/commonpool/backend/config"
 	"github.com/commonpool/backend/handler"
 	"github.com/commonpool/backend/mock"
+	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/service"
 	"github.com/commonpool/backend/store"
+	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
 	"os"
 	"testing"
@@ -27,9 +29,16 @@ var GroupStore store.GroupStore
 var ChatService service.ChatService
 var TradingService service.TradingService
 var GroupService service.GroupService
+var User1KeyStr = uuid.NewV4().String()
+var User1Key = model.NewUserKey(User1KeyStr)
 var User1 *auth.UserSession
+var User2KeyStr = uuid.NewV4().String()
+var User2Key = model.NewUserKey(User1KeyStr)
 var User2 *auth.UserSession
+var User3KeyStr = uuid.NewV4().String()
+var User3Key = model.NewUserKey(User1KeyStr)
 var User3 *auth.UserSession
+var Authorizer *mock.MockAuthorizer
 
 func TestMain(m *testing.M) {
 
@@ -37,21 +46,21 @@ func TestMain(m *testing.M) {
 
 	User1 = &auth.UserSession{
 		Username:        "user1",
-		Subject:         "user1",
+		Subject:         User1KeyStr,
 		Email:           "user1@email.com",
 		IsAuthenticated: true,
 	}
 
 	User2 = &auth.UserSession{
 		Username:        "user2",
-		Subject:         "user2",
+		Subject:         User2KeyStr,
 		Email:           "user2@email.com",
 		IsAuthenticated: true,
 	}
 
 	User3 = &auth.UserSession{
 		Username:        "user3",
-		Subject:         "user3",
+		Subject:         User3KeyStr,
 		Email:           "user3@email.com",
 		IsAuthenticated: true,
 	}
@@ -72,8 +81,8 @@ func TestMain(m *testing.M) {
 		panic(err)
 	}
 
-	authorizer := mock.NewTestAuthorizer()
-	authorizer.MockCurrentSession = func() auth.UserSession {
+	Authorizer = mock.NewTestAuthorizer()
+	Authorizer.MockCurrentSession = func() auth.UserSession {
 		if authenticatedUser == nil {
 			return auth.UserSession{
 				IsAuthenticated: false,
@@ -101,7 +110,7 @@ func TestMain(m *testing.M) {
 		&AuthStore,
 		&ChatStore,
 		TradingStore,
-		authorizer,
+		Authorizer,
 		AmqpClient,
 		*appConfig,
 		ChatService,

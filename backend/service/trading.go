@@ -24,16 +24,12 @@ func (h TradingService) AcceptOffer(ctx context.Context, request *trading.Accept
 
 	ctx, l := GetCtx(ctx, "TradingService", "AcceptOffer")
 
-	l.Debug("getting user session")
-
 	user, err := auth.GetUserSession(ctx)
 	if err != nil {
 		l.Error("could not get user session", zap.Error(err))
 		return nil, err
 	}
 	loggedInUserKey := user.GetUserKey()
-
-	l.Debug("retrieving offer")
 
 	//  Retrieving offer
 	offer, err := h.tradingStore.GetOffer(request.OfferKey)
@@ -42,16 +38,12 @@ func (h TradingService) AcceptOffer(ctx context.Context, request *trading.Accept
 		return nil, err
 	}
 
-	l.Debug("ensure offer is still pending")
-
 	//  Ensure offer is still pending approval
 	if offer.Status != trading.PendingOffer {
 		err := fmt.Errorf("offer is not pending approval")
 		l.Error("", zap.Error(err))
 		return nil, err
 	}
-
-	l.Debug("getting offer decisions")
 
 	//  Retrieve Offer decisions
 	decisions, err := h.tradingStore.GetDecisions(request.OfferKey)
@@ -64,8 +56,6 @@ func (h TradingService) AcceptOffer(ctx context.Context, request *trading.Accept
 	var currentUserDecision *trading.OfferDecision
 
 	//  Retrieving current user decision, and check if everyone else accepted the offer already
-
-	l.Debug("retrieving current user decision")
 
 	// todo: wrap in collection struct
 
@@ -88,15 +78,11 @@ func (h TradingService) AcceptOffer(ctx context.Context, request *trading.Accept
 		return nil, err
 	}
 
-	l.Debug("persisting user decision")
-
 	//  Persisting the decision
 	err = h.tradingStore.SaveDecision(request.OfferKey, loggedInUserKey, trading.AcceptedDecision)
 	if err != nil {
 		return nil, err
 	}
-
-	l.Debug("fetching user decisions anew")
 
 	decisions, err = h.tradingStore.GetDecisions(request.OfferKey)
 	if err != nil {
@@ -126,8 +112,6 @@ func (h TradingService) AcceptOffer(ctx context.Context, request *trading.Accept
 		}
 
 	}
-
-	l.Debug("building chat messages")
 
 	var blocks []chat.Block
 
@@ -219,15 +203,11 @@ func (h TradingService) AcceptOffer(ctx context.Context, request *trading.Accept
 
 	}
 
-	l.Debug("getting offer items")
-
 	offerItems, err := h.tradingStore.GetItems(request.OfferKey)
 	if err != nil {
 		l.Error("could not get offer items", zap.Error(err))
 		return nil, err
 	}
-
-	l.Debug("getting resources in offer")
 
 	var resources *res.Resources = res.NewResources([]res.Resource{})
 	if len(offerItems.Items) > 0 {

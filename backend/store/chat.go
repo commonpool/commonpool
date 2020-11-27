@@ -87,8 +87,6 @@ func (cs *ChatStore) GetChannel(ctx context.Context, channelKey model.ChannelKey
 	ctx, l := GetCtx(ctx, "ChatStore", "GetChannel")
 	l = l.With(zap.String("channelId", channelKey.ID))
 
-	l.Debug("getting channel")
-
 	var channel chat.Channel
 	err := cs.db.Where("id = ?", channelKey.String()).First(&channel).Error
 
@@ -370,8 +368,6 @@ func (cs *ChatStore) SaveMessage(ctx context.Context, request *chat.SaveMessageR
 		zap.String("channel_id", request.ChannelKey.String()),
 		zap.String("text", request.Text))
 
-	l.Debug("sending message")
-
 	var err error
 	sentAt := time.Now()
 
@@ -417,8 +413,6 @@ func (cs *ChatStore) SaveMessage(ctx context.Context, request *chat.SaveMessageR
 
 	var visibleToUser *string = nil
 	if request.VisibleToUser != nil {
-
-		l.Debug("message only visible to user", zap.String("visible_to_user_id", request.VisibleToUser.String()))
 
 		visibleToUserStr := request.VisibleToUser.String()
 		visibleToUser = &visibleToUserStr

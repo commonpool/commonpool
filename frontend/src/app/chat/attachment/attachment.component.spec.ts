@@ -1,6 +1,5 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-
-import { AttachmentComponent } from './attachment.component';
+import {ComponentFixture, TestBed} from '@angular/core/testing';
+import {AttachmentComponent} from './attachment.component';
 
 describe('AttachmentComponent', () => {
   let component: AttachmentComponent;

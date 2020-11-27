@@ -26,45 +26,23 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b50bce1a-5445-4a69-8265-74993e439f0e" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/bla.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/group/errors.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/group/utils.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mock/gen.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/snipper.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/test/integration/group_test.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/test/integration/main_test.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/test/integration/utils_test.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test/integration/resource_test.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test/integration/trading_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/amqp/client.go" beforeDir="false" afterPath="$PROJECT_DIR$/amqp/client.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/amqp/types.go" beforeDir="false" afterPath="$PROJECT_DIR$/amqp/types.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auth/auth_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/mock/auth_mock.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auth/user_session.go" beforeDir="false" afterPath="$PROJECT_DIR$/auth/user_session.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/chat/errors.go" beforeDir="false" afterPath="$PROJECT_DIR$/chat/errors.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/errors/errors.go" beforeDir="false" afterPath="$PROJECT_DIR$/errors/errors.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/chat/store.go" beforeDir="false" afterPath="$PROJECT_DIR$/chat/store.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/group/service.go" beforeDir="false" afterPath="$PROJECT_DIR$/group/service.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/group/store.go" beforeDir="false" afterPath="$PROJECT_DIR$/group/store.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/handler/amqp_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/amqp_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/handler/chat.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/chat.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/handler/chat_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/chat_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/handler/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/group.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/handler/handler_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/handler_test.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/handler/resource.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/resource.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/handler/routes.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/routes.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/model/errors.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/model/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/model/group.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/service/chat.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/chat.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/service/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/group.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/service/trading.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/trading.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/store/auth.go" beforeDir="false" afterPath="$PROJECT_DIR$/store/auth.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/store/chat.go" beforeDir="false" afterPath="$PROJECT_DIR$/store/chat.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/store/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/store/group.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/store/resource.go" beforeDir="false" afterPath="$PROJECT_DIR$/store/resource.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/store/trading.go" beforeDir="false" afterPath="$PROJECT_DIR$/store/trading.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/partition.go" beforeDir="false" afterPath="$PROJECT_DIR$/utils/partition.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/partition_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/utils/partition_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/web/group.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/integration/group_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/test/integration/group_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/integration/main_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/test/integration/main_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/integration/utils_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/test/integration/utils_test.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../frontend/src/app/api/backend.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/api/backend.service.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -117,14 +95,14 @@
       <recent name="$PROJECT_DIR$/resource" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/tmp" />
       <recent name="$PROJECT_DIR$/mock" />
       <recent name="$PROJECT_DIR$/auth" />
       <recent name="$PROJECT_DIR$/trading" />
       <recent name="$PROJECT_DIR$/handler" />
-      <recent name="$PROJECT_DIR$/amqp_test" />
     </key>
   </component>
-  <component name="RunManager" selected="Go Test.TestGetUsersForInvitePickerShouldNotReturnDuplicates in github.com/commonpool/backend/test/integration">
+  <component name="RunManager" selected="Go Test.TestCanDeclineOffer in github.com/commonpool/backend/test/integration">
     <configuration name="go build backend main.go" type="GoApplicationRunConfiguration" factoryName="Go Application" nameIsGenerated="true">
       <module name="backend" />
       <working_directory value="$PROJECT_DIR$" />
@@ -146,7 +124,7 @@
       <directory value="$PROJECT_DIR$" />
       <method v="2" />
     </configuration>
-    <configuration name="TestGetUsersForInvitePickerShouldNotReturnDuplicates in github.com/commonpool/backend/test/integration" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="TestCanAcceptOffer in github.com/commonpool/backend/test/integration" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="backend" />
       <working_directory value="$PROJECT_DIR$/test/integration" />
       <framework value="gotest" />
@@ -154,10 +132,10 @@
       <package value="github.com/commonpool/backend/test/integration" />
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
-      <pattern value="^\QTestGetUsersForInvitePickerShouldNotReturnDuplicates\E$" />
+      <pattern value="^\QTestCanAcceptOffer\E$" />
       <method v="2" />
     </configuration>
-    <configuration name="TestGroupShouldReceiveMessageWhenUserJoined in github.com/commonpool/backend/test/integration" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="TestCanDeclineOffer in github.com/commonpool/backend/test/integration" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="backend" />
       <working_directory value="$PROJECT_DIR$/test/integration" />
       <framework value="gotest" />
@@ -165,21 +143,10 @@
       <package value="github.com/commonpool/backend/test/integration" />
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
-      <pattern value="^\QTestGroupShouldReceiveMessageWhenUserJoined\E$" />
+      <pattern value="^\QTestCanDeclineOffer\E$" />
       <method v="2" />
     </configuration>
-    <configuration name="TestPartitionSinglItem in github.com/commonpool/backend/utils" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
-      <module name="backend" />
-      <working_directory value="$PROJECT_DIR$/utils" />
-      <framework value="gotest" />
-      <kind value="PACKAGE" />
-      <package value="github.com/commonpool/backend/utils" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$" />
-      <pattern value="^\QTestPartitionSinglItem\E$" />
-      <method v="2" />
-    </configuration>
-    <configuration name="TestRandomUserShouldNotBeAbleToAcceptInvitation in github.com/commonpool/backend/test/integration" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="TestUserCanCreateResource in github.com/commonpool/backend/test/integration" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="backend" />
       <working_directory value="$PROJECT_DIR$/test/integration" />
       <framework value="gotest" />
@@ -187,26 +154,37 @@
       <package value="github.com/commonpool/backend/test/integration" />
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
-      <pattern value="^\QTestRandomUserShouldNotBeAbleToAcceptInvitation\E$" />
+      <pattern value="^\QTestUserCanCreateResource\E$" />
       <method v="2" />
     </configuration>
-    <configuration name="go test github.com/commonpool/backend/test/integration" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="TestUserCanSubmitOffer in github.com/commonpool/backend/test/integration" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="backend" />
       <working_directory value="$PROJECT_DIR$/test/integration" />
       <framework value="gotest" />
       <kind value="PACKAGE" />
       <package value="github.com/commonpool/backend/test/integration" />
       <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <pattern value="^\QTestUserCanSubmitOffer\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="go test integration" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="backend" />
+      <working_directory value="$PROJECT_DIR$/test/integration" />
+      <framework value="gotest" />
+      <kind value="DIRECTORY" />
+      <package value="github.com/commonpool/backend" />
+      <directory value="$PROJECT_DIR$/test/integration" />
       <filePath value="$PROJECT_DIR$" />
       <method v="2" />
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Go Test.TestGetUsersForInvitePickerShouldNotReturnDuplicates in github.com/commonpool/backend/test/integration" />
-        <item itemvalue="Go Test.TestGroupShouldReceiveMessageWhenUserJoined in github.com/commonpool/backend/test/integration" />
-        <item itemvalue="Go Test.TestPartitionSinglItem in github.com/commonpool/backend/utils" />
-        <item itemvalue="Go Test.go test github.com/commonpool/backend/test/integration" />
-        <item itemvalue="Go Test.TestRandomUserShouldNotBeAbleToAcceptInvitation in github.com/commonpool/backend/test/integration" />
+        <item itemvalue="Go Test.TestCanDeclineOffer in github.com/commonpool/backend/test/integration" />
+        <item itemvalue="Go Test.TestCanAcceptOffer in github.com/commonpool/backend/test/integration" />
+        <item itemvalue="Go Test.go test integration" />
+        <item itemvalue="Go Test.TestUserCanSubmitOffer in github.com/commonpool/backend/test/integration" />
+        <item itemvalue="Go Test.TestUserCanCreateResource in github.com/commonpool/backend/test/integration" />
       </list>
     </recent_temporary>
   </component>
@@ -233,7 +211,14 @@
       <option name="project" value="LOCAL" />
       <updated>1606494640289</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="bla">
+      <created>1606513430860</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1606513430861</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -284,10 +269,10 @@
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
     <state x="1061" y="944" width="516" height="306" key="ANALYSIS_DLG_com.intellij.analysis.BaseAnalysisAction$1/0.27.3840.2133@0.27.3840.2133" timestamp="1606336982935" />
-    <state width="983" height="526" key="DebuggerActiveHint" timestamp="1606510329856">
+    <state width="1117" height="526" key="DebuggerActiveHint" timestamp="1606516191881">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
-    <state width="983" height="526" key="DebuggerActiveHint/0.27.3840.2133@0.27.3840.2133" timestamp="1606510329856" />
+    <state width="1117" height="526" key="DebuggerActiveHint/0.27.3840.2133@0.27.3840.2133" timestamp="1606516191881" />
     <state x="1167" y="644" width="1424" height="1045" key="DiffContextDialog" timestamp="1603897680958">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
@@ -300,46 +285,46 @@
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
     <state x="1348" y="942" width="424" height="491" key="FileChooserDialogImpl/0.27.3840.2133@0.27.3840.2133" timestamp="1606468886851" />
-    <state width="1448" height="476" key="GridCell.Tab.0.bottom" timestamp="1606513069352">
+    <state width="2260" height="772" key="GridCell.Tab.0.bottom" timestamp="1606517714894">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
-    <state width="1448" height="476" key="GridCell.Tab.0.bottom/0.27.3840.2133@0.27.3840.2133" timestamp="1606513069352" />
-    <state width="1448" height="476" key="GridCell.Tab.0.center" timestamp="1606513069351">
+    <state width="2260" height="772" key="GridCell.Tab.0.bottom/0.27.3840.2133@0.27.3840.2133" timestamp="1606517714894" />
+    <state width="2260" height="772" key="GridCell.Tab.0.center" timestamp="1606517714894">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
-    <state width="1448" height="476" key="GridCell.Tab.0.center/0.27.3840.2133@0.27.3840.2133" timestamp="1606513069351" />
-    <state width="1448" height="476" key="GridCell.Tab.0.left" timestamp="1606513069350">
+    <state width="2260" height="772" key="GridCell.Tab.0.center/0.27.3840.2133@0.27.3840.2133" timestamp="1606517714894" />
+    <state width="2260" height="772" key="GridCell.Tab.0.left" timestamp="1606517714893">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
-    <state width="1448" height="476" key="GridCell.Tab.0.left/0.27.3840.2133@0.27.3840.2133" timestamp="1606513069350" />
-    <state width="1448" height="476" key="GridCell.Tab.0.right" timestamp="1606513069351">
+    <state width="2260" height="772" key="GridCell.Tab.0.left/0.27.3840.2133@0.27.3840.2133" timestamp="1606517714893" />
+    <state width="2260" height="772" key="GridCell.Tab.0.right" timestamp="1606517714894">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
-    <state width="1448" height="476" key="GridCell.Tab.0.right/0.27.3840.2133@0.27.3840.2133" timestamp="1606513069351" />
-    <state width="1487" height="772" key="GridCell.Tab.1.bottom" timestamp="1606512482351">
+    <state width="2260" height="772" key="GridCell.Tab.0.right/0.27.3840.2133@0.27.3840.2133" timestamp="1606517714894" />
+    <state width="2260" height="772" key="GridCell.Tab.1.bottom" timestamp="1606517714896">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
-    <state width="1487" height="772" key="GridCell.Tab.1.bottom/0.27.3840.2133@0.27.3840.2133" timestamp="1606512482351" />
-    <state width="1487" height="772" key="GridCell.Tab.1.center" timestamp="1606512482350">
+    <state width="2260" height="772" key="GridCell.Tab.1.bottom/0.27.3840.2133@0.27.3840.2133" timestamp="1606517714896" />
+    <state width="2260" height="772" key="GridCell.Tab.1.center" timestamp="1606517714895">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
-    <state width="1487" height="772" key="GridCell.Tab.1.center/0.27.3840.2133@0.27.3840.2133" timestamp="1606512482350" />
-    <state width="1487" height="772" key="GridCell.Tab.1.left" timestamp="1606512482349">
+    <state width="2260" height="772" key="GridCell.Tab.1.center/0.27.3840.2133@0.27.3840.2133" timestamp="1606517714895" />
+    <state width="2260" height="772" key="GridCell.Tab.1.left" timestamp="1606517714895">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
-    <state width="1487" height="772" key="GridCell.Tab.1.left/0.27.3840.2133@0.27.3840.2133" timestamp="1606512482349" />
-    <state width="1487" height="772" key="GridCell.Tab.1.right" timestamp="1606512482350">
+    <state width="2260" height="772" key="GridCell.Tab.1.left/0.27.3840.2133@0.27.3840.2133" timestamp="1606517714895" />
+    <state width="2260" height="772" key="GridCell.Tab.1.right" timestamp="1606517714895">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
-    <state width="1487" height="772" key="GridCell.Tab.1.right/0.27.3840.2133@0.27.3840.2133" timestamp="1606512482350" />
+    <state width="2260" height="772" key="GridCell.Tab.1.right/0.27.3840.2133@0.27.3840.2133" timestamp="1606517714895" />
     <state x="1196" y="581" width="1022" height="737" key="SettingsEditor" timestamp="1606327823364">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
     <state x="1196" y="581" width="1022" height="737" key="SettingsEditor/0.27.3840.2133@0.27.3840.2133" timestamp="1606327823364" />
-    <state x="1102" y="829" width="800" height="535" key="Vcs.Push.Dialog.v2" timestamp="1606494641787">
+    <state x="1102" y="829" width="800" height="535" key="Vcs.Push.Dialog.v2" timestamp="1606513432168">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
-    <state x="1102" y="829" width="800" height="535" key="Vcs.Push.Dialog.v2/0.27.3840.2133@0.27.3840.2133" timestamp="1606494641787" />
+    <state x="1102" y="829" width="800" height="535" key="Vcs.Push.Dialog.v2/0.27.3840.2133@0.27.3840.2133" timestamp="1606513432168" />
     <state x="1472" y="668" width="473" height="585" key="com.goide.refactor.move.GoMoveDeclarationDialog" timestamp="1606505696497">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
@@ -348,26 +333,31 @@
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
     <state x="1113" y="707" width="778" height="780" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/0.27.3840.2133@0.27.3840.2133" timestamp="1606082479032" />
-    <state x="1721" y="230" width="754" height="672" key="find.popup" timestamp="1606513216370">
+    <state x="1721" y="230" width="754" height="672" key="find.popup" timestamp="1606515619539">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
-    <state x="1721" y="230" width="754" height="672" key="find.popup/0.27.3840.2133@0.27.3840.2133" timestamp="1606513216370" />
+    <state x="1721" y="230" width="754" height="672" key="find.popup/0.27.3840.2133@0.27.3840.2133" timestamp="1606515619539" />
     <state x="1753" y="850" width="323" height="508" key="refactoring.ChangeSignatureDialog" timestamp="1606505241758">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
     <state x="1753" y="850" width="323" height="508" key="refactoring.ChangeSignatureDialog/0.27.3840.2133@0.27.3840.2133" timestamp="1606505241758" />
-    <state x="845" y="833" width="672" height="678" key="search.everywhere.popup" timestamp="1606512613444">
+    <state x="845" y="833" width="672" height="678" key="search.everywhere.popup" timestamp="1606516414532">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
-    <state x="845" y="833" width="672" height="678" key="search.everywhere.popup/0.27.3840.2133@0.27.3840.2133" timestamp="1606512613444" />
+    <state x="845" y="833" width="672" height="678" key="search.everywhere.popup/0.27.3840.2133@0.27.3840.2133" timestamp="1606516414532" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/amqp/client.go</url>
-          <line>181</line>
+          <line>179</line>
           <option name="timeStamp" value="33" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/service/trading.go</url>
+          <line>156</line>
+          <option name="timeStamp" value="56" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

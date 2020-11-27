@@ -110,12 +110,12 @@ export class BackendService {
     const socketObserver = new Observable(observer => {
       try {
 
-        const subject = webSocket(`${environment.apiUrl
-          .replace('https://', 'wss://')
-          .replace('http://', 'wss://')
-        }/api/v1/ws`);
+        // const subject = webSocket(`${environment.apiUrl
+        //   .replace('https://', 'wss://')
+        //   .replace('http://', 'wss://')
+        // }/api/v1/ws`);
 
-        //const subject = webSocket(`ws://localhost:8585/api/v1/ws`);
+        const subject = webSocket(`ws://localhost:8585/api/v1/ws`);
 
         const subscription = subject.asObservable()
           .subscribe(data =>

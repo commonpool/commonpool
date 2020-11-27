@@ -93,8 +93,6 @@ func (g *GroupStore) GetGroupsByKeys(ctx context.Context, groupKeys []model.Grou
 
 	ctx, l := GetCtx(ctx, "GroupStore", "GetGroupsByKeys")
 
-	l.Debug("getting groups by keys")
-
 	var result []group.Group
 
 	err := utils.Partition(len(groupKeys), 999, func(i1 int, i2 int) error {
@@ -360,8 +358,6 @@ func (g *GroupStore) GetMembershipsForUser(ctx context.Context, userKey model.Us
 
 	l = l.With(zap.Object("user", userKey))
 
-	l.Debug("getting memberships")
-
 	var memberships []group.Membership
 	chain := g.db.Where("user_id = ?", userKey.String())
 	chain = g.filterMembershipStatus(chain, membershipStatus)
@@ -396,8 +392,6 @@ func (g *GroupStore) GetMembershipsForGroup(ctx context.Context, groupKey model.
 	ctx, l := GetCtx(ctx, "GroupStore", "GetMembershipsForGroup")
 
 	l = l.With(zap.Object("group", groupKey))
-
-	l.Debug("getting memberships for group")
 
 	var memberships []group.Membership
 	chain := g.db.Where("group_id = ?", groupKey.ID.String())

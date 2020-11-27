@@ -1,6 +1,6 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import {ComponentFixture, TestBed} from '@angular/core/testing';
 
-import { TextObjectComponent } from './text-object.component';
+import {TextObjectComponent} from './text-object.component';
 
 describe('TextObjectComponent', () => {
   let component: TextObjectComponent;

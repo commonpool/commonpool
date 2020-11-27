@@ -295,7 +295,6 @@ func (c ChatService) getOrCreateConversationChannel(ctx context.Context, userKey
 
 	ctx, l := GetCtx(ctx, "ChatService", "getOrCreateConversationChannel")
 
-	l.Debug("getting or creating conversation channel", zap.Strings("user_ids", userKeys.Strings()))
 
 	// Retrieve the channel key for that conversation
 	channelKey, err := c.getConversationChannelKey(ctx, userKeys)
@@ -304,7 +303,6 @@ func (c ChatService) getOrCreateConversationChannel(ctx context.Context, userKey
 		return nil, err
 	}
 
-	l.Debug("getting the channel")
 
 	channel, err := c.cs.GetChannel(nil, channelKey)
 	if err != nil && !errs.Is(err, chat.ErrChannelNotFound) {
@@ -384,7 +382,6 @@ func (c ChatService) SendChannelMessage(ctx context.Context, channelKey model.Ch
 		nil,
 	))
 
-	l.Debug("getting amqp channel")
 
 	amqpChannel, err := c.mq.GetChannel()
 	if err != nil {
@@ -393,7 +390,6 @@ func (c ChatService) SendChannelMessage(ctx context.Context, channelKey model.Ch
 	}
 	defer amqpChannel.Close()
 
-	l.Debug("sending message to RabbitMQ")
 
 	evt := amqp.Event{
 		Type:      "message",
@@ -438,10 +434,8 @@ func (c ChatService) SendConversationMessage(ctx context.Context, request *chat.
 		return nil, err
 	}
 
-	l.Debug("persisting message")
-
 	channelKey := createdChannel.Channel.GetKey()
-	sentMessage, err := c.cs.SaveMessage(ctx, chat.NewSaveMessageRequest(
+	sendMessageRequest := chat.NewSaveMessageRequest(
 		channelKey,
 		request.FromUserKey,
 		request.FromUserName,
@@ -449,14 +443,17 @@ func (c ChatService) SendConversationMessage(ctx context.Context, request *chat.
 		request.Blocks,
 		request.Attachments,
 		request.OnlyVisibleToUserKey,
-	))
+	)
+	sentMessage, err := c.cs.SaveMessage(ctx, sendMessageRequest)
+
+	mjs, _ := json.Marshal(sendMessageRequest)
+	fmt.Println(string(mjs))
+
 
 	if err != nil {
 		l.Error("could not save message", zap.Error(err))
 		return nil, err
 	}
-
-	l.Debug("getting amqp channel")
 
 	amqpChannel, err := c.mq.GetChannel()
 	if err != nil {
@@ -464,8 +461,6 @@ func (c ChatService) SendConversationMessage(ctx context.Context, request *chat.
 		return nil, err
 	}
 	defer amqpChannel.Close()
-
-	l.Debug("sending message to RabbitMQ")
 
 	evt := amqp.Event{
 		Type:      "message",
@@ -575,8 +570,6 @@ func (c ChatService) createSubscriptionsAndMqBindingsForUserConversation(ctx con
 
 	ctx, l := GetCtx(ctx, "ChatService", "createSubscriptionsAndMqBindingsForUserConversation")
 
-	l.Debug("creating subscriptions and mq bindings for user conversation", zap.Strings("user_ids", userKeys.Strings()))
-
 	channelKey, err := c.getConversationChannelKey(ctx, userKeys)
 	if err != nil {
 		l.Error("could not get conversation channel key")
@@ -612,8 +605,6 @@ func (c ChatService) createSubscriptionAndMqBindingForUserConversation(
 ) (*chat.ChannelSubscription, error) {
 
 	ctx, l := GetCtx(ctx, "ChatService", "createSubscriptionAndMqBindingForUserConversation")
-
-	l.Debug("creating subscription and mq binding for user conversation", zap.String("user_id", user.ID))
 
 	// The name of the conversation
 	conversationName := c.getConversationNameForUser(ctx, conversationUsers, user)
@@ -656,10 +647,6 @@ func (c ChatService) getConversationNameForUser(
 	u auth.User,
 ) string {
 
-	ctx, l := GetCtx(ctx, "ChatService", "getConversationNameForUser")
-
-	l.Debug("getting conversation name for user", zap.String("user_id", u.ID), zap.Strings("user_ids", us.GetUserKeys().Strings()))
-
 	// First, sort the user names
 	userList := us.Items
 	sort.Slice(userList, func(i, j int) bool {
@@ -677,8 +664,6 @@ func (c ChatService) getConversationNameForUser(
 
 	// Join the name with a space
 	conversationName := strings.Join(userNames, " ")
-
-	l.Debug("conversation name for user", zap.String("conversation_name", conversationName))
 
 	return conversationName
 }
@@ -702,7 +687,6 @@ func (c ChatService) getConversationChannelKey(ctx context.Context, participants
 	for _, participant := range participants.Items {
 		sid, err := utils.ShortUuidFromStr(participant.String())
 		if err != nil {
-			l.Error("could not get shor uuid from string", zap.Error(err))
 			return model.ChannelKey{}, err
 		}
 		shortUids = append(shortUids, sid)
@@ -710,8 +694,6 @@ func (c ChatService) getConversationChannelKey(ctx context.Context, participants
 	sort.Strings(shortUids)
 	channelId := strings.Join(shortUids, "-")
 	channelKey := model.NewConversationKey(channelId)
-
-	l.Debug("channel key for conversation", zap.String("channel_id", channelKey.String()))
 
 	return channelKey, nil
 }

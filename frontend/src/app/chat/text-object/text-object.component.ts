@@ -1,13 +1,26 @@
-import {Component, Input, OnInit, ViewEncapsulation} from '@angular/core';
+import {Component, Input, ViewEncapsulation} from '@angular/core';
 import {TextObject} from '../../api/models';
 
 @Component({
   selector: 'app-text-object',
-  templateUrl: './text-object.component.html',
-  styleUrls: ['./text-object.component.css'],
+  template: `
+    <span [class.text-muted]="subtle" [ngStyle]="{'font-size': small ? '0.875rem' : ''}">
+        <ng-container *ngIf="textObject.type === 'plain_text'" style="white-space: pre-wrap">
+            <span [innerText]="textObject.value"></span>
+        </ng-container>
+        <ng-container *ngIf="textObject.type === 'mrkdwn'">
+            <markdown emoji [data]="textObject.value"></markdown>
+        </ng-container>
+    </span>
+  `,
+  styles: [`
+    markdown :last-child {
+      margin-bottom: 0;
+    }
+  `],
   encapsulation: ViewEncapsulation.None
 })
-export class TextObjectComponent implements OnInit {
+export class TextObjectComponent {
 
   @Input()
   textObject: TextObject;
@@ -17,11 +30,5 @@ export class TextObjectComponent implements OnInit {
 
   @Input()
   small = false;
-
-  constructor() {
-  }
-
-  ngOnInit(): void {
-  }
 
 }

@@ -1,9 +1,0 @@
-<button class="btn btn-sm" style="height: 1.75rem; padding-top: 0.135rem"
-
-        [class.btn-outline-success]="buttonElement.style === 'primary'"
-        [class.btn-outline-danger]="buttonElement.style==='danger'"
-        [class.btn-outline-secondary]="buttonElement.style!=='danger' && buttonElement.style !== 'primary'"
-        (click)="submit($event)"
->
-  <app-text-object [textObject]="buttonElement.text" [small]="true"></app-text-object>
-</button>

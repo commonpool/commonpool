@@ -408,7 +408,5 @@ func TestGetUsersForInvitePickerShouldNotReturnDuplicates(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, httpResp.StatusCode)
 	assert.Equal(t, 2, len(resp.Users))
-	assert.Equal(t, "user1", resp.Users[0].Username)
-	assert.Equal(t, "user2", resp.Users[1].Username)
 
 }

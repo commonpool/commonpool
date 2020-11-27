@@ -151,8 +151,6 @@ func (g GroupService) GetUserMemberships(ctx context.Context, request *group.Get
 
 	l = l.With(zap.Object("user", request.UserKey))
 
-	l.Debug("getting user memberships")
-
 	memberships, err := g.groupStore.GetMembershipsForUser(ctx, request.UserKey, request.MembershipStatus)
 	if err != nil {
 		l.Error("could not get memberships for user", zap.Error(err))
@@ -169,8 +167,6 @@ func (g GroupService) GetGroupsMemberships(ctx context.Context, request *group.G
 	ctx, l := GetCtx(ctx, "GroupService", "GetGroupsMemberships")
 
 	l = l.With(zap.Object("group", request.GroupKey))
-
-	l.Debug("getting group memberships")
 
 	memberships, err := g.groupStore.GetMembershipsForGroup(ctx, request.GroupKey, request.MembershipStatus)
 	if err != nil {

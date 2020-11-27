@@ -1,17 +1,5 @@
 import {Component, Input, OnInit, ViewEncapsulation} from '@angular/core';
-import {
-  ActionsBlock,
-  Attachment,
-  Block,
-  ButtonElement,
-  ButtonStyle,
-  ContextBlock,
-  HeaderBlock,
-  ImageElement, Message,
-  SectionBlock,
-  TextObject,
-  TextType
-} from '../../api/models';
+import {Attachment, Block, Message} from '../../api/models';
 import {BlocksService} from '../blocks.service';
 
 interface Payload {

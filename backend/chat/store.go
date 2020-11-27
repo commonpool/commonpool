@@ -41,13 +41,13 @@ type GetChannelResponse struct {
 }
 
 type SaveMessageRequest struct {
-	ChannelKey    model.ChannelKey
-	Text          string
-	Attachments   []Attachment
-	Blocks        []Block
-	FromUser      model.UserKey
-	FromUserName  string
-	VisibleToUser *model.UserKey
+	ChannelKey    model.ChannelKey `json:"channelKey"`
+	Text          string           `json:"text"`
+	Attachments   []Attachment     `json:"attachments"`
+	Blocks        []Block          `json:"blocks"`
+	FromUser      model.UserKey    `json:"fromUser"`
+	FromUserName  string           `json:"toUser"`
+	VisibleToUser *model.UserKey   `json:"visibleToUser"`
 }
 
 type SaveMessageResponse struct {

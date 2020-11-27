@@ -225,8 +225,6 @@ func (h *Handler) CreateResource(c echo.Context) error {
 
 	var err error
 
-	l.Debug("unmarshaling request body")
-
 	// convert input body
 	req := web.CreateResourceRequest{}
 	if err = c.Bind(&req); err != nil {
@@ -235,25 +233,17 @@ func (h *Handler) CreateResource(c echo.Context) error {
 		return NewErrResponse(c, &response)
 	}
 
-	l.Debug("validating request body")
-
 	// validating body
 	if err = c.Validate(req); err != nil {
 		l.Error("CreateResource: error validating request body", zap.Error(err))
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
 
-	l.Debug("sanitizing input")
-
 	// sanitizing input
 	sanitized := sanitizeCreateResource(req.Resource)
 
-	l.Debug("getting logged in user")
-
 	// get logged in user
 	loggedInUserSession := h.authorization.GetAuthUserSession(c)
-
-	l.Debug("getting groups with which the resource is shared")
 
 	// getting group keys that resource is shared with
 	sharedWithGroupKeys, err, done := h.parseGroupKeys(c, req.Resource.SharedWith)
@@ -262,15 +252,11 @@ func (h *Handler) CreateResource(c echo.Context) error {
 		return err
 	}
 
-	l.Debug("making sure user is active member of group")
-
 	err, done = h.ensureResourceIsSharedWithGroupsTheUserIsActiveMemberOf(c, loggedInUserSession.GetUserKey(), sharedWithGroupKeys)
 	if done {
 		c.Logger().Warn(err, "CreateResource: user tried to share resource with groups he's active member of")
 		return err
 	}
-
-	l.Debug("creating new resource")
 
 	res := resource.NewResource(
 		model.NewResourceKey(uuid.NewV4()),
@@ -288,15 +274,11 @@ func (h *Handler) CreateResource(c echo.Context) error {
 		return NewErrResponse(c, createResourceResponse.Error)
 	}
 
-	l.Debug("retrieving the resource")
-
 	getResourceResponse := h.resourceStore.GetByKey(ctx, resource.NewGetResourceByKeyQuery(res.GetKey()))
 	if getResourceResponse.Error != nil {
 		c.Logger().Error(getResourceResponse.Error, "CreateResource: error while retrieving resource")
 		return c.JSON(http.StatusBadRequest, getResourceResponse.Error)
 	}
-
-	l.Debug("retrieving groups")
 
 	groups, err := h.groupService.GetGroupsByKeys(ctx, getResourceResponse.Sharings.GetAllGroupKeys())
 	if err != nil {

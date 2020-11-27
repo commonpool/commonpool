@@ -61,6 +61,12 @@ import {TextObjectComponent} from './chat/text-object/text-object.component';
 import {ButtonComponent} from './chat/button/button.component';
 import {BlockComponent} from './chat/block/block.component';
 import {AttachmentComponent} from './chat/attachment/attachment.component';
+import { SectionBlockComponent } from './chat/section-block/section-block.component';
+import { ContextBlockComponent } from './chat/context-block/context-block.component';
+import { ActionsBlockComponent } from './chat/actions-block/actions-block.component';
+import { DividerBlockComponent } from './chat/divider-block/divider-block.component';
+import { ImageBlockComponent } from './chat/image-block/image-block.component';
+import { HeaderBlockComponent } from './chat/header-block/header-block.component';
 // import {ConvertLinksDirective} from './markdown/convert-links.directive';
 // import {RouterLinkComponent} from './markdown/router-link/router-link.component';
 // import {MarkdownRenderer} from './markdown/Renderer';
@@ -125,6 +131,12 @@ import {AttachmentComponent} from './chat/attachment/attachment.component';
     ButtonComponent,
     BlockComponent,
     AttachmentComponent,
+    SectionBlockComponent,
+    ContextBlockComponent,
+    ActionsBlockComponent,
+    DividerBlockComponent,
+    ImageBlockComponent,
+    HeaderBlockComponent,
     // ConvertLinksDirective,
     // RouterLinkComponent,
   ],

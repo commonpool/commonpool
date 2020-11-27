@@ -2,7 +2,7 @@ import {Component, OnInit} from '@angular/core';
 import {BackendService} from '../../api/backend.service';
 import {debounceTime, filter, map, pluck, shareReplay, startWith, switchMap} from 'rxjs/operators';
 import {merge, Observable, Subject} from 'rxjs';
-import {ChannelType, EventType, GetMyMembershipsRequest, Membership, Subscription} from '../../api/models';
+import {ChannelType, EventType, Subscription} from '../../api/models';
 import {ChatService} from '../chat.service';
 
 @Component({

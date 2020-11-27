@@ -78,8 +78,6 @@ func (r RabbitMqClient) Shutdown() error {
 }
 
 func (r RabbitMqChannel) Publish(ctx context.Context, exchange string, key string, mandatory bool, immediate bool, publishing AmqpPublishing) error {
-	l := logging.WithContext(ctx)
-	l.Debug("publishing rabbitmq message")
 	return r.channel.Publish(exchange, key, mandatory, immediate, amqp.Publishing{
 		Headers:         map[string]interface{}(publishing.Headers),
 		ContentType:     publishing.ContentType,
@@ -221,8 +219,6 @@ func (r RabbitMqChannel) ExchangeDeclare(ctx context.Context, name string, excha
 		zap.Bool("nowait", nowait),
 		zap.Object("args", args))
 
-	l.Debug("declaring exchange")
-
 	if err := r.channel.ExchangeDeclare(name, exchangeType, durable, autoDelete, internal, nowait, map[string]interface{}(args)); err != nil {
 		l.Error("could not declare exchange", zap.Error(err))
 	}
@@ -239,8 +235,6 @@ func (r RabbitMqChannel) ExchangeBind(ctx context.Context, destination string, k
 		zap.String("binding_key", key),
 		zap.Bool("nowait", nowait),
 		zap.Object("args", args))
-
-	l.Debug("binding exchanges")
 
 	if err := r.channel.ExchangeBind(destination, key, source, nowait, map[string]interface{}(args)); err != nil {
 		l.Error("could not bind exchanges")
@@ -259,8 +253,6 @@ func (r RabbitMqChannel) ExchangeUnbind(ctx context.Context, destination string,
 		zap.String("source", source),
 		zap.Bool("noWait", noWait),
 		zap.Object("args", args))
-
-	l.Debug("unbinding exchange")
 
 	if err := r.channel.ExchangeUnbind(destination, key, source, noWait, map[string]interface{}(args)); err != nil {
 		l.Error("could not unbind exchanges")
@@ -283,8 +275,6 @@ func (r RabbitMqChannel) ExchangeDelete(
 		zap.Bool("if_unused", ifUnused),
 		zap.Bool("noWait", noWait))
 
-	l.Debug("unbinding exchange")
-
 	if err := r.channel.ExchangeDelete(name, ifUnused, noWait); err != nil {
 		l.Error("could not delete exchange")
 		return err
@@ -304,8 +294,6 @@ func (r RabbitMqChannel) QueueDeclare(ctx context.Context, name string, durable 
 		zap.Bool("noWait", noWait),
 		zap.Object("args", args))
 
-	l.Debug("declaring queue")
-
 	if _, err := r.channel.QueueDeclare(name, durable, autoDelete, exclusive, noWait, map[string]interface{}(args)); err != nil {
 		l.Error("could not declare queue")
 		return err
@@ -324,8 +312,6 @@ func (r RabbitMqChannel) QueueBind(ctx context.Context, name string, key string,
 		zap.Bool("noWait", noWait),
 		zap.Object("args", args))
 
-	l.Debug("binding queue")
-
 	if err := r.channel.QueueBind(name, key, exchange, noWait, map[string]interface{}(args)); err != nil {
 		l.Error("could not bind queue")
 		return err
@@ -343,8 +329,6 @@ func (r RabbitMqChannel) QueueUnbind(ctx context.Context, name string, key strin
 		zap.String("exchange", exchange),
 		zap.Object("args", args))
 
-	l.Debug("unbinding queue")
-
 	if err := r.channel.QueueUnbind(name, key, exchange, map[string]interface{}(args)); err != nil {
 		l.Error("could not unbind queue")
 		return err
@@ -361,8 +345,6 @@ func (r RabbitMqChannel) QueueDelete(ctx context.Context, name string, ifUnused 
 		zap.Bool("if_unused", ifUnused),
 		zap.Bool("if_empty", ifEmpty),
 		zap.Bool("no_wait", noWait))
-
-	l.Debug("deleting queue")
 
 	if _, err := r.channel.QueueDelete(name, ifUnused, ifEmpty, noWait); err != nil {
 		l.Error("could not delete queue")

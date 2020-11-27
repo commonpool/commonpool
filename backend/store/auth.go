@@ -3,7 +3,6 @@ package store
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/commonpool/backend/auth"
 	errs "github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
@@ -36,8 +35,6 @@ func (as *AuthStore) GetByKeys(ctx context.Context, keys []model.UserKey) (auth.
 
 	err := utils.Partition(len(keys), 999, func(i1 int, i2 int) error {
 
-		println(fmt.Sprintf("Partition: %d, %d", i1, i2))
-
 		var qryStrs []string
 		var qryParams []interface{}
 
@@ -50,7 +47,6 @@ func (as *AuthStore) GetByKeys(ctx context.Context, keys []model.UserKey) (auth.
 			qryParams = append(qryParams, item.String())
 		}
 		sqlWhere := "id IN (" + strings.Join(qryStrs, ",") + ")"
-		println(sqlWhere)
 
 		var partitioned []auth.User
 		err := as.db.Model(auth.User{}).Where(sqlWhere, qryParams...).Find(&partitioned).Error

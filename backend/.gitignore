@@ -19,3 +19,5 @@
 tmp/
 
 **/realworld_test.db
+
+tmp

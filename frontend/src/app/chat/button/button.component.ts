@@ -5,10 +5,26 @@ import {BlockService} from '../block.service';
 
 @Component({
   selector: 'app-button',
-  templateUrl: './button.component.html',
-  styleUrls: ['./button.component.css']
+  styles: [`
+    button {
+      font-size: 0.5rem;
+      font-weight: bold;
+      height: 1.75rem;
+      padding-top: 0.135rem;
+    }
+  `],
+  template: `
+    <button class="btn btn-sm"
+            [class.btn-outline-success]="buttonElement.style === 'primary'"
+            [class.btn-outline-danger]="buttonElement.style==='danger'"
+            [class.btn-outline-secondary]="buttonElement.style!=='danger' && buttonElement.style !== 'primary'"
+            (click)="submit($event)"
+    >
+      <app-text-object [textObject]="buttonElement.text" [small]="true"></app-text-object>
+    </button>
+  `
 })
-export class ButtonComponent implements OnInit {
+export class ButtonComponent {
 
   constructor(private blocksService: BlocksService, private blockService: BlockService) {
   }
@@ -16,11 +32,7 @@ export class ButtonComponent implements OnInit {
   @Input()
   buttonElement: ButtonElement;
 
-  ngOnInit(): void {
-  }
-
   submit($event: MouseEvent) {
-    console.log('OK');
     this.blocksService.submitInteraction(new SubmitAction(
       this.blockService.getBlock().blockId,
       this.buttonElement.actionId,

@@ -1,6 +1,6 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {async, ComponentFixture, TestBed} from '@angular/core/testing';
 
-import { ConversationThreadComponent } from './conversation-thread.component';
+import {ConversationThreadComponent} from './conversation-thread.component';
 
 describe('ConversationThreadComponent', () => {
   let component: ConversationThreadComponent;
