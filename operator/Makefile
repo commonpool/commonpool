@@ -23,6 +23,8 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
+CONTAINER ?= docker
+
 all: manager
 
 # Run tests
@@ -70,12 +72,12 @@ generate: controller-gen
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 # Build the docker image
-docker-build: test
-	docker build . -t ${IMG}
+pack: test
+	$(CONTAINER) build . -t ${IMG}
 
 # Push the docker image
-docker-push:
-	docker push ${IMG}
+push:
+	$(CONTAINER) push ${IMG}
 
 # find or download controller-gen
 # download controller-gen if necessary

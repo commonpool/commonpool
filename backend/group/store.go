@@ -1,6 +1,9 @@
 package group
 
-import "github.com/commonpool/backend/model"
+import (
+	"context"
+	"github.com/commonpool/backend/model"
+)
 
 type GetGroupsByKeysQuery struct {
 	GroupKeys []model.GroupKey
@@ -13,53 +16,52 @@ func NewGetGroupsByKeysQuery(groupKeys []model.GroupKey) *GetGroupsByKeysQuery {
 }
 
 type GetGroupsByKeysResponse struct {
-	Items []model.Group
-	Error error
+	Items []Group
 }
 
-func NewGetGroupsByKeysResponseSuccess(items []model.Group) *GetGroupsByKeysResponse {
-	return &GetGroupsByKeysResponse{
-		Items: items,
-	}
+type GetGroupsRequest struct {
+	Take int
+	Skip int
 }
-func NewGetGroupsByKeysResponseError(err error) *GetGroupsByKeysResponse {
-	return &GetGroupsByKeysResponse{
-		Error: err,
-	}
+
+type GetGroupsResult struct {
+	Items      []Group
+	TotalCount int64
 }
 
 type Store interface {
-	CreateGroup(request CreateGroupRequest) CreateGroupResponse
-	GetGroup(request GetGroupRequest) GetGroupResult
-	GetGroupsByKeys(request *GetGroupsByKeysQuery) *GetGroupsByKeysResponse
-	GrantPermission(request GrantPermissionRequest) GrantPermissionResult
-	RevokePermission(request RevokePermissionRequest) RevokePermissionResult
-	Invite(request InviteRequest) InviteResponse
-	Exclude(request ExcludeRequest) ExcludeResponse
-	MarkInvitationAsAccepted(request MarkInvitationAsAcceptedRequest) MarkInvitationAsAcceptedResponse
-	MarkInvitationAsDeclined(request MarkInvitationAsDeclinedRequest) MarkInvitationAsDeclinedResponse
-	DeleteMembership(request DeleteMembershipRequest) DeleteMembershipResponse
-	GetGroupPermissionsForUser(request GetMembershipPermissionsRequest) GetMembershipPermissionsResponse
-	GetMembership(request GetMembershipRequest) GetMembershipResponse
-	GetMembershipsForUser(request GetMembershipsForUserRequest) GetMembershipsForUserResponse
-	GetMembershipsForGroup(request GetMembershipsForGroupRequest) GetMembershipsForGroupResponse
+	CreateGroup(ctx context.Context, groupKey model.GroupKey, createdBy model.UserKey, name string, description string) (*Group, error)
+	GetGroup(ctx context.Context, groupKey model.GroupKey) (*Group, error)
+	GetGroups(take int, skip int) ([]Group, int64, error)
+	GetGroupsByKeys(ctx context.Context, groupKeys []model.GroupKey) (*Groups, error)
+	GrantPermission(ctx context.Context, membershipKey model.MembershipKey, permission PermissionType) error
+	RevokePermission(ctx context.Context, membershipKey model.MembershipKey, permission PermissionType) error
+	CreateMembership(ctx context.Context, membershipKey model.MembershipKey, isMember bool, isAdmin bool, isOwner bool, isDeactivated bool, groupConfirmed bool, userConfirmed bool) (*Membership, error)
+	Exclude(ctx context.Context, membershipKey model.MembershipKey) error
+	MarkInvitationAsAccepted(ctx context.Context, membershipKey model.MembershipKey, decisionFrom MembershipParty) error
+	MarkInvitationAsDeclined(ctx context.Context, membershipKey model.MembershipKey, decisionFrom MembershipParty) error
+	GetMembership(ctx context.Context, membershipKey model.MembershipKey) (*Membership, error)
+	GetMembershipsForUser(ctx context.Context, userKey model.UserKey, membershipStatus *MembershipStatus) (*Memberships, error)
+	GetMembershipsForGroup(ctx context.Context, groupKey model.GroupKey, membershipStatus *MembershipStatus) (*Memberships, error)
+	DeleteMembership(ctx context.Context, membershipKey model.MembershipKey) error
 }
 
 type CreateGroupRequest struct {
 	GroupKey    model.GroupKey
-	CreatedBy   model.UserKey
 	Name        string
 	Description string
 }
 
 type CreateGroupResponse struct {
-	Error error
+	Group           *Group
+	ChannelKey      model.ChannelKey
+	Membership      *Membership
+	SubscriptionKey model.ChannelSubscriptionKey
 }
 
-func NewCreateGroupRequest(key model.GroupKey, createdBy model.UserKey, name string, description string) CreateGroupRequest {
-	return CreateGroupRequest{
+func NewCreateGroupRequest(key model.GroupKey, name string, description string) *CreateGroupRequest {
+	return &CreateGroupRequest{
 		GroupKey:    key,
-		CreatedBy:   createdBy,
 		Name:        name,
 		Description: description,
 	}
@@ -70,24 +72,22 @@ type GetGroupRequest struct {
 }
 
 type GetGroupResult struct {
-	Error error
-	Group model.Group
+	Group *Group
 }
 
-func NewGetGroupRequest(key model.GroupKey) GetGroupRequest {
-	return GetGroupRequest{Key: key}
+func NewGetGroupRequest(key model.GroupKey) *GetGroupRequest {
+	return &GetGroupRequest{Key: key}
 }
 
 type GrantPermissionRequest struct {
 	MembershipKey model.MembershipKey
-	Permission    model.PermissionType
+	Permission    PermissionType
 }
 
 type GrantPermissionResult struct {
-	Error error
 }
 
-func NewGrantPermissionRequest(membershipKey model.MembershipKey, permission model.PermissionType) GrantPermissionRequest {
+func NewGrantPermissionRequest(membershipKey model.MembershipKey, permission PermissionType) GrantPermissionRequest {
 	return GrantPermissionRequest{
 		MembershipKey: membershipKey,
 		Permission:    permission,
@@ -96,14 +96,13 @@ func NewGrantPermissionRequest(membershipKey model.MembershipKey, permission mod
 
 type RevokePermissionRequest struct {
 	MembershipKey model.MembershipKey
-	Permission    model.PermissionType
+	Permission    PermissionType
 }
 
 type RevokePermissionResult struct {
-	Error error
 }
 
-func NewRevokePermissionRequest(membershipKey model.MembershipKey, permission model.PermissionType) RevokePermissionRequest {
+func NewRevokePermissionRequest(membershipKey model.MembershipKey, permission PermissionType) RevokePermissionRequest {
 	return RevokePermissionRequest{
 		MembershipKey: membershipKey,
 		Permission:    permission,
@@ -112,15 +111,14 @@ func NewRevokePermissionRequest(membershipKey model.MembershipKey, permission mo
 
 type InviteRequest struct {
 	MembershipKey model.MembershipKey
-	InvitedBy     MembershipParty
 }
 
 type InviteResponse struct {
-	Error error
+	Membership *Membership
 }
 
-func NewInviteRequest(membershipKey model.MembershipKey) InviteRequest {
-	return InviteRequest{
+func NewInviteRequest(membershipKey model.MembershipKey) *InviteRequest {
+	return &InviteRequest{
 		MembershipKey: membershipKey,
 	}
 }
@@ -130,26 +128,10 @@ type ExcludeRequest struct {
 }
 
 type ExcludeResponse struct {
-	Error error
 }
 
 func NewExcludeRequest(membershipKey model.MembershipKey) ExcludeRequest {
 	return ExcludeRequest{
-		MembershipKey: membershipKey,
-	}
-}
-
-type GetMembershipPermissionsRequest struct {
-	MembershipKey model.MembershipKey
-}
-
-type GetMembershipPermissionsResponse struct {
-	Error                 error
-	MembershipPermissions MembershipPermissions
-}
-
-func NewGetMembershipPermissionsRequest(membershipKey model.MembershipKey) GetMembershipPermissionsRequest {
-	return GetMembershipPermissionsRequest{
 		MembershipKey: membershipKey,
 	}
 }
@@ -168,16 +150,18 @@ const (
 )
 
 type MarkInvitationAsAcceptedRequest struct {
-	MembershipKey model.MembershipKey
-	From          MembershipParty
+	UserKey  model.UserKey
+	GroupKey model.GroupKey
 }
 
-func NewMarkInvitationAsAcceptedRequest(membershipKey model.MembershipKey, from MembershipParty) MarkInvitationAsAcceptedRequest {
-	return MarkInvitationAsAcceptedRequest{MembershipKey: membershipKey, From: from}
+func NewMarkInvitationAsAcceptedRequest(groupKey model.GroupKey, userKey model.UserKey) *MarkInvitationAsAcceptedRequest {
+	return &MarkInvitationAsAcceptedRequest{
+		UserKey:  userKey,
+		GroupKey: groupKey,
+	}
 }
 
 type MarkInvitationAsAcceptedResponse struct {
-	Error error
 }
 
 type MarkInvitationAsDeclinedRequest struct {
@@ -190,56 +174,52 @@ func NewMarkInvitationAsDeniedRequest(membershipKey model.MembershipKey, from Me
 }
 
 type MarkInvitationAsDeclinedResponse struct {
-	Error error
 }
 
 type GetMembershipsForUserRequest struct {
 	UserKey          model.UserKey
-	MembershipStatus *model.MembershipStatus
+	MembershipStatus *MembershipStatus
 }
 
-func NewGetMembershipsForUserRequest(userKey model.UserKey, membershipStatus *model.MembershipStatus) GetMembershipsForUserRequest {
-	return GetMembershipsForUserRequest{
+func NewGetMembershipsForUserRequest(userKey model.UserKey, membershipStatus *MembershipStatus) *GetMembershipsForUserRequest {
+	return &GetMembershipsForUserRequest{
 		UserKey:          userKey,
 		MembershipStatus: membershipStatus,
 	}
 }
 
 type GetMembershipsForUserResponse struct {
-	Error       error
-	Memberships model.Memberships
+	Memberships *Memberships
 }
 
 type GetMembershipsForGroupRequest struct {
 	GroupKey         model.GroupKey
-	MembershipStatus *model.MembershipStatus
+	MembershipStatus *MembershipStatus
 }
 
-func NewGetMembershipsForGroupRequest(groupKey model.GroupKey, status *model.MembershipStatus) GetMembershipsForGroupRequest {
-	return GetMembershipsForGroupRequest{
+func NewGetMembershipsForGroupRequest(groupKey model.GroupKey, status *MembershipStatus) *GetMembershipsForGroupRequest {
+	return &GetMembershipsForGroupRequest{
 		GroupKey:         groupKey,
 		MembershipStatus: status,
 	}
 }
 
 type GetMembershipsForGroupResponse struct {
-	Error       error
-	Memberships model.Memberships
+	Memberships *Memberships
 }
 
 type GetMembershipRequest struct {
 	MembershipKey model.MembershipKey
 }
 
-func NewGetMembershipRequest(membershipKey model.MembershipKey) GetMembershipRequest {
-	return GetMembershipRequest{
+func NewGetMembershipRequest(membershipKey model.MembershipKey) *GetMembershipRequest {
+	return &GetMembershipRequest{
 		MembershipKey: membershipKey,
 	}
 }
 
 type GetMembershipResponse struct {
-	Error      error
-	Membership model.Membership
+	Membership *Membership
 }
 
 type DeleteMembershipRequest struct {
@@ -251,5 +231,4 @@ func NewDeleteMembershipRequest(membershipKey model.MembershipKey) DeleteMembers
 }
 
 type DeleteMembershipResponse struct {
-	Error error
 }

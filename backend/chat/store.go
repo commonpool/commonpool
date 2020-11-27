@@ -1,95 +1,125 @@
 package chat
 
 import (
+	"context"
 	"github.com/commonpool/backend/model"
-	"github.com/commonpool/backend/resource"
+	"time"
 )
 
 type Store interface {
-	GetLatestThreads(key model.UserKey, take int, skip int) ([]model.Thread, error)
-	GetThreadMessages(key model.ThreadKey, take int, skip int) ([]model.Message, error)
-	SendMessage(sendMessageRequest *SendMessageRequest) *SendMessageResponse
-	SendMessageToThread(sendMessageRequest *SendMessageToThreadRequest) *SendMessageToThreadResponse
-	GetOrCreateResourceTopicMapping(rk model.ResourceKey, uk model.UserKey, rs resource.Store) (*model.ResourceTopic, error)
-	GetThread(threadKey model.ThreadKey) (*model.Thread, error)
-	GetTopic(key model.TopicKey) (*model.Topic, error)
-	GetOrCreateConversationTopic(request *GetOrCreateConversationTopicRequest) *GetOrCreateConversationTopicResponse
+	GetSubscriptions(ctx context.Context, request *GetSubscriptions) (*GetSubscriptionsResponse, error)
+	GetSubscription(ctx context.Context, request *GetSubscription) (*GetSubscriptionResponse, error)
+	GetMessage(ctx context.Context, request *GetMessage) (*GetMessageResponse, error)
+	GetMessages(ctx context.Context, request *GetMessages) (*GetMessagesResponse, error)
+	SaveMessage(ctx context.Context, sendMessageRequest *SaveMessageRequest) (*SaveMessageResponse, error)
+	GetChannel(ctx context.Context, channelKey model.ChannelKey) (*Channel, error)
+	CreateChannel(ctx context.Context, channel *Channel) error
+	CreateSubscription(ctx context.Context, key model.ChannelSubscriptionKey, name string) (*ChannelSubscription, error)
+	DeleteSubscription(ctx context.Context, key model.ChannelSubscriptionKey) error
 }
 
-type GetOrCreateConversationTopicRequest struct {
-	ParticipantList model.UserKeys
+type GetMessage struct {
+	MessageKey model.MessageKey
 }
 
-type GetOrCreateConversationTopicResponse struct {
-	ParticipantList model.UserKeys
-	TopicKey        model.TopicKey
-	Error           error
+type GetMessageResponse struct {
+	Message *Message
 }
 
-func NewGetOrCreateConversationTopicRequest(participantList model.UserKeys) GetOrCreateConversationTopicRequest {
-	return GetOrCreateConversationTopicRequest{
-		ParticipantList: participantList,
+type GetChannel struct {
+	ChannelKey model.ChannelKey
+}
+
+func NewGetChannel(channelKey model.ChannelKey) *GetChannel {
+	return &GetChannel{
+		ChannelKey: channelKey,
 	}
 }
 
-type SendMessageRequest struct {
-	TopicKey     model.TopicKey
-	Text         string
-	Attachments  []model.Attachment
-	Blocks       []model.Block
-	FromUser     model.UserKey
-	FromUserName string
+type GetChannelResponse struct {
+	Channel *Channel
 }
 
-type SendMessageToThreadRequest struct {
-	ThreadKey    model.ThreadKey
-	Text         string
-	Attachments  []model.Attachment
-	Blocks       []model.Block
-	FromUser     model.UserKey
-	FromUserName string
+type SaveMessageRequest struct {
+	ChannelKey    model.ChannelKey
+	Text          string
+	Attachments   []Attachment
+	Blocks        []Block
+	FromUser      model.UserKey
+	FromUserName  string
+	VisibleToUser *model.UserKey
 }
 
-type SendMessageResponse struct {
-	Error error
+type SaveMessageResponse struct {
+	Message *Message
 }
 
 type SendMessageToThreadResponse struct {
-	Error error
 }
 
-func NewSendMessageRequest(
-	topicKey model.TopicKey,
+func NewSaveMessageRequest(
+	topicKey model.ChannelKey,
 	fromUser model.UserKey,
 	fromUserName string,
 	text string,
-	blocks []model.Block,
-	attachments []model.Attachment,
-) SendMessageRequest {
-	return SendMessageRequest{
-		TopicKey:     topicKey,
-		Text:         text,
-		Attachments:  attachments,
-		Blocks:       blocks,
-		FromUser:     fromUser,
-		FromUserName: fromUserName,
+	blocks []Block,
+	attachments []Attachment,
+	visibleToUserOnly *model.UserKey,
+) *SaveMessageRequest {
+	return &SaveMessageRequest{
+		ChannelKey:    topicKey,
+		Text:          text,
+		Attachments:   attachments,
+		Blocks:        blocks,
+		FromUser:      fromUser,
+		FromUserName:  fromUserName,
+		VisibleToUser: visibleToUserOnly,
 	}
 }
 
-func NewSendMessageToThreadRequest(
-	threadKey model.ThreadKey,
-	fromUser model.UserKey,
-	fromUserName string,
-	text string,
-	blocks []model.Block,
-	attachments []model.Attachment,
-) SendMessageToThreadRequest {
-	return SendMessageToThreadRequest{
-		ThreadKey:    threadKey,
-		Text:         text,
-		Attachments:  attachments,
-		Blocks:       blocks,
-		FromUser:     fromUser,
-		FromUserName: fromUserName,
+type GetMessages struct {
+	Take    int
+	Before  time.Time
+	Channel model.ChannelKey
+	UserKey model.UserKey
+}
+
+func NewGetMessages(userKey model.UserKey, channel model.ChannelKey, before time.Time, take int) *GetMessages {
+	return &GetMessages{
+		Take:    take,
+		Before:  before,
+		Channel: channel,
+		UserKey: userKey,
 	}
+}
+
+type GetMessagesResponse struct {
+	Messages Messages
+	HasMore  bool
+}
+
+type GetSubscription struct {
+	SubscriptionKey model.ChannelSubscriptionKey
+}
+
+type GetSubscriptionResponse struct {
+	Subscription *ChannelSubscription
+}
+
+type GetSubscriptions struct {
+	Take    int
+	Skip    int
+	UserKey model.UserKey
+}
+
+func NewGetSubscriptions(userKey model.UserKey, take int, skip int) *GetSubscriptions {
+	return &GetSubscriptions{
+		Take:    take,
+		Skip:    skip,
+		UserKey: userKey,
+	}
+}
+
+type GetSubscriptionsResponse struct {
+	Subscriptions ChannelSubscriptions
 }

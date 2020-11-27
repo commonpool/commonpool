@@ -10,7 +10,7 @@ import {
   UserInfoResponse,
   UpdateResourceResponse,
   UpdateResourceRequest,
-  GetThreadsResponse,
+  GetChannelMembershipsResponse,
   GetMessagesResponse,
   UsersInfoResponse,
   SearchUsersQuery,
@@ -43,13 +43,15 @@ import {
   AcceptInvitationResponse,
   DeclineInvitationRequest,
   DeclineInvitationResponse,
-  LeaveGroupRequest, LeaveGroupResponse
+  LeaveGroupRequest, LeaveGroupResponse, SubmitInteractionRequest, Event
 } from './models';
 
-import {Observable, of, throwError} from 'rxjs';
+import {Observable, of, Subject, throwError} from 'rxjs';
 import {HttpClient, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest} from '@angular/common/http';
-import {catchError, map, tap} from 'rxjs/operators';
+import {catchError, map, retry, switchAll, tap} from 'rxjs/operators';
 import {environment} from '../../environments/environment';
+import {WebSocketSubject} from 'rxjs/internal-compatibility';
+import {webSocket} from 'rxjs/webSocket';
 
 @Injectable()
 export class AppHttpInterceptor implements HttpInterceptor {
@@ -87,6 +89,52 @@ export class BackendService {
 
   constructor(private http: HttpClient) {
 
+  }
+
+  private socket$: WebSocketSubject<any>;
+  private messagesSubject$ = new Subject<Event>();
+  public events$ = this.messagesSubject$;
+
+  public connect(): void {
+
+    console.log('connecting');
+
+    const socketObserver = new Observable(observer => {
+      try {
+        const subject = webSocket(`${environment.apiUrl
+          .replace('https://', 'wss://')
+          .replace('http://', 'wss://')
+        }/api/v1/ws`);
+        const subscription = subject.asObservable()
+          .subscribe(data =>
+              observer.next(data),
+            error => observer.error(error),
+            () => observer.complete());
+        return () => {
+          if (!subscription.closed) {
+            subscription.unsubscribe();
+          }
+        };
+      } catch (error) {
+        observer.error(error);
+      }
+    });
+
+    const messages = socketObserver.pipe(
+      retry(Infinity),
+      map(a => Event.from(a as any)))
+      .subscribe((e) => {
+        this.messagesSubject$.next(e);
+      });
+
+  }
+
+  sendMessageWs(msg: any) {
+    this.socket$.next(msg);
+  }
+
+  close() {
+    this.socket$.complete();
   }
 
   login() {
@@ -232,7 +280,7 @@ export class BackendService {
     );
   }
 
-  getThreads(skip: number, take: number): Observable<GetThreadsResponse> {
+  getSubscriptions(skip: number, take: number): Observable<GetChannelMembershipsResponse> {
     const params: { [key: string]: string } = {};
     if (skip) {
       params.skip = skip.toString();
@@ -240,7 +288,7 @@ export class BackendService {
     if (take) {
       params.take = take.toString();
     }
-    return this.http.get(`${environment.apiUrl}/api/v1/chat/threads`, {
+    return this.http.get(`${environment.apiUrl}/api/v1/chat/subscriptions`, {
       observe: 'response',
       params
     }).pipe(
@@ -248,21 +296,21 @@ export class BackendService {
         if (res.status !== 200) {
           throwError(ErrorResponse.fromHttpResponse(res));
         }
-        return GetThreadsResponse.from(res.body as GetThreadsResponse);
+        return GetChannelMembershipsResponse.from(res.body as GetChannelMembershipsResponse);
       })
     );
   }
 
-  getMessages(topic: string, skip: number, take: number): Observable<GetMessagesResponse> {
+  getMessages(channelId: string, before: number, take: number): Observable<GetMessagesResponse> {
     const params: { [key: string]: string } = {};
-    if (skip) {
-      params.skip = skip.toString();
+    if (before) {
+      params.before = before.toString();
     }
     if (take) {
       params.take = take.toString();
     }
-    if (topic) {
-      params.topic = topic;
+    if (channelId) {
+      params.channel = channelId;
     }
     return this.http.get(`${environment.apiUrl}/api/v1/chat/messages`, {
       observe: 'response',
@@ -522,6 +570,19 @@ export class BackendService {
           throwError(ErrorResponse.fromHttpResponse(res));
         }
         return LeaveGroupResponse.from(res.body as LeaveGroupResponse);
+      })
+    );
+  }
+
+  submitMessageInteraction(request: SubmitInteractionRequest): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/api/v1/chat/interaction`, request, {
+      observe: 'response'
+    }).pipe(
+      map((res) => {
+        if (res.status !== 200) {
+          throwError(ErrorResponse.fromHttpResponse(res));
+        }
+        return res;
       })
     );
   }

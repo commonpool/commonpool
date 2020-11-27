@@ -1,16 +1,19 @@
 package handler
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/commonpool/backend/chat"
 	. "github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
-	"github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/utils"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
+	uuid "github.com/satori/go.uuid"
+	"go.uber.org/zap"
 	"net/http"
+	"time"
 )
 
 /**
@@ -27,7 +30,7 @@ This way we can partition whatever data persistence we want upon the recipient i
 
 */
 
-// GetLatestThreads
+// GetRecentlyActiveSubscriptions
 // @Summary Returns the latest user message threads
 // @Description This endpoint returns the latest messaging threads for the currently logged in user.
 // @ID getLatestThreads
@@ -36,61 +39,83 @@ This way we can partition whatever data persistence we want upon the recipient i
 // @Tags chat
 // @Accept json
 // @Produce json
-// @Success 200 {object} web.GetLatestThreadsResponse
+// @Success 200 {object} web.GetLatestSubscriptionsResponse
 // @Failure 400 {object} utils.Error
-// @Router /chat/threads [get]
-func (h *Handler) GetLatestThreads(c echo.Context) error {
+// @Router /chat/subscriptions [get]
+func (h *Handler) GetRecentlyActiveSubscriptions(c echo.Context) error {
 
-	var err error
+	ctx, l := GetEchoContext(c, "GetRecentlyActiveSubscriptions")
 
-	authUser := h.authorization.GetAuthUserSession(c)
+	l.Debug("getting user auth session")
+
+	authUser := h.authorization.GetAuthUserSession2(ctx)
 	userKey := model.NewUserKey(authUser.Subject)
+
+	l.Debug("parsing skip query param")
 
 	skip, err := utils.ParseSkip(c)
 	if err != nil {
+		l.Error("could not parse 'skip' query param", zap.Error(err))
 		return err
 	}
+
+	l.Debug("parsing take query param")
 
 	take, err := utils.ParseTake(c, 10, 100)
 	if err != nil {
+		l.Error("could not parse 'take' query param", zap.Error(err))
 		return err
 	}
 
-	threads, err := h.chatStore.GetLatestThreads(userKey, take, skip)
+	l.Debug("getting subscriptions",
+		zap.Int("take", take),
+		zap.Int("skip", skip))
+
+	getSubscriptions, err := h.chatStore.GetSubscriptions(ctx, chat.NewGetSubscriptions(userKey, take, skip))
 	if err != nil {
+		l.Error("could not get subscriptions", zap.Error(err))
 		return err
 	}
 
-	var items = make([]web.Thread, len(threads))
-	for i, thread := range threads {
+	l.Debug("mapping subscriptions to web response", zap.Int("subscriptionCount", len(getSubscriptions.Subscriptions.Items)))
 
-		topic, err := h.chatStore.GetTopic(thread.GetKey().TopicKey)
+	var items []web.Subscription
+	for _, subscription := range getSubscriptions.Subscriptions.Items {
+
+		l := l.With(zap.String("channelId", subscription.ChannelID))
+
+		l.Debug("getting channel")
+
+		channel, err := h.chatStore.GetChannel(ctx, subscription.GetChannelKey())
 		if err != nil {
 			return err
 		}
 
-		fmt.Println("!!!")
-		fmt.Println(userKey.String())
-		fmt.Println(thread.LastTimeRead)
-		fmt.Println(thread.LastMessageAt)
+		l.Debug("mapping to web response")
 
-		before := thread.LastMessageAt.After(thread.LastTimeRead)
-		fmt.Println("Has unread : ", before)
+		items = append(items, web.Subscription{
+			ChannelID:           channel.ID,
+			UserID:              subscription.UserID,
+			HasUnreadMessages:   subscription.LastMessageAt.After(subscription.LastTimeRead),
+			CreatedAt:           subscription.CreatedAt,
+			UpdatedAt:           subscription.UpdatedAt,
+			LastMessageAt:       subscription.LastMessageAt,
+			LastTimeRead:        subscription.LastTimeRead,
+			LastMessageChars:    subscription.LastMessageChars,
+			LastMessageUserId:   subscription.LastMessageUserId,
+			LastMessageUserName: subscription.LastMessageUserName,
+			Name:                subscription.Name,
+			Type:                channel.Type,
+		})
 
-		items[i] = web.Thread{
-			TopicID:             thread.TopicID,
-			RecipientID:         thread.UserID,
-			LastChars:           thread.LastMessageChars,
-			HasUnreadMessages:   before,
-			LastMessageAt:       thread.LastMessageAt,
-			LastMessageUserId:   thread.LastMessageUserId,
-			LastMessageUsername: thread.LastMessageUserName,
-			Title:               topic.Title,
-		}
 	}
 
-	return c.JSON(http.StatusOK, web.GetLatestThreadsResponse{
-		Threads: items,
+	if items == nil {
+		items = []web.Subscription{}
+	}
+
+	return c.JSON(http.StatusOK, web.GetLatestSubscriptionsResponse{
+		Subscriptions: items,
 	})
 
 }
@@ -101,7 +126,7 @@ func (h *Handler) GetLatestThreads(c echo.Context) error {
 // @ID getMessages
 // @Param take query int false "Number of messages to take" minimum(0) maximum(100) default(10)
 // @Param skip query int false "Number of messages to skip" minimum(0) default(0)
-// @Param topic query string true "Topic id"
+// @Param channel query string true "Subscription id"
 // @Tags chat
 // @Accept json
 // @Produce json
@@ -110,75 +135,78 @@ func (h *Handler) GetLatestThreads(c echo.Context) error {
 // @Router /chat/messages [get]
 func (h *Handler) GetMessages(c echo.Context) error {
 
-	var err error
+	ctx, l := GetEchoContext(c, "GetMessages")
 
-	authUser := h.authorization.GetAuthUserSession(c)
-	userKey := model.NewUserKey(authUser.Subject)
+	l.Debug("getting user session")
 
-	topicStr := c.QueryParam("topic")
-	if topicStr == "" {
-		return fmt.Errorf("'topic' query param is required")
+	loggedInSession := h.authorization.GetAuthUserSession(c)
+	loggedInUserKey := loggedInSession.GetUserKey()
+
+	l.Debug("parsing 'channel' query param")
+
+	channelSrt := c.QueryParam("channel")
+	if channelSrt == "" {
+		return fmt.Errorf("'channel' query param is required")
 	}
 
-	skip, err := utils.ParseSkip(c)
-	if err != nil {
-		return err
-	}
+	l.Debug("parsing 'take' query param")
 
 	take, err := utils.ParseTake(c, 10, 100)
 	if err != nil {
+		l.Error("could not parse 'take' query param", zap.Error(err))
 		return err
 	}
 
-	topicKey := model.NewTopicKey(topicStr)
-	threadKey := model.NewThreadKey(topicKey, userKey)
+	l.Debug("parsing 'before' query param")
 
-	messages, err := h.chatStore.GetThreadMessages(threadKey, take, skip)
+	before, err := utils.ParseBefore(c)
 	if err != nil {
+		l.Error("could not parse 'before' query param", zap.Error(err))
 		return err
 	}
 
-	authors := map[string]string{}
+	channelKey := model.NewConversationKey(channelSrt)
 
-	items := make([]web.Message, len(messages))
-	for i, message := range messages {
+	l.Debug("getting messages")
 
-		if message.MessageType == model.NormalMessage && message.MessageSubType == model.UserMessage {
-			author := model.User{}
-			err = h.authStore.GetByKey(message.GetAuthorKey(), &author)
-			if err != nil {
-				return err
-			}
-			authors[author.ID] = author.Username
-		}
+	getMessages, err := h.chatStore.GetMessages(ctx, chat.NewGetMessages(loggedInUserKey, channelKey, *before, take))
+	if err != nil {
+		l.Error("could not get messages query param", zap.Error(err))
+		return err
+	}
 
-		var blocks []model.Block
-		_ = json.Unmarshal([]byte(message.Blocks), &blocks)
+	l.Debug("mapping to web response")
 
-		var attachments []model.Attachment
-		_ = json.Unmarshal([]byte(message.Attachments), &attachments)
-
-		item := web.Message{
-			ID:             message.ID.String(),
-			SentAt:         message.SentAt,
-			TopicID:        message.TopicID,
-			Blocks:         blocks,
-			Attachments:    attachments,
-			MessageType:    message.MessageType,
-			MessageSubType: message.MessageSubType,
-			Text:           message.Text,
-			UserID:         message.UserID,
-			BotID:          message.BotID,
-			IsPersonal:     message.IsPersonal,
-			SentBy:         message.SentBy,
-			SentByUsername: message.SentByUsername,
-		}
-		items[i] = item
+	items := make([]web.Message, len(getMessages.Messages.Items))
+	for i, message := range getMessages.Messages.Items {
+		items[i] = mapMessage(&message)
 	}
 
 	return c.JSON(http.StatusOK, web.GetTopicMessagesResponse{
 		Messages: items,
 	})
+}
+
+func mapMessage(message *chat.Message) web.Message {
+	var visibleToUser *string = nil
+	if message.VisibleToUser != nil {
+		visibleToUserStr := message.VisibleToUser.String()
+		visibleToUser = &visibleToUserStr
+	}
+	item := web.Message{
+		ID:             message.Key.String(),
+		ChannelID:      message.ChannelKey.String(),
+		MessageType:    message.MessageType,
+		MessageSubType: message.MessageSubType,
+		SentById:       message.SentBy.UserKey.String(),
+		SentByUsername: message.SentBy.USername,
+		SentAt:         message.SentAt,
+		Text:           message.Text,
+		Blocks:         message.Blocks,
+		Attachments:    message.Attachments,
+		VisibleToUser:  visibleToUser,
+	}
+	return item
 }
 
 // InquireAboutResource
@@ -193,107 +221,49 @@ func (h *Handler) GetMessages(c echo.Context) error {
 // @Failure 400 {object} utils.Error
 // @Router /resources/:id/inquire [post]
 func (h *Handler) InquireAboutResource(c echo.Context) error {
-
-	/**
-
-	this one is tricky. The problem is in designing the data model, and how the chat thread between users are
-	permitted.
-
-	if we only allow one thread between 2 users (a user can only send messages to another user on the same thread),
-	then it is simple. This step would only have to retrieve or create the thread between the 2 users, and post
-	a message to it.
-
-	if we want to allow multiple threads between 2 users (eg. a user inquires about 2 resources from the same owner.
-	these two convos would be on 2 threads instead of a single one) - then we have to create a mapping between
-	the (interested user ⋅ resource) → thread id.
-
-	We first check if there already exist a (interested user ⋅ resource) → thread id mapping. If not, we create
-	a new thread and mapping.
-
-	*/
-
 	var err error
+
+	ctx, l := GetEchoContext(c, "InquireAboutResource")
+
+	l.Debug("getting logged in user")
 
 	// Get current user
 	loggedInUser := h.authorization.GetAuthUserSession(c)
 	loggedInUserKey := model.NewUserKey(loggedInUser.Subject)
 
-	// Unmarshal request
+	l.Debug("getting 'id' resource key query param")
+
+	resourceKey, err := model.ParseResourceKey(c.Param("id"))
+	if err != nil {
+		return err
+	}
+
+	l.Debug("unmarshaling request")
+
 	req := web.InquireAboutResourceRequest{}
 	if err := c.Bind(&req); err != nil {
+
+		l.Error("could not unmarshal request", zap.Error(err))
+
 		response := ErrSendResourceMsgBadRequest(err)
 		return &response
 	}
+
+	l.Debug("validating request")
+
 	if err := c.Validate(req); err != nil {
+		l.Warn("bad request payload", zap.Error(err))
 		response := ErrValidation(err.Error())
 		return &response
 	}
 
-	// get the resource key
-	resourceKeyStr := c.Param("id")
-	resourceKey, err := model.ParseResourceKey(resourceKeyStr)
+	// todo: send the channel id back to the client so he can redirect
+	_, err = h.chatService.NotifyUserInterestedAboutResource(
+		ctx, chat.NewNotifyUserInterestedAboutResource(loggedInUserKey, *resourceKey, req.Message))
+
 	if err != nil {
+		l.Error("could not notify user interested about resource", zap.Error(err))
 		return err
-	}
-
-	// retrieve the resource
-	getResourceByKeyResponse := h.resourceStore.GetByKey(resource.NewGetResourceByKeyQuery(*resourceKey))
-	if getResourceByKeyResponse.Error != nil {
-		return getResourceByKeyResponse.Error
-	}
-	res := getResourceByKeyResponse.Resource
-
-	// make sure auth user is not resource owner
-	// doesn't make sense for one to inquire about his own stuff
-	if res.GetUserKey() == loggedInUserKey {
-		err := ErrCannotInquireAboutOwnResource()
-		return NewErrResponse(c, &err)
-	}
-
-	// get or create the (interested user ⋅ resource) → topic mapping
-	userResourceTopic, err := h.chatStore.GetOrCreateResourceTopicMapping(*resourceKey, loggedInUserKey, h.resourceStore)
-	if err != nil {
-		return err
-	}
-
-	// send a message on that topic
-	sendMessageToThreadRequest := chat.NewSendMessageToThreadRequest(
-		model.NewThreadKey(userResourceTopic.GetTopicKey(), res.GetUserKey()),
-		loggedInUserKey,
-		loggedInUser.Username,
-		req.Message,
-		[]model.Block{
-			*model.NewHeaderBlock(model.NewMarkdownObject("Someone is interested in your stuff!"), nil),
-			*model.NewContextBlock([]model.BlockElement{
-				model.NewMarkdownObject(
-					fmt.Sprintf("[%s](%s) is interested by your post [%s](%s).",
-						loggedInUser.Username,
-						h.config.BaseUri+"/users/"+loggedInUser.Subject,
-						res.Summary,
-						h.config.BaseUri+"/users/"+res.CreatedBy+"/"+res.ID.String(),
-					),
-				),
-			}, nil),
-		},
-		[]model.Attachment{},
-	)
-	sendMessageToThreadResponse := h.chatStore.SendMessageToThread(&sendMessageToThreadRequest)
-	if sendMessageToThreadResponse.Error != nil {
-		return sendMessageToThreadResponse.Error
-	}
-
-	sendMessageRequest := chat.NewSendMessageRequest(
-		userResourceTopic.GetTopicKey(),
-		loggedInUserKey,
-		loggedInUser.Username,
-		req.Message,
-		[]model.Block{},
-		[]model.Attachment{},
-	)
-	sendMessageResponse := h.chatStore.SendMessage(&sendMessageRequest)
-
-	if sendMessageResponse.Error != nil {
-		return NewErrResponse(c, sendMessageResponse.Error)
 	}
 
 	return c.NoContent(http.StatusAccepted)
@@ -305,7 +275,7 @@ func (h *Handler) InquireAboutResource(c echo.Context) error {
 // @Description This endpoint sends a message to the given thread
 // @ID sendMessage
 // @Param message body web.SendMessageRequest true "Message to send"
-// @Param id path string true "Topic id"
+// @Param id path string true "channel id"
 // @Tags chat
 // @Accept json
 // @Success 202
@@ -313,13 +283,9 @@ func (h *Handler) InquireAboutResource(c echo.Context) error {
 // @Router /chat/:id [post]
 func (h *Handler) SendMessage(c echo.Context) error {
 
-	/**
-	In this method, the user is replying to an existing topic.
-	*/
+	ctx, l := GetEchoContext(c, "SendMessage")
 
-	// Get current user
-	authUser := h.authorization.GetAuthUserSession(c)
-	userKey := model.NewUserKey(authUser.Subject)
+	l.Debug("unmarshaling request")
 
 	// Unmarshal request
 	req := web.SendMessageRequest{}
@@ -327,46 +293,138 @@ func (h *Handler) SendMessage(c echo.Context) error {
 		response := ErrSendResourceMsgBadRequest(err)
 		return &response
 	}
+
+	l.Debug("validating request")
+
 	if err := c.Validate(req); err != nil {
 		response := ErrValidation(err.Error())
 		return &response
 	}
 
-	// retrieve the thread
-	topicIdStr := c.Param("id")
-	topicKey := model.NewTopicKey(topicIdStr)
+	l.Debug("getting channel 'id' query param")
 
+	// retrieve the thread
+	channelId := c.Param("id")
+	channelKey := model.NewConversationKey(channelId)
 	// todo verify that user has permission to post on topic
 
-	block := model.NewSectionBlock(model.NewPlainTextObject(req.Message), nil, nil, nil)
-	sendMessageRequest := chat.NewSendMessageRequest(
-		topicKey,
-		userKey,
-		authUser.Username,
-		req.Message,
-		[]model.Block{*block},
-		[]model.Attachment{},
-	)
+	l.Debug("sending message")
 
-	sendMessageResponse := h.chatStore.SendMessage(&sendMessageRequest)
-	if sendMessageResponse.Error != nil {
-		return NewErrResponse(c, sendMessageResponse.Error)
+	_, err := h.chatService.SendChannelMessage(ctx, channelKey, req.Message)
+	if err != nil {
+		l.Error("could not send message", zap.Error(err))
+		return err
 	}
 
 	return c.NoContent(http.StatusAccepted)
 
 }
 
-
+// SubmitInteraction
+// @Summary Sends a message to a topic
+// @Description This endpoint is for user interactions through the chat box
+// @ID submitInteraction
+// @Param message body web.SubmitInteractionRequest true "Message to send"
+// @Tags chat
+// @Accept json
+// @Success 200
+// @Failure 400 {object} utils.Error
+// @Router /chat/interaction [post]
 func (h *Handler) SubmitInteraction(c echo.Context) error {
 
-	authUser := h.authorization.GetAuthUserSession(c)
-	userKey := model.NewUserKey(authUser.Subject)
+	ctx, l := GetEchoContext(c, "SubmitInteraction")
+
+	// Get current user
+	authSession := h.authorization.GetAuthUserSession(c)
+	authUserKey := model.NewUserKey(authSession.Subject)
 
 	// Unmarshal request
-	req := web.Message{}
+	req := web.SubmitInteractionRequest{}
+	if err := c.Bind(&req); err != nil {
+		l.Error("could not unmarshal request", zap.Error(err))
+		response := ErrSendResourceMsgBadRequest(err)
+		return &response
+	}
+	if err := c.Validate(req); err != nil {
+		l.Warn("error validating request", zap.Error(err))
+		response := ErrValidation(err.Error())
+		return &response
+	}
 
+	// Getting the message
+	uid, err := uuid.FromString(req.Payload.MessageID)
+	if err != nil {
+		l.Warn("could not convert message id to uuid", zap.Error(err))
+		return err
+	}
+	getMessage := &chat.GetMessage{MessageKey: model.NewMessageKey(uid)}
+	getMessageResponse, err := h.chatStore.GetMessage(ctx, getMessage)
+	if err != nil {
+		l.Warn("could not get message", zap.Error(err))
+		return err
+	}
+	message := mapMessage(getMessageResponse.Message)
 
-	return nil
+	now := time.Now()
+
+	// Mapping message actions
+	var actions []web.Action
+	for _, action := range req.Payload.Actions {
+		actions = append(actions, web.Action{
+			SubmitAction: web.SubmitAction{
+				ElementState: action.ElementState,
+				BlockID:      action.BlockID,
+				ActionID:     action.ActionID,
+			},
+			ActionTimestamp: now,
+		})
+	}
+
+	// Creating interaction payload message
+	interactionPayload := web.InteractionCallback{
+		Token: h.config.CallbackToken,
+		Payload: web.InteractionCallbackPayload{
+			Type:        web.BlockActions,
+			TriggerId:   "",
+			ResponseURL: "",
+			User: web.InteractionPayloadUser{
+				ID:       authUserKey.String(),
+				Username: authSession.Username,
+			},
+			Message: message,
+			Actions: actions,
+			State:   req.Payload.State,
+		},
+	}
+
+	requestBody, err := json.Marshal(interactionPayload)
+	if err != nil {
+		l.Error("could not convert interaction payload to request body", zap.Error(err))
+		return err
+	}
+
+	httpRequest, err := http.NewRequest("POST", "http://localhost:8585/api/v1/chatback", bytes.NewBuffer(requestBody))
+	if err != nil {
+		l.Error("error occurred while creating the chatback query", zap.Error(err))
+		return err
+	}
+
+	l.Debug("Token: " + c.Get("token").(string))
+
+	httpRequest.Header.Set("Content-Type", "application/json")
+	httpRequest.Header.Set("Authorization", "Bearer "+c.Get("token").(string))
+
+	response, err := http.DefaultClient.Do(httpRequest)
+	if err != nil {
+		l.Error("error occurred while calling the chatback api", zap.Error(err))
+		return err
+	}
+
+	if response.StatusCode != 200 {
+		l.Error("unexpected chatback return code", zap.String("status", response.Status))
+		return fmt.Errorf("unexpected status code")
+	}
+
+	return c.String(http.StatusOK, "OK")
 
 }

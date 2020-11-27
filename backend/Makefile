@@ -40,7 +40,7 @@ vet:
 	go vet ./...
 
 .PHONY: pack
-pack: test
+pack: #test
 	$(CONTAINER) build . -t $(IMG)
 
 .PHONY: push
@@ -83,5 +83,5 @@ down:
 	sed -ne '/^export / {p;d}; /.*=/ s/^/export / p' .env > .env-export
 
 .PHONY: start
-start: up .env-export
+start: .env-export
 	. .env-export && go run main.go

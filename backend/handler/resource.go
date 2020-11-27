@@ -10,6 +10,7 @@ import (
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	uuid "github.com/satori/go.uuid"
+	"go.uber.org/zap"
 	"net/http"
 	"strings"
 )
@@ -32,34 +33,43 @@ import (
 // @Router /resources [get]
 func (h *Handler) SearchResources(c echo.Context) error {
 
-	c.Logger().Debug("SearchResources")
+	ctx, l := GetEchoContext(c, "SearchResources")
 
-	// parsing request skip
+	l.Debug("searching resources")
+
+	l.Debug("parsing 'skip' query param")
+
 	skip, err := utils.ParseSkip(c)
 	if err != nil {
-		c.Logger().Error(err, "SearchResource: failed to parse skip query param")
+		l.Error("failed to parse skip query param", zap.Error(err))
 		return NewErrResponse(c, err)
 	}
 
-	// parsing request take
+	l.Debug("parsing 'take' query param")
+
 	take, err := utils.ParseTake(c, 0, 100)
 	if err != nil {
-		c.Logger().Error(err, "SearchResource: failed to parse take query param")
+		l.Error("failed to parse take query param", zap.Error(err))
 		return NewErrResponse(c, err)
 	}
 
-	// the search query
+	l.Debug("parsing 'query' query param")
+
 	searchQuery := strings.TrimSpace(c.QueryParam("query"))
 
-	// the resource type
-	resourceType, err := model.ParseResourceType(c.QueryParam("type"))
+	l.Debug("parsing 'type' query param")
+
+	resourceType, err := resource.ParseResourceType(c.QueryParam("type"))
 	if err != nil {
-		c.Logger().Error(err, "SearchResource: failed to parse type query param")
+		l.Error("SearchResource: failed to parse type query param", zap.Error(err))
 		return NewErrResponse(c, err)
 	}
 
-	// created by
+	l.Debug("parsing 'created_by' query param")
+
 	createdBy := c.QueryParam("created_by")
+
+	l.Debug("parsing 'group_id' query param")
 
 	// visible in group
 	var groupKey *model.GroupKey
@@ -68,13 +78,14 @@ func (h *Handler) SearchResources(c echo.Context) error {
 		groupKey2, err := model.ParseGroupKey(groupStr)
 		if err != nil {
 			message := "SearchResource: could not parse group key"
-			c.Logger().Error(err, message)
+			l.Error(message)
 			return c.String(http.StatusInternalServerError, message)
 		}
 		groupKey = &groupKey2
 	}
 
-	// searching resources
+	l.Debug("searching resources")
+
 	searchResourcesQuery := resource.NewSearchResourcesQuery(&searchQuery, resourceType, skip, take, createdBy, groupKey)
 	searchResourcesResponse := h.resourceStore.Search(searchResourcesQuery)
 	if searchResourcesResponse.Error != nil {
@@ -82,29 +93,37 @@ func (h *Handler) SearchResources(c echo.Context) error {
 		return NewErrResponse(c, searchResourcesResponse.Error)
 	}
 
-	// fetching groups with which resources are shared
-	getGroupsResponse := h.groupStore.GetGroupsByKeys(group.NewGetGroupsByKeysQuery(searchResourcesResponse.Sharings.GetAllGroupKeys()))
-	if getGroupsResponse.Error != nil {
-		c.Logger().Error(err, "SearchResource: failed to get groups from store")
-		return c.JSON(http.StatusInternalServerError, getGroupsResponse.Error.Error())
+	l.Debug("fetching groups with which the resource is shared")
+
+	getGroupsResponse, err := h.groupService.GetGroupsByKeys(ctx, searchResourcesResponse.Sharings.GetAllGroupKeys())
+	if err != nil {
+		l.Error("SearchResource: failed to get groups from store", zap.Error(err))
+		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	// building a map GroupKey -> Group for faster access
-	groupMap := map[model.GroupKey]model.Group{}
+	l.Debug("building groupKey -> group map")
+
+	groupMap := map[model.GroupKey]group.Group{}
 	for _, g := range getGroupsResponse.Items {
 		groupMap[g.GetKey()] = g
 	}
 
+	l.Debug("creating list of resource owners")
+
 	var createdByKeys []model.UserKey
 	for _, item := range searchResourcesResponse.Resources.Items {
-		createdByKeys = append(createdByKeys, item.GetUserKey())
+		createdByKeys = append(createdByKeys, item.GetOwnerKey())
 	}
 
-	createdByUsers, err := h.authStore.GetByKeys(createdByKeys)
+	l.Debug("fetching resource owners")
+
+	createdByUsers, err := h.authStore.GetByKeys(nil, createdByKeys)
 	if err != nil {
-		c.Logger().Error(err, "SearchResource: failed to get users by keys")
+		l.Error("failed to get users by keys", zap.Error(err))
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
+
+	l.Debug("building response body")
 
 	// building response body
 	resources := searchResourcesResponse.Resources.Items
@@ -113,11 +132,11 @@ func (h *Handler) SearchResources(c echo.Context) error {
 
 		createdBy, err := createdByUsers.GetUser(model.NewUserKey(item.CreatedBy))
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, getGroupsResponse.Error.Error())
+			return c.JSON(http.StatusInternalServerError, err.Error())
 		}
 
 		// building list of groups that the resource is shared with
-		var groups []model.Group
+		var groups []group.Group
 		sharings := searchResourcesResponse.Sharings.GetSharingsForResource(item.GetKey())
 		for _, groupKey := range sharings.GetAllGroupKeys() {
 			groups = append(groups, groupMap[groupKey])
@@ -148,38 +167,44 @@ func (h *Handler) SearchResources(c echo.Context) error {
 // @Failure 400 {object} utils.Error
 // @Router /resources/:id [get]
 func (h *Handler) GetResource(c echo.Context) error {
-	c.Logger().Debug("GetResource: getting resource by id")
+
+	ctx, l := GetEchoContext(c, "GetResource")
+
+	l.Debug("parsing resource key")
 
 	resourceKey, err := model.ParseResourceKey(c.Param("id"))
 	if err != nil {
-		c.Logger().Error(err, "GetResource: could not parse resource key")
+		l.Error("could not parse resource key", zap.Error(err))
 		return NewErrResponse(c, err)
 	}
 
-	getResourceByKeyResponse := h.resourceStore.GetByKey(resource.NewGetResourceByKeyQuery(*resourceKey))
+	l.Debug("getting resource")
+
+	getResourceByKeyResponse := h.resourceStore.GetByKey(ctx, resource.NewGetResourceByKeyQuery(*resourceKey))
 	if getResourceByKeyResponse.Error != nil {
-		c.Logger().Error(getResourceByKeyResponse.Error, "GetResource: could not get resource by key")
+		l.Error("could not get resource by key", zap.Error(err))
 		return NewErrResponse(c, getResourceByKeyResponse.Error)
 	}
 	res := getResourceByKeyResponse.Resource
 
-	createdBy := &model.User{}
-	err = h.authStore.GetByKey(model.NewUserKey(res.CreatedBy), createdBy)
+	l.Debug("getting groups")
+
+	groups, err := h.groupService.GetGroupsByKeys(ctx, getResourceByKeyResponse.Sharings.GetAllGroupKeys())
 	if err != nil {
-		c.Logger().Error(err, "GetResource: could not get user by key")
-		return NewErrResponse(c, err)
+		l.Error("could not get groups", zap.Error(err))
+		return err
 	}
 
-	// retrieving groups
-	getGroupsResponse := h.groupStore.GetGroupsByKeys(group.NewGetGroupsByKeysQuery(getResourceByKeyResponse.Sharings.GetAllGroupKeys()))
-	if getGroupsResponse.Error != nil {
-		c.Logger().Error(getGroupsResponse.Error, "GetResource: could not get groups for resource")
-		return NewErrResponse(c, getGroupsResponse.Error)
+	ownerKey := res.GetOwnerKey()
+	username, err := h.authStore.GetUsername(ownerKey)
+	if err != nil {
+		l.Error("could not get username", zap.Error(err))
+		return err
 	}
 
 	// return
 	return c.JSON(http.StatusOK, web.GetResourceResponse{
-		Resource: NewResourceResponse(res, createdBy.Username, createdBy.ID, getGroupsResponse.Items),
+		Resource: NewResourceResponse(res, username, ownerKey.String(), groups.Items),
 	})
 }
 
@@ -195,32 +220,59 @@ func (h *Handler) GetResource(c echo.Context) error {
 // @Failure 400 {object} utils.Error
 // @Router /resources [post]
 func (h *Handler) CreateResource(c echo.Context) error {
-	c.Logger().Debug("CreateResource: creating resource")
+
+	ctx, l := GetEchoContext(c, "CreateResource")
 
 	var err error
+
+	l.Debug("unmarshaling request body")
 
 	// convert input body
 	req := web.CreateResourceRequest{}
 	if err = c.Bind(&req); err != nil {
-		c.Logger().Error(err, "CreateResource: could not unmarshal request body")
+		l.Error("could not unmarshal request body", zap.Error(err))
 		response := ErrCreateResourceBadRequest(err)
 		return NewErrResponse(c, &response)
 	}
 
+	l.Debug("validating request body")
+
 	// validating body
 	if err = c.Validate(req); err != nil {
-		c.Logger().Error(err, "CreateResource: error validating request body")
+		l.Error("CreateResource: error validating request body", zap.Error(err))
 		return c.JSON(http.StatusBadRequest, err.Error())
 	}
+
+	l.Debug("sanitizing input")
 
 	// sanitizing input
 	sanitized := sanitizeCreateResource(req.Resource)
 
+	l.Debug("getting logged in user")
+
 	// get logged in user
 	loggedInUserSession := h.authorization.GetAuthUserSession(c)
 
-	// creating new resource
-	res := model.NewResource(
+	l.Debug("getting groups with which the resource is shared")
+
+	// getting group keys that resource is shared with
+	sharedWithGroupKeys, err, done := h.parseGroupKeys(c, req.Resource.SharedWith)
+	if done {
+		l.Error("CreateResource: could not get group keys resource is shared with", zap.Error(err))
+		return err
+	}
+
+	l.Debug("making sure user is active member of group")
+
+	err, done = h.ensureResourceIsSharedWithGroupsTheUserIsActiveMemberOf(c, loggedInUserSession.GetUserKey(), sharedWithGroupKeys)
+	if done {
+		c.Logger().Warn(err, "CreateResource: user tried to share resource with groups he's active member of")
+		return err
+	}
+
+	l.Debug("creating new resource")
+
+	res := resource.NewResource(
 		model.NewResourceKey(uuid.NewV4()),
 		sanitized.Type,
 		loggedInUserSession.Subject,
@@ -230,44 +282,31 @@ func (h *Handler) CreateResource(c echo.Context) error {
 		sanitized.ValueInHoursTo,
 	)
 
-	// getting group keys that resource is shared with
-	sharedWithGroupKeys, err, done := h.parseGroupKeys(c, req.Resource.SharedWith)
-	if done {
-		c.Logger().Error(err, "CreateResource: could not get group keys resource is shared with")
-		return err
-	}
-
-	// making sure that user is active member of groups the resource is shared with
-	err, done = h.ensureResourceIsSharedWithGroupsTheUserIsActiveMemberOf(c, loggedInUserSession.GetUserKey(), sharedWithGroupKeys)
-	if done {
-		c.Logger().Warn(err, "CreateResource: user tried to share resource with groups he's active member of")
-		return err
-	}
-
-	// persist resource
 	createResourceResponse := h.resourceStore.Create(resource.NewCreateResourceQuery(&res))
 	if createResourceResponse.Error != nil {
 		c.Logger().Error(createResourceResponse.Error, "CreateResource: could not persist resource")
 		return NewErrResponse(c, createResourceResponse.Error)
 	}
 
-	// retrieving resource
-	getResourceResponse := h.resourceStore.GetByKey(resource.NewGetResourceByKeyQuery(res.GetKey()))
+	l.Debug("retrieving the resource")
+
+	getResourceResponse := h.resourceStore.GetByKey(ctx, resource.NewGetResourceByKeyQuery(res.GetKey()))
 	if getResourceResponse.Error != nil {
 		c.Logger().Error(getResourceResponse.Error, "CreateResource: error while retrieving resource")
 		return c.JSON(http.StatusBadRequest, getResourceResponse.Error)
 	}
 
-	// retrieving groups
-	getGroupsResponse := h.groupStore.GetGroupsByKeys(group.NewGetGroupsByKeysQuery(getResourceResponse.Sharings.GetAllGroupKeys()))
-	if getGroupsResponse.Error != nil {
-		c.Logger().Error(getGroupsResponse.Error, "CreateResource: could not get groups")
-		return NewErrResponse(c, getGroupsResponse.Error)
+	l.Debug("retrieving groups")
+
+	groups, err := h.groupService.GetGroupsByKeys(ctx, getResourceResponse.Sharings.GetAllGroupKeys())
+	if err != nil {
+		l.Error("CreateResource: could not get groups", zap.Error(err))
+		return NewErrResponse(c, err)
 	}
 
 	// send response
 	return c.JSON(http.StatusCreated, web.CreateResourceResponse{
-		Resource: NewResourceResponse(&res, loggedInUserSession.Username, loggedInUserSession.Subject, getGroupsResponse.Items),
+		Resource: NewResourceResponse(&res, loggedInUserSession.Username, loggedInUserSession.Subject, groups.Items),
 	})
 }
 
@@ -284,6 +323,9 @@ func (h *Handler) CreateResource(c echo.Context) error {
 // @Failure 400 {object} utils.Error
 // @Router /resources [put]
 func (h *Handler) UpdateResource(c echo.Context) error {
+
+	ctx, l := GetEchoContext(c, "UpdateResource")
+
 	c.Logger().Debug("UpdateResource: updating resource")
 	req := web.UpdateResourceRequest{}
 
@@ -310,7 +352,7 @@ func (h *Handler) UpdateResource(c echo.Context) error {
 	}
 
 	// Retrieves the resource
-	getResourceByKeyResponse := h.resourceStore.GetByKey(resource.NewGetResourceByKeyQuery(*resourceKey))
+	getResourceByKeyResponse := h.resourceStore.GetByKey(ctx, resource.NewGetResourceByKeyQuery(*resourceKey))
 	if getResourceByKeyResponse.Error != nil {
 		c.Logger().Error(err, "UpdateResource: could not retrieve resource by key")
 		return NewErrResponse(c, err)
@@ -320,7 +362,7 @@ func (h *Handler) UpdateResource(c echo.Context) error {
 
 	// make sure user is owner of resource
 	loggedInUser := h.authorization.GetAuthUserSession(c)
-	if resToUpdate.GetUserKey() != loggedInUser.GetUserKey() {
+	if resToUpdate.GetOwnerKey() != loggedInUser.GetUserKey() {
 		err := fmt.Errorf("cannot update a resource you do not own")
 		c.Logger().Errorf("UpdateResource: %v", err)
 		return c.String(http.StatusForbidden, err.Error())
@@ -368,32 +410,40 @@ func (h *Handler) UpdateResource(c echo.Context) error {
 	}
 
 	// retrieving resource
-	getResourceResponse := h.resourceStore.GetByKey(resource.NewGetResourceByKeyQuery(resToUpdate.GetKey()))
+	getResourceResponse := h.resourceStore.GetByKey(ctx, resource.NewGetResourceByKeyQuery(resToUpdate.GetKey()))
 	if getResourceResponse.Error != nil {
 		c.Logger().Warn(err, "UpdateResource: error getting resource after update")
 		return c.JSON(http.StatusBadRequest, getResourceResponse.Error)
 	}
 
 	// retrieving groups
-	getGroupsResponse := h.groupStore.GetGroupsByKeys(group.NewGetGroupsByKeysQuery(getResourceResponse.Sharings.GetAllGroupKeys()))
-	if getGroupsResponse.Error != nil {
-		c.Logger().Warn(err, "UpdateResource: error getting groups")
-		return c.JSON(http.StatusBadRequest, getGroupsResponse.Error)
+	groups, err := h.groupService.GetGroupsByKeys(ctx, getResourceResponse.Sharings.GetAllGroupKeys())
+	if err != nil {
+		l.Error("could not get groups by keys", zap.Error(err))
+		return c.JSON(http.StatusBadRequest, err)
 	}
 
 	return c.JSON(http.StatusOK, web.GetResourceResponse{
-		Resource: NewResourceResponse(getResourceResponse.Resource, loggedInUser.Username, loggedInUser.Subject, getGroupsResponse.Items),
+		Resource: NewResourceResponse(getResourceResponse.Resource, loggedInUser.Username, loggedInUser.Subject, groups.Items),
 	})
 
 }
 
 func (h *Handler) ensureResourceIsSharedWithGroupsTheUserIsActiveMemberOf(c echo.Context, loggedInUserKey model.UserKey, sharedWithGroups []model.GroupKey) (error, bool) {
-	var membershipStatus model.MembershipStatus = model.ApprovedMembershipStatus
-	membershipsResponse := h.groupStore.GetMembershipsForUser(group.NewGetMembershipsForUserRequest(loggedInUserKey, &membershipStatus))
+
+	ctx, l := GetEchoContext(c, "ensureResourceIsSharedWithGroupsTheUserIsActiveMemberOf")
+
+	var membershipStatus = group.ApprovedMembershipStatus
+
+	userMemberships, err := h.groupService.GetUserMemberships(ctx, group.NewGetMembershipsForUserRequest(loggedInUserKey, &membershipStatus))
+	if err != nil {
+		l.Error("could not get user memberships", zap.Error(err))
+		return err, true
+	}
 
 	// Checking if resource is shared with groups the user is part of
 	for _, sharedWith := range sharedWithGroups {
-		hasMembershipInGroup := membershipsResponse.Memberships.ContainsMembershipForGroup(sharedWith)
+		hasMembershipInGroup := userMemberships.Memberships.ContainsMembershipForGroup(sharedWith)
 		if !hasMembershipInGroup {
 			return c.String(http.StatusBadRequest, "cannot share resource with a group you are not part of"), true
 		}
@@ -426,7 +476,7 @@ func (h *Handler) parseGroupKeys(c echo.Context, sharedWith []web.InputResourceS
 	return sharedWithGroupKeys, nil, false
 }
 
-func NewResourceResponse(res *model.Resource, creatorUsername string, creatorId string, sharedWithGroups []model.Group) web.Resource {
+func NewResourceResponse(res *resource.Resource, creatorUsername string, creatorId string, sharedWithGroups []group.Group) web.Resource {
 
 	//goland:noinspection GoPreferNilSlice
 	var sharings = []web.OutputResourceSharing{}

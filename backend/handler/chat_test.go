@@ -3,7 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
@@ -20,15 +20,15 @@ func TestSendMessage(t *testing.T) {
 
 	// user 1 creates a resource
 	mockLoggedInAs(user1)
-	res := createResource(t, "summary", "description", model.ResourceOffer)
+	res := createResource(t, "summary", "description", resource.ResourceOffer)
 
 	// user 2 sends message about resource
 	mockLoggedInAs(user2)
 	inquireAboutResource(t, res.Resource.Id, "hello!")
 
-	user2Threads := getLatestThreads(t, 0, 10).Threads
+	user2Threads := getLatestThreads(t, 0, 10).Subscriptions
 	assert.Equal(t, 1, len(user2Threads))
-	user2Messages := getThreadMessages(t, user2Threads[0].TopicID).Messages
+	user2Messages := getThreadMessages(t, user2Threads[0].ChannelID).Messages
 	assert.Equal(t, 1, len(user2Messages))
 
 	js, _ := json.MarshalIndent(user2Messages, "", "   ")
@@ -36,27 +36,27 @@ func TestSendMessage(t *testing.T) {
 
 	// user 1 checks his messages
 	mockLoggedInAs(user1)
-	user1Threads := getLatestThreads(t, 0, 10).Threads
+	user1Threads := getLatestThreads(t, 0, 10).Subscriptions
 	assert.Equal(t, 1, len(user1Threads))
 
 	js, _ = json.MarshalIndent(user1Threads, "", "   ")
 	fmt.Println("user 1 threads", string(js))
 
-	user1Messages := getThreadMessages(t, user1Threads[0].TopicID).Messages
+	user1Messages := getThreadMessages(t, user1Threads[0].ChannelID).Messages
 	assert.Equal(t, 1, len(user1Messages))
 
 	js, _ = json.MarshalIndent(user1Messages, "", "   ")
 	fmt.Println("user 1 messages", string(js))
 
 	// user 1 replies to user 2
-	sendMessage(t, user1Threads[0].TopicID, "hello back!")
-	user1Threads = getLatestThreads(t, 0, 10).Threads
+	sendMessage(t, user1Threads[0].ChannelID, "hello back!")
+	user1Threads = getLatestThreads(t, 0, 10).Subscriptions
 
 	js, _ = json.MarshalIndent(user1Threads, "", "   ")
 	fmt.Println("user 1 threads", string(js))
 
 	assert.Equal(t, 1, len(user1Threads))
-	user1Messages = getThreadMessages(t, user1Threads[0].TopicID).Messages
+	user1Messages = getThreadMessages(t, user1Threads[0].ChannelID).Messages
 
 	js, _ = json.MarshalIndent(user1Threads, "", "   ")
 	fmt.Println("user 1 messages", string(js))
@@ -100,12 +100,12 @@ func newGetLatestThreadsRequest(skip int, take int) (*httptest.ResponseRecorder,
 	return rec, c
 }
 
-func getLatestThreads(t *testing.T, skip int, take int) web.GetLatestThreadsResponse {
+func getLatestThreads(t *testing.T, skip int, take int) web.GetLatestSubscriptionsResponse {
 	rec, c := newGetLatestThreadsRequest(skip, take)
-	assert.NoError(t, h.GetLatestThreads(c))
+	assert.NoError(t, h.GetRecentlyActiveSubscriptions(c))
 
 	assert.Equal(t, http.StatusOK, rec.Code)
-	threads := web.GetLatestThreadsResponse{}
+	threads := web.GetLatestSubscriptionsResponse{}
 	assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &threads))
 	return threads
 

@@ -27,14 +27,15 @@ func (h *Handler) Register(v1 *echo.Group) {
 
 	chat := v1.Group("/chat", h.authorization.Authenticate(true))
 	chat.GET("/messages", h.GetMessages)
-	chat.GET("/threads", h.GetLatestThreads)
+	chat.GET("/subscriptions", h.GetRecentlyActiveSubscriptions)
 	chat.POST("/:id", h.SendMessage)
+	chat.POST("/interaction", h.SubmitInteraction)
 
 	offers := v1.Group("/offers", h.authorization.Authenticate(true))
-	offers.POST("", h.SendOffer)
+	offers.POST("", h.HandleSendOffer)
 	offers.GET("/:id", h.GetOffer)
 	offers.GET("", h.GetOffers)
-	offers.POST("/:id/accept", h.AcceptOffer)
+	offers.POST("/:id/accept", h.HandleAcceptOffer)
 	offers.POST("/:id/decline", h.DeclineOffer)
 
 	my := v1.Group("/my", h.authorization.Authenticate(true))
@@ -50,5 +51,8 @@ func (h *Handler) Register(v1 *echo.Group) {
 	groups.POST("/:groupId/memberships/:userId/accept", h.AcceptInvitation)
 	groups.POST("/:groupId/memberships/:userId/decline", h.DeclineInvitation)
 	groups.DELETE("/:groupId/memberships/:userId", h.LeaveGroup)
+
+	v1.POST("/chatback", h.Chatback, h.authorization.Authenticate(true))
+	v1.GET("/ws", h.Websocket, h.authorization.Authenticate(true))
 
 }

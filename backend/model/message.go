@@ -2,25 +2,33 @@ package model
 
 import (
 	uuid "github.com/satori/go.uuid"
-	"time"
 )
 
-type Message struct {
-	ID             uuid.UUID `gorm:"type:uuid;primary_key"`
-	TopicID        string    `gorm:"primary_key"`
-	MessageType    MessageType
-	MessageSubType MessageSubType
-	UserID         string
-	BotID          string
-	SentAt         time.Time
-	Text           string
-	Blocks         string `gorm:"type:jsonb"`
-	Attachments    string `gorm:"type:jsonb"`
-	IsPersonal     bool
-	SentBy         string
-	SentByUsername string
+type MessageKey struct {
+	uuid uuid.UUID
 }
 
-func (m *Message) GetAuthorKey() UserKey {
-	return NewUserKey(m.SentBy)
+func NewMessageKey(uuid uuid.UUID) MessageKey {
+	return MessageKey{
+		uuid: uuid,
+	}
+}
+
+func ParseMessageKey(key string) (*MessageKey, error) {
+	resourceUuid, err := uuid.FromString(key)
+	if err != nil {
+		return nil, err
+	}
+	messageKey := MessageKey{
+		uuid: resourceUuid,
+	}
+	return &messageKey, nil
+}
+
+func (r *MessageKey) GetUUID() uuid.UUID {
+	return r.uuid
+}
+
+func (r *MessageKey) String() string {
+	return r.uuid.String()
 }

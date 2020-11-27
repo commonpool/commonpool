@@ -4,27 +4,22 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-type Decision int
-
-const (
-	PendingDecision Decision = iota
-	AcceptedDecision
-	DeclinedDecision
-)
-
-type OfferDecision struct {
-	OfferID  uuid.UUID `gorm:"type:uuid;primary_key"`
-	UserID   string    `gorm:"primary_key"`
-	Decision Decision
+type OfferDecisionKey struct {
+	OfferID uuid.UUID
+	UserID  string
 }
 
-func (d *OfferDecision) GetKey() OfferDecisionKey {
-	return NewOfferDecisionKey(d.GetOfferKey(), d.GetUserKey())
+func NewOfferDecisionKey(offerKey OfferKey, userKey UserKey) OfferDecisionKey {
+	return OfferDecisionKey{
+		OfferID: offerKey.ID,
+		UserID:  userKey.String(),
+	}
 }
 
-func (d *OfferDecision) GetOfferKey() OfferKey {
-	return NewOfferKey(d.OfferID)
+func (o *OfferDecisionKey) GetUserKey() UserKey {
+	return NewUserKey(o.UserID)
 }
-func (d *OfferDecision) GetUserKey() UserKey {
-	return NewUserKey(d.UserID)
+
+func (o *OfferDecisionKey) GetOfferKey() OfferKey {
+	return NewOfferKey(o.OfferID)
 }

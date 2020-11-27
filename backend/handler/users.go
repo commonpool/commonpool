@@ -25,7 +25,7 @@ func (h *Handler) GetUserInfo(c echo.Context) error {
 	userId := c.Param("id")
 	userKey := model.NewUserKey(userId)
 
-	user := &model.User{}
+	user := &auth.User{}
 	err := h.authStore.GetByKey(userKey, user)
 
 	if err != nil {

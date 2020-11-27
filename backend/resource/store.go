@@ -1,9 +1,27 @@
 package resource
 
-import "github.com/commonpool/backend/model"
+import (
+	ctx "context"
+	"github.com/commonpool/backend/model"
+)
+
+type GetResourceByKeysResponse struct {
+	Items *Resources
+}
+
+type GetResourceByKeysQuery struct {
+	ResourceKeys []model.ResourceKey
+}
+
+func NewGetResourceByKeysQuery(keys []model.ResourceKey) *GetResourceByKeysQuery {
+	return &GetResourceByKeysQuery{
+		ResourceKeys: keys,
+	}
+}
 
 type Store interface {
-	GetByKey(getResourceByKeyQuery *GetResourceByKeyQuery) *GetResourceByKeyResponse
+	GetByKey(ctx ctx.Context, getResourceByKeyQuery *GetResourceByKeyQuery) *GetResourceByKeyResponse
+	GetByKeys(getResourceByKeysQuery *GetResourceByKeysQuery) (*GetResourceByKeysResponse, error)
 	Search(searchResourcesQuery *SearchResourcesQuery) *SearchResourcesResponse
 	Delete(deleteResourceQuery *DeleteResourceQuery) *DeleteResourceResponse
 	Create(createResourceQuery *CreateResourceQuery) *CreateResourceResponse
@@ -11,7 +29,7 @@ type Store interface {
 }
 
 type SearchResourcesQuery struct {
-	Type            *model.ResourceType
+	Type            *ResourceType
 	Query           *string
 	Skip            int
 	Take            int
@@ -19,7 +37,7 @@ type SearchResourcesQuery struct {
 	SharedWithGroup *model.GroupKey
 }
 
-func NewSearchResourcesQuery(query *string, resourceType *model.ResourceType, skip int, take int, createdBy string, sharedWithGroup *model.GroupKey) *SearchResourcesQuery {
+func NewSearchResourcesQuery(query *string, resourceType *ResourceType, skip int, take int, createdBy string, sharedWithGroup *model.GroupKey) *SearchResourcesQuery {
 	return &SearchResourcesQuery{
 		Type:            resourceType,
 		Query:           query,
@@ -31,15 +49,15 @@ func NewSearchResourcesQuery(query *string, resourceType *model.ResourceType, sk
 }
 
 type SearchResourcesResponse struct {
-	Resources  *model.Resources
-	Sharings   *model.ResourceSharings
+	Resources  *Resources
+	Sharings   *ResourceSharings
 	TotalCount int
 	Skip       int
 	Take       int
 	Error      error
 }
 
-func NewSearchResourcesResponseSuccess(resources *model.Resources, sharings *model.ResourceSharings, totalCount int, skip int, take int) *SearchResourcesResponse {
+func NewSearchResourcesResponseSuccess(resources *Resources, sharings *ResourceSharings, totalCount int, skip int, take int) *SearchResourcesResponse {
 	return &SearchResourcesResponse{
 		Resources:  resources,
 		Sharings:   sharings,
@@ -71,8 +89,8 @@ func NewGetResourceByKeyQuery(resourceKey model.ResourceKey) *GetResourceByKeyQu
 }
 
 type GetResourceByKeyResponse struct {
-	Resource *model.Resource
-	Sharings *model.ResourceSharings
+	Resource *Resource
+	Sharings *ResourceSharings
 	Error    error
 }
 
@@ -82,7 +100,7 @@ func NewGetResourceByKeyResponseError(err error) *GetResourceByKeyResponse {
 	}
 }
 
-func NewGetResourceByKeyResponseSuccess(resource *model.Resource, sharings *model.ResourceSharings) *GetResourceByKeyResponse {
+func NewGetResourceByKeyResponseSuccess(resource *Resource, sharings *ResourceSharings) *GetResourceByKeyResponse {
 	return &GetResourceByKeyResponse{
 		Resource: resource,
 		Sharings: sharings,
@@ -110,11 +128,11 @@ func NewDeleteResourceResponse(err error) *DeleteResourceResponse {
 }
 
 type CreateResourceQuery struct {
-	Resource   *model.Resource
+	Resource   *Resource
 	SharedWith []model.GroupKey
 }
 
-func NewCreateResourceQuery(resource *model.Resource) *CreateResourceQuery {
+func NewCreateResourceQuery(resource *Resource) *CreateResourceQuery {
 	return &CreateResourceQuery{
 		Resource: resource,
 	}
@@ -131,11 +149,11 @@ func NewCreateResourceResponse(err error) *CreateResourceResponse {
 }
 
 type UpdateResourceQuery struct {
-	Resource   *model.Resource
+	Resource   *Resource
 	SharedWith []model.GroupKey
 }
 
-func NewUpdateResourceQuery(resource *model.Resource, sharedWith []model.GroupKey) *UpdateResourceQuery {
+func NewUpdateResourceQuery(resource *Resource, sharedWith []model.GroupKey) *UpdateResourceQuery {
 	return &UpdateResourceQuery{
 		Resource:   resource,
 		SharedWith: sharedWith,

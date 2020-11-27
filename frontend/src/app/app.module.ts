@@ -1,5 +1,5 @@
-import {BrowserModule} from '@angular/platform-browser';
-import {NgModule} from '@angular/core';
+import {BrowserModule, DomSanitizer} from '@angular/platform-browser';
+import {NgModule, SecurityContext} from '@angular/core';
 
 import {AppRoutingModule} from './app-routing.module';
 import {AppComponent} from './app.component';
@@ -51,16 +51,25 @@ import {GroupInvitesViewComponent} from './groups/group-invites-view/group-invit
 import {IncomingInvitationComponent} from './users/incoming-invitation/incoming-invitation.component';
 import {KickOrLeaveGroupButtonComponent} from './groups/kick-or-leave-group-button/kick-or-leave-group-button.component';
 import {CircleFillIcon} from './icons/circle-fill/circle-fill.icon';
-import { GroupLinkComponent } from './shared/group-link/group-link.component';
-import { ResourceLinkComponent } from './shared/resource-link/resource-link.component';
-import { AcceptInvitationComponent } from './groups/accept-invitation/accept-invitation.component';
-import { HomePageComponent } from './home/home-page/home-page.component';
-import { MarkdownModule } from 'ngx-markdown';
-import { BlocksComponent } from './chat/blocks/blocks.component';
-import { TextObjectComponent } from './chat/text-object/text-object.component';
-import { ButtonComponent } from './chat/button/button.component';
-import { BlockComponent } from './chat/block/block.component';
-import { AttachmentComponent } from './chat/attachment/attachment.component';
+import {GroupLinkComponent} from './shared/group-link/group-link.component';
+import {ResourceLinkComponent} from './shared/resource-link/resource-link.component';
+import {AcceptInvitationComponent} from './groups/accept-invitation/accept-invitation.component';
+import {HomePageComponent} from './home/home-page/home-page.component';
+import {MarkdownModule, MarkedOptions} from 'ngx-markdown';
+import {BlocksComponent} from './chat/blocks/blocks.component';
+import {TextObjectComponent} from './chat/text-object/text-object.component';
+import {ButtonComponent} from './chat/button/button.component';
+import {BlockComponent} from './chat/block/block.component';
+import {AttachmentComponent} from './chat/attachment/attachment.component';
+// import {ConvertLinksDirective} from './markdown/convert-links.directive';
+// import {RouterLinkComponent} from './markdown/router-link/router-link.component';
+// import {MarkdownRenderer} from './markdown/Renderer';
+
+//const rendererFactory = (domSanitizer: DomSanitizer): MarkedOptions => {
+//  return {
+//    renderer: new MarkdownRenderer(domSanitizer),
+//  };
+//};
 
 @NgModule({
   declarations: [
@@ -116,6 +125,8 @@ import { AttachmentComponent } from './chat/attachment/attachment.component';
     ButtonComponent,
     BlockComponent,
     AttachmentComponent,
+    // ConvertLinksDirective,
+    // RouterLinkComponent,
   ],
   imports: [
     BrowserModule,
@@ -126,6 +137,14 @@ import { AttachmentComponent } from './chat/attachment/attachment.component';
     ScrollingModule,
     NgSelectModule,
     MarkdownModule.forRoot()
+    // MarkdownModule.forRoot({
+    //   sanitize: SecurityContext.NONE,
+    //   markedOptions: {
+    //     provide: MarkedOptions,
+    //     useFactory: rendererFactory,
+    //     deps: [DomSanitizer]
+    //   }
+    // })
   ],
   providers: [{provide: HTTP_INTERCEPTORS, useClass: AppHttpInterceptor, multi: true}],
   bootstrap: [AppComponent]
@@ -135,3 +154,4 @@ export class AppModule {
     authService.checkLoggedIn();
   }
 }
+

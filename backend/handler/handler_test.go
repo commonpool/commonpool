@@ -3,11 +3,8 @@ package handler
 import (
 	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/chat"
-	"github.com/commonpool/backend/config"
 	"github.com/commonpool/backend/group"
-	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/resource"
-	"github.com/commonpool/backend/router"
 	"github.com/commonpool/backend/store"
 	"github.com/commonpool/backend/trading"
 	"github.com/labstack/echo/v4"
@@ -53,42 +50,53 @@ func mockLoggedInAs(user *auth.UserSession) {
 }
 
 func setup() {
-
-	// Setup and migrate database
-	d = store.NewTestDb()
-	store.AutoMigrate(d)
-
-	// Create the different stores
-	rs = store.NewResourceStore(d)
-	as = store.NewAuthStore(d)
-	cs = store.NewChatStore(d)
-	ts = store.NewTradingStore(d)
-	gs := store.NewGroupStore(d)
-
-	// Mock authorization
-	authorizer := auth.NewTestAuthorizer()
-	authorizer.MockCurrentSession = func() auth.UserSession {
-		if authenticatedUser == nil {
-			return auth.UserSession{
-				IsAuthenticated: false,
-			}
-		}
-		return *authenticatedUser
-	}
-
-	// Create handler
-	h = NewHandler(rs, as, cs, ts, gs, authorizer, config.AppConfig{})
-
-	// Create users
-	for _, user := range users {
-		userKey := model.NewUserKey(user.Subject)
-		err := as.Upsert(userKey, user.Email, user.Username)
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	e = router.NewRouter()
+	//
+	// fakeServer := amqpServer.NewServer("amqp://localhost:5672/%2f")
+	// err := fakeServer.Start()
+	// if err != nil {
+	// 	panic(err)
+	// }
+	//
+	// amqpClient, err := NewWabbitMqClient(fakeServer)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	//
+	// // Setup and migrate database
+	// d = store.NewTestDb()
+	// store.AutoMigrate(d)
+	//
+	// // Create the different stores
+	// rs = store.NewResourceStore(d)
+	// as = store.NewAuthStore(d)
+	// cs = store.NewChatStore(d)
+	// ts = store.NewTradingStore(d)
+	// gs := store.NewGroupStore(d)
+	//
+	// // Mock authorization
+	// authorizer := auth.NewTestAuthorizer()
+	// authorizer.MockCurrentSession = func() auth.UserSession {
+	// 	if authenticatedUser == nil {
+	// 		return auth.UserSession{
+	// 			IsAuthenticated: false,
+	// 		}
+	// 	}
+	// 	return *authenticatedUser
+	// }
+	//
+	// // Create handler
+	// h = NewHandler(rs, as, cs, ts, gs, authorizer, amqpClient, config.AppConfig{})
+	//
+	// // Create users
+	// for _, user := range users {
+	// 	userKey := model.NewUserKey(user.Subject)
+	// 	err := as.Upsert(userKey, user.Email, user.Username)
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+	// }
+	//
+	// e = router.NewRouter()
 }
 
 func tearDown() {

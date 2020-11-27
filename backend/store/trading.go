@@ -1,20 +1,78 @@
 package store
 
 import (
+	"context"
 	"fmt"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/trading"
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
 	"strings"
-	"time"
 )
 
 type TradingStore struct {
 	db *gorm.DB
 }
 
-func (t TradingStore) SaveOffer(offer model.Offer, items *model.OfferItems) error {
+var _ trading.Store = TradingStore{}
+
+func NewTradingStore(db *gorm.DB) trading.Store {
+	return TradingStore{db: db}
+}
+
+func (t TradingStore) SaveOfferStatus(key model.OfferKey, status trading.OfferStatus) error {
+	qry := t.db.
+		Model(trading.Offer{}).
+		Where("id = ?", key.ID.String()).
+		Update("status", status)
+
+	if qry.Error == nil && qry.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return qry.Error
+}
+
+func (t TradingStore) GetItem(key model.OfferItemKey) (*trading.OfferItem, error) {
+	var item trading.OfferItem
+	err := t.db.
+		Model(trading.OfferItem{}).
+		Where("id = ?", key.ID.String()).
+		First(&item).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	return &item, nil
+}
+
+func (t TradingStore) ConfirmItemReceived(ctx context.Context, key model.OfferItemKey) error {
+	req := t.db.
+		Model(trading.OfferItem{}).
+		Where("id = ?", key.ID.String()).
+		Update("received", true)
+	if req.Error == nil && req.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return req.Error
+}
+
+func (t TradingStore) ConfirmItemGiven(ctx context.Context, key model.OfferItemKey) error {
+
+	req := t.db.
+		Model(trading.OfferItem{}).
+		Where("id = ?", key.ID.String()).
+		Update("given", true)
+
+	if req.Error == nil && req.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return req.Error
+}
+
+func (t TradingStore) SaveOffer(offer trading.Offer, items *trading.OfferItems) error {
 
 	err := t.db.Create(&offer).Error
 	if err != nil {
@@ -32,10 +90,10 @@ func (t TradingStore) SaveOffer(offer model.Offer, items *model.OfferItems) erro
 	}
 
 	for userKey := range userKeys {
-		decision := model.OfferDecision{
+		decision := trading.OfferDecision{
 			OfferID:  offer.ID,
 			UserID:   userKey,
-			Decision: model.PendingDecision,
+			Decision: trading.PendingDecision,
 		}
 		err := t.db.Create(decision).Error
 		if err != nil {
@@ -46,21 +104,21 @@ func (t TradingStore) SaveOffer(offer model.Offer, items *model.OfferItems) erro
 	return nil
 }
 
-func (t TradingStore) GetOffer(key model.OfferKey) (model.Offer, error) {
-	var offer model.Offer
+func (t TradingStore) GetOffer(key model.OfferKey) (trading.Offer, error) {
+	var offer trading.Offer
 	err := t.db.First(&offer, "id = ?", key.ID.String()).Error
 	return offer, err
 }
 
-func (t TradingStore) GetItems(key model.OfferKey) (*model.OfferItems, error) {
-	var items []model.OfferItem
+func (t TradingStore) GetItems(key model.OfferKey) (*trading.OfferItems, error) {
+	var items []trading.OfferItem
 	err := t.db.Find(&items, "offer_id = ?", key.ID.String()).Error
-	return model.NewOfferItems(items), err
+	return trading.NewOfferItems(items), err
 }
 
 func (t TradingStore) GetOffers(qry trading.GetOffersQuery) (trading.GetOffersResult, error) {
 
-	chain := t.db.Model(model.Offer{})
+	chain := t.db.Model(trading.Offer{})
 
 	if len(qry.UserKeys) > 0 {
 		userCount := len(qry.UserKeys)
@@ -72,15 +130,15 @@ func (t TradingStore) GetOffers(qry trading.GetOffersQuery) (trading.GetOffersRe
 		}
 		qryStr := strings.Join(qryPlaceholders, ",")
 		qryStr = "user_id in (" + qryStr + ")"
-		userQry := t.db.Model(model.OfferDecision{}).Select("offer_id").Where(qryStr, qryParams...)
+		userQry := t.db.Model(trading.OfferDecision{}).Select("offer_id").Where(qryStr, qryParams...)
 		chain = chain.Where("id in (?)", userQry)
 	}
 
 	if qry.ResourceKey != nil {
 		resQry := t.db.
-			Model(model.OfferItem{}).
+			Model(trading.OfferItem{}).
 			Select("offer_id").
-			Where("offer_type = ? AND resource_id = ?", model.ResourceOffer, qry.ResourceKey.String())
+			Where("offer_type = ? AND resource_id = ?", resource.ResourceOffer, qry.ResourceKey.String())
 		chain = chain.Where("id in (?)", resQry)
 	}
 
@@ -88,7 +146,7 @@ func (t TradingStore) GetOffers(qry trading.GetOffersQuery) (trading.GetOffersRe
 		chain = chain.Where("status = ?", qry.Status)
 	}
 
-	var offers []model.Offer
+	var offers []trading.Offer
 	err := chain.Order("created_at desc").Find(&offers).Error
 	if err != nil {
 		return trading.GetOffersResult{}, err
@@ -102,8 +160,8 @@ func (t TradingStore) GetOffers(qry trading.GetOffersQuery) (trading.GetOffersRe
 	for i, offer := range offers {
 		resultItem := trading.GetOffersResultItem{
 			Offer:          offer,
-			OfferItems:     []model.OfferItem{},
-			OfferDecisions: []model.OfferDecision{},
+			OfferItems:     []trading.OfferItem{},
+			OfferDecisions: []trading.OfferDecision{},
 		}
 		offerResultItems[i] = resultItem
 		offersById[offer.GetKey()] = resultItem
@@ -123,8 +181,8 @@ func (t TradingStore) GetOffers(qry trading.GetOffersQuery) (trading.GetOffersRe
 	qryStr := strings.Join(qryPlaceholders, ",")
 	qryStr = "offer_id in (" + qryStr + ")"
 
-	var offerItems []model.OfferItem
-	err = t.db.Model(model.OfferItem{}).Where(qryStr, qryParams...).Find(&offerItems).Error
+	var offerItems []trading.OfferItem
+	err = t.db.Model(trading.OfferItem{}).Where(qryStr, qryParams...).Find(&offerItems).Error
 	if err != nil {
 		return trading.GetOffersResult{}, err
 	}
@@ -137,8 +195,8 @@ func (t TradingStore) GetOffers(qry trading.GetOffersQuery) (trading.GetOffersRe
 		resultItem.OfferItems = append(resultItem.OfferItems, offerItem)
 	}
 
-	var offerDecisions []model.OfferDecision
-	err = t.db.Model(model.OfferDecision{}).Where(qryStr, qryParams...).Find(&offerDecisions).Error
+	var offerDecisions []trading.OfferDecision
+	err = t.db.Model(trading.OfferDecision{}).Where(qryStr, qryParams...).Find(&offerDecisions).Error
 	if err != nil {
 		return trading.GetOffersResult{}, err
 	}
@@ -157,32 +215,17 @@ func (t TradingStore) GetOffers(qry trading.GetOffersQuery) (trading.GetOffersRe
 
 }
 
-func (t TradingStore) GetDecisions(key model.OfferKey) ([]model.OfferDecision, error) {
-	var decisions []model.OfferDecision
-	err := t.db.Find(&decisions, "offer_id = ?", key.ID.String()).Error
+func (t TradingStore) GetDecisions(key model.OfferKey) ([]trading.OfferDecision, error) {
+	var decisions []trading.OfferDecision
+	err := t.db.Model(trading.OfferDecision{}).Find(&decisions, "offer_id = ?", key.ID.String()).Error
 	return decisions, err
 }
 
-func (t TradingStore) SaveDecision(key model.OfferKey, user model.UserKey, decision model.Decision) error {
-	return t.db.Model(model.OfferDecision{}).
+func (t TradingStore) SaveDecision(key model.OfferKey, user model.UserKey, decision trading.Decision) error {
+	return t.db.Model(trading.OfferDecision{}).
 		Where("offer_id = ? and user_id = ?", key.ID.String(), user.String()).
-		Update("decision", decision).
-		Error
-}
-
-func (t TradingStore) CompleteOffer(key model.OfferKey, status model.OfferStatus) error {
-	completionTime := time.Now()
-	return t.db.Model(model.Offer{}).
-		Where("id = ?", key.ID).
 		Updates(map[string]interface{}{
-			"completed_at": &completionTime,
-			"status":       status,
-		}).Error
-
-}
-
-var _ trading.Store = TradingStore{}
-
-func NewTradingStore(db *gorm.DB) trading.Store {
-	return TradingStore{db: db}
+			"decision": decision,
+		}).
+		Error
 }

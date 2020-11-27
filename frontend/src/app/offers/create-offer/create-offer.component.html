@@ -67,6 +67,17 @@
 
   <div class="row mt-2">
     <div class="col">
+      <div class="card">
+        <div class="card-body">
+          <textarea class="form-control" placeholder="Send a message along with your offer..." rows="6" name="message" [(ngModel)]="message"></textarea>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="row mt-2">
+    <div class="col">
       <button (click)="submit()" [disabled]="pending" class="btn btn-lg btn-primary shadow">Submit proposal</button>
     </div>
   </div>

@@ -1,35 +1,73 @@
+<div class="d-flex flex-row conversations-container">
 
-<div class="row no-gutters">
-  <div class="col">
-    <ul class="list-group list-group-flush">
-      <ng-container *ngIf="threads$ | async; let threads">
-        <ng-container *ngIf="threads.length > 0">
+  <div class="bg-white border-right channel-list">
+
+    <ul class="list-group list-group-flush w-100">
+
+      <ng-container *ngIf="groups$ | async; let groups">
+        <li class="list-group-item"
+            style="height: 2rem; padding-top: 0.35rem; padding-left: 0.5rem">
+          ⯆ Channels
+        </li>
+        <ng-container *ngIf="groups.length > 0">
+
           <li
             class="list-group-item list-group-item-action rounded-0 message-container"
-            *ngFor="let thread of threads"
-            [routerLink]="'/messages/' + thread.topicId"
-            [ngClass]="{'unread' : thread.hasUnreadMessages}"
+            *ngFor="let group of groups"
+            [routerLink]="'/messages/c/' + group.channelId"
+            [class.active]="(chat.currentConversation$ | async)?.id === group.channelId"
+            style="height: 2rem; padding-top: 0.3rem; padding-left: 1rem"
           >
             <div class="message-content">
-              <div class="title font-weight-bold">{{thread.title}}</div>
-              <div class="last-message">
-                <div class="last-message-preview">
-                  {{thread.lastChars}}
-                </div>
-              </div>
+              <div class="title">#{{group.name}}</div>
             </div>
             <div class="message-icon">
               <app-circle-fill height="0.5em" width="0.5em" class="text-primary"></app-circle-fill>
             </div>
           </li>
         </ng-container>
-        <li *ngIf="threads.length == 0" class="list-group-item rounded-0 message-container ">
-          <div class="title font-weight-bold p-3">
+        <li *ngIf="groups.length == 0" class="list-group-item rounded-0 ">
+          <div class="title font-weight-bold p-1">
             No Messages
           </div>
         </li>
       </ng-container>
+
+      <ng-container *ngIf="conversations$ | async; let convos">
+        <ng-container *ngIf="convos.length > 0">
+          <li class="list-group-item"
+              style="height: 2rem; padding-top: 0.35rem; padding-left: 0.5rem">
+            ⯆ Conversations
+          </li>
+          <li
+            class="list-group-item list-group-item-action rounded-0 message-container"
+            *ngFor="let convo of convos"
+            [routerLink]="'/messages/c/' + convo.channelId"
+            [class.active]="(chat.currentConversation$ | async)?.id === convo.channelId"
+            style="height: 2rem; padding-top: 0.3rem; padding-left: 1rem"
+          >
+            <div class="message-content">
+              <div class="title">{{convo.name}}</div>
+            </div>
+            <div class="message-icon">
+              <app-circle-fill height="0.5em" width="0.5em" class="text-primary"></app-circle-fill>
+            </div>
+          </li>
+        </ng-container>
+        <li *ngIf="convos.length == 0" class="list-group-item rounded-0">
+          <div class="title font-weight-bold p-1">
+            No Messages
+          </div>
+        </li>
+      </ng-container>
+
+
     </ul>
   </div>
+  <div class="flex-grow-1" style="overflow: hidden">
+    <router-outlet></router-outlet>
+
+  </div>
+
 </div>
 

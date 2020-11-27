@@ -1,7 +1,8 @@
 package web
 
 import (
-	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/auth"
+	"github.com/commonpool/backend/group"
 	"time"
 )
 
@@ -12,8 +13,8 @@ type Group struct {
 	Description string    `json:"description"`
 }
 
-func NewGroup(group model.Group) Group {
-	return Group{
+func NewGroup(group *group.Group) *Group {
+	return &Group{
 		ID:          group.ID.String(),
 		CreatedAt:   group.CreatedAt,
 		Name:        group.Name,
@@ -35,7 +36,7 @@ type Membership struct {
 	UserName       string    `json:"userName"`
 }
 
-func NewMembership(membership model.Membership, groupNames model.GroupNames, names model.UserNames) Membership {
+func NewMembership(membership *group.Membership, groupNames group.GroupNames, names auth.UserNames) Membership {
 	return Membership{
 		UserID:         membership.UserID,
 		GroupID:        membership.GroupID.String(),
@@ -57,20 +58,20 @@ type CreateGroupRequest struct {
 }
 
 type CreateGroupResponse struct {
-	Group Group `json:"group"`
+	Group *Group `json:"group"`
 }
 
-func NewCreateGroupResponse(group model.Group) CreateGroupResponse {
+func NewCreateGroupResponse(group *group.Group) CreateGroupResponse {
 	return CreateGroupResponse{
 		Group: NewGroup(group),
 	}
 }
 
 type GetGroupResponse struct {
-	Group Group `json:"group"`
+	Group *Group `json:"group"`
 }
 
-func NewGetGroupResponse(group model.Group) GetGroupResponse {
+func NewGetGroupResponse(group *group.Group) GetGroupResponse {
 	return GetGroupResponse{
 		Group: NewGroup(group),
 	}
@@ -84,7 +85,7 @@ type InviteUserResponse struct {
 	Membership Membership `json:"membership"`
 }
 
-func NewInviteUserResponse(membership model.Membership, groupNames model.GroupNames, userNames model.UserNames) InviteUserResponse {
+func NewInviteUserResponse(membership *group.Membership, groupNames group.GroupNames, userNames auth.UserNames) InviteUserResponse {
 	return InviteUserResponse{
 		Membership: NewMembership(membership, groupNames, userNames),
 	}
@@ -98,14 +99,14 @@ type ExcludeUserResponse struct {
 	Membership Membership `json:"membership"`
 }
 
-func NewExcludeUserResponse(membership model.Membership, groupNames model.GroupNames, userNames model.UserNames) ExcludeUserResponse {
+func NewExcludeUserResponse(membership group.Membership, groupNames group.GroupNames, userNames auth.UserNames) ExcludeUserResponse {
 	return ExcludeUserResponse{
-		Membership: NewMembership(membership, groupNames, userNames),
+		Membership: NewMembership(&membership, groupNames, userNames),
 	}
 }
 
 type GrantPermissionRequest struct {
-	Permission model.PermissionType `json:"permission"`
+	Permission group.PermissionType `json:"permission"`
 	UserID     string               `json:"userId"`
 	GroupID    string               `json:"groupId"`
 }
@@ -114,14 +115,14 @@ type GrantPermissionResponse struct {
 	Membership Membership `json:"membership"`
 }
 
-func NewGrantPermissionResponse(membership model.Membership, groupNames model.GroupNames, userNames model.UserNames) GrantPermissionResponse {
+func NewGrantPermissionResponse(membership group.Membership, groupNames group.GroupNames, userNames auth.UserNames) GrantPermissionResponse {
 	return GrantPermissionResponse{
-		Membership: NewMembership(membership, groupNames, userNames),
+		Membership: NewMembership(&membership, groupNames, userNames),
 	}
 }
 
 type RevokePermissionRequest struct {
-	Permission model.PermissionType `json:"permission"`
+	Permission group.PermissionType `json:"permission"`
 	UserID     string               `json:"userId"`
 	GroupID    string               `json:"groupId"`
 }
@@ -130,9 +131,9 @@ type RevokePermissionResponse struct {
 	Membership Membership `json:"membership"`
 }
 
-func NewRevokePermissionResponse(membership model.Membership, groupNames model.GroupNames, userNames model.UserNames) RevokePermissionResponse {
+func NewRevokePermissionResponse(membership group.Membership, groupNames group.GroupNames, userNames auth.UserNames) RevokePermissionResponse {
 	return RevokePermissionResponse{
-		Membership: NewMembership(membership, groupNames, userNames),
+		Membership: NewMembership(&membership, groupNames, userNames),
 	}
 }
 
@@ -144,10 +145,10 @@ type GetUserMembershipsResponse struct {
 	Memberships []Membership `json:"memberships"`
 }
 
-func NewGetUserMembershipsResponse(memberships model.Memberships, groupNames model.GroupNames, userNames model.UserNames) GetUserMembershipsResponse {
+func NewGetUserMembershipsResponse(memberships *group.Memberships, groupNames group.GroupNames, userNames auth.UserNames) GetUserMembershipsResponse {
 	responseMemberships := make([]Membership, len(memberships.Items))
 	for i, membership := range memberships.Items {
-		responseMemberships[i] = NewMembership(membership, groupNames, userNames)
+		responseMemberships[i] = NewMembership(&membership, groupNames, userNames)
 	}
 	return GetUserMembershipsResponse{
 		Memberships: responseMemberships,
@@ -158,10 +159,10 @@ type GetGroupMembershipsResponse struct {
 	Memberships []Membership `json:"memberships"`
 }
 
-func NewGetGroupMembershipsResponse(memberships []model.Membership, groupNames model.GroupNames, userNames model.UserNames) GetGroupMembershipsResponse {
+func NewGetGroupMembershipsResponse(memberships []group.Membership, groupNames group.GroupNames, userNames auth.UserNames) GetGroupMembershipsResponse {
 	responseMemberships := make([]Membership, len(memberships))
 	for i, membership := range memberships {
-		responseMemberships[i] = NewMembership(membership, groupNames, userNames)
+		responseMemberships[i] = NewMembership(&membership, groupNames, userNames)
 	}
 	return GetGroupMembershipsResponse{
 		Memberships: responseMemberships,
@@ -178,7 +179,7 @@ type GetMembershipResponse struct {
 	Membership Membership `json:"membership"`
 }
 
-func NewGetMembershipResponse(membership model.Membership, groupNames model.GroupNames, userNames model.UserNames) GetMembershipResponse {
+func NewGetMembershipResponse(membership *group.Membership, groupNames group.GroupNames, userNames auth.UserNames) GetMembershipResponse {
 	return GetMembershipResponse{
 		Membership: NewMembership(membership, groupNames, userNames),
 	}
@@ -188,8 +189,8 @@ type AcceptInvitationResponse struct {
 	Membership Membership `json:"membership"`
 }
 
-func NewAcceptInvitationResponse(membership model.Membership, groupNames model.GroupNames, userNames model.UserNames) AcceptInvitationResponse {
-	return AcceptInvitationResponse{
+func NewAcceptInvitationResponse(membership *group.Membership, groupNames group.GroupNames, userNames auth.UserNames) *AcceptInvitationResponse {
+	return &AcceptInvitationResponse{
 		Membership: NewMembership(membership, groupNames, userNames),
 	}
 }
@@ -198,9 +199,9 @@ type DeclineInvitationResponse struct {
 	Membership Membership `json:"membership"`
 }
 
-func NewDeclineInvitationResponse(membership model.Membership, groupNames model.GroupNames, userNames model.UserNames) DeclineInvitationResponse {
+func NewDeclineInvitationResponse(membership group.Membership, groupNames group.GroupNames, userNames auth.UserNames) DeclineInvitationResponse {
 	return DeclineInvitationResponse{
-		Membership: NewMembership(membership, groupNames, userNames),
+		Membership: NewMembership(&membership, groupNames, userNames),
 	}
 }
 
@@ -208,8 +209,8 @@ type LeaveGroupResponse struct {
 	Membership Membership `json:"membership"`
 }
 
-func NewLeaveGroupResponse(membership model.Membership, groupNames model.GroupNames, userNames model.UserNames) LeaveGroupResponse {
+func NewLeaveGroupResponse(membership group.Membership, groupNames group.GroupNames, userNames auth.UserNames) LeaveGroupResponse {
 	return LeaveGroupResponse{
-		Membership: NewMembership(membership, groupNames, userNames),
+		Membership: NewMembership(&membership, groupNames, userNames),
 	}
 }

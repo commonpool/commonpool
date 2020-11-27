@@ -96,7 +96,13 @@ export class SearchResourcesResponse {
 }
 
 export class SearchResourceRequest {
-  constructor(public query: string, public type: ResourceType, public createdBy: string, public groupId, public take: number, public skip: number) {
+  constructor(
+    public query: string,
+    public type: ResourceType,
+    public createdBy: string,
+    public groupId,
+    public take: number,
+    public skip: number) {
   }
 }
 
@@ -196,40 +202,53 @@ export class SearchUsersQuery {
   }
 }
 
-export class GetThreadsRequest {
+export class GetSubscriptionsRequest {
   constructor(public skip: number, public take: number) {
   }
 }
 
-export class Thread {
+export enum ChannelType {
+  Group = 0,
+  Conversation = 1
+}
+
+export class Subscription {
   constructor(
-    public title: string,
-    public hasUnreadMessages: boolean,
-    public topicId: string,
-    public lastChars: string,
+    public channelId: string,
+    public userId: string,
+    public createdAt: string,
+    public updatedAt: string,
     public lastMessageAt: string,
+    public lastTimeRead: string,
+    public lastMessageChars: string,
     public lastMessageUserId: string,
-    public lastMessageUsername: string) {
+    public lastMessageUsername: string,
+    public name: string,
+    public type: ChannelType) {
   }
 
-  static from(thread: Thread) {
-    return new Thread(
-      thread.title,
-      thread.hasUnreadMessages,
-      thread.topicId,
-      thread.lastChars,
-      thread.lastMessageAt,
-      thread.lastMessageUserId,
-      thread.lastMessageUsername);
+  static from(s: Subscription) {
+    return new Subscription(
+      s.channelId,
+      s.userId,
+      s.createdAt,
+      s.updatedAt,
+      s.lastMessageAt,
+      s.lastTimeRead,
+      s.lastMessageChars,
+      s.lastMessageUserId,
+      s.lastMessageUsername,
+      s.name,
+      s.type);
   }
 }
 
-export class GetThreadsResponse {
-  constructor(public threads: Thread[]) {
+export class GetChannelMembershipsResponse {
+  constructor(public subscriptions: Subscription[]) {
   }
 
-  static from(response: GetThreadsResponse) {
-    return new GetThreadsResponse(response.threads.map(t => Thread.from(t)));
+  static from(response: GetChannelMembershipsResponse) {
+    return new GetChannelMembershipsResponse(response.subscriptions.map(t => Subscription.from(t)));
   }
 }
 
@@ -238,21 +257,28 @@ export class GetMessagesRequest {
   }
 }
 
+export enum MessageType {
+  NormalMessage = 'message'
+}
+
+export enum MessageSubType {
+  UserMessage = 'user',
+  BotMessage = 'bot'
+}
+
 export class Message {
   constructor(
     public id: string,
-    public topidId: string,
-    public messageType: string,
-    public messageSubType: string,
-    public userId: string,
-    public botId: string,
+    public channelId: string,
+    public messageType: MessageType,
+    public messageSubType: MessageSubType,
+    public sentById: string,
+    public sentByUsername: string,
     public sentAt: string,
     public text: string,
     public blocks: Block[],
     public attachments: Attachment[],
-    public sentBy: string,
-    public sentByUsername: string,
-    public isPersonal: boolean) {
+    public visibleToUser: string) {
     const date = new Date(Date.parse(this.sentAt));
     this.sentAtDistance = formatDistanceToNow(date, {addSuffix: true});
     this.sentAtHour = format(date, 'hh');
@@ -266,18 +292,16 @@ export class Message {
   static from(m: Message) {
     return new Message(
       m.id,
-      m.topidId,
+      m.channelId,
       m.messageType,
       m.messageSubType,
-      m.userId,
-      m.botId,
+      m.sentById,
+      m.sentByUsername,
       m.sentAt,
       m.text,
       m.blocks ? m.blocks.map(b => Block.from(b)) : undefined,
       m.attachments ? m.attachments.map(a => Attachment.from(a)) : undefined,
-      m.sentBy,
-      m.sentByUsername,
-      m.isPersonal
+      m.visibleToUser
     );
   }
 }
@@ -314,11 +338,11 @@ export class GetOffersRequest {
 }
 
 export class SendOfferRequestPayload {
-  constructor(public items: SendOfferRequestItem[]) {
+  constructor(public items: SendOfferRequestItem[], public message: string) {
   }
 
   public static from(req: SendOfferRequestPayload): SendOfferRequestPayload {
-    return new SendOfferRequestPayload(req.items.map(i => SendOfferRequestItem.from(i)));
+    return new SendOfferRequestPayload(req.items.map(i => SendOfferRequestItem.from(i)), req.message);
   }
 }
 
@@ -1093,4 +1117,121 @@ export class Attachment {
   }
 }
 
+export class ElementState {
+  public constructor(
+    public type: ElementType,
+    public selectedDate?: string,
+    public selectedTime?: string,
+    public value?: string,
+    public selectedOption?: OptionObject,
+    public selectedOptions?: OptionObject[]
+  ) {
+  }
+
+  public static from(e: ElementState): ElementState {
+    return new ElementState(
+      e.type,
+      e.selectedDate,
+      e.selectedTime,
+      e.value,
+      e.selectedOption ? OptionObject.from(e.selectedOption) : undefined,
+      e.selectedOptions ? e.selectedOptions.map(o => OptionObject.from(o)) : undefined
+    );
+  }
+}
+
+export class SubmitAction extends ElementState {
+  constructor(
+    public blockId: string,
+    public actionId: string,
+    public type: ElementType,
+    public selectedDate?: string,
+    public selectedTime?: string,
+    public value?: string,
+    public selectedOption?: OptionObject,
+    public selectedOptions?: OptionObject[]) {
+    super(type, selectedDate, selectedTime, value, selectedOption, selectedOptions);
+  }
+
+  public static from(e: SubmitAction): SubmitAction {
+    return new SubmitAction(
+      e.blockId,
+      e.actionId,
+      e.type,
+      e.selectedDate,
+      e.selectedTime,
+      e.value,
+      e.selectedOption ? OptionObject.from(e.selectedOption) : undefined,
+      e.selectedOptions ? e.selectedOptions.map(o => OptionObject.from(o)) : undefined);
+  }
+}
+
+export type SubmitActionState = {
+  [blockId: string]: { [actionId: string]: ElementState }
+};
+
+export class SubmitInteractionPayload {
+  public constructor(public messageId: string, public actions: SubmitAction[], public state: SubmitActionState) {
+  }
+
+  public static from(p: SubmitInteractionPayload): SubmitInteractionPayload {
+    const newState: SubmitActionState = {};
+    for (const blockKey in p.state) {
+      if (p.state.hasOwnProperty(blockKey)) {
+        for (const actionKey in p.state[blockKey]) {
+          if (p.state[blockKey].hasOwnProperty(actionKey)) {
+            if (!newState[blockKey]) {
+              newState[blockKey] = {};
+            }
+            if (!newState[blockKey][actionKey]) {
+              newState[blockKey][actionKey] = {} as ElementState;
+            }
+            newState[blockKey][actionKey] = ElementState.from(p.state[blockKey][actionKey]);
+          }
+        }
+      }
+    }
+    return new SubmitInteractionPayload(
+      p.messageId,
+      p.actions ? p.actions.map(a => SubmitAction.from(a)) : undefined,
+      newState);
+  }
+}
+
+export class SubmitInteractionRequest {
+  public constructor(public payload: SubmitInteractionPayload) {
+  }
+}
+
+export enum EventType {
+  MessageEvent = 'message'
+}
+
+export enum EventSubType {
+  MessageChanged = 'message_changed',
+  MessageDeleted = 'message_deleted'
+}
+
+export class Event {
+  public constructor(
+    public type: EventType,
+    public subType: EventSubType,
+    public channel: string,
+    public user: string,
+    public id: string,
+    public timestamp: string,
+    public text: string) {
+  }
+
+  public static from(e: Event): Event {
+    return new Event(
+      e.type,
+      e.subType,
+      e.channel,
+      e.user,
+      e.id,
+      e.timestamp,
+      e.text);
+  }
+}
 

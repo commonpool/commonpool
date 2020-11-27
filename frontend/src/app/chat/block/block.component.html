@@ -2,9 +2,19 @@
 
   <div *ngSwitchCase="'section'" class="block block-section">
     <div>
-      <ng-container *ngIf="block.text">
-        <app-text-object [textObject]="block.text"></app-text-object>
-      </ng-container>
+      <div class="d-flex flex-row">
+        <ng-container *ngIf="block.text">
+          <app-text-object [textObject]="block.text"></app-text-object>
+        </ng-container>
+        <div class="flex-grow-1" style="max-width: 10rem;]"></div>
+        <ng-container *ngIf="block.accessory; let a">
+          <ng-container *ngIf="a.type === 'button'">
+            <div style="position:relative; top:-0.25rem">
+              <app-button [buttonElement]="a"></app-button>
+            </div>
+          </ng-container>
+        </ng-container>
+      </div>
     </div>
   </div>
 
@@ -25,9 +35,9 @@
   </div>
 
   <div *ngSwitchCase="'actions'" class="block block-actions d-flex actions-container">
-    <ng-container *ngFor="let element of block.elements; let i = index">
-      <ng-container *ngIf="element.type === 'button'">
-        <app-button [buttonElement]="element"></app-button>
+    <ng-container *ngFor="let e of block.elements; let i = index">
+      <ng-container *ngIf="e.type === 'button'">
+        <app-button [buttonElement]="e"></app-button>
       </ng-container>
     </ng-container>
   </div>
@@ -48,10 +58,9 @@
   </div>
 
 
-  <h5 class="font-weight-bold block-header mt-2" *ngSwitchCase="'header'">
-    <app-text-object [textObject]="block.text"></app-text-object>
+  <h5 *ngSwitchCase="'header'" class="font-weight-bold block-header mt-2" >
+    <app-text-object [textObject]="block.text" [small]="true"></app-text-object>
   </h5>
-
 
 
 </ng-container>

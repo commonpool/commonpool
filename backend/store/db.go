@@ -2,7 +2,11 @@ package store
 
 import (
 	"fmt"
-	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/auth"
+	"github.com/commonpool/backend/chat"
+	"github.com/commonpool/backend/group"
+	"github.com/commonpool/backend/resource"
+	"github.com/commonpool/backend/trading"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"os"
@@ -25,18 +29,17 @@ func NewTestDb() *gorm.DB {
 
 func AutoMigrate(db *gorm.DB) {
 	err := db.AutoMigrate(
-		&model.Resource{},
-		&model.ResourceSharing{},
-		&model.User{},
-		&model.Thread{},
-		&model.Message{},
-		&model.Topic{},
-		&model.ResourceTopic{},
-		&model.Offer{},
-		&model.OfferItem{},
-		&model.OfferDecision{},
-		&model.Group{},
-		&model.Membership{},
+		&chat.Channel{},
+		&chat.ChannelSubscription{},
+		&group.Group{},
+		&group.Membership{},
+		&Message{},
+		&trading.Offer{},
+		&trading.OfferItem{},
+		&trading.OfferDecision{},
+		&resource.Resource{},
+		&resource.ResourceSharing{},
+		&auth.User{},
 	)
 	if err != nil {
 		panic(err)

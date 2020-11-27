@@ -40,6 +40,10 @@ type CommonpoolInstallationSpec struct {
 	OidcClientIdSecretKey     string `json:"oidcClientIdSecretKey"`
 	OidcClientSecretSecret    string `json:"oidcClientSecretSecret"`
 	OidcClientSecretSecretKey string `json:"oidcClientSecretSecretKey"`
+	RabbitMqUrlSecret         string `json:"rabbitMqUrlSecret"`
+	RabbitMqUrlSecretKey      string `json:"rabbitMqUrlSecretKey"`
+	CallbackTokenSecret       string `json:"callbackTokenSecret"`
+	CallbackTokenSecretKey    string `json:"callbackTokenSecretKey"`
 }
 
 // CommonpoolInstallationStatus defines the observed state of CommonpoolInstallation

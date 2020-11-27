@@ -12,6 +12,8 @@ export class TopNavComponent implements OnInit {
   constructor(public auth: AuthService, public backend: BackendService) {
   }
 
+  bla = `:::user:::bfac680d-37c4-45a5-b4d0-ecd136958016:::`;
+
   ngOnInit(): void {
   }
 

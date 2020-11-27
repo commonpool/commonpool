@@ -2,7 +2,8 @@ package handler
 
 import (
 	"encoding/json"
-	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/resource"
+	"github.com/commonpool/backend/trading"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
@@ -14,10 +15,10 @@ import (
 func TestTrading(t *testing.T) {
 
 	mockLoggedInAs(user1)
-	res1 := createResource(t, "summary1", "desc1", model.ResourceOffer)
+	res1 := createResource(t, "summary1", "desc1", resource.ResourceOffer)
 
 	mockLoggedInAs(user2)
-	res2 := createResource(t, "summary2", "desc2", model.ResourceOffer)
+	res2 := createResource(t, "summary2", "desc2", resource.ResourceOffer)
 
 	mockLoggedInAs(user1)
 	offer := sendOffer(t,
@@ -34,10 +35,10 @@ func TestTrading(t *testing.T) {
 	assert.Equal(t, res2.Resource.Id, offer.Offer.Items[1].ResourceId)
 	assert.Equal(t, 2, len(offer.Offer.Decisions))
 	assert.Equal(t, user1.Subject, offer.Offer.Decisions[0].UserID)
-	assert.Equal(t, model.PendingDecision, offer.Offer.Decisions[0].Decision)
+	assert.Equal(t, trading.PendingDecision, offer.Offer.Decisions[0].Decision)
 	assert.Equal(t, offer.Offer.ID, offer.Offer.Decisions[0].OfferID)
 	assert.Equal(t, user2.Subject, offer.Offer.Decisions[1].UserID)
-	assert.Equal(t, model.PendingDecision, offer.Offer.Decisions[1].Decision)
+	assert.Equal(t, trading.PendingDecision, offer.Offer.Decisions[1].Decision)
 	assert.Equal(t, offer.Offer.ID, offer.Offer.Decisions[1].OfferID)
 
 	_ = getOffers(t)
@@ -48,7 +49,7 @@ func aResourceOffer(from string, to string, resource string) web.SendOfferPayloa
 	return web.SendOfferPayloadItem{
 		From:          from,
 		To:            to,
-		Type:          model.ResourceItem,
+		Type:          trading.ResourceItem,
 		ResourceId:    &resource,
 		TimeInSeconds: nil,
 	}
@@ -57,7 +58,7 @@ func aTimeOffer(from string, to string, time int64) web.SendOfferPayloadItem {
 	return web.SendOfferPayloadItem{
 		From:          from,
 		To:            to,
-		Type:          model.ResourceItem,
+		Type:          trading.ResourceItem,
 		ResourceId:    nil,
 		TimeInSeconds: &time,
 	}
@@ -95,7 +96,7 @@ func sendOffer(t *testing.T, items ...web.SendOfferPayloadItem) web.GetOfferResp
 	}
 
 	rec, c := newSendOfferRequest(string(js))
-	err = h.SendOffer(c)
+	err = h.HandleSendOffer(c)
 
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusCreated, rec.Code)

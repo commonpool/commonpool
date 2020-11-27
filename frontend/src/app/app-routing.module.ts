@@ -61,10 +61,23 @@ const routes: Routes = [
     ]
   }, {
     path: 'messages',
-    component: ConversationThreadListComponent
-  }, {
-    path: 'messages/:id',
-    component: ConversationThreadComponent
+    component: ConversationThreadListComponent,
+    children: [
+      {
+        path: 'c/:id',
+        component: ConversationThreadComponent,
+        data: {
+          type: 'channel'
+        }
+      },
+      {
+        path: 'g/:id',
+        component: ConversationThreadComponent,
+        data: {
+          type: 'group'
+        }
+      }
+    ]
   }, {
     path: 'offers',
     component: OfferListComponent

@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	amqp "github.com/commonpool/backend/amqp"
 	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/chat"
 	"github.com/commonpool/backend/config"
@@ -10,6 +12,7 @@ import (
 	"github.com/commonpool/backend/handler"
 	"github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/router"
+	"github.com/commonpool/backend/service"
 	"github.com/commonpool/backend/store"
 	"github.com/commonpool/backend/trading"
 	"github.com/labstack/echo/v4"
@@ -17,17 +20,20 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"io/ioutil"
+	"log"
 	"os"
+	"os/signal"
+	"time"
 )
 
 var (
-	d  *gorm.DB
-	rs resource.Store
-	as auth.Store
-	cs chat.Store
-	ts trading.Store
-	gs group.Store
-	e  *echo.Echo
+	d             *gorm.DB
+	resourceStore resource.Store
+	authStore     auth.Store
+	cs            chat.Store
+	ts            trading.Store
+	gs            group.Store
+	e             *echo.Echo
 )
 
 // @title commonpool api
@@ -43,27 +49,69 @@ func main() {
 		panic(err)
 	}
 
+	ctx := context.Background()
+
+	amqpCli, err := amqp.NewRabbitMqClient(ctx, appConfig.AmqpUrl)
+	if err != nil {
+		log.Fatal(err, "cannot crate amqp client")
+	}
+
 	r := router.NewRouter()
 
 	r.GET("/api/swagger/*", echoSwagger.WrapHandler)
 
 	db := getDb(appConfig)
 	store.AutoMigrate(db)
-	rs = store.NewResourceStore(db)
-	as = store.NewAuthStore(db)
-	cs := store.NewChatStore(db)
-	ts := store.NewTradingStore(db)
-	gs := store.NewGroupStore(db)
+
+	resourceStore = store.NewResourceStore(db)
+	authStore = store.NewAuthStore(db)
+	chatStore := store.NewChatStore(db, authStore, amqpCli)
+	tradingStore := store.NewTradingStore(db)
+	groupStore := store.NewGroupStore(db, amqpCli)
+
+	chatService := service.NewChatService(authStore, groupStore, resourceStore, amqpCli, chatStore)
+	tradingService := service.NewTradingService(tradingStore, resourceStore, authStore, chatService)
+	groupService := service.NewGroupService(groupStore, amqpCli, chatService, authStore)
 
 	v1 := r.Group("/api/v1")
-	authorization := auth.NewAuth(v1, appConfig, "/api/v1", as)
+	authorization := auth.NewAuth(v1, appConfig, "/api/v1", authStore)
 
-	h := handler.NewHandler(rs, as, cs, ts, gs, authorization, *appConfig)
+	h := handler.NewHandler(
+		resourceStore,
+		authStore,
+		chatStore,
+		tradingStore,
+		authorization,
+		amqpCli,
+		*appConfig,
+		chatService,
+		tradingService,
+		groupService)
 
 	h.Register(v1)
 
-	r.Logger.Info("Secure Cookies", appConfig.SecureCookies)
-	r.Logger.Fatal(r.Start("0.0.0.0:8585"))
+	// Start server
+	go func() {
+		if err := r.Start("0.0.0.0:8585"); err != nil {
+			r.Logger.Error(err)
+			r.Logger.Info("shutting down the server")
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := amqpCli.Shutdown(); err != nil {
+		r.Logger.Fatal(err)
+	}
+
+	if err := r.Shutdown(ctx); err != nil {
+		r.Logger.Fatal(err)
+	}
+
 }
 
 func getDb(appConfig *config.AppConfig) *gorm.DB {

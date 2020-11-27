@@ -1,6 +1,7 @@
 package store
 
 import (
+	ctx "context"
 	"errors"
 	errs "github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
@@ -14,6 +15,29 @@ type ResourceStore struct {
 	db *gorm.DB
 }
 
+func (rs *ResourceStore) GetByKeys(getResourceByKeysQuery *resource.GetResourceByKeysQuery) (*resource.GetResourceByKeysResponse, error) {
+
+	var result []resource.Resource
+
+	var sql []string
+	var params []interface{}
+	for _, item := range getResourceByKeysQuery.ResourceKeys {
+		sql = append(sql, "?")
+		params = append(params, item.String())
+	}
+	sqlQuery := "id in (" + strings.Join(sql, ",") + ")"
+
+	err := rs.db.Model(resource.Resource{}).Where(sqlQuery, params...).Find(&result).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &resource.GetResourceByKeysResponse{
+		Items: resource.NewResources(result),
+	}, nil
+}
+
 var _ resource.Store = &ResourceStore{}
 
 func NewResourceStore(db *gorm.DB) *ResourceStore {
@@ -23,13 +47,15 @@ func NewResourceStore(db *gorm.DB) *ResourceStore {
 }
 
 // GetByKey Gets a resource by key
-func (rs *ResourceStore) GetByKey(getResourceByKeyQuery *resource.GetResourceByKeyQuery) *resource.GetResourceByKeyResponse {
+func (rs *ResourceStore) GetByKey(ctx ctx.Context, getResourceByKeyQuery *resource.GetResourceByKeyQuery) *resource.GetResourceByKeyResponse {
 
-	result := model.Resource{}
+	result := resource.Resource{}
 	resourceKey := getResourceByKeyQuery.ResourceKey
 	resourceKeyStr := resourceKey.String()
 
-	if err := rs.db.First(&result, "id = ?", resourceKeyStr).Error; err != nil {
+	db := rs.db.WithContext(ctx)
+
+	if err := db.First(&result, "id = ?", resourceKeyStr).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			response := errs.ErrResourceNotFound(resourceKeyStr)
 			return resource.NewGetResourceByKeyResponseError(&response)
@@ -37,7 +63,7 @@ func (rs *ResourceStore) GetByKey(getResourceByKeyQuery *resource.GetResourceByK
 		return resource.NewGetResourceByKeyResponseError(err)
 	}
 
-	sharings, err := getResourceSharings(rs.db, []model.ResourceKey{resourceKey})
+	sharings, err := getResourceSharings(db, []model.ResourceKey{resourceKey})
 	if err != nil {
 		return resource.NewGetResourceByKeyResponseError(err)
 	}
@@ -52,12 +78,12 @@ func (rs *ResourceStore) Delete(deleteResourceQuery *resource.DeleteResourceQuer
 		resourceKey := deleteResourceQuery.ResourceKey
 		resourceKeyStr := resourceKey.GetUUID().String()
 
-		err := rs.db.Delete(&model.ResourceSharing{}, "resource_id = ?", resourceKeyStr).Error
+		err := rs.db.Delete(&resource.ResourceSharing{}, "resource_id = ?", resourceKeyStr).Error
 		if err != nil {
 			return err
 		}
 
-		result := rs.db.Delete(&model.Resource{}, "id = ?", resourceKeyStr)
+		result := rs.db.Delete(&resource.Resource{}, "id = ?", resourceKeyStr)
 		if result.RowsAffected == 0 {
 			response := errs.ErrResourceNotFound(resourceKeyStr)
 			return &response
@@ -67,7 +93,7 @@ func (rs *ResourceStore) Delete(deleteResourceQuery *resource.DeleteResourceQuer
 			return result.Error
 		}
 
-		return rs.db.Delete(&model.ResourceSharing{}, "resource_id = ?", resourceKey.String()).Error
+		return rs.db.Delete(&resource.ResourceSharing{}, "resource_id = ?", resourceKey.String()).Error
 	})
 	return resource.NewDeleteResourceResponse(err)
 }
@@ -104,7 +130,7 @@ func (rs *ResourceStore) Update(updateResourceRequest *resource.UpdateResourceQu
 			return update.Error
 		}
 
-		err := tx.Delete(&model.ResourceSharing{}, "resource_id = ?", res.ID.String()).Error
+		err := tx.Delete(&resource.ResourceSharing{}, "resource_id = ?", res.ID.String()).Error
 		if err != nil {
 			return err
 		}
@@ -118,9 +144,9 @@ func (rs *ResourceStore) Update(updateResourceRequest *resource.UpdateResourceQu
 
 // Search search for resources
 func (rs *ResourceStore) Search(query *resource.SearchResourcesQuery) *resource.SearchResourcesResponse {
-	var resources []model.Resource
+	var resources []resource.Resource
 
-	chain := rs.db.Model(&model.Resource{})
+	chain := rs.db.Model(&resource.Resource{})
 
 	if query.Type != nil {
 		chain = chain.Where(`"resources"."type" = ?`, query.Type)
@@ -167,7 +193,7 @@ func (rs *ResourceStore) Search(query *resource.SearchResourcesQuery) *resource.
 	}
 
 	return resource.NewSearchResourcesResponseSuccess(
-		model.NewResources(resources),
+		resource.NewResources(resources),
 		sharings,
 		int(totalCount),
 		query.Take,
@@ -175,9 +201,9 @@ func (rs *ResourceStore) Search(query *resource.SearchResourcesQuery) *resource.
 
 }
 
-func getResourceSharings(db *gorm.DB, resources []model.ResourceKey) (*model.ResourceSharings, error) {
+func getResourceSharings(db *gorm.DB, resources []model.ResourceKey) (*resource.ResourceSharings, error) {
 
-	var sharings []model.ResourceSharing
+	var sharings []resource.ResourceSharing
 
 	err := utils.Partition(len(resources), 999, func(i1 int, i2 int) error {
 		var qryPart []string
@@ -187,8 +213,8 @@ func getResourceSharings(db *gorm.DB, resources []model.ResourceKey) (*model.Res
 			qryParam = append(qryParam, res.String())
 		}
 		qry := "resource_id IN ( " + strings.Join(qryPart, ",") + ")"
-		var part []model.ResourceSharing
-		err := db.Model(model.ResourceSharing{}).Where(qry, qryParam...).Find(&part).Error
+		var part []resource.ResourceSharing
+		err := db.Model(resource.ResourceSharing{}).Where(qry, qryParam...).Find(&part).Error
 		if err != nil {
 			return err
 		}
@@ -201,16 +227,16 @@ func getResourceSharings(db *gorm.DB, resources []model.ResourceKey) (*model.Res
 		return nil, err
 	}
 
-	return model.NewResourceSharings(sharings)
+	return resource.NewResourceSharings(sharings)
 }
 
 func createResourceSharings(with []model.GroupKey, resourceKey model.ResourceKey, db *gorm.DB) error {
 	if len(with) == 0 {
 		return nil
 	}
-	var resourceSharings = make([]model.ResourceSharing, len(with))
+	var resourceSharings = make([]resource.ResourceSharing, len(with))
 	for i, groupKey := range with {
-		resourceSharing := model.NewResourceSharing(resourceKey, groupKey)
+		resourceSharing := resource.NewResourceSharing(resourceKey, groupKey)
 		resourceSharings[i] = resourceSharing
 	}
 

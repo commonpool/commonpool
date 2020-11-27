@@ -20,6 +20,7 @@ export class CreateOfferComponent implements OnInit {
   resource: string | null = null;
   offerItemType: OfferItemType = OfferItemType.ResourceItem;
   time = 1;
+  message = ""
 
   toPredicate = (val: string) => true;
 
@@ -49,7 +50,7 @@ export class CreateOfferComponent implements OnInit {
   submit() {
     this.pending = true;
     this.error = undefined;
-    this.backend.sendOffer(new SendOfferRequest(new SendOfferRequestPayload(this.items))).subscribe(res => {
+    this.backend.sendOffer(new SendOfferRequest(new SendOfferRequestPayload(this.items, this.message))).subscribe(res => {
       this.pending = false;
       console.log(res);
     }, err => {

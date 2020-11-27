@@ -41,6 +41,10 @@ spec:
               description: BackendImage Overrides the docker image used for the backend
                 service
               type: string
+            callbackTokenSecret:
+              type: string
+            callbackTokenSecretKey:
+              type: string
             databaseHost:
               type: string
             databaseName:
@@ -72,7 +76,13 @@ spec:
               type: string
             oidcDiscoveryUrl:
               type: string
+            rabbitMqUrlSecret:
+              type: string
+            rabbitMqUrlSecretKey:
+              type: string
           required:
+          - callbackTokenSecret
+          - callbackTokenSecretKey
           - databaseHost
           - databaseName
           - databasePasswordSecret
@@ -85,6 +95,8 @@ spec:
           - oidcClientSecretSecret
           - oidcClientSecretSecretKey
           - oidcDiscoveryUrl
+          - rabbitMqUrlSecret
+          - rabbitMqUrlSecretKey
           type: object
         status:
           description: CommonpoolInstallationStatus defines the observed state of

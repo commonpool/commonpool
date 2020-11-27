@@ -1,15 +1,20 @@
-# Generation of Kubernetes YAML is still under development!
-#
-# Save the output of this file and use kubectl create -f to import
-# it into Kubernetes.
-#
-# Created with podman-2.1.1
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+  type: LoadBalancer
+---
 apiVersion: v1
 kind: Pod
 metadata:
   labels:
-    app: commonpool-dev
-  name: commonpool-dev
+    app: postgres
+  name: postgres
 spec:
   restartPolicy: OnFailure
   containers:
@@ -45,14 +50,75 @@ spec:
         - containerPort: 5432
           hostPort: 5432
           protocol: TCP
-      resources: { }
-      securityContext:
-        allowPrivilegeEscalation: true
-        capabilities:
-          drop:
-            - CAP_MKNOD
-            - CAP_NET_RAW
-        privileged: false
-        readOnlyRootFilesystem: false
-        seLinuxOptions: { }
-      workingDir: /
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq
+spec:
+  selector:
+    app: rabbitmq
+  type: LoadBalancer
+  ports:
+    - port: 15672
+      name: rabbitmq-management
+    - port: 4369
+      name: rabbitmq-epmd
+    - port: 5672
+      name: rabbitmq-cli-1
+    - port: 56673
+      name: rabbitmq-cli-2
+    - port: 25672
+      name: rabbitmq-internode
+    - port: 61613
+      name: rabbitmq-stomp-1
+    - port: 61614
+      name: rabbitmq-stomp-2
+    - port: 1883
+      name: rabbitmq-mqtt-1
+    - port: 8883
+      name: rabbitmq-mqtt-2
+    - port: 15674
+      name: rabbitmq-stomp-ws
+    - port: 15675
+      name: rabbitmq-mqtt-ws
+    - port: 15692
+      name: rabbitmq-prometheus
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: rabbitmq
+  name: rabbitmq
+spec:
+  containers:
+    - name: rabbitmq
+      image: rabbitmq:3-management
+      resources:
+        requests:
+          cpu: 100m
+          memory: 100Mi
+      ports:
+        - containerPort: 15672
+          hostPort: 15672
+          protocol: TCP
+        - containerPort: 6379
+          hostPort: 6379
+          protocol: TCP
+        - containerPort: 25672
+          hostPort: 25672
+          protocol: TCP
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: metallb-system
+  name: config
+data:
+  config: |
+    address-pools:
+    - name: default
+      protocol: layer2
+      addresses:
+      - 172.42.42.0-172.42.42.255

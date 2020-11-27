@@ -9,6 +9,8 @@ import (
 
 var Trans ut.Translator
 
+var DefaultValidator = NewValidator()
+
 func NewValidator() *Validator {
 
 	var (

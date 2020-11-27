@@ -1,7 +1,9 @@
 package store
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"github.com/commonpool/backend/auth"
 	errs "github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
@@ -27,12 +29,14 @@ type UserStore struct {
 	db *gorm.DB
 }
 
-func (as *AuthStore) GetByKeys(keys []model.UserKey) (model.Users, error) {
+func (as *AuthStore) GetByKeys(ctx context.Context, keys []model.UserKey) (auth.Users, error) {
 
-	var result []model.User
+	var result []auth.User
 	usedKeys := map[model.UserKey]bool{}
 
 	err := utils.Partition(len(keys), 999, func(i1 int, i2 int) error {
+
+		println(fmt.Sprintf("Partition: %d, %d", i1, i2))
 
 		var qryStrs []string
 		var qryParams []interface{}
@@ -46,9 +50,10 @@ func (as *AuthStore) GetByKeys(keys []model.UserKey) (model.Users, error) {
 			qryParams = append(qryParams, item.String())
 		}
 		sqlWhere := "id IN (" + strings.Join(qryStrs, ",") + ")"
+		println(sqlWhere)
 
-		var partitioned []model.User
-		err := as.db.Model(model.User{}).Where(sqlWhere, qryParams...).Find(&partitioned).Error
+		var partitioned []auth.User
+		err := as.db.Model(auth.User{}).Where(sqlWhere, qryParams...).Find(&partitioned).Error
 		if err != nil {
 			log.Error(err, "GetByKeys: could not get users by keys")
 			return err
@@ -60,14 +65,14 @@ func (as *AuthStore) GetByKeys(keys []model.UserKey) (model.Users, error) {
 	})
 
 	if err != nil {
-		return model.Users{}, err
+		return auth.Users{}, err
 	}
 
-	return model.NewUsers(result), nil
+	return auth.NewUsers(result), nil
 }
 
 func (as *AuthStore) Upsert(key model.UserKey, email string, username string) error {
-	usr := &model.User{}
+	usr := &auth.User{}
 	err := as.GetByKey(key, usr)
 
 	if err != nil && errs.IsNotFoundError(err) {
@@ -88,7 +93,7 @@ func (as *AuthStore) Upsert(key model.UserKey, email string, username string) er
 			"username": username,
 			"email":    email,
 		}
-		err := as.db.Model(model.User{}).Where("id = ?", key.String()).Updates(updates).Error
+		err := as.db.Model(auth.User{}).Where("id = ?", key.String()).Updates(updates).Error
 		if err != nil {
 			log.Error(err, "could not upsert user")
 			return err
@@ -98,8 +103,8 @@ func (as *AuthStore) Upsert(key model.UserKey, email string, username string) er
 
 }
 
-func (as *AuthStore) GetByKey(key model.UserKey, r *model.User) error {
-	if err := as.db.Model(&model.User{}).First(r, "id = ?", key.String()).Error; err != nil {
+func (as *AuthStore) GetByKey(key model.UserKey, r *auth.User) error {
+	if err := as.db.Model(&auth.User{}).First(r, "id = ?", key.String()).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			log.Warn(err, "GetByKey: user with id "+key.String()+" not found")
 			response := errs.ErrUserNotFound(key.String())
@@ -112,7 +117,7 @@ func (as *AuthStore) GetByKey(key model.UserKey, r *model.User) error {
 }
 
 func (as *AuthStore) GetUsername(key model.UserKey) (string, error) {
-	var user model.User
+	var user auth.User
 	err := as.GetByKey(key, &user)
 	if err != nil {
 		log.Error(err, "GetUsername: could not get username")
@@ -121,8 +126,8 @@ func (as *AuthStore) GetUsername(key model.UserKey) (string, error) {
 	return user.Username, err
 }
 
-func (as *AuthStore) Find(query auth.UserQuery) ([]model.User, error) {
-	var users []model.User
+func (as *AuthStore) Find(query auth.UserQuery) ([]auth.User, error) {
+	var users []auth.User
 	chain := as.db
 	if query.Query != "" {
 		chain = chain.Where("username like ?", query.Query+"%")

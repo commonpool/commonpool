@@ -1,71 +1,77 @@
 package model
 
 import (
-	"fmt"
-	"time"
+	"go.uber.org/zap/zapcore"
 )
 
-type User struct {
-	ID        string `gorm:"primary_key"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time `sql:"index"`
-	Username  string     `gorm:"not null"`
-	Email     string     `gorm:"not null"`
+type UserKey struct {
+	subject string
 }
 
-func (u *User) GetKey() UserKey {
-	return NewUserKey(u.ID)
+func (k UserKey) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
+	encoder.AddString("user_id", k.subject)
+	return nil
 }
 
-type Users struct {
-	Items   []User
-	userMap map[UserKey]User
+var _ zapcore.ObjectMarshaler = &UserKey{}
+
+func NewUserKey(subject string) UserKey {
+	return UserKey{subject: subject}
 }
 
-func NewUsers(u []User) Users {
-	var users []User
-	var userMap = map[UserKey]User{}
-	for _, user := range u {
-		users = append(users, user)
-		userMap[user.GetKey()] = user
+func (k *UserKey) String() string {
+	return k.subject
+}
+
+func (k *UserKey) GetExchangeName() string {
+	return "users." + k.String()
+}
+
+type UserKeys struct {
+	Items []UserKey
+}
+
+func (k *UserKeys) Contains(key UserKey) bool {
+	if k.Items == nil {
+		return false
 	}
-	return Users{
-		Items:   users,
-		userMap: userMap,
+	for _, userKey := range k.Items {
+		if userKey == key {
+			return true
+		}
+	}
+	return false
+}
+
+func NewUserKeys(userKeys []UserKey) *UserKeys {
+	if userKeys == nil {
+		userKeys = []UserKey{}
+	}
+
+	var newUserKeys []UserKey
+	userKeyMap := map[UserKey]bool{}
+	for _, key := range userKeys {
+		if _, ok := userKeyMap[key]; ok {
+			continue
+		}
+		userKeyMap[key] = true
+		newUserKeys = append(newUserKeys, key)
+	}
+
+	return &UserKeys{
+		Items: newUserKeys,
 	}
 }
 
-func (u *Users) GetUser(key UserKey) (User,error) {
-	user, ok := u.userMap[key]
-	if !ok {
-		return User{}, fmt.Errorf("user not found")
+func (k *UserKeys) Strings() []string {
+	strs := make([]string, len(k.Items))
+	for i := range k.Items {
+		strs[i] = k.Items[i].String()
 	}
-	return user, nil
+	return strs
 }
 
-func (u *Users) Append(user User) Users {
-	items := append(u.Items, user)
-	return NewUsers(items)
-}
-
-func (u *Users) AppendAll(users Users) Users {
-	items := u.Items
-	for _, user := range users.Items {
-		items = append(items, user)
-	}
-	return NewUsers(items)
-}
-
-func (u *Users) GetUserKeys() UserKeys {
-	var userKeys []UserKey
-	for _, item := range u.Items {
-		userKeys = append(userKeys, item.GetKey())
-	}
-	return NewUserKeys(userKeys)
-}
-
-
-func (u *Users) GetUserCount() int {
-	return len(u.Items)
+type UserReference interface {
+	GetUserKey() UserKey
+	GetUsername() string
 }

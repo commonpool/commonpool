@@ -17,6 +17,8 @@ type AppConfig struct {
 	DbName           string
 	DbUsername       string
 	DbPassword       string
+	CallbackToken    string
+	AmqpUrl          string
 }
 
 func GetAppConfig(readEnv EnvReader, readFile FileReader) (*AppConfig, error) {
@@ -49,6 +51,36 @@ func GetAppConfig(readEnv EnvReader, readFile FileReader) (*AppConfig, error) {
 			return nil, err
 		}
 		dbPassword = string(dbUserIo)
+	}
+
+	callbackToken, hasCallbackToken := readEnv(callbackTokenEnv)
+	callbackTokenFile, hasCallbackTokenFile := readEnv(callbackTokenFileEnv)
+
+	if !hasCallbackToken && !hasCallbackTokenFile {
+		return nil, fmt.Errorf("%s or %s  environment variable is required", callbackTokenEnv, callbackTokenFileEnv)
+	}
+
+	if hasCallbackTokenFile {
+		callbackTokenIo, err := readFile(callbackTokenFile)
+		if err != nil {
+			return nil, err
+		}
+		callbackToken = string(callbackTokenIo)
+	}
+
+	amqpUrl, hasAmqpUrl := readEnv(amqpUrlEnv)
+	amqpUrlFile, hasAmqpUrlFile := readEnv(amqpUrlFileEnv)
+
+	if !hasAmqpUrl && !hasAmqpUrlFile {
+		return nil, fmt.Errorf("%s or %s  environment variable is required", amqpUrlEnv, amqpUrlFileEnv)
+	}
+
+	if hasAmqpUrlFile {
+		amqpUrlIo, err := readFile(amqpUrlFile)
+		if err != nil {
+			return nil, err
+		}
+		amqpUrl = string(amqpUrlIo)
 	}
 
 	dbName, ok := readEnv(dbNameEnv)
@@ -113,7 +145,7 @@ func GetAppConfig(readEnv EnvReader, readFile FileReader) (*AppConfig, error) {
 		secureCookies = strings.ToLower(secureCookiesStr) == "true"
 	}
 
-	dbConfig := &AppConfig{
+	appConfig := &AppConfig{
 		BaseUri:          baseUri,
 		OidcClientId:     clientId,
 		OidcClientSecret: clientSecret,
@@ -124,8 +156,10 @@ func GetAppConfig(readEnv EnvReader, readFile FileReader) (*AppConfig, error) {
 		DbUsername:       dbUser,
 		DbPassword:       dbPassword,
 		SecureCookies:    secureCookies,
+		CallbackToken:    callbackToken,
+		AmqpUrl:          amqpUrl,
 	}
-	return dbConfig, nil
+	return appConfig, nil
 }
 
 type EnvReader func(string) (string, bool)
@@ -145,6 +179,10 @@ const (
 	oidcClientSecretFileEnv = "OIDC_CLIENT_SECRET_FILE"
 	oidcClientSecretEnv     = "OIDC_CLIENT_SECRET"
 	secureCookiesEnv        = "SECURE_COOKIES"
+	callbackTokenEnv        = "CALLBACK_TOKEN"
+	callbackTokenFileEnv    = "CALLBACK_TOKEN_FILE"
+	amqpUrlEnv              = "AMQP_URL"
+	amqpUrlFileEnv          = "AMQP_URL_FILE"
 )
 
 type FileReader func(string) ([]byte, error)

@@ -12,6 +12,7 @@ import {
   TextObject,
   TextType
 } from '../../api/models';
+import {BlocksService} from '../blocks.service';
 
 interface Payload {
   blocks: Block[];
@@ -22,14 +23,24 @@ interface Payload {
   selector: 'app-blocks',
   templateUrl: './blocks.component.html',
   styleUrls: ['./blocks.component.css'],
-  encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None,
+  providers: [BlocksService]
 })
 export class BlocksComponent implements OnInit {
 
+  private _message: Message;
   @Input()
-  public message: Message;
+  public set message(value: Message) {
+    this._message = value;
+    this.svc.setMessage(value);
+  }
 
-  constructor() {
+  public get message(): Message {
+    return this._message;
+  }
+
+  constructor(public svc: BlocksService) {
+
   }
 
   ngOnInit(): void {

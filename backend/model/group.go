@@ -1,23 +1,42 @@
 package model
 
 import (
+	"fmt"
+	"github.com/commonpool/backend/utils"
 	uuid "github.com/satori/go.uuid"
-	"time"
+	"go.uber.org/zap/zapcore"
 )
 
-type Group struct {
-	ID          uuid.UUID `gorm:"type:uuid;primary_key"`
-	CreatedBy   string
-	CreatedAt   time.Time
-	Name        string
-	Description string
+type GroupKey struct {
+	ID uuid.UUID
 }
 
-func (o *Group) GetKey() GroupKey {
-	return NewGroupKey(o.ID)
+var _ zapcore.ObjectMarshaler = &GroupKey{}
+
+func (k GroupKey) Equals(g GroupKey) bool {
+	return k.ID == g.ID
 }
 
-type Groups struct {
-	items map[GroupKey]Group
-	order []int
+func (k GroupKey) GetChannelKey() ChannelKey {
+	shortUid := utils.ShortUuid(k.ID)
+	return ChannelKey{
+		ID: shortUid,
+	}
+}
+
+func NewGroupKey(id uuid.UUID) GroupKey {
+	return GroupKey{ID: id}
+}
+
+func ParseGroupKey(value string) (GroupKey, error) {
+	offerId, err := uuid.FromString(value)
+	if err != nil {
+		return GroupKey{}, fmt.Errorf("cannot parse group key: %s", err.Error())
+	}
+	return NewGroupKey(offerId), err
+}
+
+func (k GroupKey) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
+	encoder.AddString("group_id", k.ID.String())
+	return nil
 }

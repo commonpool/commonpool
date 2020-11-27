@@ -72,6 +72,14 @@ const (
 	databasePasswordVolumeSecretKey = "password"
 	oidcClientIdVolumeSecretKey     = "oidc-client-id"
 	oidcClientSecretVolumeSecretKey = "oidc-client-secret"
+	rabbitMqVolumeName              = "rabbitmq"
+	rabbitMqSecretPath              = "/secrets/rabbitmq-secret"
+	rabbitMqEnv                     = "AMQP_URL_FILE"
+	rabbitMqUrlSecretKey            = "rabbitmq"
+	callbackTokenSecretPath         = "/secrets/callback-token-secret"
+	callbackTokenEnv                = "CALLBACK_TOKEN_FILE"
+	callbackTokenVolumeName         = "callback-token"
+	callbackTokenSecretKey          = "callback-token"
 )
 
 // CommonpoolInstallationReconciler reconciles a CommonpoolInstallation object
@@ -527,6 +535,18 @@ func (r *CommonpoolInstallationReconciler) newBackendDeployment(installation *ap
 									MountPath: oidcClientSecretSecretPath,
 									SubPath:   oidcClientSecretVolumeSecretKey,
 								},
+								{
+									Name:      rabbitMqVolumeName,
+									ReadOnly:  true,
+									MountPath: rabbitMqSecretPath,
+									SubPath:   rabbitMqUrlSecretKey,
+								},
+								{
+									Name:      callbackTokenVolumeName,
+									ReadOnly:  true,
+									MountPath: callbackTokenSecretPath,
+									SubPath:   callbackTokenSecretKey,
+								},
 							},
 							Env: []k8scorev1.EnvVar{
 								{
@@ -564,6 +584,14 @@ func (r *CommonpoolInstallationReconciler) newBackendDeployment(installation *ap
 								{
 									Name:  oidcClientSecretFileEnv,
 									Value: oidcClientSecretSecretPath,
+								},
+								{
+									Name:  rabbitMqEnv,
+									Value: rabbitMqSecretPath,
+								},
+								{
+									Name:  callbackTokenEnv,
+									Value: callbackTokenSecretPath,
 								},
 							},
 						},
@@ -620,6 +648,34 @@ func (r *CommonpoolInstallationReconciler) newBackendDeployment(installation *ap
 										{
 											Key:  installation.Spec.OidcClientSecretSecretKey,
 											Path: oidcClientSecretVolumeSecretKey,
+											Mode: &readOnlyMode,
+										},
+									},
+								},
+							},
+						}, {
+							Name: rabbitMqVolumeName,
+							VolumeSource: k8scorev1.VolumeSource{
+								Secret: &k8scorev1.SecretVolumeSource{
+									SecretName: installation.Spec.RabbitMqUrlSecret,
+									Items: []k8scorev1.KeyToPath{
+										{
+											Key:  installation.Spec.RabbitMqUrlSecretKey,
+											Path: rabbitMqUrlSecretKey,
+											Mode: &readOnlyMode,
+										},
+									},
+								},
+							},
+						}, {
+							Name: callbackTokenVolumeName,
+							VolumeSource: k8scorev1.VolumeSource{
+								Secret: &k8scorev1.SecretVolumeSource{
+									SecretName: installation.Spec.CallbackTokenSecret,
+									Items: []k8scorev1.KeyToPath{
+										{
+											Key:  installation.Spec.CallbackTokenSecretKey,
+											Path: callbackTokenSecretKey,
 											Mode: &readOnlyMode,
 										},
 									},

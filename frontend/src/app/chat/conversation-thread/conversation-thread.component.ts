@@ -1,10 +1,11 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
 import {BehaviorSubject, combineLatest, Observable, Subject} from 'rxjs';
-import {map, pluck, startWith, switchMap} from 'rxjs/operators';
+import {filter, map, pluck, startWith, switchMap} from 'rxjs/operators';
 import {ActivatedRoute} from '@angular/router';
 import {BackendService} from '../../api/backend.service';
-import {GetMessagesResponse, Message, SectionBlock, TextObject, TextType} from '../../api/models';
+import {Event, EventType, GetMessagesResponse, Message, SectionBlock, TextObject, TextType} from '../../api/models';
 import {format} from 'date-fns';
+import {ChatService, ConversationType} from '../chat.service';
 
 class MessageGroup {
   constructor(public date: Date, public dateStr: string, public messages: Message[]) {
@@ -38,26 +39,39 @@ class UserMessages extends DisplayElement {
   templateUrl: './conversation-thread.component.html',
   styleUrls: ['./conversation-thread.component.css']
 })
-export class ConversationThreadComponent implements OnInit {
+export class ConversationThreadComponent implements OnInit , OnDestroy{
 
+  private type: string;
   private skipSubject = new Subject<number>();
   private skip$ = this.skipSubject.pipe(startWith(0));
   private takeSubject = new Subject<number>();
-  private take$ = this.takeSubject.pipe(startWith(10));
-  private topicSubject = new BehaviorSubject<string>(undefined);
-  private topic$ = this.topicSubject.asObservable();
+  private take$ = this.takeSubject.pipe(startWith(30));
+  private channelIdSubject = new BehaviorSubject<string>(undefined);
+  private channelId$ = this.channelIdSubject.asObservable();
   public content = '';
-  private topicSub = this.route.params.pipe(pluck('id')).subscribe(topic => {
-    this.topicSubject.next(topic);
+  private routeSub = this.route.params.pipe(pluck('id')).subscribe(channelId => {
+    this.chat.setCurrentConversation({
+      type: ConversationType.Channel,
+      id: channelId
+    });
+    this.channelIdSubject.next(channelId);
+  });
+
+  pub$ = combineLatest<Observable<string>, Observable<Event>>([this.channelIdSubject.asObservable(), this.backend.events$]).pipe(
+    filter(([channel, message]) => !!channel && !!message),
+    filter(([channel, message]) => message.type === EventType.MessageEvent),
+    filter(([channel, message]) => channel === message.channel)
+  ).subscribe((a) => {
+    this.refresh();
   });
 
   private triggerSubject = new Subject<void>();
   private trigger$ = this.triggerSubject.asObservable().pipe(startWith([undefined]));
 
-  public messages$: Observable<GetMessagesResponse> = combineLatest([this.skip$, this.take$, this.topic$, this.trigger$])
+  public messages$: Observable<GetMessagesResponse> = combineLatest([this.skip$, this.take$, this.channelId$, this.trigger$])
     .pipe(
-      switchMap(([s, t, topic, _]) => {
-        return this.backend.getMessages(topic, s, t);
+      switchMap(([s, t, channelId, _]) => {
+        return this.backend.getMessages(channelId, new Date().valueOf(), t);
       }),
     );
 
@@ -116,9 +130,9 @@ export class ConversationThreadComponent implements OnInit {
 
         }
 
-        if (currentUserMsgGrp === undefined || lastUser !== message.sentBy) {
-          currentUserMsgGrp = new UserMessages(message.sentByUsername, message.sentBy, []);
-          lastUser = message.sentBy;
+        if (currentUserMsgGrp === undefined || lastUser !== message.sentById) {
+          currentUserMsgGrp = new UserMessages(message.sentByUsername, message.sentById, []);
+          lastUser = message.sentById;
           messageGroups.push(currentUserMsgGrp);
         }
 
@@ -144,11 +158,12 @@ export class ConversationThreadComponent implements OnInit {
     return o?.date?.toISOString();
   }
 
-  constructor(private route: ActivatedRoute, private backend: BackendService) {
+  constructor(private route: ActivatedRoute, private backend: BackendService, public chat: ChatService) {
+    this.type = this.route.snapshot.data.type;
   }
 
   ngOnInit(): void {
-    setInterval(() => this.refresh(), 5000);
+
   }
 
   refresh() {
@@ -157,9 +172,8 @@ export class ConversationThreadComponent implements OnInit {
 
   sendMessage(event: any) {
     event.preventDefault();
-    this.backend.sendMessage(this.topicSubject.value, this.content).subscribe(() => {
+    this.backend.sendMessage(this.channelIdSubject.value, this.content).subscribe(() => {
       this.content = '';
-      this.refresh();
     });
   }
 
@@ -176,6 +190,10 @@ export class ConversationThreadComponent implements OnInit {
     return someDate.getDate() === yesterday.getDate() &&
       someDate.getMonth() === yesterday.getMonth() &&
       someDate.getFullYear() === yesterday.getFullYear();
+  }
+
+  ngOnDestroy(): void {
+    this.chat.setCurrentConversation(undefined)
   }
 
 }

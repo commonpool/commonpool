@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"fmt"
+	"context"
 	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/group"
@@ -10,6 +10,7 @@ import (
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	uuid "github.com/satori/go.uuid"
+	"go.uber.org/zap"
 	"net/http"
 	"strings"
 )
@@ -27,10 +28,13 @@ import (
 // @Router /groups [post]
 func (h *Handler) CreateGroup(c echo.Context) error {
 
-	authUserKey := h.authorization.GetAuthUserKey(c)
+	ctx, l := GetEchoContext(c, "CreateGroup")
+
+	l.Debug("creating group")
 
 	req := web.CreateGroupRequest{}
 	if err := c.Bind(&req); err != nil {
+		l.Error("could not bind CreateGroupRequest", zap.Error(err))
 		return NewErrResponse(c, err)
 	}
 
@@ -44,20 +48,16 @@ func (h *Handler) CreateGroup(c echo.Context) error {
 
 	var groupKey = model.NewGroupKey(uuid.NewV4())
 
-	var createGroupRequest = group.NewCreateGroupRequest(groupKey, authUserKey, req.Name, req.Description)
-	var createGroup = h.groupStore.CreateGroup(createGroupRequest)
-	if createGroup.Error != nil {
-		return NewErrResponse(c, createGroup.Error)
+	var createGroupRequest = group.NewCreateGroupRequest(groupKey, req.Name, req.Description)
+	createGroupResponse, err := h.groupService.CreateGroup(ctx, createGroupRequest)
+	if err != nil {
+		l.Error("could not create group", zap.Error(err))
+		return err
 	}
 
-	var getGroupRequest = group.NewGetGroupRequest(groupKey)
-	var getGroup = h.groupStore.GetGroup(getGroupRequest)
-	if getGroup.Error != nil {
-		return NewErrResponse(c, getGroup.Error)
-	}
-
-	var response = web.NewCreateGroupResponse(getGroup.Group)
+	var response = web.NewCreateGroupResponse(createGroupResponse.Group)
 	return c.JSON(http.StatusCreated, response)
+
 }
 
 // GetGroup godoc
@@ -73,18 +73,23 @@ func (h *Handler) CreateGroup(c echo.Context) error {
 // @Router /groups/:id [get]
 func (h *Handler) GetGroup(c echo.Context) error {
 
+	ctx, l := GetEchoContext(c, "GetGroup")
+
+	l.Debug("getting group")
+
 	groupKey, err := model.ParseGroupKey(c.Param("id"))
 	if err != nil {
+		l.Error("could not parse group key", zap.Error(err))
 		return NewErrResponse(c, err)
 	}
 
-	var getGroupRequest = group.NewGetGroupRequest(groupKey)
-	var getGroup = h.groupStore.GetGroup(getGroupRequest)
-	if getGroup.Error != nil {
-		return NewErrResponse(c, getGroup.Error)
+	getGroupResponse, err := h.groupService.GetGroup(ctx, group.NewGetGroupRequest(groupKey))
+	if err != nil {
+		l.Error("could not get group", zap.Error(err))
+		return err
 	}
 
-	var response = web.NewGetGroupResponse(getGroup.Group)
+	var response = web.NewGetGroupResponse(getGroupResponse.Group)
 	return c.JSON(http.StatusOK, response)
 
 }
@@ -101,27 +106,31 @@ func (h *Handler) GetGroup(c echo.Context) error {
 // @Router /my/memberships [get]
 func (h *Handler) GetLoggedInUserMemberships(c echo.Context) error {
 
+	ctx, l := GetEchoContext(c, "GetLoggedInUserMemberships")
+
+	l.Debug("getting logged in user memberships")
+
 	authUserKey := h.authorization.GetAuthUserKey(c)
 
-	getMembershipsRequest := group.NewGetMembershipsForUserRequest(authUserKey, model.AnyMembershipStatus())
-	getMemberships := h.groupStore.GetMembershipsForUser(getMembershipsRequest)
-	if getMemberships.Error != nil {
-		return NewErrResponse(c, getMemberships.Error)
+	userMembershipsResponse, err := h.groupService.GetUserMemberships(ctx, group.NewGetMembershipsForUserRequest(authUserKey, group.AnyMembershipStatus()))
+	if err != nil {
+		l.Error("could not get logged in user memberships", zap.Error(err))
+		return NewErrResponse(c, err)
 	}
 
-	memberships := getMemberships.Memberships
+	memberships := userMembershipsResponse.Memberships
 
-	groupNames, err := h.getGroupNamesForMemberships(memberships)
+	groupNames, err := h.getGroupNamesForMemberships(ctx, memberships)
 	if err != nil {
 		return NewErrResponse(c, err)
 	}
 
-	userNames, err := h.getUserNamesForMemberships(memberships)
+	userNames, err := h.getUserNamesForMemberships(ctx, memberships)
 	if err != nil {
 		return NewErrResponse(c, err)
 	}
 
-	response := web.NewGetUserMembershipsResponse(getMemberships.Memberships, groupNames, userNames)
+	response := web.NewGetUserMembershipsResponse(userMembershipsResponse.Memberships, groupNames, userNames)
 	return c.JSON(http.StatusOK, response)
 
 }
@@ -140,37 +149,47 @@ func (h *Handler) GetLoggedInUserMemberships(c echo.Context) error {
 // @Router /users/:id/memberships [get]
 func (h *Handler) GetUserMemberships(c echo.Context) error {
 
-	var membershipStatus = model.AnyMembershipStatus()
+	ctx, l := GetEchoContext(c, "GetUserMemberships")
+
+	l.Debug("getting user memberships")
+
+	var membershipStatus = group.AnyMembershipStatus()
 	statusStr := c.QueryParam("status")
 	if statusStr != "" {
-		ms, err := model.ParseMembershipStatus(statusStr)
+		ms, err := group.ParseMembershipStatus(statusStr)
 		if err != nil {
+
+			l.Error("could not parse desired membership 'status' query param",
+				zap.Error(err),
+				zap.String("status", statusStr))
+
 			return NewErrResponse(c, err)
+
 		}
 		membershipStatus = &ms
 	}
 
 	userKey := model.NewUserKey(c.Param("id"))
-
-	getMembershipsRequest := group.NewGetMembershipsForUserRequest(userKey, membershipStatus)
-	getMemberships := h.groupStore.GetMembershipsForUser(getMembershipsRequest)
-	if getMemberships.Error != nil {
-		return NewErrResponse(c, getMemberships.Error)
+	getMembershipsForUserRequest := group.NewGetMembershipsForUserRequest(userKey, membershipStatus)
+	getMembershipsResponse, err := h.groupService.GetUserMemberships(ctx, getMembershipsForUserRequest)
+	if err != nil {
+		l.Error("could not get user memberships", zap.Error(err))
+		return err
 	}
 
-	memberships := getMemberships.Memberships
-
-	groupNames, err := h.getGroupNamesForMemberships(memberships)
+	groupNames, err := h.getGroupNamesForMemberships(ctx, getMembershipsResponse.Memberships)
 	if err != nil {
+		l.Error("could not get group names for memberships", zap.Error(err))
 		return NewErrResponse(c, err)
 	}
 
-	userNames, err := h.getUserNamesForMemberships(memberships)
+	userNames, err := h.getUserNamesForMemberships(ctx, getMembershipsResponse.Memberships)
 	if err != nil {
+		l.Error("could not get user names for memberships", zap.Error(err))
 		return NewErrResponse(c, err)
 	}
 
-	response := web.NewGetUserMembershipsResponse(getMemberships.Memberships, groupNames, userNames)
+	response := web.NewGetUserMembershipsResponse(getMembershipsResponse.Memberships, groupNames, userNames)
 	return c.JSON(http.StatusOK, response)
 
 }
@@ -189,30 +208,37 @@ func (h *Handler) GetUserMemberships(c echo.Context) error {
 // @Router /groups/:groupId/memberships/:userId [get]
 func (h *Handler) GetMembership(c echo.Context) error {
 
+	ctx, l := GetEchoContext(c, "GetMembership")
+
+	l.Debug("getting memberships")
+
 	userKey := model.NewUserKey(c.Param("userId"))
 
 	groupKey, err := model.ParseGroupKey(c.Param("groupId"))
 	if err != nil {
+		l.Error("could not parse group key", zap.Error(err))
 		return NewErrResponse(c, err)
 	}
 
 	membershipKey := model.NewMembershipKey(groupKey, userKey)
-
 	getMembershipsRequest := group.NewGetMembershipRequest(membershipKey)
-	getMemberships := h.groupStore.GetMembership(getMembershipsRequest)
-	if getMemberships.Error != nil {
-		return NewErrResponse(c, getMemberships.Error)
-	}
-
-	var memberships = model.NewMemberships([]model.Membership{getMemberships.Membership})
-
-	groupNames, err := h.getGroupNamesForMemberships(memberships)
+	getMemberships, err := h.groupService.GetMembership(ctx, getMembershipsRequest)
 	if err != nil {
+		l.Error("could not get membership", zap.Error(err))
 		return NewErrResponse(c, err)
 	}
 
-	userNames, err := h.getUserNamesForMemberships(memberships)
+	var memberships = group.NewMemberships([]group.Membership{*getMemberships.Membership})
+
+	groupNames, err := h.getGroupNamesForMemberships(ctx, memberships)
 	if err != nil {
+		l.Error("could not get group names for memberships", zap.Error(err))
+		return NewErrResponse(c, err)
+	}
+
+	userNames, err := h.getUserNamesForMemberships(ctx, memberships)
+	if err != nil {
+		l.Error("could not get user names for memberships", zap.Error(err))
 		return NewErrResponse(c, err)
 	}
 
@@ -235,11 +261,14 @@ func (h *Handler) GetMembership(c echo.Context) error {
 // @Router /groups/:id/memberships [get]
 func (h *Handler) GetGroupMemberships(c echo.Context) error {
 
-	var membershipStatus = model.AnyMembershipStatus()
+	ctx, l := GetEchoContext(c, "GetGroupMemberships")
+
+	var membershipStatus = group.AnyMembershipStatus()
 	statusStr := c.QueryParam("status")
 	if statusStr != "" {
-		ms, err := model.ParseMembershipStatus(statusStr)
+		ms, err := group.ParseMembershipStatus(statusStr)
 		if err != nil {
+			l.Error("could not parse desired membership 'status' query param", zap.String("status", statusStr))
 			return NewErrResponse(c, err)
 		}
 		membershipStatus = &ms
@@ -247,46 +276,53 @@ func (h *Handler) GetGroupMemberships(c echo.Context) error {
 
 	groupKey, err := model.ParseGroupKey(c.Param("id"))
 	if err != nil {
+		l.Error("could not parse group key", zap.Error(err))
 		return NewErrResponse(c, err)
 	}
 
-	var getGroupRequest = group.NewGetGroupRequest(groupKey)
-	var getGroup = h.groupStore.GetGroup(getGroupRequest)
-	if getGroup.Error != nil {
-		return NewErrResponse(c, getGroup.Error)
-	}
-
-	getGroupMembershipsRequest := group.NewGetMembershipsForGroupRequest(groupKey, membershipStatus)
-	getGroupMemberships := h.groupStore.GetMembershipsForGroup(getGroupMembershipsRequest)
-	if getGroupMemberships.Error != nil {
-		return NewErrResponse(c, err)
-	}
-
-	memberships := getGroupMemberships.Memberships
-
-	userNames, err := h.getUserNamesForMemberships(memberships)
+	_, err = h.groupService.GetGroup(ctx, group.NewGetGroupRequest(groupKey))
 	if err != nil {
+		l.Error("could not get group", zap.Error(err))
 		return NewErrResponse(c, err)
 	}
 
-	groupNames, err := h.getGroupNamesForMemberships(memberships)
+	getGroupMemberships, err := h.groupService.GetGroupsMemberships(ctx, group.NewGetMembershipsForGroupRequest(groupKey, membershipStatus))
 	if err != nil {
+		l.Error("could not get group memberships", zap.Error(err))
 		return NewErrResponse(c, err)
 	}
 
-	response := web.NewGetUserMembershipsResponse(memberships, groupNames, userNames)
+	userNames, err := h.getUserNamesForMemberships(ctx, getGroupMemberships.Memberships)
+	if err != nil {
+		l.Error("could not get user names for memberships", zap.Error(err))
+		return NewErrResponse(c, err)
+	}
+
+	groupNames, err := h.getGroupNamesForMemberships(ctx, getGroupMemberships.Memberships)
+	if err != nil {
+		l.Error("could not get group names for memberships", zap.Error(err))
+		return NewErrResponse(c, err)
+	}
+
+	response := web.NewGetUserMembershipsResponse(getGroupMemberships.Memberships, groupNames, userNames)
 	return c.JSON(http.StatusOK, response)
 
 }
 
-func (h *Handler) getUserNamesForMemberships(memberships model.Memberships) (model.UserNames, error) {
-	var userNames = model.UserNames{}
+func (h *Handler) getUserNamesForMemberships(ctx context.Context, memberships *group.Memberships) (auth.UserNames, error) {
+
+	ctx, l := GetCtx(ctx, "getUserNamesForMemberships")
+
+	l.Debug("getting user names for memberships")
+
+	var userNames = auth.UserNames{}
 	for _, membership := range memberships.Items {
 		userKey := membership.GetUserKey()
 		_, ok := userNames[userKey]
 		if !ok {
 			username, err := h.authStore.GetUsername(userKey)
 			if err != nil {
+				l.Error("could not get username", zap.String("user_id", userKey.String()))
 				return userNames, err
 			}
 			userNames[userKey] = username
@@ -295,15 +331,21 @@ func (h *Handler) getUserNamesForMemberships(memberships model.Memberships) (mod
 	return userNames, nil
 }
 
-func (h *Handler) getGroupNamesForMemberships(memberships model.Memberships) (model.GroupNames, error) {
-	var groupNames = model.GroupNames{}
+func (h *Handler) getGroupNamesForMemberships(ctx context.Context, memberships *group.Memberships) (group.GroupNames, error) {
+
+	ctx, l := GetCtx(ctx, "getGroupNamesForMemberships")
+
+	l.Debug("getting group names for memberships")
+
+	var groupNames = group.GroupNames{}
 	for _, membership := range memberships.Items {
 		groupKey := membership.GetGroupKey()
 		_, ok := groupNames[groupKey]
 		if !ok {
-			getGroup := h.groupStore.GetGroup(group.NewGetGroupRequest(groupKey))
-			if getGroup.Error != nil {
-				return groupNames, getGroup.Error
+			getGroup, err := h.groupService.GetGroup(ctx, group.NewGetGroupRequest(groupKey))
+			if err != nil {
+				l.Error("could not get group", zap.Error(err))
+				return groupNames, err
 			}
 			groupNames[groupKey] = getGroup.Group.Name
 		}
@@ -384,65 +426,51 @@ func (h *Handler) GetUsersForGroupInvitePicker(c echo.Context) error {
 // @Router /groups/:id/invite [get]
 func (h *Handler) InviteUser(c echo.Context) error {
 
-	authUserKey := h.authorization.GetAuthUserKey(c)
+	ctx, l := GetEchoContext(c, "InviteUser")
+
+	l.Debug("inviting user to group")
 
 	req := web.InviteUserRequest{}
 	if err := c.Bind(&req); err != nil {
+		l.Error("could not bind web.InviteUserRequest", zap.Error(err))
 		return NewErrResponse(c, err)
 	}
 
-	// Retrieve the group
 	groupKey, err := model.ParseGroupKey(c.Param("id"))
 	if err != nil {
+		l.Error("could not parse group key", zap.String("group_id", c.Param("id")))
 		return NewErrResponse(c, err)
 	}
-	getGroup := h.groupStore.GetGroup(group.NewGetGroupRequest(groupKey))
-	if getGroup.Error != nil {
-		return NewErrResponse(c, getGroup.Error)
+
+	invitedUserKey := model.NewUserKey(req.UserID)
+	newMembershipKey := model.NewMembershipKey(groupKey, invitedUserKey)
+
+	membership, err := h.groupService.SendGroupInvitation(ctx, group.NewInviteRequest(newMembershipKey))
+	if err != nil {
+		l.Error("could not send invitation", zap.Error(err))
+		return err
 	}
-	groupNames := model.GroupNames{
+
+	getGroup, err := h.groupService.GetGroup(ctx, group.NewGetGroupRequest(groupKey))
+	if err != nil {
+		l.Error("could not get group", zap.Error(err))
+		return NewErrResponse(c, err)
+	}
+	groupNames := group.GroupNames{
 		groupKey: getGroup.Group.Name,
 	}
 
-	// Retrieve the invited user key
-	userKey := model.NewUserKey(req.UserID)
-	username, err := h.authStore.GetUsername(userKey)
+	username, err := h.authStore.GetUsername(membership.Membership.GetUserKey())
 	if err != nil {
+		l.Error("could not get username", zap.Error(err))
 		return NewErrResponse(c, err)
 	}
-	userNames := model.UserNames{
-		userKey: username,
-	}
-
-	// Check that inviter can actually invite on that group
-	authMembershipKey := model.NewMembershipKey(groupKey, authUserKey)
-	authPermissions := h.groupStore.GetGroupPermissionsForUser(group.NewGetMembershipPermissionsRequest(authMembershipKey))
-	if authPermissions.Error != nil {
-		return NewErrResponse(c, authPermissions.Error)
-	}
-	if !authPermissions.MembershipPermissions.IsAdmin {
-		return NewErrResponse(c, fmt.Errorf("forbidden"))
-	}
-
-	// Create the membership
-	membershipKey := model.NewMembershipKey(groupKey, userKey)
-	invite := h.groupStore.Invite(group.InviteRequest{
-		MembershipKey: membershipKey,
-		InvitedBy:     group.GroupParty,
-	})
-
-	if invite.Error != nil {
-		return NewErrResponse(c, invite.Error)
-	}
-
-	// Retrieve the created membership
-	getMembership := h.groupStore.GetMembership(group.NewGetMembershipRequest(membershipKey))
-	if getMembership.Error != nil {
-		return NewErrResponse(c, getMembership.Error)
+	userNames := auth.UserNames{
+		newMembershipKey.UserKey: username,
 	}
 
 	// Respond to query
-	response := web.NewInviteUserResponse(getMembership.Membership, groupNames, userNames)
+	response := web.NewInviteUserResponse(membership.Membership, groupNames, userNames)
 	return c.JSON(http.StatusAccepted, response)
 
 }
@@ -461,83 +489,39 @@ func (h *Handler) InviteUser(c echo.Context) error {
 // @Router /groups/:groupId/memberships/:userId/accept [post]
 func (h *Handler) AcceptInvitation(c echo.Context) error {
 
-	authUserKey := h.authorization.GetAuthUserKey(c)
+	ctx, l := GetEchoContext(c, "AcceptInvitation")
 
 	groupKey, err := model.ParseGroupKey(c.Param("groupId"))
 	if err != nil {
+		l.Error("could not parse group key", zap.Error(err))
 		return NewErrResponse(c, err)
 	}
-
-	var getGroupRequest = group.NewGetGroupRequest(groupKey)
-	var getGroup = h.groupStore.GetGroup(getGroupRequest)
-	if getGroup.Error != nil {
-		return NewErrResponse(c, getGroup.Error)
-	}
-
 	userKey := model.NewUserKey(c.Param("userId"))
+
+	l = l.With(zap.Object("user", userKey), zap.Object("group", groupKey))
+
 	membershipKey := model.NewMembershipKey(groupKey, userKey)
-
-	getMembershipRequest := group.NewGetMembershipRequest(membershipKey)
-	getMembershipResponse := h.groupStore.GetMembership(getMembershipRequest)
-	if getMembershipResponse.Error != nil {
-		return NewErrResponse(c, getMembershipResponse.Error)
-	}
-
-	if userKey == authUserKey {
-		// the user is approving his side
-		if getMembershipResponse.Membership.UserConfirmed {
-			return NewErrResponse(c, fmt.Errorf("already confirmed"))
-		}
-
-		acceptRequest := group.NewMarkInvitationAsAcceptedRequest(membershipKey, group.UserParty)
-		acceptResponse := h.groupStore.MarkInvitationAsAccepted(acceptRequest)
-		if acceptResponse.Error != nil {
-			return NewErrResponse(c, acceptResponse.Error)
-		}
-
-	} else {
-		// the group is approving his side
-		authMembershipKey := model.NewMembershipKey(groupKey, authUserKey)
-		getAuthMembershipResponse := h.groupStore.GetMembership(group.NewGetMembershipRequest(authMembershipKey))
-		if getAuthMembershipResponse.Error != nil {
-			return NewErrResponse(c, getAuthMembershipResponse.Error)
-		}
-
-		if !getAuthMembershipResponse.Membership.IsAdmin {
-			return NewErrResponse(c, fmt.Errorf("forbidden"))
-		}
-
-		if getMembershipResponse.Membership.GroupConfirmed {
-			return NewErrResponse(c, fmt.Errorf("already confirmed"))
-		}
-
-		acceptRequest := group.NewMarkInvitationAsAcceptedRequest(membershipKey, group.GroupParty)
-		acceptResponse := h.groupStore.MarkInvitationAsAccepted(acceptRequest)
-		if acceptResponse.Error != nil {
-			return NewErrResponse(c, acceptResponse.Error)
-		}
-
-	}
-
-	getMembershipRequest = group.NewGetMembershipRequest(membershipKey)
-	getMembershipResponse = h.groupStore.GetMembership(getMembershipRequest)
-	if getMembershipResponse.Error != nil {
-		return NewErrResponse(c, getMembershipResponse.Error)
-	}
-
-	memberships := model.NewMemberships([]model.Membership{getMembershipResponse.Membership})
-
-	userNames, err := h.getUserNamesForMemberships(memberships)
+	acceptInvitationResponse, err := h.groupService.AcceptInvitation(ctx, group.NewAcceptInvitationRequest(membershipKey))
 	if err != nil {
+		l.Error("could not accept invitation", zap.Error(err))
+		return err
+	}
+
+	memberships := group.NewMemberships([]group.Membership{*acceptInvitationResponse.Membership})
+
+	userNames, err := h.getUserNamesForMemberships(ctx, memberships)
+	if err != nil {
+		l.Error("could not get user names for memberships", zap.Error(err))
 		return NewErrResponse(c, err)
 	}
 
-	groupNames, err := h.getGroupNamesForMemberships(memberships)
+	groupNames, err := h.getGroupNamesForMemberships(ctx, memberships)
 	if err != nil {
+		l.Error("could not get group names for memberships", zap.Error(err))
 		return NewErrResponse(c, err)
 	}
 
-	response := web.NewAcceptInvitationResponse(getMembershipResponse.Membership, groupNames, userNames)
+	response := web.NewAcceptInvitationResponse(acceptInvitationResponse.Membership, groupNames, userNames)
 	return c.JSON(http.StatusOK, response)
 
 }
@@ -556,77 +540,26 @@ func (h *Handler) AcceptInvitation(c echo.Context) error {
 // @Router /groups/:groupId/memberships/:userId/decline [post]
 func (h *Handler) DeclineInvitation(c echo.Context) error {
 
-	authUserKey := h.authorization.GetAuthUserKey(c)
+	ctx, l := GetEchoContext(c, "DeclineInvitation")
+
+	l.Debug("declining invitation")
 
 	groupKey, err := model.ParseGroupKey(c.Param("groupId"))
 	if err != nil {
 		return NewErrResponse(c, err)
 	}
 
-	var getGroupRequest = group.NewGetGroupRequest(groupKey)
-	var getGroup = h.groupStore.GetGroup(getGroupRequest)
-	if getGroup.Error != nil {
-		return NewErrResponse(c, getGroup.Error)
-	}
-
 	userKey := model.NewUserKey(c.Param("userId"))
 	membershipKey := model.NewMembershipKey(groupKey, userKey)
 
-	getMembershipRequest := group.NewGetMembershipRequest(membershipKey)
-	getMembershipResponse := h.groupStore.GetMembership(getMembershipRequest)
-	if getMembershipResponse.Error != nil {
-		return NewErrResponse(c, getMembershipResponse.Error)
-	}
-
-	if userKey == authUserKey {
-
-		// the user is declining his side
-		if getMembershipResponse.Membership.UserConfirmed {
-			return NewErrResponse(c, fmt.Errorf("already confirmed"))
-		}
-
-		deleteMembership := h.groupStore.DeleteMembership(group.NewDeleteMembershipRequest(membershipKey))
-		if deleteMembership.Error != nil {
-			return NewErrResponse(c, deleteMembership.Error)
-		}
-
-	} else {
-		// the group is approving his side
-		authMembershipKey := model.NewMembershipKey(groupKey, authUserKey)
-		getAuthMembershipResponse := h.groupStore.GetMembership(group.NewGetMembershipRequest(authMembershipKey))
-		if getAuthMembershipResponse.Error != nil {
-			return NewErrResponse(c, getAuthMembershipResponse.Error)
-		}
-
-		if !getAuthMembershipResponse.Membership.IsAdmin {
-			return NewErrResponse(c, fmt.Errorf("forbidden"))
-		}
-
-		if getMembershipResponse.Membership.GroupConfirmed {
-			return NewErrResponse(c, fmt.Errorf("already confirmed"))
-		}
-
-		deleteMembership := h.groupStore.DeleteMembership(group.NewDeleteMembershipRequest(membershipKey))
-		if deleteMembership.Error != nil {
-			return NewErrResponse(c, deleteMembership.Error)
-		}
-
-	}
-
-	memberships := model.NewMemberships([]model.Membership{model.NewEmptyMembership(membershipKey)})
-
-	userNames, err := h.getUserNamesForMemberships(memberships)
+	err = h.groupService.DeclineInvitation(ctx, group.NewDelineInvitationRequest(membershipKey))
 	if err != nil {
-		return NewErrResponse(c, err)
+		l.Error("could not decline invitation", zap.Error(err))
+		return err
 	}
 
-	groupNames, err := h.getGroupNamesForMemberships(memberships)
-	if err != nil {
-		return NewErrResponse(c, err)
-	}
+	return c.NoContent(http.StatusAccepted)
 
-	response := web.NewDeclineInvitationResponse(getMembershipResponse.Membership, groupNames, userNames)
-	return c.JSON(http.StatusOK, response)
 }
 
 // LeaveGroup godoc
@@ -643,64 +576,24 @@ func (h *Handler) DeclineInvitation(c echo.Context) error {
 // @Router /groups/:groupId/memberships/:userId [delete]
 func (h *Handler) LeaveGroup(c echo.Context) error {
 
-	authUserKey := h.authorization.GetAuthUserKey(c)
+	ctx, l := GetEchoContext(c, "LeaveGroup")
+
+	l.Debug("leaving group")
 
 	groupKey, err := model.ParseGroupKey(c.Param("groupId"))
 	if err != nil {
 		return NewErrResponse(c, err)
 	}
 
-	var getGroupRequest = group.NewGetGroupRequest(groupKey)
-	var getGroup = h.groupStore.GetGroup(getGroupRequest)
-	if getGroup.Error != nil {
-		return NewErrResponse(c, getGroup.Error)
-	}
-
 	userKey := model.NewUserKey(c.Param("userId"))
 	membershipKey := model.NewMembershipKey(groupKey, userKey)
 
-	getMembershipRequest := group.NewGetMembershipRequest(membershipKey)
-	getMembershipResponse := h.groupStore.GetMembership(getMembershipRequest)
-	if getMembershipResponse.Error != nil {
-		return NewErrResponse(c, getMembershipResponse.Error)
-	}
-
-	if userKey == authUserKey {
-		deleteMembership := h.groupStore.DeleteMembership(group.NewDeleteMembershipRequest(membershipKey))
-		if deleteMembership.Error != nil {
-			return NewErrResponse(c, deleteMembership.Error)
-		}
-	} else {
-		// the group is approving his side
-		authMembershipKey := model.NewMembershipKey(groupKey, authUserKey)
-		getAuthMembershipResponse := h.groupStore.GetMembership(group.NewGetMembershipRequest(authMembershipKey))
-		if getAuthMembershipResponse.Error != nil {
-			return NewErrResponse(c, getAuthMembershipResponse.Error)
-		}
-
-		if !getAuthMembershipResponse.Membership.IsAdmin {
-			return NewErrResponse(c, fmt.Errorf("forbidden"))
-		}
-
-		deleteMembership := h.groupStore.DeleteMembership(group.NewDeleteMembershipRequest(membershipKey))
-		if deleteMembership.Error != nil {
-			return NewErrResponse(c, deleteMembership.Error)
-		}
-
-	}
-
-	memberships := model.NewMemberships([]model.Membership{model.NewEmptyMembership(membershipKey)})
-
-	userNames, err := h.getUserNamesForMemberships(memberships)
+	err = h.groupService.LeaveGroup(ctx, group.NewLeaveGroupRequest(membershipKey))
 	if err != nil {
-		return NewErrResponse(c, err)
+		l.Error("could not decline invitation", zap.Error(err))
+		return err
 	}
 
-	groupNames, err := h.getGroupNamesForMemberships(memberships)
-	if err != nil {
-		return NewErrResponse(c, err)
-	}
+	return c.NoContent(http.StatusAccepted)
 
-	response := web.NewDeclineInvitationResponse(getMembershipResponse.Membership, groupNames, userNames)
-	return c.JSON(http.StatusOK, response)
 }

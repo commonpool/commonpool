@@ -37,14 +37,18 @@ var (
 	ErrParseTake = func(err string) ErrorResponse {
 		return NewError(fmt.Sprintf("cannot parse take: '%s'", err), "ErrParseTake", http.StatusBadRequest)
 	}
+	ErrParseBefore = func(err string) ErrorResponse {
+		return NewError(fmt.Sprintf("cannot parse before: '%s'", err), "ErrParseBefore", http.StatusBadRequest)
+	}
 	ErrParseResourceType = func(resType string) ErrorResponse {
 		return NewError(fmt.Sprintf("cannot parse resource type '%s'", resType), "ErrParseResourceType", http.StatusBadRequest)
 	}
 	ErrCannotConvertToInt = func(int string, err string) ErrorResponse {
 		return NewError(fmt.Sprintf("cannot convert '%s' to integer: %s", int, err), "ErrCannotParseInt", http.StatusBadRequest)
 	}
-	ErrCannotInquireAboutOwnResource = func() ErrorResponse {
-		return NewError("cannot inquire about your own resource", "ErrCannotInquireAboutOwnResource", http.StatusForbidden)
+	ErrCannotInquireAboutOwnResource = func() *ErrorResponse {
+		err := NewError("cannot inquire about your own resource", "ErrCannotInquireAboutOwnResource", http.StatusForbidden)
+		return &err
 	}
 	ErrInvalidTopicId = func(threadId string) ErrorResponse {
 		return NewError(fmt.Sprintf("invalid thread id: '%s'", threadId), "ErrInvalidTopicId", http.StatusBadRequest)

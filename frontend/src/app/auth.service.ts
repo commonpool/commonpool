@@ -1,6 +1,6 @@
 import {Injectable, OnDestroy} from '@angular/core';
 import {BehaviorSubject, Observable, Subject} from 'rxjs';
-import {pluck, switchMap} from 'rxjs/operators';
+import {catchError, map, pluck, switchMap, tap} from 'rxjs/operators';
 import {BackendService} from './api/backend.service';
 import {ResourceType, SessionResponse, UserInfoResponse} from './api/models';
 import {Router} from '@angular/router';
@@ -13,11 +13,29 @@ export class AuthService implements OnDestroy {
   constructor(private backend: BackendService, private router: Router) {
   }
 
+  liveData$ = this.backend.events$.pipe(
+    catchError(error => {
+      console.error(error);
+      return [];
+    }),
+    tap({
+        error: error => console.log('[Live component] Error:', error),
+        complete: () => console.log('[Live component] Connection Closed'),
+        next: value => console.log('[Live component] Next: ', value),
+      }
+    )
+  );
+
   loginSubject = new Subject();
   loginSubscription = this.loginSubject.asObservable()
     .pipe(
       switchMap(a => this.backend.getSession())
     ).subscribe(value => {
+
+      if (value) {
+        this.backend.connect();
+      }
+
       this.sessionSubject.next(value);
     });
 
