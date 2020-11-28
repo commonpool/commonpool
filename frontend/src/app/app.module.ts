@@ -67,6 +67,7 @@ import { ActionsBlockComponent } from './chat/actions-block/actions-block.compon
 import { DividerBlockComponent } from './chat/divider-block/divider-block.component';
 import { ImageBlockComponent } from './chat/image-block/image-block.component';
 import { HeaderBlockComponent } from './chat/header-block/header-block.component';
+import { MessageGroupComponent } from './chat/message-group/message-group.component';
 // import {ConvertLinksDirective} from './markdown/convert-links.directive';
 // import {RouterLinkComponent} from './markdown/router-link/router-link.component';
 // import {MarkdownRenderer} from './markdown/Renderer';
@@ -137,6 +138,7 @@ import { HeaderBlockComponent } from './chat/header-block/header-block.component
     DividerBlockComponent,
     ImageBlockComponent,
     HeaderBlockComponent,
+    MessageGroupComponent,
     // ConvertLinksDirective,
     // RouterLinkComponent,
   ],

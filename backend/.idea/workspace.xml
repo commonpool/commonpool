@@ -26,24 +26,29 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b50bce1a-5445-4a69-8265-74993e439f0e" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/test/integration/resource_test.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/test/integration/trading_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../frontend/jest.config.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../frontend/src/app/chat/utils/messages-mapper.spec.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../frontend/src/app/chat/utils/messages-mapper.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../frontend/tsconfig.spec.bkp.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/amqp/client.go" beforeDir="false" afterPath="$PROJECT_DIR$/amqp/client.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/chat/store.go" beforeDir="false" afterPath="$PROJECT_DIR$/chat/store.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/handler/resource.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/resource.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/chat.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/chat.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/group.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/trading.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/trading.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/store/auth.go" beforeDir="false" afterPath="$PROJECT_DIR$/store/auth.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/store/chat.go" beforeDir="false" afterPath="$PROJECT_DIR$/store/chat.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/store/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/store/group.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/integration/group_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/test/integration/group_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/integration/main_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/test/integration/main_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/integration/utils_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/test/integration/utils_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/api/backend.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/api/backend.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/angular.json" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/angular.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/karma.conf.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/app/app.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/app.module.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/app/chat/actions-block/actions-block.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/chat/actions-block/actions-block.component.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/app/chat/block/block.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/chat/block/block.component.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/app/chat/blocks.service.spec.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/chat/blocks.service.spec.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/app/chat/blocks/blocks.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/chat/blocks/blocks.component.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/app/chat/conversation-thread/conversation-thread.component.css" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/chat/conversation-thread/conversation-thread.component.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/app/chat/conversation-thread/conversation-thread.component.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/app/chat/conversation-thread/conversation-thread.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/chat/conversation-thread/conversation-thread.component.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/app/chat/header-block/header-block.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/chat/header-block/header-block.component.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/app/chat/section-block/section-block.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/chat/section-block/section-block.component.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/app/resources/resource-details/resource-details.component.spec.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/resources/resource-details/resource-details.component.spec.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/app/resources/resource-list-view/resource-list-view.component.spec.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/resources/resource-list-view/resource-list-view.component.spec.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/test.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/tsconfig.spec.json" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/tsconfig.spec.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -349,11 +354,6 @@
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/amqp/client.go</url>
-          <line>179</line>
-          <option name="timeStamp" value="33" />
-        </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/service/trading.go</url>
           <line>156</line>

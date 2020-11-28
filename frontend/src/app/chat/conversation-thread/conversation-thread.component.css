@@ -19,11 +19,8 @@
   }
 
 }
-
-
 .a-thread {
   display: flex;
-  flex-direction: column-reverse;
   padding: 0;
   margin: 0;
   overflow-y: auto;
@@ -37,19 +34,9 @@
   height: 3rem;
 }
 
-textarea {
-  border-radius: 0.5rem;
-  width: 100%;
-  height: 2.5rem;
-  resize: none;
-}
 
 .textarea-container {
-  padding: 0.25rem;
-  height: 100%;
-  width: 100%;
-  display: flex;
-  flex-direction: row;
+
 }
 
 .send {
@@ -58,7 +45,7 @@ textarea {
 
 .messages {
   display: flex;
-  flex-direction: column-reverse;
+  flex-direction: column;
 }
 
 .message {

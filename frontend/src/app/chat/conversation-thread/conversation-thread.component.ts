@@ -1,4 +1,13 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  OnDestroy,
+  OnInit,
+  QueryList,
+  ViewChild,
+  ViewChildren
+} from '@angular/core';
 import {BehaviorSubject, combineLatest, Observable, Subject} from 'rxjs';
 import {filter, map, pluck, startWith, switchMap} from 'rxjs/operators';
 import {ActivatedRoute} from '@angular/router';
@@ -6,6 +15,7 @@ import {BackendService} from '../../api/backend.service';
 import {Event, EventType, GetMessagesResponse, Message, SectionBlock, TextObject, TextType} from '../../api/models';
 import {format} from 'date-fns';
 import {ChatService, ConversationType} from '../chat.service';
+import {MapMessages} from '../utils/messages-mapper';
 
 class MessageGroup {
   constructor(public date: Date, public dateStr: string, public messages: Message[]) {
@@ -36,11 +46,76 @@ class UserMessages extends DisplayElement {
 
 @Component({
   selector: 'app-conversation-thread',
-  templateUrl: './conversation-thread.component.html',
+  styles: [
+      `
+      .input-section {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 2.5rem;
+        z-index: 1000;
+        width: 100%
+      }
+
+      textarea {
+        height: 2.5rem;
+        resize: none;
+      }
+
+      .messages-container {
+        height: calc(100vh - 11rem);
+        overflow-y: auto;
+      }
+
+      .messages-inner-container {
+        max-width: 60rem;
+      }
+    `
+  ],
+  template: `
+    <div class="channel w-100 " style="position:relative">
+
+      <div style="height: 3rem; position: relative; top:0; left: 0; width: 100%; z-index:1000"
+           class="border-bottom bg-primary">
+        <a class="btn btn-light mt-1 ml-1" [routerLink]="'/messages'">
+          🡠
+        </a>
+      </div>
+
+      <div class="py-2 w-100 messages-container" #scrollframe (scroll)="scrolled($event)" (resize)="scrolled($event)">
+        <div class="messages messages-inner-container" style="line-break: loose">
+          <ng-container *ngIf="messageGroups$ | async; let messageGroups">
+            <ng-container *ngFor="let messageGroup of messageGroups;">
+              <app-message-group [messageGroup]="messageGroup" #item></app-message-group>
+            </ng-container>
+          </ng-container>
+        </div>
+      </div>
+
+      <div class="input-section px-2 mb-3 d-flex flex-row">
+        <textarea class="form-control rounded-0"
+                  [(ngModel)]="content"
+                  (keydown.enter)="sendMessage($event)">
+        </textarea>
+        <div class="send">
+          <button class="btn btn-primary ml-2" (click)="sendMessage($event)">
+            <app-arrow-right></app-arrow-right>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+  `,
   styleUrls: ['./conversation-thread.component.css']
 })
-export class ConversationThreadComponent implements OnInit , OnDestroy{
+export class ConversationThreadComponent implements OnInit, OnDestroy, AfterViewInit {
 
+  @ViewChild('scrollframe', {static: false}) scrollFrame: ElementRef<HTMLElement>;
+  @ViewChildren('item') itemElements: QueryList<any>;
+  private scrollContainer: HTMLElement;
+
+  private isNearBottom = true;
   private type: string;
   private skipSubject = new Subject<number>();
   private skip$ = this.skipSubject.pipe(startWith(0));
@@ -75,87 +150,12 @@ export class ConversationThreadComponent implements OnInit , OnDestroy{
       }),
     );
 
-  public displayElements$ = this.messages$.pipe(
+  public messageGroups$ = this.messages$.pipe(
     pluck<GetMessagesResponse, Message[]>('messages'),
-    map((messages: Message[]) => {
-      return messages.map(m => {
-        if (((!m.blocks || m.blocks.length === 0) && m.text)) {
-          m.blocks = [
-            new SectionBlock(new TextObject(TextType.PlainTextType, m.text))
-          ];
-        }
-        return m;
-      });
-    }),
-    map((messages: Message[]) => {
-
-      const messageGroups: DisplayElement[] = [];
-
-      let lastDate: Date;
-      let lastDateYear: number;
-      let lastDateMonth: number;
-      let lastDateDay: number;
-      let lastUser: string;
-      let currentUserMsgGrp: UserMessages;
-
-      for (let i = 0; i < messages.length; i++) {
-
-        const message = messages[i];
-
-        if (i === 0) {
-          lastDate = message.sentAtDate;
-          lastDateYear = lastDate.getFullYear();
-          lastDateMonth = lastDate.getMonth();
-          lastDateDay = lastDate.getDate();
-        }
-
-        if (this.isDifferentDate(lastDate, message.sentAtDate) || (messages.length - 1 === i)) {
-
-          lastDate = message.sentAtDate;
-          lastDateYear = message.sentAtDate.getFullYear();
-          lastDateMonth = message.sentAtDate.getMonth();
-          lastDateDay = message.sentAtDate.getDate();
-
-          let dateStr = format(lastDate, 'EEEE LLL. Mo.');
-
-          if (this.isToday(lastDate)) {
-            dateStr = 'today';
-          } else if (this.isYesterday(lastDate)) {
-            dateStr = 'yesterday';
-          }
-
-          const newDateGroup = new DateSeparator(lastDate, dateStr);
-          console.log(newDateGroup);
-          messageGroups.push(newDateGroup);
-
-        }
-
-        if (currentUserMsgGrp === undefined || lastUser !== message.sentById) {
-          currentUserMsgGrp = new UserMessages(message.sentByUsername, message.sentById, []);
-          lastUser = message.sentById;
-          messageGroups.push(currentUserMsgGrp);
-        }
-
-        currentUserMsgGrp.messages.push(message);
-      }
-
-      return messageGroups;
-    })
-  );
-
-  private isDifferentDate(date1: Date, date2: Date) {
-    return (date1 && date1.getFullYear() !== date2.getFullYear())
-      || (date1 && date1.getMonth() !== date2.getMonth())
-      || (date1 && date1.getDate() !== date2.getDate());
-
-  }
+    map((messages: Message[]) => MapMessages(messages)));
 
   trackMessage(i, o: Message) {
     return o.id;
-  }
-
-  trackMessageGroup(i, o: MessageGroup) {
-    return o?.date?.toISOString();
   }
 
   constructor(private route: ActivatedRoute, private backend: BackendService, public chat: ChatService) {
@@ -177,23 +177,39 @@ export class ConversationThreadComponent implements OnInit , OnDestroy{
     });
   }
 
-  isToday(someDate) {
-    const today = new Date();
-    return someDate.getDate() === today.getDate() &&
-      someDate.getMonth() === today.getMonth() &&
-      someDate.getFullYear() === today.getFullYear();
-  }
-
-  isYesterday(someDate) {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    return someDate.getDate() === yesterday.getDate() &&
-      someDate.getMonth() === yesterday.getMonth() &&
-      someDate.getFullYear() === yesterday.getFullYear();
-  }
-
   ngOnDestroy(): void {
-    this.chat.setCurrentConversation(undefined)
+    this.chat.setCurrentConversation(undefined);
+  }
+
+  private onItemElementsChanged(): void {
+    console.log('element changed', this.isNearBottom);
+    if (this.isNearBottom) {
+      this.scrollToBottom();
+    }
+  }
+
+  private scrollToBottom(): void {
+    this.scrollContainer.scroll({
+      top: this.scrollContainer.scrollHeight,
+      left: 0,
+      behavior: 'auto'
+    });
+  }
+
+  ngAfterViewInit() {
+    this.scrollContainer = this.scrollFrame.nativeElement;
+    this.itemElements.changes.subscribe(_ => this.onItemElementsChanged());
+  }
+
+  private isUserNearBottom(): boolean {
+    const threshold = 300;
+    const position = this.scrollContainer.scrollTop + this.scrollContainer.offsetHeight;
+    const height = this.scrollContainer.scrollHeight;
+    return position > height - threshold;
+  }
+
+  scrolled(event: any): void {
+    this.isNearBottom = this.isUserNearBottom();
   }
 
 }

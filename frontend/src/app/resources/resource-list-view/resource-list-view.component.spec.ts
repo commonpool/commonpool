@@ -59,7 +59,8 @@ describe('ResourceListViewComponent', () => {
         20,
         'createdBy',
         'createdById',
-        '2020-10-20T19:26:05.425Z'
+        '2020-10-20T19:26:05.425Z',
+        []
       )], 1, 10, 0);
 
     const resources$ = defer(() => of(resources).pipe(delay(100)));

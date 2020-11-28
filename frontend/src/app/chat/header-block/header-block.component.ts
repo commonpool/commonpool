@@ -5,7 +5,7 @@ import {Block} from '../../api/models';
   selector: 'app-header-block',
   template: `
     <div class="font-weight-bold block-header mt-2">
-      <app-text-object [textObject]="block.text" [small]="true"></app-text-object>
+      <app-text-object [textObject]="block" [small]="true"></app-text-object>
     </div>
   `
 })

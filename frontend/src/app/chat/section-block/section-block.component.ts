@@ -3,8 +3,13 @@ import {Block} from '../../api/models';
 
 @Component({
   selector: 'app-section-block',
+  styles: [`
+    .section-row {
+      align-items: center;
+    }
+  `],
   template: `
-    <div class="d-flex flex-row">
+    <div class="section-row d-flex flex-row">
 
       <ng-container *ngIf="block.text">
         <app-text-object [textObject]="block.text"></app-text-object>
@@ -14,9 +19,7 @@ import {Block} from '../../api/models';
 
       <ng-container *ngIf="block.accessory; let accessory">
         <ng-container *ngIf="accessory.type === 'button'">
-          <div style="position:relative; top:-0.25rem">
-            <app-button [buttonElement]="accessory"></app-button>
-          </div>
+          <app-button [buttonElement]="accessory"></app-button>
         </ng-container>
       </ng-container>
 

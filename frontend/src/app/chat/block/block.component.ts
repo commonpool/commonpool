@@ -33,7 +33,7 @@ import {BlockService} from '../block.service';
       </div>
 
       <h5 *ngSwitchCase="'header'" class="block block-header">
-        <app-header-block></app-header-block>
+        <app-header-block [block]="block"></app-header-block>
       </h5>
 
     </ng-container>

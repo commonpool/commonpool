@@ -1,4 +1,5 @@
 <div class="blocks-container">
+  <div *ngIf="message.text && (!message.blocks || message.blocks.length === 0)">{{message.text}}</div>
   <div class="blocks" *ngIf="message.blocks">
     <app-block *ngFor="let block of message.blocks" [block]="block"></app-block>
   </div>

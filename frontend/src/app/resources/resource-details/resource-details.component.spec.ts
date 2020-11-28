@@ -27,7 +27,8 @@ describe('ResourceDetailsComponent', () => {
           20,
           'createdBy',
           'createdById',
-          '2020-10-20T19:26:05.425Z'
+          '2020-10-20T19:26:05.425Z',
+          []
         )));
     }
   };

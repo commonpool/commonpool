@@ -5,13 +5,13 @@ import {Block} from '../../api/models';
   selector: 'app-actions-block',
   template: `
     <div class="d-flex">
-      <ng-container *ngFor="let blockElement of block.elements; let i = index">
-        <ng-container *ngIf="blockElement.type === 'button'">
-          <div class="actions-container">
+      <div class="actions-container">
+        <ng-container *ngFor="let blockElement of block.elements; let i = index">
+          <ng-container *ngIf="blockElement.type === 'button'">
             <app-button [buttonElement]="blockElement"></app-button>
-          </div>
+          </ng-container>
         </ng-container>
-      </ng-container>
+      </div>
     </div>
   `,
   styles: [`
