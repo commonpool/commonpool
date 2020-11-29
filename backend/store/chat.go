@@ -108,7 +108,7 @@ func (cs *ChatStore) GetChannel(ctx context.Context, channelKey model.ChannelKey
 
 }
 
-func (cs *ChatStore) GetSubscriptionsForUser(ctx context.Context, request *chat.GetSubscriptions) (*chat.GetSubscriptionsResponse, error) {
+func (cs *ChatStore) GetSubscriptionsForUser(ctx context.Context, request *chat.GetSubscriptions) (*chat.ChannelSubscriptions, error) {
 	ctx, l := GetCtx(ctx, "ChatStore", "GetSubscriptionsForUser")
 
 	var subscriptions []chat.ChannelSubscription
@@ -124,9 +124,7 @@ func (cs *ChatStore) GetSubscriptionsForUser(ctx context.Context, request *chat.
 		l.Error("could not get subscriptions", zap.Error(err))
 		return nil, err
 	}
-	return &chat.GetSubscriptionsResponse{
-		Subscriptions: *chat.NewChannelSubscriptions(subscriptions),
-	}, nil
+	return chat.NewChannelSubscriptions(subscriptions), nil
 }
 
 func (cs *ChatStore) GetSubscriptionsForChannel(ctx context.Context, channelKey model.ChannelKey) ([]chat.ChannelSubscription, error) {
@@ -145,7 +143,7 @@ func (cs *ChatStore) GetSubscriptionsForChannel(ctx context.Context, channelKey 
 	return subscriptions, nil
 }
 
-func (cs *ChatStore) GetSubscription(ctx context.Context, request *chat.GetSubscription) (*chat.GetSubscriptionResponse, error) {
+func (cs *ChatStore) GetSubscription(ctx context.Context, request *chat.GetSubscription) (*chat.ChannelSubscription, error) {
 
 	ctx, l := GetCtx(ctx, "ChatStore", "GetSubscription")
 
@@ -167,20 +165,18 @@ func (cs *ChatStore) GetSubscription(ctx context.Context, request *chat.GetSubsc
 		return nil, err
 	}
 
-	return &chat.GetSubscriptionResponse{
-		Subscription: &subscription,
-	}, nil
+	return &subscription, nil
 
 }
 
-func (cs *ChatStore) GetMessage(ctx context.Context, request *chat.GetMessage) (*chat.GetMessageResponse, error) {
+func (cs *ChatStore) GetMessage(ctx context.Context, messageKey model.MessageKey) (*chat.Message, error) {
 
 	ctx, l := GetCtx(ctx, "ChatStore", "GetMessage")
 
 	var message Message
 	err := cs.db.
 		Model(Message{}).
-		Where("id = ?", request.MessageKey.String()).
+		Where("id = ?", messageKey.String()).
 		First(&message).
 		Error
 
@@ -195,9 +191,7 @@ func (cs *ChatStore) GetMessage(ctx context.Context, request *chat.GetMessage) (
 		return nil, err
 	}
 
-	return &chat.GetMessageResponse{
-		Message: returnMessage,
-	}, nil
+	return returnMessage, nil
 }
 
 func (cs *ChatStore) GetMessages(ctx context.Context, request *chat.GetMessages) (*chat.GetMessagesResponse, error) {
@@ -377,7 +371,7 @@ func (cs *ChatStore) GetMessages(ctx context.Context, request *chat.GetMessages)
 // 	return nil
 // }
 
-func (cs *ChatStore) SaveMessage(ctx context.Context, request *chat.SaveMessageRequest) (*chat.SaveMessageResponse, error) {
+func (cs *ChatStore) SaveMessage(ctx context.Context, request *chat.SaveMessageRequest) (*chat.Message, error) {
 
 	ctx, l := GetCtx(ctx, "ChatStore", "SaveMessage")
 
@@ -481,9 +475,7 @@ func (cs *ChatStore) SaveMessage(ctx context.Context, request *chat.SaveMessageR
 		l.Error("could not map message", zap.Error(err))
 	}
 
-	return &chat.SaveMessageResponse{
-		Message: returnMessage,
-	}, nil
+	return returnMessage, nil
 
 }
 

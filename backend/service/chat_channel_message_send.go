@@ -49,9 +49,9 @@ func (c ChatService) SendChannelMessage(ctx context.Context, channelKey model.Ch
 		SubType:   "user",
 		Channel:   channelKey.String(),
 		User:      authUserKey.String(),
-		ID:        sentMessage.Message.Key.String(),
-		Timestamp: sentMessage.Message.SentAt.String(),
-		Text:      sentMessage.Message.Text,
+		ID:        sentMessage.Key.String(),
+		Timestamp: sentMessage.SentAt.String(),
+		Text:      sentMessage.Text,
 	}
 
 	js, err := json.Marshal(evt)

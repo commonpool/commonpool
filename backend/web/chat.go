@@ -51,7 +51,7 @@ type GetLatestMessageThreadsResponse struct {
 }
 
 type GetTopicMessagesResponse struct {
-	Messages []Message `json:"messages"`
+	Messages []*Message `json:"messages"`
 }
 
 type InteractionMessage struct {
@@ -109,7 +109,7 @@ type InteractionCallbackPayload struct {
 	User        InteractionPayloadUser             `json:"user"`
 	TriggerId   string                             `json:"triggerId"`
 	ResponseURL string                             `json:"responseUrl"`
-	Message     Message                            `json:"message"`
+	Message     *Message                           `json:"message"`
 	Actions     []Action                           `json:"actions"`
 	State       map[string]map[string]ElementState `json:"state"`
 }

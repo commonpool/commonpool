@@ -36,11 +36,6 @@ const (
 
 type EventSubType string
 
-const (
-	MessageChanged = "message_changed"
-	MessageDeleted = "message_deleted"
-)
-
 type Event struct {
 	Type      EventType    `json:"type"`
 	SubType   EventSubType `json:"subType"`
@@ -57,9 +52,8 @@ type EventContainer struct {
 }
 
 type Delivery struct {
-	Acknowledger Ack  // the channel from which this delivery arrived
-	Headers      Args // Application or header exchange table
-	// Properties
+	Acknowledger    Ack       // the channel from which this delivery arrived
+	Headers         Args      // Application or header exchange table
 	ContentType     string    // MIME content type
 	ContentEncoding string    // MIME content encoding
 	DeliveryMode    uint8     // queue implementation use - non-persistent (1) or persistent (2)

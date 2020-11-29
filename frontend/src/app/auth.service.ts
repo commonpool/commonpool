@@ -1,6 +1,6 @@
 import {Injectable, OnDestroy} from '@angular/core';
-import {BehaviorSubject, Observable, Subject} from 'rxjs';
-import {catchError, map, pluck, switchMap, tap} from 'rxjs/operators';
+import {BehaviorSubject, interval, Observable, Subject} from 'rxjs';
+import {catchError, map, pluck, startWith, switchMap, tap} from 'rxjs/operators';
 import {BackendService} from './api/backend.service';
 import {ResourceType, SessionResponse, UserInfoResponse} from './api/models';
 import {Router} from '@angular/router';
@@ -26,25 +26,19 @@ export class AuthService implements OnDestroy {
     )
   );
 
-  loginSubject = new Subject();
-  loginSubscription = this.loginSubject.asObservable()
-    .pipe(
-      switchMap(a => this.backend.getSession())
-    ).subscribe(value => {
-
-      if (value) {
-        this.backend.connect();
-      }
-
-      this.sessionSubject.next(value);
-    });
+  loginSubscription = interval(10000).pipe(
+    startWith([null]),
+    switchMap(a => this.backend.getSession())
+  ).subscribe(value => {
+    this.sessionSubject.next(value);
+  });
 
   private sessionSubject = new BehaviorSubject<SessionResponse>(undefined);
   public session$ = this.sessionSubject.asObservable();
   public authUserId$ = this.session$.pipe(pluck('id'));
 
   public checkLoggedIn() {
-    this.loginSubject.next(true);
+    // this.loginSubject.next(true);
   }
 
   public goToMyProfile() {

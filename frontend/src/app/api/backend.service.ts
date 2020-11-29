@@ -116,6 +116,12 @@ export class BackendService {
       try {
         const subject = webSocket(`${environment.wsUrl}/api/v1/ws`);
         const subscription = subject.asObservable()
+          .pipe(
+            catchError(err => {
+              console.error(err);
+              throw err;
+            })
+          )
           .subscribe(data =>
               observer.next(data),
             error => observer.error(error),
@@ -132,6 +138,11 @@ export class BackendService {
 
     const messages = socketObserver.pipe(
       retry(Infinity),
+      catchError(err => {
+        console.log('!!');
+        console.error(err);
+        throw err;
+      }),
       map(a => Event.from(a as any)))
       .subscribe((e) => {
         this.messagesSubject$.next(e);

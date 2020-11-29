@@ -28,6 +28,20 @@ type OidcAuthenticator struct {
 	authStore    Store
 }
 
+func (a *OidcAuthenticator) GetRedirectResponse(request *http.Request) (*RedirectResponse, error) {
+	st, err := newState(request, state)
+	if err != nil {
+		return nil, err
+	}
+	codeURL := a.oauth2Config.AuthCodeURL(st)
+	response := &RedirectResponse{
+		RedirectResponseMeta{
+			RedirectTo: codeURL,
+		},
+	}
+	return response, nil
+}
+
 // GetAuthenticatedUser gets the current authenticated user
 func (a *OidcAuthenticator) GetAuthUserSession(c echo.Context) UserSession {
 	var isAuthenticated = c.Get(IsAuthenticatedKey).(bool)
@@ -290,7 +304,7 @@ func (a *OidcAuthenticator) getAccessToken(c echo.Context) (string, error) {
 
 // RedirectToAuth sends redirect request to authenticate
 func (a *OidcAuthenticator) RedirectToAuth(c echo.Context) error {
-	st, err := newState(c, state)
+	st, err := newState(c.Request(), state)
 	if err != nil {
 		return err
 	}

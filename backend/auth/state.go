@@ -5,20 +5,16 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"github.com/commonpool/backend/logging"
-	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
+	"net/http"
 )
 
 const state = "someState"
 
-func newState(c echo.Context, state string) (string, error) {
+func newState(request *http.Request, state string) (string, error) {
 
-	l := logging.WithContext(c.Request().Context())
-
-	origin := c.Request().Header.Get("Origin")
-	referrer := c.Request().Referer()
-
-	l.Debug("encoding nonce", zap.String("origin", origin), zap.String("referrer", referrer))
+	_ = request.Header.Get("Origin")
+	referrer := request.Referer()
 
 	st := Nonce{
 		DesiredUrl: referrer,
@@ -26,7 +22,6 @@ func newState(c echo.Context, state string) (string, error) {
 	}
 	bytes, err := json.Marshal(st)
 	if err != nil {
-		l.Error("could not encode state", zap.Error(err))
 		return "", err
 	}
 	b64 := base64.StdEncoding.EncodeToString(bytes)

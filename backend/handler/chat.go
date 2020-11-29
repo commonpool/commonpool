@@ -71,16 +71,16 @@ func (h *Handler) GetRecentlyActiveSubscriptions(c echo.Context) error {
 		zap.Int("take", take),
 		zap.Int("skip", skip))
 
-	getSubscriptions, err := h.chatStore.GetSubscriptionsForUser(ctx, chat.NewGetSubscriptions(userKey, take, skip))
+	userSubscriptions, err := h.chatStore.GetSubscriptionsForUser(ctx, chat.NewGetSubscriptions(userKey, take, skip))
 	if err != nil {
 		l.Error("could not get subscriptions", zap.Error(err))
 		return err
 	}
 
-	l.Debug("mapping subscriptions to web response", zap.Int("subscriptionCount", len(getSubscriptions.Subscriptions.Items)))
+	l.Debug("mapping subscriptions to web response", zap.Int("subscriptionCount", len(userSubscriptions.Items)))
 
 	var items []web.Subscription
-	for _, subscription := range getSubscriptions.Subscriptions.Items {
+	for _, subscription := range userSubscriptions.Items {
 
 		l := l.With(zap.String("channelId", subscription.ChannelID))
 
@@ -177,7 +177,7 @@ func (h *Handler) GetMessages(c echo.Context) error {
 
 	l.Debug("mapping to web response")
 
-	items := make([]web.Message, len(getMessages.Messages.Items))
+	items := make([]*web.Message, len(getMessages.Messages.Items))
 	for i, message := range getMessages.Messages.Items {
 		items[i] = mapMessage(&message)
 	}
@@ -187,13 +187,13 @@ func (h *Handler) GetMessages(c echo.Context) error {
 	})
 }
 
-func mapMessage(message *chat.Message) web.Message {
+func mapMessage(message *chat.Message) *web.Message {
 	var visibleToUser *string = nil
 	if message.VisibleToUser != nil {
 		visibleToUserStr := message.VisibleToUser.String()
 		visibleToUser = &visibleToUserStr
 	}
-	item := web.Message{
+	return &web.Message{
 		ID:             message.Key.String(),
 		ChannelID:      message.ChannelKey.String(),
 		MessageType:    message.MessageType,
@@ -206,7 +206,6 @@ func mapMessage(message *chat.Message) web.Message {
 		Attachments:    message.Attachments,
 		VisibleToUser:  visibleToUser,
 	}
-	return item
 }
 
 // InquireAboutResource
@@ -354,13 +353,11 @@ func (h *Handler) SubmitInteraction(c echo.Context) error {
 		l.Warn("could not convert message id to uuid", zap.Error(err))
 		return err
 	}
-	getMessage := &chat.GetMessage{MessageKey: model.NewMessageKey(uid)}
-	getMessageResponse, err := h.chatStore.GetMessage(ctx, getMessage)
+	message, err := h.chatStore.GetMessage(ctx, model.NewMessageKey(uid))
 	if err != nil {
 		l.Warn("could not get message", zap.Error(err))
 		return err
 	}
-	message := mapMessage(getMessageResponse.Message)
 
 	now := time.Now()
 
@@ -377,6 +374,8 @@ func (h *Handler) SubmitInteraction(c echo.Context) error {
 		})
 	}
 
+	webMessage := mapMessage(message)
+
 	// Creating interaction payload message
 	interactionPayload := web.InteractionCallback{
 		Token: h.config.CallbackToken,
@@ -388,7 +387,7 @@ func (h *Handler) SubmitInteraction(c echo.Context) error {
 				ID:       authUserKey.String(),
 				Username: authSession.Username,
 			},
-			Message: message,
+			Message: webMessage,
 			Actions: actions,
 			State:   req.Payload.State,
 		},

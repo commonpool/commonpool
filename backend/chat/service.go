@@ -4,7 +4,6 @@ import (
 	ctx "context"
 	"github.com/commonpool/backend/model"
 	"golang.org/x/net/context"
-	"time"
 )
 
 type Service interface {
@@ -37,63 +36,6 @@ func NewNotifyUserInterestedAboutResource(interestedUser model.UserKey, resource
 		ResourceKey:    resourceKey,
 		Message:        message,
 	}
-}
-
-type NotifyUserOffer struct {
-	OfferingUser model.UserKey
-	OfferKey     model.OfferKey
-}
-type NotifyUserOfferResponse struct {
-	Message *Message
-}
-
-type NotifyOfferAccepted struct {
-	AcceptingUser model.UserKey
-	Offer         model.OfferKey
-}
-
-type NotifyOfferAcceptedResponse struct {
-	Message *Message
-}
-
-type NotifyOfferDeclined struct {
-	DecliningUser model.UserKey
-	Offer         model.OfferKey
-}
-type NotifyOfferDeclinedResponse struct {
-	Message *Message
-}
-
-type NotifyGroupJoined struct {
-	UserKey  model.UserKey
-	GroupKey model.GroupKey
-}
-
-type NotifyGroupJoinedResponse struct {
-	Message *Message
-}
-
-type NotifyGroupLeft struct {
-	UserKey  model.UserKey
-	GroupKey model.GroupKey
-}
-
-type NotifyGroupLeftResponse struct {
-	Message *Message
-}
-
-type NotifyCreditsTransferred struct {
-	FromUserKey model.UserKey
-	ToUserKey   model.GroupKey
-	Amount      time.Time
-}
-
-type NotifyCreditsTransferredResponse struct {
-	Message *Message
-}
-
-type GetOrCreateConversationChannel struct {
-	UserKeys *model.UserKeys
 }
 
 type GetOrCreateConversationChannelResponse struct {

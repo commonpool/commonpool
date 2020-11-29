@@ -27,34 +27,22 @@
   <component name="ChangeListManager">
     <list default="true" id="b50bce1a-5445-4a69-8265-74993e439f0e" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/amqp/client.go" beforeDir="false" afterPath="$PROJECT_DIR$/amqp/client.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/amqp/types.go" beforeDir="false" afterPath="$PROJECT_DIR$/amqp/types.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/auth/auth.go" beforeDir="false" afterPath="$PROJECT_DIR$/auth/auth.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/auth/oidc_authenticator.go" beforeDir="false" afterPath="$PROJECT_DIR$/auth/oidc_authenticator.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth/state.go" beforeDir="false" afterPath="$PROJECT_DIR$/auth/state.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/chat/service.go" beforeDir="false" afterPath="$PROJECT_DIR$/chat/service.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/chat/store.go" beforeDir="false" afterPath="$PROJECT_DIR$/chat/store.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/config_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/config/config_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/errors/errors.go" beforeDir="false" afterPath="$PROJECT_DIR$/errors/errors.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/handler/handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/handler.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handler/chat.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/chat.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/handler/pubsub.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/pubsub.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/handler/resource_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/resource_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/handler/trading.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/trading.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/handler/trading_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/trading_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mock/amcp_ack_mock.go" beforeDir="false" afterPath="$PROJECT_DIR$/mock/amcp_ack_mock.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mock/amqp_channel_mock.go" beforeDir="false" afterPath="$PROJECT_DIR$/mock/amqp_channel_mock.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mock/amqp_client_mock.go" beforeDir="false" afterPath="$PROJECT_DIR$/mock/amqp_client_mock.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mock/auth_mock.go" beforeDir="false" afterPath="$PROJECT_DIR$/mock/auth_mock.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/chat.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/chat.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/group.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/trading_offer_accept.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/trading_offer_accept.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handler/routes.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/routes.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/service/chat_channel_message_send.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/chat_channel_message_send.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/service/chat_convo_message_send.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/chat_convo_message_send.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/service/chat_group_message_send.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/chat_group_message_send.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/store/chat.go" beforeDir="false" afterPath="$PROJECT_DIR$/store/chat.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/store/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/store/group.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/integration/main_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/test/integration/main_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/integration/trading_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/test/integration/trading_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/integration/utils_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/test/integration/utils_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/parse.go" beforeDir="false" afterPath="$PROJECT_DIR$/utils/parse.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/web/group.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/chat.go" beforeDir="false" afterPath="$PROJECT_DIR$/web/chat.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/app/api/backend.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/api/backend.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/src/app/auth.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/auth.service.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -244,7 +232,14 @@
       <option name="project" value="LOCAL" />
       <updated>1606631482334</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="code style">
+      <created>1606632350046</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1606632350046</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -266,7 +261,8 @@
     <MESSAGE value="Share resources with group" />
     <MESSAGE value="bla" />
     <MESSAGE value="trading history" />
-    <option name="LAST_COMMIT_MESSAGE" value="trading history" />
+    <MESSAGE value="code style" />
+    <option name="LAST_COMMIT_MESSAGE" value="code style" />
   </component>
   <component name="VgoProject">
     <integration-enabled>true</integration-enabled>
@@ -292,10 +288,10 @@
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
     <state x="1660" y="755" width="1255" height="513" key="#xdebugger.evaluate/0.27.3840.2133@0.27.3840.2133" timestamp="1606565332233" />
-    <state x="1061" y="944" width="516" height="306" key="ANALYSIS_DLG_com.intellij.analysis.BaseAnalysisAction$1" timestamp="1606631982602">
+    <state x="1061" y="944" width="516" height="306" key="ANALYSIS_DLG_com.intellij.analysis.BaseAnalysisAction$1" timestamp="1606632357543">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
-    <state x="1061" y="944" width="516" height="306" key="ANALYSIS_DLG_com.intellij.analysis.BaseAnalysisAction$1/0.27.3840.2133@0.27.3840.2133" timestamp="1606631982602" />
+    <state x="1061" y="944" width="516" height="306" key="ANALYSIS_DLG_com.intellij.analysis.BaseAnalysisAction$1/0.27.3840.2133@0.27.3840.2133" timestamp="1606632357543" />
     <state width="1117" height="526" key="DebuggerActiveHint" timestamp="1606564981970">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
@@ -352,10 +348,10 @@
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
     <state x="1196" y="581" width="1022" height="737" key="SettingsEditor/0.27.3840.2133@0.27.3840.2133" timestamp="1606327823364" />
-    <state x="1102" y="829" width="800" height="535" key="Vcs.Push.Dialog.v2" timestamp="1606631484572">
+    <state x="1102" y="829" width="800" height="535" key="Vcs.Push.Dialog.v2" timestamp="1606632351724">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
-    <state x="1102" y="829" width="800" height="535" key="Vcs.Push.Dialog.v2/0.27.3840.2133@0.27.3840.2133" timestamp="1606631484572" />
+    <state x="1102" y="829" width="800" height="535" key="Vcs.Push.Dialog.v2/0.27.3840.2133@0.27.3840.2133" timestamp="1606632351724" />
     <state width="1630" height="1066" key="XDebugger.FullValuePopup" timestamp="1606580707816">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
@@ -376,10 +372,10 @@
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
     <state x="1721" y="230" width="754" height="672" key="find.popup/0.27.3840.2133@0.27.3840.2133" timestamp="1606586927589" />
-    <state x="1753" y="850" width="323" height="508" key="refactoring.ChangeSignatureDialog" timestamp="1606624151549">
+    <state x="1753" y="850" width="980" height="508" key="refactoring.ChangeSignatureDialog" timestamp="1606634521775">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
-    <state x="1753" y="850" width="323" height="508" key="refactoring.ChangeSignatureDialog/0.27.3840.2133@0.27.3840.2133" timestamp="1606624151549" />
+    <state x="1753" y="850" width="980" height="508" key="refactoring.ChangeSignatureDialog/0.27.3840.2133@0.27.3840.2133" timestamp="1606634521775" />
     <state x="845" y="833" width="672" height="678" key="search.everywhere.popup" timestamp="1606586521579">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>

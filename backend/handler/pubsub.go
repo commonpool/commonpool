@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"github.com/commonpool/backend/amqp"
 	"github.com/commonpool/backend/auth"
+	"github.com/commonpool/backend/logging"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/utils"
 	"github.com/gorilla/websocket"
@@ -24,8 +25,8 @@ type Client struct {
 	send                chan []byte
 	id                  string
 	userKey             model.UserKey
-	queueName           string
-	consumerKey         string
+	queueName           *string
+	consumerKey         *string
 }
 
 var upgrader = websocket.Upgrader{
@@ -79,7 +80,7 @@ func (c *Client) eventPump(ctx context.Context) error {
 
 	l.Debug("event pump")
 
-	ch, err := c.amqpChannel.Consume(ctx, c.queueName, c.consumerKey, false, false, false, false, nil)
+	ch, err := c.amqpChannel.Consume(ctx, *c.queueName, *c.consumerKey, false, false, false, false, nil)
 	if err != nil {
 		l.Error("could not consume amqp channel", zap.Error(err))
 		return err
@@ -189,23 +190,17 @@ func (h *Hub) run() {
 			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)
 				close(client.send)
-				_ = client.amqpChannel.Close()
-			}
-		case message := <-h.broadcast:
-			for client := range h.clients {
-				select {
-				case client.send <- message:
-				default:
-					close(client.send)
-					delete(h.clients, client)
+				if client.amqpChannel != nil {
+					_ = client.amqpChannel.Close()
 				}
 			}
+		case _ = <-h.broadcast:
+
 		}
 	}
 }
 
-func NewClient(hub *Hub, conn *websocket.Conn, amqpChannel amqp.Channel, queueName string, key string) *Client {
-
+func NewClient(hub *Hub, conn *websocket.Conn, amqpChannel amqp.Channel, queueName *string, key *string) *Client {
 	return &Client{
 		hub:                 hub,
 		websocketConnection: conn,
@@ -216,26 +211,70 @@ func NewClient(hub *Hub, conn *websocket.Conn, amqpChannel amqp.Channel, queueNa
 	}
 }
 
+func NewAnonymousClient(hub *Hub, conn *websocket.Conn) *Client {
+	return &Client{
+		hub:                 hub,
+		websocketConnection: conn,
+		send:                make(chan []byte, 256),
+		amqpChannel:         nil,
+		queueName:           nil,
+		consumerKey:         nil,
+	}
+}
+
+func (h *Handler) websocketAnonymous(ctx context.Context, response *echo.Response, request *http.Request) error {
+
+	ctx = logging.NewContext(ctx)
+	l := logging.WithContext(ctx)
+
+	l.Debug("Anonymous websocket")
+
+	ws, err := upgrader.Upgrade(response, request, nil)
+	if err != nil {
+		l.Error("could not upgrade websocket connection", zap.Error(err))
+		return err
+	}
+	defer ws.Close()
+
+	hub := newHub()
+	go hub.run()
+
+	client := NewAnonymousClient(hub, ws)
+
+	go client.writePump()
+	go client.readPump()
+
+	redirectResponse, err := h.authorization.GetRedirectResponse(request)
+	if err != nil {
+		return err
+	}
+
+	jsBytes, err := json.Marshal(redirectResponse)
+	if err != nil {
+		return err
+	}
+
+	client.send <- jsBytes
+
+	time.Sleep(time.Second * 10)
+
+	return nil
+
+}
+
 func (h *Handler) Websocket(c echo.Context) error {
 
 	ctx, l := GetEchoContext(c, "Websocket")
-
-	l.Debug("initializing websocket connection")
-
-	l.Debug("getting user session")
-
-	userSession, err := auth.GetUserSession(ctx)
-	if err != nil {
-		l.Error("could not get user session", zap.Error(err))
-		return err
-	}
-	userKey := userSession.GetUserKey()
 
 	upgrader.CheckOrigin = func(r *http.Request) bool {
 		return true
 	}
 
-	l.Debug("upgrading websocket connection")
+	userSession, err := auth.GetUserSession(ctx)
+	if err != nil {
+		return h.websocketAnonymous(ctx, c.Response(), c.Request())
+	}
+	userKey := userSession.GetUserKey()
 
 	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 	if err != nil {
@@ -243,6 +282,7 @@ func (h *Handler) Websocket(c echo.Context) error {
 		return err
 	}
 	defer ws.Close()
+
 
 	l.Debug("creating new hub")
 
@@ -285,7 +325,7 @@ func (h *Handler) Websocket(c echo.Context) error {
 		return err
 	}
 
-	client := NewClient(hub, ws, amqpChannel, queueName, consumerKey)
+	client := NewClient(hub, ws, amqpChannel, &queueName, &consumerKey)
 
 	c.Logger().Info("registering hub")
 	client.hub.register <- client

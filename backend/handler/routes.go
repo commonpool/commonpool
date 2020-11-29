@@ -59,6 +59,6 @@ func (h *Handler) Register(v1 *echo.Group) {
 	chat.POST("/interaction", h.SubmitInteraction)
 
 	v1.POST("/chatback", h.Chatback, h.authorization.Authenticate(true))
-	v1.GET("/ws", h.Websocket, h.authorization.Authenticate(true))
+	v1.GET("/ws", h.Websocket, h.authorization.Authenticate(false))
 
 }
