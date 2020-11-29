@@ -74,8 +74,8 @@ type MembershipPermissions struct {
 type MembershipParty int
 
 const (
-	GroupParty MembershipParty = iota
-	UserParty
+	PartyGroup MembershipParty = iota
+	PartyUser
 )
 
 type GetMembershipsForUserRequest struct {

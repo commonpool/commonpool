@@ -29,7 +29,7 @@ type Store interface {
 }
 
 type SearchResourcesQuery struct {
-	Type            *ResourceType
+	Type            *Type
 	Query           *string
 	Skip            int
 	Take            int
@@ -37,7 +37,7 @@ type SearchResourcesQuery struct {
 	SharedWithGroup *model.GroupKey
 }
 
-func NewSearchResourcesQuery(query *string, resourceType *ResourceType, skip int, take int, createdBy string, sharedWithGroup *model.GroupKey) *SearchResourcesQuery {
+func NewSearchResourcesQuery(query *string, resourceType *Type, skip int, take int, createdBy string, sharedWithGroup *model.GroupKey) *SearchResourcesQuery {
 	return &SearchResourcesQuery{
 		Type:            resourceType,
 		Query:           query,
@@ -50,14 +50,14 @@ func NewSearchResourcesQuery(query *string, resourceType *ResourceType, skip int
 
 type SearchResourcesResponse struct {
 	Resources  *Resources
-	Sharings   *ResourceSharings
+	Sharings   *Sharings
 	TotalCount int
 	Skip       int
 	Take       int
 	Error      error
 }
 
-func NewSearchResourcesResponseSuccess(resources *Resources, sharings *ResourceSharings, totalCount int, skip int, take int) *SearchResourcesResponse {
+func NewSearchResourcesResponseSuccess(resources *Resources, sharings *Sharings, totalCount int, skip int, take int) *SearchResourcesResponse {
 	return &SearchResourcesResponse{
 		Resources:  resources,
 		Sharings:   sharings,
@@ -90,7 +90,7 @@ func NewGetResourceByKeyQuery(resourceKey model.ResourceKey) *GetResourceByKeyQu
 
 type GetResourceByKeyResponse struct {
 	Resource *Resource
-	Sharings *ResourceSharings
+	Sharings *Sharings
 	Error    error
 }
 
@@ -100,7 +100,7 @@ func NewGetResourceByKeyResponseError(err error) *GetResourceByKeyResponse {
 	}
 }
 
-func NewGetResourceByKeyResponseSuccess(resource *Resource, sharings *ResourceSharings) *GetResourceByKeyResponse {
+func NewGetResourceByKeyResponseSuccess(resource *Resource, sharings *Sharings) *GetResourceByKeyResponse {
 	return &GetResourceByKeyResponse{
 		Resource: resource,
 		Sharings: sharings,

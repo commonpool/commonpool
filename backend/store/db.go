@@ -38,7 +38,7 @@ func AutoMigrate(db *gorm.DB) {
 		&trading.OfferItem{},
 		&trading.OfferDecision{},
 		&resource.Resource{},
-		&resource.ResourceSharing{},
+		&resource.Sharing{},
 		&auth.User{},
 	)
 	if err != nil {

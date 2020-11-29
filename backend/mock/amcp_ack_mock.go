@@ -8,15 +8,15 @@ import (
 	"sync"
 )
 
-// Ensure, that AmqpAcknowledgerMock does implement amqp.AmqpAcknowledger.
+// Ensure, that AmqpAcknowledgerMock does implement amqp.Ack.
 // If this is not the case, regenerate this file with moq.
-var _ amqp.AmqpAcknowledger = &AmqpAcknowledgerMock{}
+var _ amqp.Ack = &AmqpAcknowledgerMock{}
 
-// AmqpAcknowledgerMock is a mock implementation of amqp.AmqpAcknowledger.
+// AmqpAcknowledgerMock is a mock implementation of amqp.Ack.
 //
 //     func TestSomethingThatUsesAmqpAcknowledger(t *testing.T) {
 //
-//         // make and configure a mocked amqp.AmqpAcknowledger
+//         // make and configure a mocked amqp.Ack
 //         mockedAmqpAcknowledger := &AmqpAcknowledgerMock{
 //             AckFunc: func(tag uint64, multiple bool) error {
 // 	               panic("mock out the Ack method")
@@ -29,7 +29,7 @@ var _ amqp.AmqpAcknowledger = &AmqpAcknowledgerMock{}
 //             },
 //         }
 //
-//         // use mockedAmqpAcknowledger in code that requires amqp.AmqpAcknowledger
+//         // use mockedAmqpAcknowledger in code that requires amqp.Ack
 //         // and then make assertions.
 //
 //     }
@@ -77,7 +77,7 @@ type AmqpAcknowledgerMock struct {
 // Ack calls AckFunc.
 func (mock *AmqpAcknowledgerMock) Ack(tag uint64, multiple bool) error {
 	if mock.AckFunc == nil {
-		panic("AmqpAcknowledgerMock.AckFunc: method is nil but AmqpAcknowledger.Ack was just called")
+		panic("AmqpAcknowledgerMock.AckFunc: method is nil but Ack.Ack was just called")
 	}
 	callInfo := struct {
 		Tag      uint64
@@ -112,7 +112,7 @@ func (mock *AmqpAcknowledgerMock) AckCalls() []struct {
 // Nack calls NackFunc.
 func (mock *AmqpAcknowledgerMock) Nack(tag uint64, multiple bool, requeue bool) error {
 	if mock.NackFunc == nil {
-		panic("AmqpAcknowledgerMock.NackFunc: method is nil but AmqpAcknowledger.Nack was just called")
+		panic("AmqpAcknowledgerMock.NackFunc: method is nil but Ack.Nack was just called")
 	}
 	callInfo := struct {
 		Tag      uint64
@@ -151,7 +151,7 @@ func (mock *AmqpAcknowledgerMock) NackCalls() []struct {
 // Reject calls RejectFunc.
 func (mock *AmqpAcknowledgerMock) Reject(tag uint64, requeue bool) error {
 	if mock.RejectFunc == nil {
-		panic("AmqpAcknowledgerMock.RejectFunc: method is nil but AmqpAcknowledger.Reject was just called")
+		panic("AmqpAcknowledgerMock.RejectFunc: method is nil but Ack.Reject was just called")
 	}
 	callInfo := struct {
 		Tag     uint64

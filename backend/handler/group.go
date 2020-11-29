@@ -325,13 +325,13 @@ func (h *Handler) getUserNamesForMemberships(ctx context.Context, memberships *g
 	return userNames, nil
 }
 
-func (h *Handler) getGroupNamesForMemberships(ctx context.Context, memberships *group.Memberships) (group.GroupNames, error) {
+func (h *Handler) getGroupNamesForMemberships(ctx context.Context, memberships *group.Memberships) (group.Names, error) {
 
 	ctx, l := GetCtx(ctx, "getGroupNamesForMemberships")
 
 	l.Debug("getting group names for memberships")
 
-	var groupNames = group.GroupNames{}
+	var groupNames = group.Names{}
 	for _, membership := range memberships.Items {
 		groupKey := membership.GetGroupKey()
 		_, ok := groupNames[groupKey]

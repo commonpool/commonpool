@@ -136,7 +136,3 @@ func IsNotFoundError(err error) bool {
 	}
 	return res.StatusCode == http.StatusNotFound
 }
-
-func ReturnErrorResponse(c echo.Context, err ErrorResponse) error {
-	return c.JSON(err.StatusCode, err)
-}

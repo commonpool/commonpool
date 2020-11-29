@@ -18,7 +18,7 @@ type Resource struct {
 	Id               string                  `json:"id"`
 	Summary          string                  `json:"summary"`
 	Description      string                  `json:"description"`
-	Type             resource.ResourceType   `json:"type"`
+	Type             resource.Type           `json:"type"`
 	CreatedAt        time.Time               `json:"createdAt"`
 	CreatedBy        string                  `json:"createdBy"`
 	CreatedById      string                  `json:"createdById"`
@@ -45,7 +45,7 @@ type CreateResourceRequest struct {
 type CreateResourcePayload struct {
 	Summary          string                 `json:"summary" validate:"required,max=100"`
 	Description      string                 `json:"description" validate:"required"`
-	Type             resource.ResourceType  `json:"type" validate:"min=0,max=1"`
+	Type             resource.Type          `json:"type" validate:"min=0,max=1"`
 	ValueInHoursFrom int                    `json:"valueInHoursFrom" validate:"required"`
 	ValueInHoursTo   int                    `json:"valueInHoursTo" validate:"required"`
 	SharedWith       []InputResourceSharing `json:"sharedWith"`
@@ -62,7 +62,7 @@ type UpdateResourceRequest struct {
 type UpdateResourcePayload struct {
 	Summary          string                 `json:"summary"`
 	Description      string                 `json:"description"`
-	Type             resource.ResourceType  `json:"type"`
+	Type             resource.Type          `json:"type"`
 	ValueInHoursFrom int                    `json:"valueInHoursFrom"`
 	ValueInHoursTo   int                    `json:"valueInHoursTo"`
 	SharedWith       []InputResourceSharing `json:"sharedWith"`

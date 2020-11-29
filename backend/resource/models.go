@@ -12,18 +12,18 @@ type Resource struct {
 	ID               uuid.UUID `gorm:"type:uuid;primary_key"`
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
-	DeletedAt        *time.Time   `sql:"index"`
-	Summary          string       `gorm:"not null;"`
-	Description      string       `gorm:"not null;"`
-	CreatedBy        string       `gorm:"not null;"`
-	Type             ResourceType `gorm:"not null;"`
-	ValueInHoursFrom int          `gorm:"not null;'"`
-	ValueInHoursTo   int          `gorm:"not null"`
+	DeletedAt        *time.Time `sql:"index"`
+	Summary          string     `gorm:"not null;"`
+	Description      string     `gorm:"not null;"`
+	CreatedBy        string     `gorm:"not null;"`
+	Type             Type       `gorm:"not null;"`
+	ValueInHoursFrom int        `gorm:"not null;'"`
+	ValueInHoursTo   int        `gorm:"not null"`
 }
 
 func NewResource(
 	key model.ResourceKey,
-	resourceType ResourceType,
+	resourceType Type,
 	createdBy string,
 	summary string,
 	description string,
@@ -87,39 +87,39 @@ func (r *Resources) ContainsKey(key model.ResourceKey) bool {
 	return ok
 }
 
-type ResourceSharing struct {
+type Sharing struct {
 	ResourceID uuid.UUID `gorm:"type:uuid;primary_key"`
 	GroupID    uuid.UUID `gorm:"type:uuid;primary_key"`
 }
 
-func NewResourceSharing(resourceKey model.ResourceKey, groupKey model.GroupKey) ResourceSharing {
-	return ResourceSharing{
+func NewResourceSharing(resourceKey model.ResourceKey, groupKey model.GroupKey) Sharing {
+	return Sharing{
 		ResourceID: resourceKey.ID,
 		GroupID:    groupKey.ID,
 	}
 }
 
-type ResourceSharings struct {
-	sharings map[model.ResourceKey][]ResourceSharing
+type Sharings struct {
+	sharings map[model.ResourceKey][]Sharing
 }
 
-func NewResourceSharings(sharings []ResourceSharing) (*ResourceSharings, error) {
-	var result = map[model.ResourceKey][]ResourceSharing{}
+func NewResourceSharings(sharings []Sharing) (*Sharings, error) {
+	var result = map[model.ResourceKey][]Sharing{}
 	for _, sharing := range sharings {
 		resourceKey, err := model.ParseResourceKey(sharing.ResourceID.String())
 		if err != nil {
-			return &ResourceSharings{}, err
+			return &Sharings{}, err
 		}
 		_, ok := result[*resourceKey]
 		if !ok {
-			result[*resourceKey] = []ResourceSharing{}
+			result[*resourceKey] = []Sharing{}
 		}
 		result[*resourceKey] = append(result[*resourceKey], sharing)
 	}
-	return &ResourceSharings{sharings: result}, nil
+	return &Sharings{sharings: result}, nil
 }
 
-func (s *ResourceSharings) GetAllGroupKeys() []model.GroupKey {
+func (s *Sharings) GetAllGroupKeys() []model.GroupKey {
 	groupMap := map[model.GroupKey]bool{}
 	var groupKeys []model.GroupKey
 	for _, sharing := range s.Items() {
@@ -132,18 +132,18 @@ func (s *ResourceSharings) GetAllGroupKeys() []model.GroupKey {
 	return groupKeys
 }
 
-func (s *ResourceSharings) GetSharingsForResource(key model.ResourceKey) *ResourceSharings {
+func (s *Sharings) GetSharingsForResource(key model.ResourceKey) *Sharings {
 	list, ok := s.sharings[key]
 	if !ok {
-		response, _ := NewResourceSharings([]ResourceSharing{})
+		response, _ := NewResourceSharings([]Sharing{})
 		return response
 	}
 	response, _ := NewResourceSharings(list)
 	return response
 }
 
-func (s *ResourceSharings) Items() []ResourceSharing {
-	var result []ResourceSharing
+func (s *Sharings) Items() []Sharing {
+	var result []Sharing
 	for _, sharings := range s.sharings {
 		for _, sharing := range sharings {
 			result = append(result, sharing)
@@ -152,24 +152,24 @@ func (s *ResourceSharings) Items() []ResourceSharing {
 	return result
 }
 
-type ResourceType int
+type Type int
 
 const (
-	ResourceOffer ResourceType = iota
-	ResourceRequest
+	Offer Type = iota
+	Request
 )
 
-func ParseResourceType(s string) (*ResourceType, error) {
-	var res ResourceType
+func ParseResourceType(s string) (*Type, error) {
+	var res Type
 	if s == "" {
 		return nil, nil
 	}
 	if s == "0" {
-		res = ResourceOffer
+		res = Offer
 		return &res, nil
 	}
 	if s == "1" {
-		res = ResourceRequest
+		res = Request
 		return &res, nil
 	}
 

@@ -36,7 +36,7 @@ type Membership struct {
 	UserName       string    `json:"userName"`
 }
 
-func NewMembership(membership *group.Membership, groupNames group.GroupNames, names auth.UserNames) Membership {
+func NewMembership(membership *group.Membership, groupNames group.Names, names auth.UserNames) Membership {
 	return Membership{
 		UserID:         membership.UserID,
 		GroupID:        membership.GroupID.String(),
@@ -85,7 +85,7 @@ type GetUserMembershipsResponse struct {
 	Memberships []Membership `json:"memberships"`
 }
 
-func NewGetUserMembershipsResponse(memberships *group.Memberships, groupNames group.GroupNames, userNames auth.UserNames) GetUserMembershipsResponse {
+func NewGetUserMembershipsResponse(memberships *group.Memberships, groupNames group.Names, userNames auth.UserNames) GetUserMembershipsResponse {
 	responseMemberships := make([]Membership, len(memberships.Items))
 	for i, membership := range memberships.Items {
 		responseMemberships[i] = NewMembership(&membership, groupNames, userNames)
@@ -99,16 +99,6 @@ type GetGroupMembershipsResponse struct {
 	Memberships []Membership `json:"memberships"`
 }
 
-func NewGetGroupMembershipsResponse(memberships []group.Membership, groupNames group.GroupNames, userNames auth.UserNames) GetGroupMembershipsResponse {
-	responseMemberships := make([]Membership, len(memberships))
-	for i, membership := range memberships {
-		responseMemberships[i] = NewMembership(&membership, groupNames, userNames)
-	}
-	return GetGroupMembershipsResponse{
-		Memberships: responseMemberships,
-	}
-}
-
 type GetUsersForGroupInvitePickerResponse struct {
 	Users []UserInfoResponse `json:"users"`
 	Take  int                `json:"take"`
@@ -119,7 +109,7 @@ type GetMembershipResponse struct {
 	Membership Membership `json:"membership"`
 }
 
-func NewGetMembershipResponse(membership *group.Membership, groupNames group.GroupNames, userNames auth.UserNames) *GetMembershipResponse {
+func NewGetMembershipResponse(membership *group.Membership, groupNames group.Names, userNames auth.UserNames) *GetMembershipResponse {
 	return &GetMembershipResponse{
 		Membership: NewMembership(membership, groupNames, userNames),
 	}
@@ -129,7 +119,7 @@ type CreateOrAcceptInvitationResponse struct {
 	Membership Membership `json:"membership"`
 }
 
-func NewCreateOrAcceptInvitationResponse(membership *group.Membership, groupNames group.GroupNames, userNames auth.UserNames) *CreateOrAcceptInvitationResponse {
+func NewCreateOrAcceptInvitationResponse(membership *group.Membership, groupNames group.Names, userNames auth.UserNames) *CreateOrAcceptInvitationResponse {
 	return &CreateOrAcceptInvitationResponse{
 		Membership: NewMembership(membership, groupNames, userNames),
 	}
@@ -140,31 +130,11 @@ type CreateOrAcceptInvitationRequest struct {
 	GroupID string `json:"groupId"`
 }
 
-func NewCreateOrAcceptInvitationRequest(userId string, groupId string) *CreateOrAcceptInvitationRequest {
-	return &CreateOrAcceptInvitationRequest{
-		UserID:  userId,
-		GroupID: groupId,
-	}
-}
-
 type CancelOrDeclineInvitationResponse struct {
 	Membership Membership `json:"membership"`
-}
-
-func NewCancelOrDeclineInvitationResponse(membership group.Membership, groupNames group.GroupNames, userNames auth.UserNames) CancelOrDeclineInvitationResponse {
-	return CancelOrDeclineInvitationResponse{
-		Membership: NewMembership(&membership, groupNames, userNames),
-	}
 }
 
 type CancelOrDeclineInvitationRequest struct {
 	UserID  string `json:"userId"`
 	GroupID string `json:"groupId"`
-}
-
-func NewCancelOrDeclineInvitationRequest(userId string, groupId string) *CancelOrDeclineInvitationRequest {
-	return &CancelOrDeclineInvitationRequest{
-		UserID:  userId,
-		GroupID: groupId,
-	}
 }

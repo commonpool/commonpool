@@ -16,7 +16,7 @@ type Store interface {
 	ConfirmItemReceived(ctx context.Context, key model.OfferItemKey) error
 	ConfirmItemGiven(ctx context.Context, key model.OfferItemKey) error
 	SaveOfferStatus(key model.OfferKey, offer OfferStatus) error
-	GetTradingHistory(ctx context.Context, ids *model.UserKeys) ([]TradingHistoryEntry, error)
+	GetTradingHistory(ctx context.Context, ids *model.UserKeys) ([]HistoryEntry, error)
 }
 
 type GetOffersQuery struct {

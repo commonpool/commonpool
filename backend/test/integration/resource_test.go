@@ -27,7 +27,7 @@ func TestUserCanCreateResource(t *testing.T) {
 		Resource: web.CreateResourcePayload{
 			Summary:          "Summary",
 			Description:      "Description",
-			Type:             resource.ResourceOffer,
+			Type:             resource.Offer,
 			ValueInHoursFrom: 1,
 			ValueInHoursTo:   3,
 			SharedWith:       []web.InputResourceSharing{},
@@ -38,7 +38,7 @@ func TestUserCanCreateResource(t *testing.T) {
 
 	assert.Equal(t, "Summary", resp.Resource.Summary)
 	assert.Equal(t, "Description", resp.Resource.Description)
-	assert.Equal(t, resource.ResourceOffer, resp.Resource.Type)
+	assert.Equal(t, resource.Offer, resp.Resource.Type)
 	assert.Equal(t, 1, resp.Resource.ValueInHoursFrom)
 	assert.Equal(t, 3, resp.Resource.ValueInHoursTo)
 

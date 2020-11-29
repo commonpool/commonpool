@@ -20,6 +20,7 @@ func ParseOfferKey(value string) (OfferKey, error) {
 	return NewOfferKey(offerId), err
 }
 
+//goland:noinspection GoUnusedExportedFunction
 func MustParseOfferKey(value string) OfferKey {
 	offerId, err := uuid.FromString(value)
 	if err != nil {

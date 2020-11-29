@@ -15,10 +15,10 @@ import (
 func TestTrading(t *testing.T) {
 
 	mockLoggedInAs(user1)
-	res1 := createResource(t, "summary1", "desc1", resource.ResourceOffer)
+	res1 := createResource(t, "summary1", "desc1", resource.Offer)
 
 	mockLoggedInAs(user2)
-	res2 := createResource(t, "summary2", "desc2", resource.ResourceOffer)
+	res2 := createResource(t, "summary2", "desc2", resource.Offer)
 
 	mockLoggedInAs(user1)
 	offer := sendOffer(t,
@@ -100,7 +100,7 @@ func sendOffer(t *testing.T, items ...web.SendOfferPayloadItem) web.GetOfferResp
 
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusCreated, rec.Code)
-	resource := web.GetOfferResponse{}
-	assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &resource))
-	return resource
+	res := web.GetOfferResponse{}
+	assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &res))
+	return res
 }

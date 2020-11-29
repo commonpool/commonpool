@@ -80,7 +80,7 @@ func ListenOnUserExchange(t *testing.T, ctx context.Context, userKey model.UserK
 	delivery, err := amqpChan.Consume(ctx, randomStr, randomStr, false, false, false, false, nil)
 	assert.NoError(t, err)
 
-	del := make(chan amqp.AmqpDelivery)
+	del := make(chan amqp.Delivery)
 
 	go func() {
 		for d := range delivery {
@@ -97,8 +97,8 @@ func ListenOnUserExchange(t *testing.T, ctx context.Context, userKey model.UserK
 }
 
 type UserExchangeListener struct {
-	Channel  amqp.AmqpChannel
-	Delivery <-chan amqp.AmqpDelivery
+	Channel  amqp.Channel
+	Delivery <-chan amqp.Delivery
 }
 
 func (l *UserExchangeListener) Close() error {

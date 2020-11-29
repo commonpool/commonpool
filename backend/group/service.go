@@ -44,9 +44,3 @@ func NewDelineInvitationRequest(membershipKey model.MembershipKey) *CancelOrDecl
 type LeaveGroupRequest struct {
 	MembershipKey model.MembershipKey
 }
-
-func NewLeaveGroupRequest(membershipKey model.MembershipKey) *LeaveGroupRequest {
-	return &LeaveGroupRequest{
-		MembershipKey: membershipKey,
-	}
-}

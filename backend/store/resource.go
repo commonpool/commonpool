@@ -78,7 +78,7 @@ func (rs *ResourceStore) Delete(deleteResourceQuery *resource.DeleteResourceQuer
 		resourceKey := deleteResourceQuery.ResourceKey
 		resourceKeyStr := resourceKey.GetUUID().String()
 
-		err := rs.db.Delete(&resource.ResourceSharing{}, "resource_id = ?", resourceKeyStr).Error
+		err := rs.db.Delete(&resource.Sharing{}, "resource_id = ?", resourceKeyStr).Error
 		if err != nil {
 			return err
 		}
@@ -93,7 +93,7 @@ func (rs *ResourceStore) Delete(deleteResourceQuery *resource.DeleteResourceQuer
 			return result.Error
 		}
 
-		return rs.db.Delete(&resource.ResourceSharing{}, "resource_id = ?", resourceKey.String()).Error
+		return rs.db.Delete(&resource.Sharing{}, "resource_id = ?", resourceKey.String()).Error
 	})
 	return resource.NewDeleteResourceResponse(err)
 }
@@ -130,7 +130,7 @@ func (rs *ResourceStore) Update(updateResourceRequest *resource.UpdateResourceQu
 			return update.Error
 		}
 
-		err := tx.Delete(&resource.ResourceSharing{}, "resource_id = ?", res.ID.String()).Error
+		err := tx.Delete(&resource.Sharing{}, "resource_id = ?", res.ID.String()).Error
 		if err != nil {
 			return err
 		}
@@ -201,12 +201,12 @@ func (rs *ResourceStore) Search(query *resource.SearchResourcesQuery) *resource.
 
 }
 
-func getResourceSharings(db *gorm.DB, resources []model.ResourceKey) (*resource.ResourceSharings, error) {
+func getResourceSharings(db *gorm.DB, resources []model.ResourceKey) (*resource.Sharings, error) {
 
-	var sharings []resource.ResourceSharing
+	var sharings []resource.Sharing
 
 	if len(resources) == 0 {
-		rs, _ := resource.NewResourceSharings([]resource.ResourceSharing{})
+		rs, _ := resource.NewResourceSharings([]resource.Sharing{})
 		return rs, nil
 	}
 
@@ -218,8 +218,8 @@ func getResourceSharings(db *gorm.DB, resources []model.ResourceKey) (*resource.
 			qryParam = append(qryParam, res.String())
 		}
 		qry := "resource_id IN ( " + strings.Join(qryPart, ",") + ")"
-		var part []resource.ResourceSharing
-		err := db.Model(resource.ResourceSharing{}).Where(qry, qryParam...).Find(&part).Error
+		var part []resource.Sharing
+		err := db.Model(resource.Sharing{}).Where(qry, qryParam...).Find(&part).Error
 		if err != nil {
 			return err
 		}
@@ -233,7 +233,7 @@ func getResourceSharings(db *gorm.DB, resources []model.ResourceKey) (*resource.
 	}
 
 	if sharings == nil {
-		sharings = []resource.ResourceSharing{}
+		sharings = []resource.Sharing{}
 	}
 
 	return resource.NewResourceSharings(sharings)
@@ -243,7 +243,7 @@ func createResourceSharings(with []model.GroupKey, resourceKey model.ResourceKey
 	if len(with) == 0 {
 		return nil
 	}
-	var resourceSharings = make([]resource.ResourceSharing, len(with))
+	var resourceSharings = make([]resource.Sharing, len(with))
 	for i, groupKey := range with {
 		resourceSharing := resource.NewResourceSharing(resourceKey, groupKey)
 		resourceSharings[i] = resourceSharing

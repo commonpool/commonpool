@@ -87,10 +87,10 @@ func (a *OidcAuthenticator) Logout() echo.HandlerFunc {
 		v := url.Values{
 			"redirect_uri": {a.appConfig.BaseUri},
 		}
-		url := a.appConfig.OidcDiscoveryUrl + "/protocol/openid-connect/logout?" + v.Encode()
+		discoveryUrl := a.appConfig.OidcDiscoveryUrl + "/protocol/openid-connect/logout?" + v.Encode()
 		response := &RedirectResponse{
 			RedirectResponseMeta{
-				RedirectTo: url,
+				RedirectTo: discoveryUrl,
 			},
 		}
 		return c.JSON(http.StatusOK, response)

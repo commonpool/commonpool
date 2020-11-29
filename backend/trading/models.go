@@ -27,7 +27,7 @@ type Offer struct {
 	Message        string
 }
 
-type TradingHistoryEntry struct {
+type HistoryEntry struct {
 	Timestamp         time.Time
 	FromUserID        model.UserKey
 	ToUserID          model.UserKey

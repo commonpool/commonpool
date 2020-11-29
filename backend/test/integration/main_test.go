@@ -24,7 +24,7 @@ var authenticatedUser = &auth.UserSession{}
 var a *handler.Handler
 
 var Db *gorm.DB
-var AmqpClient amqp.AmqpClient
+var AmqpClient amqp.Client
 var ResourceStore store.ResourceStore
 var AuthStore store.AuthStore
 var ChatStore store.ChatStore
@@ -42,7 +42,7 @@ var User2 *auth.UserSession
 var User3KeyStr = uuid.NewV4().String()
 var User3Key = model.NewUserKey(User1KeyStr)
 var User3 *auth.UserSession
-var Authorizer *mock.MockAuthorizer
+var Authorizer *mock.Authorizer
 
 func TestMain(m *testing.M) {
 
@@ -118,7 +118,7 @@ func teardown() {
 
 	Db.Delete(auth.User{}, "1 = 1")
 	Db.Delete(resource.Resource{}, "1 = 1")
-	Db.Delete(resource.ResourceSharing{}, "1 = 1")
+	Db.Delete(resource.Sharing{}, "1 = 1")
 	Db.Delete(trading.Offer{}, "1 = 1")
 	Db.Delete(trading.OfferItem{}, "1 = 1")
 	Db.Delete(trading.OfferDecision{}, "1 = 1")

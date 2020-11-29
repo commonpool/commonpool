@@ -4,7 +4,7 @@ import (
 	"github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
-	en_translations "github.com/go-playground/validator/v10/translations/en"
+	enTranslations "github.com/go-playground/validator/v10/translations/en"
 )
 
 var Trans ut.Translator
@@ -22,7 +22,7 @@ func NewValidator() *Validator {
 
 	Trans = trans
 
-	_ = en_translations.RegisterDefaultTranslations(validate, trans)
+	_ = enTranslations.RegisterDefaultTranslations(validate, trans)
 
 	return &Validator{
 		validator: validate,

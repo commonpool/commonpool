@@ -55,7 +55,7 @@ func (c ChatService) SendGroupMessage(ctx context.Context, request *chat.SendGro
 		return nil, err
 	}
 
-	err = amqpChannel.Publish(ctx, amqp.MessagesExchange, "", false, false, amqp.AmqpPublishing{
+	err = amqpChannel.Publish(ctx, amqp.MessagesExchange, "", false, false, amqp.Publishing{
 		Headers: map[string]interface{}{
 			"channel_id": channelKey.String(),
 			"event_type": "chat.message",

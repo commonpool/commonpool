@@ -11,12 +11,12 @@ var _ group.Service = &GroupService{}
 
 type GroupService struct {
 	groupStore  group.Store
-	amqpClient  amqp.AmqpClient
+	amqpClient  amqp.Client
 	chatService chat.Service
 	authStore   auth.Store
 }
 
-func NewGroupService(groupStore group.Store, amqpClient amqp.AmqpClient, chatService chat.Service, authStore auth.Store) *GroupService {
+func NewGroupService(groupStore group.Store, amqpClient amqp.Client, chatService chat.Service, authStore auth.Store) *GroupService {
 	return &GroupService{
 		groupStore:  groupStore,
 		amqpClient:  amqpClient,

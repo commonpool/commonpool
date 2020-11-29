@@ -138,7 +138,7 @@ func (t TradingStore) GetOffers(qry trading.GetOffersQuery) (trading.GetOffersRe
 		resQry := t.db.
 			Model(trading.OfferItem{}).
 			Select("offer_id").
-			Where("offer_type = ? AND resource_id = ?", resource.ResourceOffer, qry.ResourceKey.String())
+			Where("offer_type = ? AND resource_id = ?", resource.Offer, qry.ResourceKey.String())
 		chain = chain.Where("id in (?)", resQry)
 	}
 
@@ -230,7 +230,7 @@ func (t TradingStore) SaveDecision(key model.OfferKey, user model.UserKey, decis
 		Error
 }
 
-func (t TradingStore) GetTradingHistory(ctx context.Context, ids *model.UserKeys) ([]trading.TradingHistoryEntry, error) {
+func (t TradingStore) GetTradingHistory(ctx context.Context, ids *model.UserKeys) ([]trading.HistoryEntry, error) {
 
 	var offerItems []trading.OfferItem
 
@@ -253,7 +253,7 @@ func (t TradingStore) GetTradingHistory(ctx context.Context, ids *model.UserKeys
 		return nil, err
 	}
 
-	var tradingHistory []trading.TradingHistoryEntry
+	var tradingHistory []trading.HistoryEntry
 
 	for _, offerItem := range offerItems {
 		fromUser := model.NewUserKey(offerItem.FromUserID)
@@ -265,7 +265,7 @@ func (t TradingStore) GetTradingHistory(ctx context.Context, ids *model.UserKeys
 			resourceKey = &rk
 		}
 
-		tradingHistory = append(tradingHistory, trading.TradingHistoryEntry{
+		tradingHistory = append(tradingHistory, trading.HistoryEntry{
 			FromUserID:        fromUser,
 			ToUserID:          toUser,
 			ResourceID:        resourceKey,

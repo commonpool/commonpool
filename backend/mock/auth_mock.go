@@ -8,34 +8,34 @@ import (
 	"net/http"
 )
 
-type MockAuthorizer struct {
+type Authorizer struct {
 	IsAuthorized       bool
 	MockCurrentSession func() auth.UserSession
 }
 
-var _ auth.IAuth = &MockAuthorizer{}
+var _ auth.IAuth = &Authorizer{}
 
-func (a *MockAuthorizer) GetAuthUserSession(c echo.Context) auth.UserSession {
+func (a *Authorizer) GetAuthUserSession(c echo.Context) auth.UserSession {
 	return a.MockCurrentSession()
 }
 
-func (a *MockAuthorizer) GetAuthUserKey(c echo.Context) model.UserKey {
+func (a *Authorizer) GetAuthUserKey(c echo.Context) model.UserKey {
 	return model.NewUserKey(a.MockCurrentSession().Subject)
 }
 
-func (a *MockAuthorizer) Login() echo.HandlerFunc {
+func (a *Authorizer) Login() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		return c.String(http.StatusOK, "")
 	}
 }
 
-func (a *MockAuthorizer) Logout() echo.HandlerFunc {
+func (a *Authorizer) Logout() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		return c.String(http.StatusOK, "")
 	}
 }
 
-func (a *MockAuthorizer) Authenticate(redirectOnError bool) echo.MiddlewareFunc {
+func (a *Authorizer) Authenticate(redirectOnError bool) echo.MiddlewareFunc {
 	return func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			return handlerFunc(c)
@@ -43,10 +43,10 @@ func (a *MockAuthorizer) Authenticate(redirectOnError bool) echo.MiddlewareFunc 
 	}
 }
 
-func (a *MockAuthorizer) GetAuthUserSession2(ctx context.Context) auth.UserSession {
+func (a *Authorizer) GetAuthUserSession2(ctx context.Context) auth.UserSession {
 	return a.MockCurrentSession()
 }
 
-func NewTestAuthorizer() *MockAuthorizer {
-	return &MockAuthorizer{}
+func NewTestAuthorizer() *Authorizer {
+	return &Authorizer{}
 }

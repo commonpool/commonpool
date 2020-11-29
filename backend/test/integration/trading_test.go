@@ -61,7 +61,7 @@ func TestUserCanSubmitOffer(t *testing.T) {
 		Resource: web.CreateResourcePayload{
 			Summary:          "Summary",
 			Description:      "Description",
-			Type:             resource.ResourceOffer,
+			Type:             resource.Offer,
 			ValueInHoursFrom: 1,
 			ValueInHoursTo:   3,
 			SharedWith:       []web.InputResourceSharing{},
@@ -104,7 +104,7 @@ func TestCanAcceptOffer(t *testing.T) {
 		Resource: web.CreateResourcePayload{
 			Summary:          "Summary",
 			Description:      "Description",
-			Type:             resource.ResourceOffer,
+			Type:             resource.Offer,
 			ValueInHoursFrom: 1,
 			ValueInHoursTo:   3,
 			SharedWith:       []web.InputResourceSharing{},
@@ -154,7 +154,7 @@ func TestCanDeclineOffer(t *testing.T) {
 		Resource: web.CreateResourcePayload{
 			Summary:          "Summary",
 			Description:      "Description",
-			Type:             resource.ResourceOffer,
+			Type:             resource.Offer,
 			ValueInHoursFrom: 1,
 			ValueInHoursTo:   3,
 			SharedWith:       []web.InputResourceSharing{},
@@ -222,7 +222,7 @@ func TestSendingOfferShouldCreateChatChannelBetweenUsers(t *testing.T) {
 		Resource: web.CreateResourcePayload{
 			Summary:          "Summary",
 			Description:      "Description",
-			Type:             resource.ResourceOffer,
+			Type:             resource.Offer,
 			ValueInHoursFrom: 1,
 			ValueInHoursTo:   3,
 			SharedWith:       []web.InputResourceSharing{},
@@ -274,7 +274,7 @@ func TestSendingOfferBetweenMultiplePeopleShouldCreateChatChannelBetweenUsers(t 
 		Resource: web.CreateResourcePayload{
 			Summary:          "Summary",
 			Description:      "Description",
-			Type:             resource.ResourceOffer,
+			Type:             resource.Offer,
 			ValueInHoursFrom: 1,
 			ValueInHoursTo:   3,
 			SharedWith:       []web.InputResourceSharing{},
@@ -285,7 +285,7 @@ func TestSendingOfferBetweenMultiplePeopleShouldCreateChatChannelBetweenUsers(t 
 		Resource: web.CreateResourcePayload{
 			Summary:          "Summary",
 			Description:      "Description",
-			Type:             resource.ResourceOffer,
+			Type:             resource.Offer,
 			ValueInHoursFrom: 1,
 			ValueInHoursTo:   3,
 			SharedWith:       []web.InputResourceSharing{},
@@ -353,7 +353,7 @@ func TestCanGetTradingHistory(t *testing.T) {
 		Resource: web.CreateResourcePayload{
 			Summary:          "Summary",
 			Description:      "Description",
-			Type:             resource.ResourceOffer,
+			Type:             resource.Offer,
 			ValueInHoursFrom: 1,
 			ValueInHoursTo:   3,
 			SharedWith:       []web.InputResourceSharing{},
@@ -364,7 +364,7 @@ func TestCanGetTradingHistory(t *testing.T) {
 		Resource: web.CreateResourcePayload{
 			Summary:          "Summary",
 			Description:      "Description",
-			Type:             resource.ResourceOffer,
+			Type:             resource.Offer,
 			ValueInHoursFrom: 1,
 			ValueInHoursTo:   3,
 			SharedWith:       []web.InputResourceSharing{},
@@ -483,14 +483,4 @@ func findUserSession(subject string, users []*auth.UserSession) *auth.UserSessio
 		}
 	}
 	return offerItemUserSession
-}
-
-func getOfferItemsReceivedByUser(offerItems []web.OfferItem, userKey model.UserKey) []web.OfferItem {
-	var result []web.OfferItem
-	for _, offerItem := range offerItems {
-		if offerItem.ToUserID == userKey.String() {
-			result = append(result, offerItem)
-		}
-	}
-	return result
 }

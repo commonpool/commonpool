@@ -22,7 +22,7 @@ import (
 type ChatStore struct {
 	db *gorm.DB
 	as auth.Store
-	mq amqp.AmqpClient
+	mq amqp.Client
 }
 
 func (cs *ChatStore) DeleteSubscription(ctx context.Context, key model.ChannelSubscriptionKey) error {
@@ -50,7 +50,7 @@ func (cs *ChatStore) CreateChannel(ctx context.Context, channel *chat.Channel) e
 
 var _ chat.Store = &ChatStore{}
 
-func NewChatStore(db *gorm.DB, as auth.Store, amqpClient amqp.AmqpClient) *ChatStore {
+func NewChatStore(db *gorm.DB, as auth.Store, amqpClient amqp.Client) *ChatStore {
 	return &ChatStore{
 		as: as,
 		db: db,
@@ -530,30 +530,6 @@ func (cs *ChatStore) GetTopic(key model.ChannelKey) (*chat.Channel, error) {
 		return nil, err
 	}
 	return &topic, nil
-}
-
-func getAttachmentsJson(attachments []chat.Attachment) (string, error) {
-	attachmentsJson := "[]"
-	if attachments != nil {
-		attachmentBytes, err := json.Marshal(attachments)
-		if err != nil {
-			return "", err
-		}
-		attachmentsJson = string(attachmentBytes)
-	}
-	return attachmentsJson, nil
-}
-
-func getBlocksJson(blocks []chat.Block) (string, error) {
-	blocksJson := "[]"
-	if blocks != nil {
-		blocksBytes, err := json.Marshal(blocks)
-		if err != nil {
-			return "", err
-		}
-		blocksJson = string(blocksBytes)
-	}
-	return blocksJson, nil
 }
 
 func (cs *ChatStore) getChannel(channelKey *model.ChannelKey) (*chat.Channel, error) {

@@ -27,7 +27,7 @@ func TestSearchBySummaryAndType(t *testing.T) {
 	key := model.NewResourceKey(uuid.NewV4())
 	r := resource.NewResource(
 		key,
-		resource.ResourceOffer,
+		resource.Offer,
 		"author",
 		"a superb summary",
 		"Description",
@@ -81,7 +81,7 @@ func TestCreateResource(t *testing.T) {
 	assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &res))
 	assert.Equal(t, "summary", res.Resource.Summary)
 	assert.Equal(t, "description", res.Resource.Description)
-	assert.Equal(t, resource.ResourceOffer, res.Resource.Type)
+	assert.Equal(t, resource.Offer, res.Resource.Type)
 }
 
 // TestCreateResourceInvalid400
@@ -171,7 +171,7 @@ func TestGetResource(t *testing.T) {
 	key := model.NewResourceKey(uuid.NewV4())
 	r := resource.NewResource(
 		key,
-		resource.ResourceOffer,
+		resource.Offer,
 		user1.Subject,
 		"Summary",
 		"Description",
@@ -192,7 +192,7 @@ func TestGetResource(t *testing.T) {
 	assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &res))
 	assert.Equal(t, "Summary", res.Resource.Summary)
 	assert.Equal(t, "Description", res.Resource.Description)
-	assert.Equal(t, resource.ResourceOffer, res.Resource.Type)
+	assert.Equal(t, resource.Offer, res.Resource.Type)
 	assert.Equal(t, 1, res.Resource.ValueInHoursFrom)
 	assert.Equal(t, 2, res.Resource.ValueInHoursTo)
 
@@ -251,7 +251,7 @@ func TestUpdateResource(t *testing.T) {
 	key := model.NewResourceKey(uuid.NewV4())
 	r := resource.NewResource(
 		key,
-		resource.ResourceOffer,
+		resource.Offer,
 		user1.Subject,
 		"Summary",
 		"Description",
@@ -323,7 +323,7 @@ func newCreateResourceRequest(js string) (*httptest.ResponseRecorder, echo.Conte
 	return rec, c
 }
 
-func createResource(t *testing.T, summary string, description string, resType resource.ResourceType) web.CreateResourceResponse {
+func createResource(t *testing.T, summary string, description string, resType resource.Type) web.CreateResourceResponse {
 	payload := web.CreateResourceRequest{
 		Resource: web.CreateResourcePayload{
 			Summary:          summary,
@@ -342,7 +342,7 @@ func createResource(t *testing.T, summary string, description string, resType re
 
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusCreated, rec.Code)
-	resource := web.CreateResourceResponse{}
-	assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &resource))
-	return resource
+	webResponse := web.CreateResourceResponse{}
+	assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &webResponse))
+	return webResponse
 }

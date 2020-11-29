@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func (h TradingService) AcceptOffer(ctx context.Context, request *trading.AcceptOffer) (*trading.AcceptOfferResponse, error) {
+func (t TradingService) AcceptOffer(ctx context.Context, request *trading.AcceptOffer) (*trading.AcceptOfferResponse, error) {
 
 	ctx, l := GetCtx(ctx, "TradingService", "AcceptOffer")
 
@@ -23,7 +23,7 @@ func (h TradingService) AcceptOffer(ctx context.Context, request *trading.Accept
 	loggedInUserKey := user.GetUserKey()
 
 	//  Retrieving offer
-	offer, err := h.tradingStore.GetOffer(request.OfferKey)
+	offer, err := t.tradingStore.GetOffer(request.OfferKey)
 	if err != nil {
 		l.Error("could not get offer", zap.Error(err), zap.String("offerId", request.OfferKey.ID.String()))
 		return nil, err
@@ -37,7 +37,7 @@ func (h TradingService) AcceptOffer(ctx context.Context, request *trading.Accept
 	}
 
 	//  Retrieve Offer decisions
-	decisions, err := h.tradingStore.GetDecisions(request.OfferKey)
+	decisions, err := t.tradingStore.GetDecisions(request.OfferKey)
 	if err != nil {
 		l.Error("could not get offer decisions", zap.Error(err))
 		return nil, err
@@ -70,12 +70,12 @@ func (h TradingService) AcceptOffer(ctx context.Context, request *trading.Accept
 	}
 
 	//  Persisting the decision
-	err = h.tradingStore.SaveDecision(request.OfferKey, loggedInUserKey, trading.AcceptedDecision)
+	err = t.tradingStore.SaveDecision(request.OfferKey, loggedInUserKey, trading.AcceptedDecision)
 	if err != nil {
 		return nil, err
 	}
 
-	decisions, err = h.tradingStore.GetDecisions(request.OfferKey)
+	decisions, err = t.tradingStore.GetDecisions(request.OfferKey)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (h TradingService) AcceptOffer(ctx context.Context, request *trading.Accept
 		userKeyLst = append(userKeyLst, decision.GetUserKey())
 	}
 	userKeys := model.NewUserKeys(userKeyLst)
-	users, err := h.us.GetByKeys(ctx, userKeyLst)
+	users, err := t.us.GetByKeys(ctx, userKeyLst)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +96,7 @@ func (h TradingService) AcceptOffer(ctx context.Context, request *trading.Accept
 	if currentUserLastOneToDecide {
 
 		l.Debug("user is last one to decide. mark offer as accepted")
-		err = h.tradingStore.SaveOfferStatus(request.OfferKey, trading.AcceptedOffer)
+		err = t.tradingStore.SaveOfferStatus(request.OfferKey, trading.AcceptedOffer)
 		if err != nil {
 			l.Error("could not save offer status", zap.Error(err))
 			return nil, err
@@ -154,7 +154,7 @@ func (h TradingService) AcceptOffer(ctx context.Context, request *trading.Accept
 		[]chat.Attachment{},
 		nil,
 	)
-	_, err = h.cs.SendConversationMessage(ctx, sendMessage)
+	_, err = t.cs.SendConversationMessage(ctx, sendMessage)
 	if err != nil {
 		l.Error("could not send message", zap.Error(err))
 		return nil, err
@@ -186,7 +186,7 @@ func (h TradingService) AcceptOffer(ctx context.Context, request *trading.Accept
 			[]chat.Attachment{},
 			nil,
 		)
-		_, err = h.cs.SendConversationMessage(ctx, sendMessage)
+		_, err = t.cs.SendConversationMessage(ctx, sendMessage)
 		if err != nil {
 			l.Error("could not send conversation message", zap.Error(err))
 			return nil, err
@@ -194,16 +194,16 @@ func (h TradingService) AcceptOffer(ctx context.Context, request *trading.Accept
 
 	}
 
-	offerItems, err := h.tradingStore.GetItems(request.OfferKey)
+	offerItems, err := t.tradingStore.GetItems(request.OfferKey)
 	if err != nil {
 		l.Error("could not get offer items", zap.Error(err))
 		return nil, err
 	}
 
-	var resources *resource.Resources = resource.NewResources([]resource.Resource{})
+	var resources = resource.NewResources([]resource.Resource{})
 	if len(offerItems.Items) > 0 {
 		getByKeys := resource.NewGetResourceByKeysQuery(offerItems.GetResourceKeys())
-		getResourcesByKeysResponse, err := h.rs.GetByKeys(getByKeys)
+		getResourcesByKeysResponse, err := t.rs.GetByKeys(getByKeys)
 		if err != nil {
 			l.Error("could not get resources by keys", zap.Error(err))
 			return nil, err
@@ -229,10 +229,10 @@ func (h TradingService) AcceptOffer(ctx context.Context, request *trading.Accept
 					}
 
 					actionId := "confirm_item_received"
-					resource, _ := resources.GetResource(userItem.GetResourceKey())
+					res, _ := resources.GetResource(userItem.GetResourceKey())
 					fromUser, _ := users.GetUser(userItem.GetFromUserKey())
 					block := chat.NewSectionBlock(
-						chat.NewMarkdownObject(fmt.Sprintf("**%s**", resource.Summary)),
+						chat.NewMarkdownObject(fmt.Sprintf("**%s**", res.Summary)),
 						[]chat.BlockElement{},
 						chat.NewButtonElement(
 							chat.NewMarkdownObject(fmt.Sprintf("I received it from **%s**", fromUser.Username)),
@@ -250,10 +250,10 @@ func (h TradingService) AcceptOffer(ctx context.Context, request *trading.Accept
 					}
 
 					actionId := "confirm_item_given"
-					resource, _ := resources.GetResource(userItem.GetResourceKey())
+					res, _ := resources.GetResource(userItem.GetResourceKey())
 					toUser, _ := users.GetUser(userItem.GetToUserKey())
 					block := chat.NewSectionBlock(
-						chat.NewMarkdownObject(fmt.Sprintf("**%s**", resource.Summary)),
+						chat.NewMarkdownObject(fmt.Sprintf("**%s**", res.Summary)),
 						[]chat.BlockElement{},
 						chat.NewButtonElement(
 							chat.NewMarkdownObject(fmt.Sprintf("I've given it to **%s**", toUser.Username)),
@@ -287,7 +287,7 @@ func (h TradingService) AcceptOffer(ctx context.Context, request *trading.Accept
 				[]chat.Attachment{},
 				&userKey,
 			)
-			_, err = h.cs.SendConversationMessage(nil, sendMessage)
+			_, err = t.cs.SendConversationMessage(nil, sendMessage)
 			if err != nil {
 				l.Error("could not send conversation message", zap.Error(err))
 				return nil, err

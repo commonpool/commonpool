@@ -15,12 +15,12 @@ import (
 
 type GroupStore struct {
 	db *gorm.DB
-	mq amqp.AmqpClient
+	mq amqp.Client
 }
 
 var _ group.Store = &GroupStore{}
 
-func NewGroupStore(db *gorm.DB, mq amqp.AmqpClient) *GroupStore {
+func NewGroupStore(db *gorm.DB, mq amqp.Client) *GroupStore {
 	return &GroupStore{
 		db: db,
 		mq: mq,
@@ -130,9 +130,7 @@ func (g *GroupStore) GetGroupsByKeys(ctx context.Context, groupKeys []model.Grou
 		return nil, err
 	}
 
-	return &group.Groups{
-		Items: result,
-	}, nil
+	return group.NewGroups(result), nil
 }
 
 func (g *GroupStore) GrantPermission(ctx context.Context, membershipKey model.MembershipKey, permission group.PermissionType) error {
@@ -295,10 +293,10 @@ func (g *GroupStore) updateInvitationAcceptance(ctx context.Context, membershipK
 	var statusQry string
 	var updates = map[string]interface{}{}
 
-	if decisionFrom == group.UserParty {
+	if decisionFrom == group.PartyUser {
 		statusQry = "user_confirmed = ?"
 		updates["user_confirmed"] = isAccepted
-	} else if decisionFrom == group.GroupParty {
+	} else if decisionFrom == group.PartyGroup {
 		statusQry = "group_confirmed = ?"
 		updates["group_confirmed"] = isAccepted
 	} else {

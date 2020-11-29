@@ -19,12 +19,12 @@ import (
 type ChatService struct {
 	us auth.Store
 	gs group.Store
-	mq amqp.AmqpClient
+	mq amqp.Client
 	rs res.Store
 	cs chat.Store
 }
 
-func NewChatService(us auth.Store, gs group.Store, rs res.Store, mq amqp.AmqpClient, cs chat.Store) *ChatService {
+func NewChatService(us auth.Store, gs group.Store, rs res.Store, mq amqp.Client, cs chat.Store) *ChatService {
 	return &ChatService{
 		us: us,
 		gs: gs,

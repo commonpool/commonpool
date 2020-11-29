@@ -19,7 +19,7 @@ func getEnv(key string) (string, bool) {
 func getFile(key string) ([]byte, error) {
 	value, ok := file[key]
 	if !ok {
-		return nil, fmt.Errorf("Error")
+		return nil, fmt.Errorf("error")
 	}
 	return []byte(value), nil
 }

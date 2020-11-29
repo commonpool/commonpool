@@ -5,10 +5,10 @@ import (
 	"time"
 )
 
-type AmqpPublishing struct {
+type Publishing struct {
 	// Application or exchange specific fields,
 	// the headers exchange will inspect this field.
-	Headers AmqpArgs
+	Headers Args
 
 	// Properties
 	ContentType     string    // MIME content type
@@ -56,9 +56,9 @@ type EventContainer struct {
 	Event Event
 }
 
-type AmqpDelivery struct {
-	Acknowledger AmqpAcknowledger // the channel from which this delivery arrived
-	Headers      AmqpArgs         // Application or header exchange table
+type Delivery struct {
+	Acknowledger Ack  // the channel from which this delivery arrived
+	Headers      Args // Application or header exchange table
 	// Properties
 	ContentType     string    // MIME content type
 	ContentEncoding string    // MIME content encoding
@@ -87,9 +87,9 @@ type AmqpDelivery struct {
 	Body []byte
 }
 
-type AmqpArgs map[string]interface{}
+type Args map[string]interface{}
 
-func (a AmqpArgs) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
+func (a Args) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
 	if a == nil {
 		return nil
 	}
@@ -104,4 +104,4 @@ func (a AmqpArgs) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
 	return nil
 }
 
-var _ zapcore.ObjectMarshaler = AmqpArgs{}
+var _ zapcore.ObjectMarshaler = Args{}

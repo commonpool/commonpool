@@ -8,28 +8,28 @@ import (
 	"go.uber.org/zap"
 )
 
-var _ AmqpClient = RabbitMqClient{}
+var _ Client = RabbitMqClient{}
 
-type AmqpClient interface {
+type Client interface {
 	Shutdown() error
-	GetChannel() (AmqpChannel, error)
+	GetChannel() (Channel, error)
 }
 
-type AmqpChannel interface {
+type Channel interface {
 	Close() error
-	ExchangeBind(ctx context.Context, destination string, key string, source string, nowait bool, args AmqpArgs) error
-	ExchangeUnbind(ctx context.Context, destination string, key string, source string, noWait bool, args AmqpArgs) error
-	ExchangeDeclare(ctx context.Context, name string, exchangeType string, durable bool, autoDelete bool, internal bool, nowait bool, args AmqpArgs) error
+	ExchangeBind(ctx context.Context, destination string, key string, source string, nowait bool, args Args) error
+	ExchangeUnbind(ctx context.Context, destination string, key string, source string, noWait bool, args Args) error
+	ExchangeDeclare(ctx context.Context, name string, exchangeType string, durable bool, autoDelete bool, internal bool, nowait bool, args Args) error
 	ExchangeDelete(ctx context.Context, name string, ifUnused bool, noWait bool) error
-	QueueDeclare(ctx context.Context, name string, durable bool, autoDelete bool, exclusive bool, noWait bool, args AmqpArgs) error
-	QueueBind(ctx context.Context, name string, key string, exchange string, nowait bool, args AmqpArgs) error
-	QueueUnbind(ctx context.Context, name string, key string, exchange string, args AmqpArgs) error
+	QueueDeclare(ctx context.Context, name string, durable bool, autoDelete bool, exclusive bool, noWait bool, args Args) error
+	QueueBind(ctx context.Context, name string, key string, exchange string, nowait bool, args Args) error
+	QueueUnbind(ctx context.Context, name string, key string, exchange string, args Args) error
 	QueueDelete(ctx context.Context, name string, ifUnused bool, ifEmpty bool, noWait bool) error
-	Consume(ctx context.Context, queue string, consumer string, autoAck bool, exclusive bool, noLocal bool, noWait bool, args AmqpArgs) (<-chan AmqpDelivery, error)
-	Publish(ctx context.Context, exchange string, key string, mandatory bool, immediate bool, publishing AmqpPublishing) error
+	Consume(ctx context.Context, queue string, consumer string, autoAck bool, exclusive bool, noLocal bool, noWait bool, args Args) (<-chan Delivery, error)
+	Publish(ctx context.Context, exchange string, key string, mandatory bool, immediate bool, publishing Publishing) error
 }
 
-type AmqpAcknowledger interface {
+type Ack interface {
 	Ack(tag uint64, multiple bool) error
 	Nack(tag uint64, multiple bool, requeue bool) error
 	Reject(tag uint64, requeue bool) error
@@ -44,7 +44,7 @@ func (r RabbitMqChannel) Close() error {
 	return r.channel.Close()
 }
 
-var _ AmqpChannel = &RabbitMqChannel{}
+var _ Channel = &RabbitMqChannel{}
 
 type RabbitMqClient struct {
 	connection     *amqp.Connection
@@ -52,7 +52,7 @@ type RabbitMqClient struct {
 	channel        *amqp.Channel
 }
 
-func (r RabbitMqClient) GetChannel() (AmqpChannel, error) {
+func (r RabbitMqClient) GetChannel() (Channel, error) {
 	ch, err := r.connection.Channel()
 	if err != nil {
 		return nil, err
@@ -77,7 +77,7 @@ func (r RabbitMqClient) Shutdown() error {
 	return nil
 }
 
-func (r RabbitMqChannel) Publish(ctx context.Context, exchange string, key string, mandatory bool, immediate bool, publishing AmqpPublishing) error {
+func (r RabbitMqChannel) Publish(ctx context.Context, exchange string, key string, mandatory bool, immediate bool, publishing Publishing) error {
 	return r.channel.Publish(exchange, key, mandatory, immediate, amqp.Publishing{
 		Headers:         map[string]interface{}(publishing.Headers),
 		ContentType:     publishing.ContentType,
@@ -96,7 +96,7 @@ func (r RabbitMqChannel) Publish(ctx context.Context, exchange string, key strin
 	})
 }
 
-func NewRabbitMqClient(ctx context.Context, amqpUrl string) (AmqpClient, error) {
+func NewRabbitMqClient(ctx context.Context, amqpUrl string) (Client, error) {
 
 	l := logging.WithContext(ctx)
 
@@ -149,13 +149,13 @@ func NewRabbitMqClient(ctx context.Context, amqpUrl string) (AmqpClient, error) 
 		return nil, err
 	}
 
-	amqpClient := AmqpClient(rabbitMqClient)
+	amqpClient := Client(rabbitMqClient)
 
 	return amqpClient, nil
 
 }
 
-func (r RabbitMqChannel) Consume(ctx context.Context, queue string, consumer string, autoAck bool, exclusive bool, noLocal bool, noWait bool, args AmqpArgs) (<-chan AmqpDelivery, error) {
+func (r RabbitMqChannel) Consume(ctx context.Context, queue string, consumer string, autoAck bool, exclusive bool, noLocal bool, noWait bool, args Args) (<-chan Delivery, error) {
 
 	l := logging.WithContext(ctx).With(
 		zap.String("queue", queue),
@@ -173,11 +173,11 @@ func (r RabbitMqChannel) Consume(ctx context.Context, queue string, consumer str
 		l.Error("could not consume queue", zap.Error(err))
 	}
 
-	amqpChan := make(chan AmqpDelivery)
+	amqpChan := make(chan Delivery)
 
 	go func() {
 		for delivery := range ch {
-			var amqpDelivery = AmqpDelivery{
+			var amqpDelivery = Delivery{
 				Acknowledger:    delivery.Acknowledger,
 				Headers:         map[string]interface{}(delivery.Headers),
 				ContentType:     delivery.ContentType,
@@ -208,7 +208,7 @@ func (r RabbitMqChannel) Consume(ctx context.Context, queue string, consumer str
 	return amqpChan, nil
 }
 
-func (r RabbitMqChannel) ExchangeDeclare(ctx context.Context, name string, exchangeType string, durable bool, autoDelete bool, internal bool, nowait bool, args AmqpArgs) error {
+func (r RabbitMqChannel) ExchangeDeclare(ctx context.Context, name string, exchangeType string, durable bool, autoDelete bool, internal bool, nowait bool, args Args) error {
 
 	l := logging.WithContext(ctx).With(
 		zap.String("exchange_name", name),
@@ -227,7 +227,7 @@ func (r RabbitMqChannel) ExchangeDeclare(ctx context.Context, name string, excha
 
 }
 
-func (r RabbitMqChannel) ExchangeBind(ctx context.Context, destination string, key string, source string, nowait bool, args AmqpArgs) error {
+func (r RabbitMqChannel) ExchangeBind(ctx context.Context, destination string, key string, source string, nowait bool, args Args) error {
 
 	l := logging.WithContext(ctx).With(
 		zap.String("source", source),
@@ -245,7 +245,7 @@ func (r RabbitMqChannel) ExchangeBind(ctx context.Context, destination string, k
 
 }
 
-func (r RabbitMqChannel) ExchangeUnbind(ctx context.Context, destination string, key string, source string, noWait bool, args AmqpArgs) error {
+func (r RabbitMqChannel) ExchangeUnbind(ctx context.Context, destination string, key string, source string, noWait bool, args Args) error {
 
 	l := logging.WithContext(ctx).With(
 		zap.String("destination", destination),
@@ -284,7 +284,7 @@ func (r RabbitMqChannel) ExchangeDelete(
 
 }
 
-func (r RabbitMqChannel) QueueDeclare(ctx context.Context, name string, durable bool, autoDelete bool, exclusive bool, noWait bool, args AmqpArgs) error {
+func (r RabbitMqChannel) QueueDeclare(ctx context.Context, name string, durable bool, autoDelete bool, exclusive bool, noWait bool, args Args) error {
 
 	l := logging.WithContext(ctx).With(
 		zap.String("name", name),
@@ -303,7 +303,7 @@ func (r RabbitMqChannel) QueueDeclare(ctx context.Context, name string, durable 
 
 }
 
-func (r RabbitMqChannel) QueueBind(ctx context.Context, name string, key string, exchange string, noWait bool, args AmqpArgs) error {
+func (r RabbitMqChannel) QueueBind(ctx context.Context, name string, key string, exchange string, noWait bool, args Args) error {
 
 	l := logging.WithContext(ctx).With(
 		zap.String("name", name),
@@ -321,7 +321,7 @@ func (r RabbitMqChannel) QueueBind(ctx context.Context, name string, key string,
 
 }
 
-func (r RabbitMqChannel) QueueUnbind(ctx context.Context, name string, key string, exchange string, args AmqpArgs) error {
+func (r RabbitMqChannel) QueueUnbind(ctx context.Context, name string, key string, exchange string, args Args) error {
 
 	l := logging.WithContext(ctx).With(
 		zap.String("name", name),

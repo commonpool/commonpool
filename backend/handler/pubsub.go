@@ -20,7 +20,7 @@ import (
 type Client struct {
 	hub                 *Hub
 	websocketConnection *websocket.Conn
-	amqpChannel         amqp.AmqpChannel
+	amqpChannel         amqp.Channel
 	send                chan []byte
 	id                  string
 	userKey             model.UserKey
@@ -204,7 +204,7 @@ func (h *Hub) run() {
 	}
 }
 
-func NewClient(hub *Hub, conn *websocket.Conn, amqpChannel amqp.AmqpChannel, queueName string, key string) *Client {
+func NewClient(hub *Hub, conn *websocket.Conn, amqpChannel amqp.Channel, queueName string, key string) *Client {
 
 	return &Client{
 		hub:                 hub,

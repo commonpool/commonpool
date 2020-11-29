@@ -56,7 +56,7 @@ func (g GroupService) CreateOrAcceptInvitation(ctx context.Context, request *gro
 			return nil, err
 		}
 
-		err := g.groupStore.MarkInvitationAsAccepted(ctx, membershipKey, group.UserParty)
+		err := g.groupStore.MarkInvitationAsAccepted(ctx, membershipKey, group.PartyUser)
 		if err != nil {
 			l.Error("could not mark invitation as accepted", zap.Error(err))
 			return nil, err
@@ -92,7 +92,7 @@ func (g GroupService) CreateOrAcceptInvitation(ctx context.Context, request *gro
 			return nil, err
 		}
 
-		err = g.groupStore.MarkInvitationAsAccepted(ctx, membershipKey, group.GroupParty)
+		err = g.groupStore.MarkInvitationAsAccepted(ctx, membershipKey, group.PartyGroup)
 		if err != nil {
 			l.Error("could not mark invitation as accepted", zap.Error(err))
 			return nil, err

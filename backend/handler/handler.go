@@ -1,7 +1,7 @@
 package handler
 
 import (
-	amqp "github.com/commonpool/backend/amqp"
+	"github.com/commonpool/backend/amqp"
 	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/chat"
 	"github.com/commonpool/backend/config"
@@ -11,7 +11,7 @@ import (
 )
 
 type Handler struct {
-	amqp           amqp.AmqpClient
+	amqp           amqp.Client
 	resourceStore  resource.Store
 	authStore      auth.Store
 	authorization  auth.IAuth
@@ -29,7 +29,7 @@ func NewHandler(
 	cs chat.Store,
 	ts trading.Store,
 	auth auth.IAuth,
-	amqp amqp.AmqpClient,
+	amqp amqp.Client,
 	cfg config.AppConfig,
 	chatService chat.Service,
 	tradingService trading.Service,

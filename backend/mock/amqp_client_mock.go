@@ -8,17 +8,17 @@ import (
 	"sync"
 )
 
-// Ensure, that AmqpClientMock does implement amqp.AmqpClient.
+// Ensure, that AmqpClientMock does implement amqp.Client.
 // If this is not the case, regenerate this file with moq.
-var _ amqp.AmqpClient = &AmqpClientMock{}
+var _ amqp.Client = &AmqpClientMock{}
 
-// AmqpClientMock is a mock implementation of amqp.AmqpClient.
+// AmqpClientMock is a mock implementation of amqp.Client.
 //
 //     func TestSomethingThatUsesAmqpClient(t *testing.T) {
 //
-//         // make and configure a mocked amqp.AmqpClient
+//         // make and configure a mocked amqp.Client
 //         mockedAmqpClient := &AmqpClientMock{
-//             GetChannelFunc: func() (amqp.AmqpChannel, error) {
+//             GetChannelFunc: func() (amqp.Channel, error) {
 // 	               panic("mock out the GetChannel method")
 //             },
 //             ShutdownFunc: func() error {
@@ -26,13 +26,13 @@ var _ amqp.AmqpClient = &AmqpClientMock{}
 //             },
 //         }
 //
-//         // use mockedAmqpClient in code that requires amqp.AmqpClient
+//         // use mockedAmqpClient in code that requires amqp.Client
 //         // and then make assertions.
 //
 //     }
 type AmqpClientMock struct {
 	// GetChannelFunc mocks the GetChannel method.
-	GetChannelFunc func() (amqp.AmqpChannel, error)
+	GetChannelFunc func() (amqp.Channel, error)
 
 	// ShutdownFunc mocks the Shutdown method.
 	ShutdownFunc func() error
@@ -51,9 +51,9 @@ type AmqpClientMock struct {
 }
 
 // GetChannel calls GetChannelFunc.
-func (mock *AmqpClientMock) GetChannel() (amqp.AmqpChannel, error) {
+func (mock *AmqpClientMock) GetChannel() (amqp.Channel, error) {
 	if mock.GetChannelFunc == nil {
-		panic("AmqpClientMock.GetChannelFunc: method is nil but AmqpClient.GetChannel was just called")
+		panic("AmqpClientMock.GetChannelFunc: method is nil but Client.GetChannel was just called")
 	}
 	callInfo := struct {
 	}{}
@@ -79,7 +79,7 @@ func (mock *AmqpClientMock) GetChannelCalls() []struct {
 // Shutdown calls ShutdownFunc.
 func (mock *AmqpClientMock) Shutdown() error {
 	if mock.ShutdownFunc == nil {
-		panic("AmqpClientMock.ShutdownFunc: method is nil but AmqpClient.Shutdown was just called")
+		panic("AmqpClientMock.ShutdownFunc: method is nil but Client.Shutdown was just called")
 	}
 	callInfo := struct {
 	}{}

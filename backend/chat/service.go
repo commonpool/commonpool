@@ -47,13 +47,6 @@ type NotifyUserOfferResponse struct {
 	Message *Message
 }
 
-func NewNotifyUserOffer(offeringUser model.UserKey, offerKey model.OfferKey) *NotifyUserOffer {
-	return &NotifyUserOffer{
-		OfferingUser: offeringUser,
-		OfferKey:     offerKey,
-	}
-}
-
 type NotifyOfferAccepted struct {
 	AcceptingUser model.UserKey
 	Offer         model.OfferKey
@@ -63,26 +56,12 @@ type NotifyOfferAcceptedResponse struct {
 	Message *Message
 }
 
-func NewNotifyOfferAccepted(acceptingUser model.UserKey, offerKey model.OfferKey) *NotifyOfferAccepted {
-	return &NotifyOfferAccepted{
-		AcceptingUser: acceptingUser,
-		Offer:         offerKey,
-	}
-}
-
 type NotifyOfferDeclined struct {
 	DecliningUser model.UserKey
 	Offer         model.OfferKey
 }
 type NotifyOfferDeclinedResponse struct {
 	Message *Message
-}
-
-func NewNotifyOfferDeclined(decliningUser model.UserKey, offerKey model.OfferKey) *NotifyOfferDeclined {
-	return &NotifyOfferDeclined{
-		DecliningUser: decliningUser,
-		Offer:         offerKey,
-	}
 }
 
 type NotifyGroupJoined struct {
@@ -94,13 +73,6 @@ type NotifyGroupJoinedResponse struct {
 	Message *Message
 }
 
-func NewNotifyGroupJoined(userKey model.UserKey, groupKey model.GroupKey) *NotifyGroupJoined {
-	return &NotifyGroupJoined{
-		UserKey:  userKey,
-		GroupKey: groupKey,
-	}
-}
-
 type NotifyGroupLeft struct {
 	UserKey  model.UserKey
 	GroupKey model.GroupKey
@@ -108,13 +80,6 @@ type NotifyGroupLeft struct {
 
 type NotifyGroupLeftResponse struct {
 	Message *Message
-}
-
-func NewNotifyGroupLeft(userKey model.UserKey, groupKey model.GroupKey) *NotifyGroupLeft {
-	return &NotifyGroupLeft{
-		UserKey:  userKey,
-		GroupKey: groupKey,
-	}
 }
 
 type NotifyCreditsTransferred struct {
@@ -127,14 +92,6 @@ type NotifyCreditsTransferredResponse struct {
 	Message *Message
 }
 
-func NewNotifyCreditsTransferred(fromUserKey model.UserKey, toUserKey model.GroupKey, amount time.Time) *NotifyCreditsTransferred {
-	return &NotifyCreditsTransferred{
-		FromUserKey: fromUserKey,
-		ToUserKey:   toUserKey,
-		Amount:      amount,
-	}
-}
-
 type GetOrCreateConversationChannel struct {
 	UserKeys *model.UserKeys
 }
@@ -143,24 +100,12 @@ type GetOrCreateConversationChannelResponse struct {
 	Channel *Channel
 }
 
-func NewGetOrCreateConversationChannel(userKeys *model.UserKeys) *GetOrCreateConversationChannel {
-	return &GetOrCreateConversationChannel{
-		UserKeys: userKeys,
-	}
-}
-
 type DeleteGroupChannel struct {
 	GroupKey model.GroupKey
 }
 
 type DeleteGroupChannelResponse struct {
 	Channel *Channel
-}
-
-func NewDeleteGroupChannel(groupKey model.GroupKey) *DeleteGroupChannel {
-	return &DeleteGroupChannel{
-		GroupKey: groupKey,
-	}
 }
 
 type SendConversationMessage struct {

@@ -26,89 +26,35 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b50bce1a-5445-4a69-8265-74993e439f0e" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/service/chat_channel_create.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/service/chat_channel_message_send.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/service/chat_channel_subscribe.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/service/chat_channel_unsubscribe.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/service/chat_convo_channel_bind.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/service/chat_convo_channel_get_create.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/service/chat_convo_message_send.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/service/chat_group_message_send.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/service/chat_user_exchange_create.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/service/group_create.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/service/group_get.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/service/group_get_by_keys.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/service/group_invitation_create_accept.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/service/group_invitation_decline_cancel.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/service/group_membership_get.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/service/group_memberships_get.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/service/group_memberships_user_get.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/service/groups_get.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/service/trading_history_get.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/service/trading_item_get.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/service/trading_item_given_received_notify.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/service/trading_item_received_given.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/service/trading_offer_accept.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/trading/errors.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/web/trading.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../frontend/src/app/markdown/renderer.spec.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../frontend/src/app/markdown/renderer.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auth/users.go" beforeDir="false" afterPath="$PROJECT_DIR$/auth/users.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/chat/models.go" beforeDir="false" afterPath="$PROJECT_DIR$/chat/models.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/amqp/client.go" beforeDir="false" afterPath="$PROJECT_DIR$/amqp/client.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/amqp/types.go" beforeDir="false" afterPath="$PROJECT_DIR$/amqp/types.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth/auth.go" beforeDir="false" afterPath="$PROJECT_DIR$/auth/auth.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth/oidc_authenticator.go" beforeDir="false" afterPath="$PROJECT_DIR$/auth/oidc_authenticator.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/chat/service.go" beforeDir="false" afterPath="$PROJECT_DIR$/chat/service.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/chat/store.go" beforeDir="false" afterPath="$PROJECT_DIR$/chat/store.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/group/service.go" beforeDir="false" afterPath="$PROJECT_DIR$/group/service.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/handler/chat.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/chat.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/handler/chatback.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/chatback.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/config_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/config/config_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/errors/errors.go" beforeDir="false" afterPath="$PROJECT_DIR$/errors/errors.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handler/handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/handler.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/handler/pubsub.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/pubsub.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/handler/routes.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/routes.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handler/resource_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/resource_test.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/handler/trading.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/trading.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/model/offer.go" beforeDir="false" afterPath="$PROJECT_DIR$/model/offer.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/model/offer_item.go" beforeDir="false" afterPath="$PROJECT_DIR$/model/offer_item.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/model/user.go" beforeDir="false" afterPath="$PROJECT_DIR$/model/user.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handler/trading_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/trading_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mock/amcp_ack_mock.go" beforeDir="false" afterPath="$PROJECT_DIR$/mock/amcp_ack_mock.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mock/amqp_channel_mock.go" beforeDir="false" afterPath="$PROJECT_DIR$/mock/amqp_channel_mock.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mock/amqp_client_mock.go" beforeDir="false" afterPath="$PROJECT_DIR$/mock/amqp_client_mock.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mock/auth_mock.go" beforeDir="false" afterPath="$PROJECT_DIR$/mock/auth_mock.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/service/chat.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/chat.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/service/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/group.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/trading.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/trading.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/store/auth.go" beforeDir="false" afterPath="$PROJECT_DIR$/store/auth.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/service/trading_offer_accept.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/trading_offer_accept.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/store/chat.go" beforeDir="false" afterPath="$PROJECT_DIR$/store/chat.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/store/trading.go" beforeDir="false" afterPath="$PROJECT_DIR$/store/trading.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/integration/group_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/test/integration/group_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/store/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/store/group.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/test/integration/main_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/test/integration/main_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/integration/resource_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/test/integration/resource_test.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/test/integration/trading_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/test/integration/trading_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/trading/models.go" beforeDir="false" afterPath="$PROJECT_DIR$/trading/models.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/trading/service.go" beforeDir="false" afterPath="$PROJECT_DIR$/trading/service.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/trading/store.go" beforeDir="false" afterPath="$PROJECT_DIR$/trading/store.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/offer.go" beforeDir="false" afterPath="$PROJECT_DIR$/web/offer.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/api/backend.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/api/backend.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/api/models.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/api/models.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/app-routing.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/app-routing.module.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/app.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/app.module.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/chat/block.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/chat/block.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/chat/block/block.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/chat/block/block.component.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/chat/blocks/blocks.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/chat/blocks/blocks.component.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/chat/blocks/blocks.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/chat/blocks/blocks.component.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/chat/conversation-thread-list/conversation-thread-list.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/chat/conversation-thread-list/conversation-thread-list.component.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/chat/conversation-thread-list/conversation-thread-list.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/chat/conversation-thread-list/conversation-thread-list.component.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/chat/conversation-thread/conversation-thread.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/chat/conversation-thread/conversation-thread.component.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/chat/header-block/header-block.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/chat/header-block/header-block.component.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/chat/message-group/message-group.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/chat/message-group/message-group.component.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/chat/section-block/section-block.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/chat/section-block/section-block.component.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/chat/text-object/text-object.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/chat/text-object/text-object.component.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/markdown/Renderer.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/markdown/convert-links.directive.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/markdown/convert-links.directive.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/markdown/router-link/router-link.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/markdown/router-link/router-link.component.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/shared/username/username.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/shared/username/username.component.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/shared/username/username.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/shared/username/username.component.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/top-nav/top-nav.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/top-nav/top-nav.component.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/assets/env.js" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/assets/env.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/assets/env.template.js" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/assets/env.template.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/environments/IEnvironment.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/environments/IEnvironment.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/environments/environment.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/environments/environment.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../operator/api/v1/commonpoolinstallation_types.go" beforeDir="false" afterPath="$PROJECT_DIR$/../operator/api/v1/commonpoolinstallation_types.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../operator/config/crd/bases/apps.commonpool.net_commonpoolinstallations.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../operator/config/crd/bases/apps.commonpool.net_commonpoolinstallations.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../operator/controllers/commonpoolinstallation_controller.go" beforeDir="false" afterPath="$PROJECT_DIR$/../operator/controllers/commonpoolinstallation_controller.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/integration/utils_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/test/integration/utils_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/parse.go" beforeDir="false" afterPath="$PROJECT_DIR$/utils/parse.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/web/group.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -284,7 +230,21 @@
       <option name="project" value="LOCAL" />
       <updated>1606513430861</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="trading history">
+      <created>1606631419200</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1606631419200</updated>
+    </task>
+    <task id="LOCAL-00005" summary="trading history">
+      <created>1606631482334</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1606631482334</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -332,10 +292,10 @@
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
     <state x="1660" y="755" width="1255" height="513" key="#xdebugger.evaluate/0.27.3840.2133@0.27.3840.2133" timestamp="1606565332233" />
-    <state x="1061" y="944" width="516" height="306" key="ANALYSIS_DLG_com.intellij.analysis.BaseAnalysisAction$1" timestamp="1606336982935">
+    <state x="1061" y="944" width="516" height="306" key="ANALYSIS_DLG_com.intellij.analysis.BaseAnalysisAction$1" timestamp="1606631982602">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
-    <state x="1061" y="944" width="516" height="306" key="ANALYSIS_DLG_com.intellij.analysis.BaseAnalysisAction$1/0.27.3840.2133@0.27.3840.2133" timestamp="1606336982935" />
+    <state x="1061" y="944" width="516" height="306" key="ANALYSIS_DLG_com.intellij.analysis.BaseAnalysisAction$1/0.27.3840.2133@0.27.3840.2133" timestamp="1606631982602" />
     <state width="1117" height="526" key="DebuggerActiveHint" timestamp="1606564981970">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
@@ -392,10 +352,10 @@
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
     <state x="1196" y="581" width="1022" height="737" key="SettingsEditor/0.27.3840.2133@0.27.3840.2133" timestamp="1606327823364" />
-    <state x="1102" y="829" width="800" height="535" key="Vcs.Push.Dialog.v2" timestamp="1606513432168">
+    <state x="1102" y="829" width="800" height="535" key="Vcs.Push.Dialog.v2" timestamp="1606631484572">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
-    <state x="1102" y="829" width="800" height="535" key="Vcs.Push.Dialog.v2/0.27.3840.2133@0.27.3840.2133" timestamp="1606513432168" />
+    <state x="1102" y="829" width="800" height="535" key="Vcs.Push.Dialog.v2/0.27.3840.2133@0.27.3840.2133" timestamp="1606631484572" />
     <state width="1630" height="1066" key="XDebugger.FullValuePopup" timestamp="1606580707816">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>

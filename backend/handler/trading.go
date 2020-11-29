@@ -38,7 +38,7 @@ type ValidErrors struct {
 
 func NewValidError(validerr validator.ValidationErrors) ValidErrors {
 
-	validErrors := []ValidError{}
+	var validErrors []ValidError
 
 	for _, err := range validerr {
 		validErrors = append(validErrors, ValidError{
@@ -55,6 +55,10 @@ func NewValidError(validerr validator.ValidationErrors) ValidErrors {
 	}
 
 	translation := validerr.Translate(route.Trans)
+
+	if validErrors == nil {
+		validErrors = []ValidError{}
+	}
 
 	return ValidErrors{
 		Message: validerr.Error(),

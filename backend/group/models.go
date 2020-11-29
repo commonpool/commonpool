@@ -34,7 +34,7 @@ func NewGroups(groups []Group) *Groups {
 	}
 }
 
-type GroupNames map[model.GroupKey]string
+type Names map[model.GroupKey]string
 
 type PermissionType int
 
@@ -53,21 +53,6 @@ type Membership struct {
 	UserConfirmed  bool
 	CreatedAt      time.Time
 	IsDeactivated  bool
-}
-
-func NewEmptyMembership(
-	membershipKey model.MembershipKey,
-) Membership {
-	return Membership{
-		GroupID:        membershipKey.GroupKey.ID,
-		UserID:         membershipKey.UserKey.String(),
-		IsMember:       false,
-		IsAdmin:        false,
-		IsOwner:        false,
-		GroupConfirmed: false,
-		UserConfirmed:  false,
-		IsDeactivated:  false,
-	}
 }
 
 func (m *Membership) GetGroupKey() model.GroupKey {

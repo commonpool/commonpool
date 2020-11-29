@@ -3,7 +3,7 @@ package auth
 import (
 	"context"
 	"github.com/commonpool/backend/model"
-	echo "github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4"
 )
 
 // Interface for authorization module

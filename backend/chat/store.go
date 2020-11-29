@@ -31,12 +31,6 @@ type GetChannel struct {
 	ChannelKey model.ChannelKey
 }
 
-func NewGetChannel(channelKey model.ChannelKey) *GetChannel {
-	return &GetChannel{
-		ChannelKey: channelKey,
-	}
-}
-
 type GetChannelResponse struct {
 	Channel *Channel
 }

@@ -47,12 +47,12 @@ func ParseTake(c echo.Context, defaultTake int, maxTake int) (int, error) {
 func ParseQueryParamInt(c echo.Context, paramName string, defaultValue int) (int, error) {
 	paramAsStr := c.QueryParam(paramName)
 	if paramAsStr != "" {
-		int, err := strconv.Atoi(paramAsStr)
+		intValue, err := strconv.Atoi(paramAsStr)
 		if err != nil {
 			response := errors.ErrCannotConvertToInt(paramAsStr, err.Error())
 			return 0, &response
 		}
-		return int, nil
+		return intValue, nil
 	} else {
 		return defaultValue, nil
 	}

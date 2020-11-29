@@ -46,7 +46,7 @@ func TestSendMessage(t *testing.T) {
 
 	// user 1 creates a resource
 	mockLoggedInAs(user1)
-	res := createResource(t, "summary", "description", resource.ResourceOffer)
+	res := createResource(t, "summary", "description", resource.Offer)
 
 	// user 2 sends message about resource
 	mockLoggedInAs(user2)

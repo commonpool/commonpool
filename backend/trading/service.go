@@ -10,7 +10,7 @@ type Service interface {
 	GetOfferItem(ctx context.Context, offerItemKey model.OfferItemKey) (*OfferItem, error)
 	ConfirmItemReceivedOrGiven(ctx context.Context, offerItemKey model.OfferItemKey) error
 	AcceptOffer(ctx ctx.Context, request *AcceptOffer) (*AcceptOfferResponse, error)
-	GetTradingHistory(ctx context.Context, userIDs *model.UserKeys) ([]TradingHistoryEntry, error)
+	GetTradingHistory(ctx context.Context, userIDs *model.UserKeys) ([]HistoryEntry, error)
 }
 
 type AcceptOffer struct {
