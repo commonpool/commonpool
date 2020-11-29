@@ -1,0 +1,32 @@
+<ng-container *ngIf="history$ | async; let history">
+  <table class="table">
+
+    <tbody>
+
+    <tr *ngFor="let entry of history.entries">
+      <td>
+        {{entry.fromUsername}}
+      </td>
+      <td>
+        <app-arrow-right></app-arrow-right>
+      </td>
+      <td>
+        <ng-container *ngIf="entry.resourceId">
+          <app-resource-link2 [id]="entry.resourceId"></app-resource-link2>
+        </ng-container>
+        <ng-container *ngIf="entry.timeAmountSeconds">
+          {{entry.timeAmountSeconds / 60}}min.
+        </ng-container>
+      </td>
+      <td>
+        <app-arrow-right></app-arrow-right>
+      </td>
+      <td>
+        {{entry.toUsername}}
+      </td>
+    </tr>
+
+    </tbody>
+
+  </table>
+</ng-container>
