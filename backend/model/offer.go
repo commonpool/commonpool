@@ -19,3 +19,11 @@ func ParseOfferKey(value string) (OfferKey, error) {
 	}
 	return NewOfferKey(offerId), err
 }
+
+func MustParseOfferKey(value string) OfferKey {
+	offerId, err := uuid.FromString(value)
+	if err != nil {
+		panic(err)
+	}
+	return NewOfferKey(offerId)
+}

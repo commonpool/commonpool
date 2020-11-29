@@ -323,8 +323,8 @@ func NewChannels(channels []Channel) Channels {
 }
 
 type ChannelSubscription struct {
-	ChannelID           string `gorm:"primaryKey"`
-	UserID              string `gorm:"primaryKey"`
+	ChannelID           string `gorm:"primaryKey;not null"`
+	UserID              string `gorm:"primaryKey;not null"`
 	Name                string
 	CreatedAt           time.Time
 	UpdatedAt           time.Time

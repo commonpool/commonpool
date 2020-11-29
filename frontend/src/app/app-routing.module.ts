@@ -19,6 +19,8 @@ import {GroupInvitesViewComponent} from './groups/group-invites-view/group-invit
 import {GroupResourcesViewComponent} from './groups/group-resources-view/group-resources-view.component';
 import {HomePageComponent} from './home/home-page/home-page.component';
 import {BlocksComponent} from './chat/blocks/blocks.component';
+import {SampleComponent} from './sample/sample/sample.component';
+import {TradingHistoryComponent} from './trading/history/trading-history.component';
 
 const routes: Routes = [
   {
@@ -111,10 +113,13 @@ const routes: Routes = [
         data: {accountType: 'group', resourceType: 'offers'}
       }
     ]
+  }, {
+    path: 'trading-history',
+    component: TradingHistoryComponent
   },
   {
     path: 'sample',
-    component: BlocksComponent
+    component: SampleComponent
   }
 ];
 

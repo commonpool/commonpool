@@ -18,6 +18,8 @@ func CreateResource(t *testing.T, ctx context.Context, userSession *auth.UserSes
 }
 
 func TestUserCanCreateResource(t *testing.T) {
+	teardown()
+	setup()
 
 	ctx := context.Background()
 

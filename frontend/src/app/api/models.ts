@@ -1235,3 +1235,47 @@ export class Event {
   }
 }
 
+export class GetTradingHistoryRequest {
+  public constructor(public userIds: string[]) {
+  }
+
+  public static from(r: GetTradingHistoryRequest): GetTradingHistoryRequest {
+    return new GetTradingHistoryRequest(r.userIds);
+  }
+}
+
+export class TradingHistoryEntry {
+  public constructor(
+    public timestamp: string,
+    public fromUserId: string,
+    public toUserId: string,
+    public fromUsername: string,
+    public toUsername: string,
+    public resourceId: string | undefined,
+    public timeAmountSeconds: number | undefined) {
+  }
+
+  public static from(t: TradingHistoryEntry): TradingHistoryEntry {
+    return new TradingHistoryEntry(
+      t.timestamp,
+      t.fromUserId,
+      t.toUserId,
+      t.fromUsername,
+      t.toUsername,
+      t.resourceId,
+      t.timeAmountSeconds
+    );
+  }
+}
+
+export class GetTradingHistoryResponse {
+  public constructor(public entries: TradingHistoryEntry[]) {
+
+  }
+
+  public static from(r: GetTradingHistoryResponse): GetTradingHistoryResponse {
+    return new GetTradingHistoryResponse(
+      r.entries ? r.entries.map(e => TradingHistoryEntry.from(e)) : []
+    );
+  }
+}

@@ -15,7 +15,6 @@ type Service interface {
 	GetGroupsMemberships(ctx context.Context, request *GetMembershipsForGroupRequest) (*GetMembershipsForGroupResponse, error)
 	CreateOrAcceptInvitation(ctx context.Context, request *CreateOrAcceptInvitationRequest) (*CreateOrAcceptInvitationResponse, error)
 	CancelOrDeclineInvitation(ctx context.Context, request *CancelOrDeclineInvitationRequest) error
-	RegisterUserAmqpSubscriptions(ctx context.Context) error
 }
 
 type CreateOrAcceptInvitationRequest struct {

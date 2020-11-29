@@ -69,10 +69,14 @@ func (cs *ChatStore) CreateSubscription(ctx context.Context, key model.ChannelSu
 		Name:      name,
 	}
 
-	err := cs.db.Clauses(clause.OnConflict{
+	qry := cs.db.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "user_id"}, {Name: "channel_id"}},
 		DoUpdates: clause.AssignmentColumns([]string{"name"}),
-	}).Create(&channelSubscription).Error
+	}).Create(&channelSubscription)
+
+	l.Info("rows affected", zap.Int64("rows", qry.RowsAffected))
+
+	err := qry.Error
 
 	if err != nil {
 		l.Error("could not store channel subscription in database", zap.Error(err))
@@ -104,10 +108,8 @@ func (cs *ChatStore) GetChannel(ctx context.Context, channelKey model.ChannelKey
 
 }
 
-func (cs *ChatStore) GetSubscriptions(ctx context.Context, request *chat.GetSubscriptions) (*chat.GetSubscriptionsResponse, error) {
-	ctx, l := GetCtx(ctx, "ChatStore", "GetSubscriptions")
-
-	l.Debug("getting subscriptions", zap.String("user_id", request.UserKey.String()))
+func (cs *ChatStore) GetSubscriptionsForUser(ctx context.Context, request *chat.GetSubscriptions) (*chat.GetSubscriptionsResponse, error) {
+	ctx, l := GetCtx(ctx, "ChatStore", "GetSubscriptionsForUser")
 
 	var subscriptions []chat.ChannelSubscription
 	err := cs.db.
@@ -125,6 +127,22 @@ func (cs *ChatStore) GetSubscriptions(ctx context.Context, request *chat.GetSubs
 	return &chat.GetSubscriptionsResponse{
 		Subscriptions: *chat.NewChannelSubscriptions(subscriptions),
 	}, nil
+}
+
+func (cs *ChatStore) GetSubscriptionsForChannel(ctx context.Context, channelKey model.ChannelKey) ([]chat.ChannelSubscription, error) {
+	ctx, _ = GetCtx(ctx, "ChatStore", "GetSubscriptionsForChannel")
+
+	var subscriptions []chat.ChannelSubscription
+	err := cs.db.
+		Where("channel_id = ?", channelKey.String()).
+		Find(&subscriptions).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return subscriptions, nil
 }
 
 func (cs *ChatStore) GetSubscription(ctx context.Context, request *chat.GetSubscription) (*chat.GetSubscriptionResponse, error) {

@@ -1,5 +1,6 @@
 import {Component, Input, OnInit} from '@angular/core';
 import {MessageGroup} from '../utils/messages-mapper';
+import {Message} from '../../api/models';
 
 @Component({
   selector: 'app-message-group',
@@ -22,11 +23,7 @@ import {MessageGroup} from '../utils/messages-mapper';
             {{messageGroup.formattedDate}} - {{messageGroup.messages[0].sentAtDate | date:"HH:MM aa"}}
           </small>
         </div>
-        <div>
-          <div class="message" *ngFor="let message of messageGroup.messages">
-            <app-blocks [message]="message"></app-blocks>
-          </div>
-        </div>
+        <app-blocks *ngFor="let message of messageGroup.messages; trackBy: trackMessage" [message]="message"></app-blocks>
       </div>
 
     </div>
@@ -36,9 +33,10 @@ import {MessageGroup} from '../utils/messages-mapper';
       line-break: anywhere;
     }
 
-    .group-header{
+    .group-header {
       line-height: 1rem;
     }
+
     .user-badge {
       width: 2rem;
       height: 2rem;
@@ -58,5 +56,11 @@ export class MessageGroupComponent {
 
   @Input()
   messageGroup: MessageGroup;
+
+  function;
+
+  trackMessage(index: number, message: Message): any {
+    return index;
+  }
 
 }

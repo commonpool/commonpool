@@ -18,6 +18,8 @@ type Service interface {
 	SendGroupMessage(ctx ctx.Context, request *SendGroupMessage) (*SendGroupMessageResponse, error)
 	CreateUserExchange(ctx context.Context, userKey model.UserKey) (string, error)
 	GetUserExchangeName(ctx context.Context, userKey model.UserKey) string
+	GetUserLink(userKey model.UserKey) string
+	GetResourceLink(resource model.ResourceKey) string
 }
 
 type NotifyUserInterestedAboutResource struct {

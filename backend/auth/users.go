@@ -21,6 +21,9 @@ func NewUsers(u []User) Users {
 		users = append(users, user)
 		userMap[userKey] = user
 	}
+	if users == nil {
+		users = []User{}
+	}
 	return Users{
 		Items:   users,
 		userMap: userMap,

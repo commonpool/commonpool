@@ -43,7 +43,12 @@ import {
   AcceptInvitationResponse,
   DeclineInvitationRequest,
   DeclineInvitationResponse,
-  LeaveGroupRequest, LeaveGroupResponse, SubmitInteractionRequest, Event
+  LeaveGroupRequest,
+  LeaveGroupResponse,
+  SubmitInteractionRequest,
+  Event,
+  GetTradingHistoryRequest,
+  GetTradingHistoryResponse
 } from './models';
 
 import {Observable, of, Subject, throwError} from 'rxjs';
@@ -109,14 +114,7 @@ export class BackendService {
 
     const socketObserver = new Observable(observer => {
       try {
-
-        // const subject = webSocket(`${environment.apiUrl
-        //   .replace('https://', 'wss://')
-        //   .replace('http://', 'wss://')
-        // }/api/v1/ws`);
-
-        const subject = webSocket(`ws://localhost:8585/api/v1/ws`);
-
+        const subject = webSocket(`${environment.wsUrl}/api/v1/ws`);
         const subscription = subject.asObservable()
           .subscribe(data =>
               observer.next(data),
@@ -583,4 +581,16 @@ export class BackendService {
     );
   }
 
+  getTradingHistory(request: GetTradingHistoryRequest): Observable<GetTradingHistoryResponse> {
+    return this.http.post(`${environment.apiUrl}/api/v1/trading-history`, request, {
+      observe: 'response'
+    }).pipe(
+      map((res: HttpResponse<object>) => {
+        if (res.status !== 200) {
+          throwError(ErrorResponse.fromHttpResponse(res));
+        }
+        return GetTradingHistoryResponse.from(res.body as GetTradingHistoryResponse);
+      })
+    );
+  }
 }

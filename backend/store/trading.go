@@ -34,7 +34,7 @@ func (t TradingStore) SaveOfferStatus(key model.OfferKey, status trading.OfferSt
 	return qry.Error
 }
 
-func (t TradingStore) GetItem(key model.OfferItemKey) (*trading.OfferItem, error) {
+func (t TradingStore) GetItem(ctx context.Context, key model.OfferItemKey) (*trading.OfferItem, error) {
 	var item trading.OfferItem
 	err := t.db.
 		Model(trading.OfferItem{}).
@@ -228,4 +228,51 @@ func (t TradingStore) SaveDecision(key model.OfferKey, user model.UserKey, decis
 			"decision": decision,
 		}).
 		Error
+}
+
+func (t TradingStore) GetTradingHistory(ctx context.Context, ids *model.UserKeys) ([]trading.TradingHistoryEntry, error) {
+
+	var offerItems []trading.OfferItem
+
+	qry := t.db.Model(trading.OfferItem{}).
+		Joins("JOIN offers ON offer_items.offer_id = offers.id AND offers.status = ?", trading.CompletedOffer)
+
+	if ids != nil && ids.Items != nil && len(ids.Items) > 0 {
+		var placeholders []string
+		var params []interface{}
+		for _, item := range ids.Items {
+			placeholders = append(placeholders, "?")
+			params = append(params, item.String())
+		}
+		qry = qry.Where(fmt.Sprintf("offers_items.user_id in (%s)", strings.Join(placeholders, ",")), params...)
+	}
+
+	err := qry.Find(&offerItems).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	var tradingHistory []trading.TradingHistoryEntry
+
+	for _, offerItem := range offerItems {
+		fromUser := model.NewUserKey(offerItem.FromUserID)
+		toUser := model.NewUserKey(offerItem.ToUserID)
+
+		var resourceKey *model.ResourceKey
+		if offerItem.ResourceID != nil {
+			rk := model.NewResourceKey(offerItem.ID)
+			resourceKey = &rk
+		}
+
+		tradingHistory = append(tradingHistory, trading.TradingHistoryEntry{
+			FromUserID:        fromUser,
+			ToUserID:          toUser,
+			ResourceID:        resourceKey,
+			TimeAmountSeconds: offerItem.OfferedTimeInSeconds,
+		})
+
+	}
+
+	return tradingHistory, nil
 }

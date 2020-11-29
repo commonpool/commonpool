@@ -43,6 +43,11 @@ func (k *UserKeys) Contains(key UserKey) bool {
 	return false
 }
 
+func (k *UserKeys) Append(key UserKey) *UserKeys {
+	newUserKeys := append(k.Items, key)
+	return NewUserKeys(newUserKeys)
+}
+
 func NewUserKeys(userKeys []UserKey) *UserKeys {
 	if userKeys == nil {
 		userKeys = []UserKey{}

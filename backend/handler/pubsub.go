@@ -307,7 +307,7 @@ func (h *Handler) Websocket(c echo.Context) error {
 	//
 	// c.Logger().Info("getting subscriptions")
 	// getSubscriptions := chat.NewGetSubscriptions(userKey, 100, 0)
-	// subs, err := h.chatStore.GetSubscriptions(ctx, getSubscriptions)
+	// subs, err := h.chatStore.GetSubscriptionsForUser(ctx, getSubscriptions)
 	// if err != nil {
 	// 	l.Error("could not get subscriptions", zap.Error(err))
 	// 	return err

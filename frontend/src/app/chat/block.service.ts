@@ -14,6 +14,9 @@ export class BlockService {
   }
 
   public setBlock(block: Block) {
+    if (this._block && JSON.stringify(block) === JSON.stringify(this._block)) {
+      return;
+    }
     this._block = block;
   }
 

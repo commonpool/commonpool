@@ -1,4 +1,4 @@
-import {Component, Input, ViewEncapsulation} from '@angular/core';
+import {ChangeDetectionStrategy, Component, Input, ViewEncapsulation} from '@angular/core';
 import {TextObject} from '../../api/models';
 
 @Component({
@@ -18,12 +18,23 @@ import {TextObject} from '../../api/models';
       margin-bottom: 0;
     }
   `],
-  encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TextObjectComponent {
+  constructor() {
+    console.log('new textobject');
+  }
 
+  _textObject: TextObject;
   @Input()
-  textObject: TextObject;
+  get textObject(): TextObject {
+    return this._textObject;
+  }
+
+  set textObject(value: TextObject) {
+    this._textObject = value;
+  }
 
   @Input()
   subtle = false;

@@ -7,7 +7,8 @@ import (
 )
 
 type Store interface {
-	GetSubscriptions(ctx context.Context, request *GetSubscriptions) (*GetSubscriptionsResponse, error)
+	GetSubscriptionsForUser(ctx context.Context, request *GetSubscriptions) (*GetSubscriptionsResponse, error)
+	GetSubscriptionsForChannel(ctx context.Context, channelKey model.ChannelKey) ([]ChannelSubscription, error)
 	GetSubscription(ctx context.Context, request *GetSubscription) (*GetSubscriptionResponse, error)
 	GetMessage(ctx context.Context, request *GetMessage) (*GetMessageResponse, error)
 	GetMessages(ctx context.Context, request *GetMessages) (*GetMessagesResponse, error)

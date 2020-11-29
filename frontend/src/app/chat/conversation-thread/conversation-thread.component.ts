@@ -15,34 +15,7 @@ import {BackendService} from '../../api/backend.service';
 import {Event, EventType, GetMessagesResponse, Message, SectionBlock, TextObject, TextType} from '../../api/models';
 import {format} from 'date-fns';
 import {ChatService, ConversationType} from '../chat.service';
-import {MapMessages} from '../utils/messages-mapper';
-
-class MessageGroup {
-  constructor(public date: Date, public dateStr: string, public messages: Message[]) {
-  }
-}
-
-enum DisplayType {
-  Date = 'date',
-  UserMessages = 'userMessages'
-}
-
-class DisplayElement {
-  constructor(public type: DisplayType) {
-  }
-}
-
-class DateSeparator extends DisplayElement {
-  constructor(public date: Date, public dateStr: string) {
-    super(DisplayType.Date);
-  }
-}
-
-class UserMessages extends DisplayElement {
-  constructor(public username: string, public userID: string, public messages: Message[]) {
-    super(DisplayType.UserMessages);
-  }
-}
+import {MapMessages, MessageGroup} from '../utils/messages-mapper';
 
 @Component({
   selector: 'app-conversation-thread',
@@ -85,7 +58,7 @@ class UserMessages extends DisplayElement {
       <div class="py-2 w-100 messages-container" #scrollframe (scroll)="scrolled($event)" (resize)="scrolled($event)">
         <div class="messages messages-inner-container" style="line-break: loose">
           <ng-container *ngIf="messageGroups$ | async; let messageGroups">
-            <ng-container *ngFor="let messageGroup of messageGroups;">
+            <ng-container *ngFor="let messageGroup of messageGroups; trackBy: trackMessageGroup">
               <app-message-group [messageGroup]="messageGroup" #item></app-message-group>
             </ng-container>
           </ng-container>
@@ -210,6 +183,10 @@ export class ConversationThreadComponent implements OnInit, OnDestroy, AfterView
 
   scrolled(event: any): void {
     this.isNearBottom = this.isUserNearBottom();
+  }
+
+  trackMessageGroup(index: number, messageGroup: MessageGroup): string {
+    return messageGroup.formattedDate + '-' + messageGroup.sentById;
   }
 
 }

@@ -1,7 +1,7 @@
 import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {BackendService} from '../../api/backend.service';
 import {Subject} from 'rxjs';
-import {pluck, switchMap} from 'rxjs/operators';
+import {distinctUntilChanged, pluck, shareReplay, switchMap, tap} from 'rxjs/operators';
 
 @Component({
   selector: 'app-username',
@@ -11,10 +11,16 @@ import {pluck, switchMap} from 'rxjs/operators';
 export class UsernameComponent implements OnInit {
 
   constructor(private backend: BackendService) {
+    console.log("new username")
   }
 
   private idSubject = new Subject<string>();
-  userInfo$ = this.idSubject.asObservable().pipe(
+  id$ = this.idSubject.asObservable().pipe(
+    distinctUntilChanged(),
+    shareReplay()
+  );
+
+  userInfo$ = this.id$.pipe(
     switchMap(id => this.backend.getUserInfo(id)),
     pluck('username')
   ).subscribe((username) => {
@@ -24,9 +30,9 @@ export class UsernameComponent implements OnInit {
   ngOnInit(): void {
   }
 
-
   @Input()
   set id(value: string) {
+    console.log(value);
     this.idSubject.next(value);
   }
 

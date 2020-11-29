@@ -3,6 +3,7 @@
 
   // Environment variables
   window["env"]["apiUrl"] = "http://localhost:4200";
-  // window["env"]["apiUrl"] = "https://commonpool.net";
+  window["env"]["wsUrl"] = "ws://localhost:8585";
   window["env"]["debug"] = true;
+
 })(this);

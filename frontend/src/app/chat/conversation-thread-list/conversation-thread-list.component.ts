@@ -2,7 +2,7 @@ import {Component, OnInit} from '@angular/core';
 import {BackendService} from '../../api/backend.service';
 import {debounceTime, filter, map, pluck, shareReplay, startWith, switchMap} from 'rxjs/operators';
 import {merge, Observable, Subject} from 'rxjs';
-import {ChannelType, EventType, Subscription} from '../../api/models';
+import {ChannelType, EventType, Group, Subscription} from '../../api/models';
 import {ChatService} from '../chat.service';
 
 @Component({
@@ -37,6 +37,10 @@ export class ConversationThreadListComponent implements OnInit {
 
   ngOnInit(): void {
 
+  }
+
+  trackSubscription(index: number, sub: Subscription) {
+    return sub.userId + '-' + sub.channelId;
   }
 
 }

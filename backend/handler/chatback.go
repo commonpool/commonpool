@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/trading"
 	"github.com/commonpool/backend/web"
@@ -60,10 +59,6 @@ func (h *Handler) HandleChatbackConfirmItemGivenOrReceived(
 
 	ctx, l := GetEchoContext(c, "HandleChatbackConfirmItemGivenOrReceived")
 
-	l.Debug("retrieving user key")
-
-	requestUserKey := model.NewUserKey(req.Payload.User.ID)
-
 	l.Debug("retrieving offer item id from payload")
 
 	// retrieving item id from payload
@@ -76,20 +71,13 @@ func (h *Handler) HandleChatbackConfirmItemGivenOrReceived(
 	l.Debug("converting item id to item key")
 
 	// converting item id to item key
-	offerItemId, err := uuid.FromString(*itemId)
+	offerItemKey, err := model.ParseOfferItemKey(*itemId)
 	if err != nil {
 		l.Error("could not get offer item id from request", zap.Error(err))
 		return c.String(http.StatusBadRequest, err.Error())
 	}
-	itemKey := model.NewOfferItemKey(offerItemId)
 
-	if bond == trading.OfferItemReceiving {
-		_, err = h.tradingService.ConfirmItemReceived(ctx, trading.NewConfirmItemReceived(requestUserKey, itemKey))
-	} else if bond == trading.OfferItemGiving {
-		_, err = h.tradingService.ConfirmItemGiven(ctx, trading.NewConfirmItemGiven(requestUserKey, itemKey))
-	} else {
-		return fmt.Errorf("unexpected")
-	}
+	err = h.tradingService.ConfirmItemReceivedOrGiven(ctx, offerItemKey)
 
 	if err != nil {
 		l.Error("could not confirm item was received or given", zap.Error(err))

@@ -8,6 +8,7 @@ import {IEnvironment} from './IEnvironment';
 export const environment: IEnvironment = {
   production: false,
   apiUrl: (window as any)?.apiUrl || 'http://localhost:4200',
+  wsUrl: (window as any)?.wsUrl || 'ws://localhost:8585',
   debug: (window as any)?.env?.debug || true
 };
 

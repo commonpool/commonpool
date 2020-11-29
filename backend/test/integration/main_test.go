@@ -4,12 +4,16 @@ import (
 	"context"
 	"github.com/commonpool/backend/amqp"
 	"github.com/commonpool/backend/auth"
+	"github.com/commonpool/backend/chat"
 	"github.com/commonpool/backend/config"
+	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/handler"
 	"github.com/commonpool/backend/mock"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/service"
 	"github.com/commonpool/backend/store"
+	"github.com/commonpool/backend/trading"
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
 	"os"
@@ -68,19 +72,6 @@ func TestMain(m *testing.M) {
 	ctx := context.Background()
 
 	AmqpClient, _ = amqp.NewRabbitMqClient(ctx, "amqp://guest:guest@192.168.39.47:31991/")
-
-	ch, _ := AmqpClient.GetChannel()
-	key1 := User1.GetUserKey()
-	err := ch.ExchangeDelete(ctx, key1.GetExchangeName(), false, false)
-	if err != nil {
-		panic(err)
-	}
-	key2 := User2.GetUserKey()
-	err = ch.ExchangeDelete(ctx, key2.GetExchangeName(), false, false)
-	if err != nil {
-		panic(err)
-	}
-
 	Authorizer = mock.NewTestAuthorizer()
 	Authorizer.MockCurrentSession = func() auth.UserSession {
 		if authenticatedUser == nil {
@@ -117,23 +108,36 @@ func TestMain(m *testing.M) {
 		TradingService,
 		GroupService)
 
+	os.Exit(m.Run())
+
+}
+
+func teardown() {
+
+	ctx := context.Background()
+
+	Db.Delete(auth.User{}, "1 = 1")
+	Db.Delete(resource.Resource{}, "1 = 1")
+	Db.Delete(resource.ResourceSharing{}, "1 = 1")
+	Db.Delete(trading.Offer{}, "1 = 1")
+	Db.Delete(trading.OfferItem{}, "1 = 1")
+	Db.Delete(trading.OfferDecision{}, "1 = 1")
+	Db.Delete(chat.Channel{}, "1 = 1")
+	Db.Delete(chat.ChannelSubscription{}, "1 = 1")
+	Db.Delete(store.Message{}, "1 = 1")
+	Db.Delete(group.Group{}, "1 = 1")
+	Db.Delete(group.Membership{}, "1 = 1")
+
+	ch, _ := AmqpClient.GetChannel()
+	_ = ch.ExchangeDelete(ctx, User1Key.GetExchangeName(), false, false)
+	_ = ch.ExchangeDelete(ctx, User2Key.GetExchangeName(), false, false)
+	_ = ch.ExchangeDelete(ctx, User3Key.GetExchangeName(), false, false)
+}
+
+func setup() {
+
 	PanicIfError(AuthStore.Upsert(User1.GetUserKey(), User1.Email, User1.Username))
 	PanicIfError(AuthStore.Upsert(User2.GetUserKey(), User2.Email, User2.Username))
 	PanicIfError(AuthStore.Upsert(User3.GetUserKey(), User3.Email, User3.Username))
-
-	rc := m.Run()
-
-	err = ch.ExchangeDelete(ctx, key1.GetExchangeName(), false, false)
-	if err != nil {
-		panic(err)
-		os.Exit(1)
-	}
-	err = ch.ExchangeDelete(ctx, key2.GetExchangeName(), false, false)
-	if err != nil {
-		panic(err)
-		os.Exit(1)
-	}
-
-	os.Exit(rc)
 
 }

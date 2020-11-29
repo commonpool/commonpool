@@ -61,22 +61,26 @@ import {TextObjectComponent} from './chat/text-object/text-object.component';
 import {ButtonComponent} from './chat/button/button.component';
 import {BlockComponent} from './chat/block/block.component';
 import {AttachmentComponent} from './chat/attachment/attachment.component';
-import { SectionBlockComponent } from './chat/section-block/section-block.component';
-import { ContextBlockComponent } from './chat/context-block/context-block.component';
-import { ActionsBlockComponent } from './chat/actions-block/actions-block.component';
-import { DividerBlockComponent } from './chat/divider-block/divider-block.component';
-import { ImageBlockComponent } from './chat/image-block/image-block.component';
-import { HeaderBlockComponent } from './chat/header-block/header-block.component';
-import { MessageGroupComponent } from './chat/message-group/message-group.component';
-// import {ConvertLinksDirective} from './markdown/convert-links.directive';
-// import {RouterLinkComponent} from './markdown/router-link/router-link.component';
-// import {MarkdownRenderer} from './markdown/Renderer';
+import {SectionBlockComponent} from './chat/section-block/section-block.component';
+import {ContextBlockComponent} from './chat/context-block/context-block.component';
+import {ActionsBlockComponent} from './chat/actions-block/actions-block.component';
+import {DividerBlockComponent} from './chat/divider-block/divider-block.component';
+import {ImageBlockComponent} from './chat/image-block/image-block.component';
+import {HeaderBlockComponent} from './chat/header-block/header-block.component';
+import {MessageGroupComponent} from './chat/message-group/message-group.component';
+import {SampleComponent} from './sample/sample/sample.component';
+import {MarkdownRenderer} from './markdown/renderer';
+import {ConvertLinksDirective} from './markdown/convert-links.directive';
+import {RouterLinkComponent} from './markdown/router-link/router-link.component';
+import {UserLinkComponent} from './shared/user-link/user-link.component';
+import {ResourceLink2Component} from './shared/resource-link2/resource-link2.component';
+import {TradingHistoryComponent} from './trading/history/trading-history.component';
 
-//const rendererFactory = (domSanitizer: DomSanitizer): MarkedOptions => {
-//  return {
-//    renderer: new MarkdownRenderer(domSanitizer),
-//  };
-//};
+const rendererFactory = (domSanitizer: DomSanitizer): MarkedOptions => {
+  return {
+    renderer: new MarkdownRenderer(domSanitizer),
+  };
+};
 
 @NgModule({
   declarations: [
@@ -139,8 +143,12 @@ import { MessageGroupComponent } from './chat/message-group/message-group.compon
     ImageBlockComponent,
     HeaderBlockComponent,
     MessageGroupComponent,
-    // ConvertLinksDirective,
-    // RouterLinkComponent,
+    SampleComponent,
+    ConvertLinksDirective,
+    RouterLinkComponent,
+    UserLinkComponent,
+    ResourceLink2Component,
+    TradingHistoryComponent,
   ],
   imports: [
     BrowserModule,
@@ -150,15 +158,15 @@ import { MessageGroupComponent } from './chat/message-group/message-group.compon
     HttpClientModule,
     ScrollingModule,
     NgSelectModule,
-    MarkdownModule.forRoot()
-    // MarkdownModule.forRoot({
-    //   sanitize: SecurityContext.NONE,
-    //   markedOptions: {
-    //     provide: MarkedOptions,
-    //     useFactory: rendererFactory,
-    //     deps: [DomSanitizer]
-    //   }
-    // })
+//    MarkdownModule.forRoot()
+    MarkdownModule.forRoot({
+      sanitize: SecurityContext.NONE,
+      markedOptions: {
+        provide: MarkedOptions,
+        useFactory: rendererFactory,
+        deps: [DomSanitizer]
+      }
+    })
   ],
   providers: [{provide: HTTP_INTERCEPTORS, useClass: AppHttpInterceptor, multi: true}],
   bootstrap: [AppComponent]

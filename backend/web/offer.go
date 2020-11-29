@@ -22,8 +22,8 @@ type OfferItem struct {
 	FromUserID    string                `json:"fromUserId"`
 	ToUserID      string                `json:"toUserId"`
 	Type          trading.OfferItemType `json:"type"`
-	ResourceId    string                `json:"resourceId"`
-	TimeInSeconds int64                 `json:"timeInSeconds"`
+	ResourceId    *string               `json:"resourceId"`
+	TimeInSeconds *int64                `json:"timeInSeconds"`
 }
 
 type OfferDecision struct {

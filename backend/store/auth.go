@@ -6,7 +6,6 @@ import (
 	"github.com/commonpool/backend/auth"
 	errs "github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
-	"github.com/commonpool/backend/utils"
 	"github.com/labstack/gommon/log"
 	"gorm.io/gorm"
 	"strings"
@@ -30,41 +29,30 @@ type UserStore struct {
 
 func (as *AuthStore) GetByKeys(ctx context.Context, keys []model.UserKey) (auth.Users, error) {
 
-	var result []auth.User
-	usedKeys := map[model.UserKey]bool{}
+	var qryStrs []string
+	var qryParams []interface{}
 
-	err := utils.Partition(len(keys), 999, func(i1 int, i2 int) error {
+	if keys == nil || len(keys) == 0 {
+		return auth.NewUsers([]auth.User{}), nil
+	}
 
-		var qryStrs []string
-		var qryParams []interface{}
+	for _, userKey := range keys {
+		qryStrs = append(qryStrs, "?")
+		qryParams = append(qryParams, userKey.String())
+	}
 
-		for _, item := range keys[i1:i2] {
-			if usedKeys[item] {
-				continue
-			}
-			usedKeys[item] = true
-			qryStrs = append(qryStrs, "?")
-			qryParams = append(qryParams, item.String())
-		}
-		sqlWhere := "id IN (" + strings.Join(qryStrs, ",") + ")"
+	sqlWhere := "id IN (" + strings.Join(qryStrs, ",") + ")"
 
-		var partitioned []auth.User
-		err := as.db.Model(auth.User{}).Where(sqlWhere, qryParams...).Find(&partitioned).Error
-		if err != nil {
-			log.Error(err, "GetByKeys: could not get users by keys")
-			return err
-		}
-		for _, user := range partitioned {
-			result = append(result, user)
-		}
-		return nil
-	})
+	var users []auth.User
+	err := as.db.Model(auth.User{}).Where(sqlWhere, qryParams...).Find(&users).Error
 
 	if err != nil {
+		log.Error(err, "GetByKeys: could not get users by keys")
 		return auth.Users{}, err
 	}
 
-	return auth.NewUsers(result), nil
+	return auth.NewUsers(users), nil
+
 }
 
 func (as *AuthStore) Upsert(key model.UserKey, email string, username string) error {

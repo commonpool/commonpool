@@ -453,6 +453,9 @@ func (r *CommonpoolInstallationReconciler) newFrontendDeployment(installation *a
 								{
 									Name:  "API_URL",
 									Value: "https://" + installation.Spec.IngressHost,
+								}, {
+									Name:  "WS_URL",
+									Value: "wss://" + installation.Spec.WebsocketHost,
 								},
 							},
 						},

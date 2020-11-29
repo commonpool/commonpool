@@ -3,42 +3,14 @@ package trading
 import (
 	ctx "context"
 	"github.com/commonpool/backend/model"
+	"golang.org/x/net/context"
 )
 
 type Service interface {
-	ConfirmItemReceived(ctx ctx.Context, request *ConfirmItemReceived) (*ConfirmItemReceivedResponse, error)
-	ConfirmItemGiven(ctx ctx.Context, request *ConfirmItemGiven) (*ConfirmItemGivenResponse, error)
+	GetOfferItem(ctx context.Context, offerItemKey model.OfferItemKey) (*OfferItem, error)
+	ConfirmItemReceivedOrGiven(ctx context.Context, offerItemKey model.OfferItemKey) error
 	AcceptOffer(ctx ctx.Context, request *AcceptOffer) (*AcceptOfferResponse, error)
-}
-
-type ConfirmItemReceived struct {
-	ReceivedByUser model.UserKey
-	OfferItemKey   model.OfferItemKey
-}
-
-type ConfirmItemReceivedResponse struct {
-}
-
-func NewConfirmItemReceived(receivedByUser model.UserKey, offerItemKey model.OfferItemKey) *ConfirmItemReceived {
-	return &ConfirmItemReceived{
-		ReceivedByUser: receivedByUser,
-		OfferItemKey:   offerItemKey,
-	}
-}
-
-type ConfirmItemGiven struct {
-	GivenByUser  model.UserKey
-	OfferItemKey model.OfferItemKey
-}
-
-type ConfirmItemGivenResponse struct {
-}
-
-func NewConfirmItemGiven(GivenByUser model.UserKey, offerItemKey model.OfferItemKey) *ConfirmItemGiven {
-	return &ConfirmItemGiven{
-		GivenByUser:  GivenByUser,
-		OfferItemKey: offerItemKey,
-	}
+	GetTradingHistory(ctx context.Context, userIDs *model.UserKeys) ([]TradingHistoryEntry, error)
 }
 
 type AcceptOffer struct {

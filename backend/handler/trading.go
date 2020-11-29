@@ -152,7 +152,7 @@ func (h *Handler) SendOffer(ctx context.Context, req web.SendOfferRequest, fromU
 				userKeys = append(userKeys, toUser)
 			}
 
-			foundUsers, err := h.authStore.GetByKeys(nil, userKeys)
+			foundUsers, err := h.authStore.GetByKeys(ctx, userKeys)
 			if err != nil {
 				return nil, err
 			}
@@ -247,7 +247,10 @@ func (h *Handler) SendOffer(ctx context.Context, req web.SendOfferRequest, fromU
 		var blocks []chat.Block
 
 		// Adding a descriptive header
-		blocks = append(blocks, *chat.NewHeaderBlock(chat.NewMarkdownObject(fmt.Sprintf("%s is proposing an exchange", fromUser.GetUsername())), nil))
+		blocks = append(blocks, *chat.NewHeaderBlock(
+			chat.NewMarkdownObject(
+				fmt.Sprintf("%s is proposing an exchange", h.chatService.GetUserLink(fromUser.GetUserKey())),
+			), nil))
 
 		// Looping through each item to construct the message
 		for _, userOfferItem := range userOfferItems.Items {
@@ -265,19 +268,15 @@ func (h *Handler) SendOffer(ctx context.Context, req web.SendOfferRequest, fromU
 			if userOfferItem.GetFromUserKey() == itemUserKey {
 
 				if userOfferItem.IsTimeExchangeItem() {
-
-					message := fmt.Sprintf("**%s** would like **%s** of your time", toUser.Username, userOfferItem.FormatOfferedTimeInSeconds())
+					message := fmt.Sprintf("%s would like %s of your time",
+						h.chatService.GetUserLink(toUser.GetUserKey()),
+						userOfferItem.FormatOfferedTimeInSeconds())
 					block := chat.NewSectionBlock(chat.NewMarkdownObject(message), nil, nil, nil)
 					blocks = append(blocks, *block)
-
 				} else if userOfferItem.IsResourceExchangeItem() {
-
-					resource, err := usedResources.GetResource(userOfferItem.GetResourceKey())
-					if err != nil {
-						return nil, err
-					}
-
-					message := fmt.Sprintf("**%s** would like **%s**", toUser.Username, resource.Summary)
+					message := fmt.Sprintf("%s would like %s",
+						h.chatService.GetUserLink(toUser.GetUserKey()),
+						h.chatService.GetResourceLink(userOfferItem.GetResourceKey()))
 					block := chat.NewSectionBlock(chat.NewMarkdownObject(message), nil, nil, nil)
 					blocks = append(blocks, *block)
 				}
@@ -285,23 +284,16 @@ func (h *Handler) SendOffer(ctx context.Context, req web.SendOfferRequest, fromU
 			} else {
 
 				if userOfferItem.IsTimeExchangeItem() {
-
-					message := fmt.Sprintf("you would get **%s** of time bank credits from **%s**",
+					message := fmt.Sprintf("you would get %s of time bank credits from %s",
 						userOfferItem.FormatOfferedTimeInSeconds(),
-						fromUser.Username)
-
+						h.chatService.GetUserLink(fromUser.GetUserKey()))
 					block := chat.NewSectionBlock(chat.NewMarkdownObject(message), nil, nil, nil)
 					blocks = append(blocks, *block)
-
 				} else if userOfferItem.IsResourceExchangeItem() {
-
 					resourceKey := userOfferItem.GetResourceKey()
-					resource, err := usedResources.GetResource(resourceKey)
-					if err != nil {
-						return nil, err
-					}
-
-					message := fmt.Sprintf("you would get **%s** from **%s**", resource.Summary, fromUser.Username)
+					message := fmt.Sprintf("you would get %s from %s",
+						h.chatService.GetResourceLink(resourceKey),
+						h.chatService.GetUserLink(fromUser.GetUserKey()))
 					block := chat.NewSectionBlock(chat.NewMarkdownObject(message), nil, nil, nil)
 					blocks = append(blocks, *block)
 				}
@@ -407,7 +399,7 @@ func (h *Handler) HandleAcceptOffer(c echo.Context) error {
 		return err
 	}
 
-	return c.String(http.StatusAccepted, "")
+	return c.String(http.StatusOK, "")
 
 }
 
@@ -475,7 +467,7 @@ func (h *Handler) DeclineOffer(c echo.Context) error {
 		return err
 	}
 
-	return c.JSON(http.StatusAccepted, webOffer)
+	return c.JSON(http.StatusOK, webOffer)
 
 }
 
@@ -587,6 +579,111 @@ func (h *Handler) GetWebOffer(offerKey OfferKey) (*web.GetOfferResponse, error) 
 	return &response, nil
 }
 
+func (h *Handler) ConfirmItemReceivedOrGiven(c echo.Context) error {
+
+	ctx, _ := GetEchoContext(c, "ConfirmItemReceivedOrGiven")
+
+	offerItemKey, err := ParseOfferItemKey(c.Param("id"))
+	if err != nil {
+		return err
+	}
+	err = h.tradingService.ConfirmItemReceivedOrGiven(ctx, offerItemKey)
+	if err != nil {
+		return err
+	}
+
+	offerItem, err := h.tradingService.GetOfferItem(ctx, offerItemKey)
+	if err != nil {
+		return errs.ReturnException(c, err)
+	}
+
+	webResponse := h.mapOfferItem(offerItem)
+
+	return c.JSON(http.StatusOK, webResponse)
+
+}
+
+func (h *Handler) mapOfferItem(offerItem *trading.OfferItem) web.OfferItem {
+	resourceId := offerItem.ResourceID
+	var resourceIdResult *string = nil
+	if resourceId != nil {
+		resourceIdStr := resourceId.String()
+		resourceIdResult = &resourceIdStr
+	}
+	webResponse := web.OfferItem{
+		ID:            offerItem.ID.String(),
+		FromUserID:    offerItem.FromUserID,
+		ToUserID:      offerItem.ToUserID,
+		Type:          offerItem.ItemType,
+		ResourceId:    resourceIdResult,
+		TimeInSeconds: offerItem.OfferedTimeInSeconds,
+	}
+	return webResponse
+}
+
+func (h *Handler) GetTradingHistory(c echo.Context) error {
+
+	ctx, _ := GetEchoContext(c, "GetTradingHistory")
+
+	req := web.GetTradingHistoryRequest{}
+	if err := c.Bind(&req); err != nil {
+		return err
+	}
+
+	var userKeys []UserKey
+	for _, userId := range req.UserIDs {
+		userKey := NewUserKey(userId)
+		userKeys = append(userKeys, userKey)
+	}
+
+	tradingHistory, err := h.tradingService.GetTradingHistory(ctx, NewUserKeys(userKeys))
+	if err != nil {
+		return err
+	}
+
+	tradingUserKeys := NewUserKeys([]UserKey{})
+	for _, entry := range tradingHistory {
+		tradingUserKeys = tradingUserKeys.Append(entry.ToUserID)
+		tradingUserKeys = tradingUserKeys.Append(entry.FromUserID)
+	}
+
+	users, err := h.authStore.GetByKeys(ctx, tradingUserKeys.Items)
+	if err != nil {
+		return err
+	}
+
+	var responseEntries []web.TradingHistoryEntry
+	for _, entry := range tradingHistory {
+		var resourceId *string
+		if entry.ResourceID != nil {
+			resourceIdStr := entry.ResourceID.String()
+			resourceId = &resourceIdStr
+		}
+		fromUser, err := users.GetUser(entry.FromUserID)
+		if err != nil {
+			return err
+		}
+		toUser, err := users.GetUser(entry.ToUserID)
+		if err != nil {
+			return err
+		}
+		webEntry := web.TradingHistoryEntry{
+			Timestamp:         entry.Timestamp.String(),
+			FromUserID:        entry.FromUserID.String(),
+			FromUsername:      fromUser.Username,
+			ToUserID:          entry.ToUserID.String(),
+			ToUsername:        toUser.Username,
+			ResourceID:        resourceId,
+			TimeAmountSeconds: entry.TimeAmountSeconds,
+		}
+		responseEntries = append(responseEntries, webEntry)
+	}
+
+	return c.JSON(http.StatusOK, web.GetTradingHistoryResponse{
+		Entries: responseEntries,
+	})
+}
+
 func (h *Handler) mapToWebOffer(offer trading.Offer, items *trading.OfferItems, decisions []trading.OfferDecision) (*web.Offer, error) {
 
 	authorUsername, err := h.authStore.GetUsername(offer.GetAuthorKey())
@@ -614,9 +711,15 @@ func (h *Handler) mapToWebOffer(offer trading.Offer, items *trading.OfferItems, 
 			Type:       offerItem.ItemType,
 		}
 		if offerItem.ItemType == trading.ResourceItem {
-			webItem.ResourceId = offerItem.ResourceID.String()
+			resourceUid := offerItem.ResourceID
+			var resourceIdResult *string = nil
+			if resourceUid != nil {
+				resourceIdStr := resourceUid.String()
+				resourceIdResult = &resourceIdStr
+			}
+			webItem.ResourceId = resourceIdResult
 		} else if offerItem.ItemType == trading.TimeItem {
-			webItem.TimeInSeconds = *offerItem.OfferedTimeInSeconds
+			webItem.TimeInSeconds = offerItem.OfferedTimeInSeconds
 		}
 		responseItems[i] = webItem
 	}

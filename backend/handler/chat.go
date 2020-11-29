@@ -71,7 +71,7 @@ func (h *Handler) GetRecentlyActiveSubscriptions(c echo.Context) error {
 		zap.Int("take", take),
 		zap.Int("skip", skip))
 
-	getSubscriptions, err := h.chatStore.GetSubscriptions(ctx, chat.NewGetSubscriptions(userKey, take, skip))
+	getSubscriptions, err := h.chatStore.GetSubscriptionsForUser(ctx, chat.NewGetSubscriptions(userKey, take, skip))
 	if err != nil {
 		l.Error("could not get subscriptions", zap.Error(err))
 		return err

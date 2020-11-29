@@ -80,6 +80,8 @@ spec:
               type: string
             rabbitMqUrlSecretKey:
               type: string
+            websocketHost:
+              type: string
           required:
           - callbackTokenSecret
           - callbackTokenSecretKey

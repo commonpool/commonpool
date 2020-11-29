@@ -28,6 +28,7 @@ type CommonpoolInstallationSpec struct {
 	FrontendImage string `json:"frontendImage,omitempty"`
 	// IngressHost Specifies the host for the kubernetes ingress
 	IngressHost               string `json:"ingressHost,omitempty"`
+	WebsocketHost             string `json:"websocketHost,omitempty"`
 	DatabaseHost              string `json:"databaseHost"`
 	DatabasePort              int    `json:"databasePort"`
 	DatabaseName              string `json:"databaseName"`

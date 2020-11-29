@@ -23,9 +23,16 @@ type Offer struct {
 	Status         OfferStatus
 	CreatedAt      time.Time
 	ExpirationTime *time.Time
-	// Completion time (when either accepted, expired or declined)
-	CompletedAt *time.Time
-	Message     string
+	CompletedAt    *time.Time
+	Message        string
+}
+
+type TradingHistoryEntry struct {
+	Timestamp         time.Time
+	FromUserID        model.UserKey
+	ToUserID          model.UserKey
+	ResourceID        *model.ResourceKey
+	TimeAmountSeconds *int64
 }
 
 func NewOffer(offerKey model.OfferKey, author model.UserKey, message string, expiration *time.Time) Offer {
@@ -88,7 +95,7 @@ const (
 
 type OfferItem struct {
 	ID         uuid.UUID `gorm:"type:uuid;primary_key"`
-	OfferID    uuid.UUID
+	OfferID    uuid.UUID `gorm:"type:uuid"`
 	ItemType   OfferItemType
 	FromUserID string
 	ToUserID   string

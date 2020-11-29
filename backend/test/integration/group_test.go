@@ -46,6 +46,9 @@ func GetUsersForInvitePicker(t *testing.T, ctx context.Context, groupId model.Gr
 }
 
 func TestCreateGroup(t *testing.T) {
+	teardown()
+	setup()
+
 	ctx := context.Background()
 	response, httpResponse := CreateGroup(t, ctx, User1, &web.CreateGroupRequest{
 		Name:        "sample",
@@ -60,6 +63,9 @@ func TestCreateGroup(t *testing.T) {
 }
 
 func TestCreateGroupUnauthenticatedShouldFailWithUnauthorized(t *testing.T) {
+	teardown()
+	setup()
+
 	ctx := context.Background()
 	_, httpResponse := CreateGroup(t, ctx, nil, &web.CreateGroupRequest{
 		Name:        "sample",
@@ -69,6 +75,9 @@ func TestCreateGroupUnauthenticatedShouldFailWithUnauthorized(t *testing.T) {
 }
 
 func TestCreateGroupEmptyName(t *testing.T) {
+	teardown()
+	setup()
+
 	ctx := context.Background()
 	_, httpResponse := CreateGroup(t, ctx, User1, &web.CreateGroupRequest{
 		Name:        "",
@@ -78,6 +87,9 @@ func TestCreateGroupEmptyName(t *testing.T) {
 }
 
 func TestCreateGroupEmptyDescriptionShouldNotFail(t *testing.T) {
+	teardown()
+	setup()
+
 	ctx := context.Background()
 	_, httpResponse := CreateGroup(t, ctx, User1, &web.CreateGroupRequest{
 		Name:        "A Blibbers",
@@ -87,6 +99,9 @@ func TestCreateGroupEmptyDescriptionShouldNotFail(t *testing.T) {
 }
 
 func TestCreateGroupShouldCreateOwnerMembership(t *testing.T) {
+	teardown()
+	setup()
+
 	ctx := context.Background()
 	response, _ := CreateGroup(t, ctx, User1, &web.CreateGroupRequest{
 		Name:        "sample",
@@ -105,6 +120,9 @@ func TestCreateGroupShouldCreateOwnerMembership(t *testing.T) {
 }
 
 func TestCreatingGroupShouldSubscribeOwnerToChanel(t *testing.T) {
+	teardown()
+	setup()
+
 	ctx := context.Background()
 
 	amqpChan, err := AmqpClient.GetChannel()
@@ -137,6 +155,8 @@ func TestCreatingGroupShouldSubscribeOwnerToChanel(t *testing.T) {
 }
 
 func TestOwnerShouldBeAbleToInviteUser(t *testing.T) {
+	teardown()
+	setup()
 
 	ctx := context.Background()
 	grp, _ := CreateGroup(t, ctx, User1, &web.CreateGroupRequest{
@@ -159,6 +179,9 @@ func TestOwnerShouldBeAbleToInviteUser(t *testing.T) {
 }
 
 func TestInviteeShouldBeAbleToAcceptInvitationFromOwner(t *testing.T) {
+	teardown()
+	setup()
+
 	ctx := context.Background()
 	grp, _ := CreateGroup(t, ctx, User1, &web.CreateGroupRequest{
 		Name:        "sample",
@@ -183,6 +206,9 @@ func TestInviteeShouldBeAbleToAcceptInvitationFromOwner(t *testing.T) {
 }
 
 func TestInviteeShouldBeAbleToDeclineInvitationFromOwner(t *testing.T) {
+	teardown()
+	setup()
+
 	ctx := context.Background()
 	grp, _ := CreateGroup(t, ctx, User1, &web.CreateGroupRequest{
 		Name:        "sample",
@@ -203,6 +229,9 @@ func TestInviteeShouldBeAbleToDeclineInvitationFromOwner(t *testing.T) {
 }
 
 func TestOwnerShouldBeAbleToDeclineInvitationFromOwner(t *testing.T) {
+	teardown()
+	setup()
+
 	ctx := context.Background()
 	grp, _ := CreateGroup(t, ctx, User1, &web.CreateGroupRequest{
 		Name:        "sample",
@@ -223,6 +252,9 @@ func TestOwnerShouldBeAbleToDeclineInvitationFromOwner(t *testing.T) {
 }
 
 func TestRandomUserShouldNotBeAbleToAcceptInvitation(t *testing.T) {
+	teardown()
+	setup()
+
 	ctx := context.Background()
 	grp, _ := CreateGroup(t, ctx, User1, &web.CreateGroupRequest{
 		Name:        "sample",
@@ -240,6 +272,9 @@ func TestRandomUserShouldNotBeAbleToAcceptInvitation(t *testing.T) {
 }
 
 func TestPersonShouldBeAbleToRequestBeingInvitedInGroup(t *testing.T) {
+	teardown()
+	setup()
+
 	ctx := context.Background()
 	grp, _ := CreateGroup(t, ctx, User1, &web.CreateGroupRequest{
 		Name:        "sample",
@@ -260,6 +295,9 @@ func TestPersonShouldBeAbleToRequestBeingInvitedInGroup(t *testing.T) {
 }
 
 func TestOwnerShouldBeAbleToAcceptInvitationRequest(t *testing.T) {
+	teardown()
+	setup()
+
 	ctx := context.Background()
 	grp, _ := CreateGroup(t, ctx, User1, &web.CreateGroupRequest{
 		Name:        "sample",
@@ -284,6 +322,9 @@ func TestOwnerShouldBeAbleToAcceptInvitationRequest(t *testing.T) {
 }
 
 func TestGroupShouldReceiveMessageWhenUserJoined(t *testing.T) {
+	teardown()
+	setup()
+
 	ctx := context.Background()
 
 	x1 := ListenOnUserExchange(t, ctx, User1.GetUserKey())
@@ -364,6 +405,9 @@ func TestGroupShouldReceiveMessageWhenUserJoined(t *testing.T) {
 }
 
 func TestGetUsersForInvitePickerShouldNotReturnDuplicates(t *testing.T) {
+	teardown()
+	setup()
+
 	ctx := context.Background()
 
 	_, _ = CreateGroup(t, ctx, User1, &web.CreateGroupRequest{

@@ -10,6 +10,9 @@ func (h *Handler) Register(v1 *echo.Group) {
 	auth.Any("/login", h.authorization.Login())
 	auth.Any("/logout", h.authorization.Logout())
 
+	meta := v1.Group("/meta", h.authorization.Authenticate(false))
+	meta.GET("/who-am-i", h.WhoAmI)
+
 	resources := v1.Group("/resources", h.authorization.Authenticate(true))
 	resources.GET("", h.SearchResources)
 	resources.GET("/:id", h.GetResource)
@@ -22,21 +25,18 @@ func (h *Handler) Register(v1 *echo.Group) {
 	users.GET("/:id", h.GetUserInfo)
 	users.GET("/:id/memberships", h.GetUserMemberships)
 
-	meta := v1.Group("/meta", h.authorization.Authenticate(false))
-	meta.GET("/who-am-i", h.WhoAmI)
-
-	chat := v1.Group("/chat", h.authorization.Authenticate(true))
-	chat.GET("/messages", h.GetMessages)
-	chat.GET("/subscriptions", h.GetRecentlyActiveSubscriptions)
-	chat.POST("/:id", h.SendMessage)
-	chat.POST("/interaction", h.SubmitInteraction)
-
 	offers := v1.Group("/offers", h.authorization.Authenticate(true))
-	offers.POST("", h.HandleSendOffer)
 	offers.GET("/:id", h.GetOffer)
 	offers.GET("", h.GetOffers)
+	offers.POST("", h.HandleSendOffer)
 	offers.POST("/:id/accept", h.HandleAcceptOffer)
 	offers.POST("/:id/decline", h.DeclineOffer)
+
+	tradingHistory := v1.Group("/trading-history", h.authorization.Authenticate(false))
+	tradingHistory.POST("", h.GetTradingHistory)
+
+	offerItems := v1.Group("/offer-items", h.authorization.Authenticate(true))
+	offerItems.POST("/:id/confirmation", h.ConfirmItemReceivedOrGiven)
 
 	my := v1.Group("/my", h.authorization.Authenticate(true))
 	my.GET("/memberships", h.GetLoggedInUserMemberships)
@@ -51,6 +51,12 @@ func (h *Handler) Register(v1 *echo.Group) {
 	memberships := v1.Group("/memberships", h.authorization.Authenticate(true))
 	memberships.POST("", h.CreateOrAcceptMembership)
 	memberships.DELETE("", h.CancelOrDeclineInvitation)
+
+	chat := v1.Group("/chat", h.authorization.Authenticate(true))
+	chat.GET("/messages", h.GetMessages)
+	chat.GET("/subscriptions", h.GetRecentlyActiveSubscriptions)
+	chat.POST("/:id", h.SendMessage)
+	chat.POST("/interaction", h.SubmitInteraction)
 
 	v1.POST("/chatback", h.Chatback, h.authorization.Authenticate(true))
 	v1.GET("/ws", h.Websocket, h.authorization.Authenticate(true))
