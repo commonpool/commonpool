@@ -270,7 +270,7 @@ func (a *OidcAuthenticator) getAccessToken(c echo.Context) (string, error) {
 	var rawAccessToken = ""
 	var accessTokenFromCookie = ""
 	var accessTokenFromHeader = c.Request().Header.Get("Authorization")
-	var accessTokenFromQuery = c.Request().URL.Query().Get("token")
+	var accessTokenFromQuery = c.Request().URL.Query()["token"]
 
 	accessTokenCookie, err := c.Cookie(accessTokenCookieName)
 	if err == nil {
@@ -294,9 +294,9 @@ func (a *OidcAuthenticator) getAccessToken(c echo.Context) (string, error) {
 		rawAccessToken = parts[1]
 	}
 
-	if accessTokenFromQuery != "" {
+	if len(accessTokenFromQuery) != 0 && accessTokenFromQuery[0] != "" {
 		c.Logger().Info("Using access token from query")
-		rawAccessToken = accessTokenFromQuery
+		rawAccessToken = accessTokenFromQuery[0]
 	}
 
 	return rawAccessToken, nil

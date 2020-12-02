@@ -10,6 +10,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"os"
+	"time"
 )
 
 func NewTestDb() *gorm.DB {
@@ -23,7 +24,9 @@ func NewTestDb() *gorm.DB {
 		panic(err)
 	}
 
-	sqlDB.SetMaxIdleConns(3)
+	sqlDB.SetMaxIdleConns(1)
+	sqlDB.SetMaxOpenConns(1)
+	sqlDB.SetConnMaxLifetime(time.Hour)
 	return db
 }
 

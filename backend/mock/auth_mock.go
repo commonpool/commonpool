@@ -13,14 +13,33 @@ type Authorizer struct {
 	MockCurrentSession func() auth.UserSession
 }
 
+func (a *Authorizer) GetRedirectResponse(request *http.Request) (*auth.RedirectResponse, error) {
+	panic("implement me")
+}
+
 var _ auth.IAuth = &Authorizer{}
 
 func (a *Authorizer) GetAuthUserSession(c echo.Context) auth.UserSession {
-	return a.MockCurrentSession()
+	var isAuthenticated = c.Get(auth.IsAuthenticatedKey).(bool)
+	if !isAuthenticated {
+		return auth.UserSession{
+			Username:        "",
+			Subject:         "",
+			Email:           "",
+			IsAuthenticated: false,
+		}
+	}
+	return auth.UserSession{
+		Username:        c.Get(auth.SubjectUsernameKey).(string),
+		Subject:         c.Get(auth.SubjectKey).(string),
+		Email:           c.Get(auth.SubjectEmailKey).(string),
+		IsAuthenticated: isAuthenticated,
+	}
 }
 
 func (a *Authorizer) GetAuthUserKey(c echo.Context) model.UserKey {
-	return model.NewUserKey(a.MockCurrentSession().Subject)
+	session := a.GetAuthUserSession(c)
+	return session.GetUserKey()
 }
 
 func (a *Authorizer) Login() echo.HandlerFunc {

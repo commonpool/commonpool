@@ -1,17 +1,17 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {BackendService} from '../../api/backend.service';
 import {
-  CreateResourcePayload,
-  CreateResourceRequest, ExtendedResource, GetMyMembershipsRequest, GetMyMembershipsResponse,
-  GetResourceResponse, Membership,
+  CreateResourceRequest,
+  GetMyMembershipsRequest,
+  GetMyMembershipsResponse,
+  Membership,
   ResourceType, SharedWithInput,
-  UpdateResourcePayload,
   UpdateResourceRequest
 } from '../../api/models';
-import {ActivatedRoute, Router} from '@angular/router';
-import {filter, map, pluck, shareReplay, switchMap, tap} from 'rxjs/operators';
+import {ActivatedRoute} from '@angular/router';
+import {filter, map, pluck, shareReplay, switchMap, tap, withLatestFrom} from 'rxjs/operators';
 import {AuthService} from '../../auth.service';
-import {combineLatest} from 'rxjs';
+import {FormControl, FormGroup, Validators, FormArray} from '@angular/forms';
 
 @Component({
   selector: 'app-new-resource',
@@ -20,50 +20,94 @@ import {combineLatest} from 'rxjs';
 })
 export class CreateOrEditResourceComponent implements OnInit, OnDestroy {
 
-  resourceId$ = this.route.params.pipe(pluck('id'));
-  resource$ = this.resourceId$.pipe(
-    filter(id => !!id),
-    switchMap(id => this.api.getResource(id)),
-    pluck<GetResourceResponse, ExtendedResource>('resource'),
-    shareReplay()
-  );
+  public submitted = false;
 
-  isOwnerSub = combineLatest([this.resource$, this.auth.session$]).pipe(
-    map(([resource, session]) => {
-      return session && resource.createdById === session.id;
-    })).subscribe(isResourceOwner => {
-    this.isResourceOwner = isResourceOwner;
+  public resource = new FormGroup({
+    type: new FormControl(ResourceType.Offer, [
+      Validators.required,
+    ]),
+    summary: new FormControl('', [
+      Validators.required
+    ]),
+    description: new FormControl('', [
+      Validators.required
+    ]),
+    valueInHoursFrom: new FormControl(0, [
+      Validators.required,
+      Validators.min(0)
+    ]),
+    valueInHoursTo: new FormControl(0, [
+      Validators.required,
+      Validators.min(0),
+    ]),
+    sharedWith: new FormArray([])
+  }, control => {
+    const fg = control as FormGroup;
+    if (fg.controls.valueInHoursFrom > fg.controls.valueInHoursTo) {
+      return {hoursFromLargerThanValuesTo: {}};
+    }
   });
 
-  resourceSub = this.resource$.subscribe(res => {
-    this.id = res.id;
-    this.summary = res.summary;
-    this.description = res.description;
-    this.resourceType = res.type;
-    this.valueInHoursFrom = res.valueInHoursFrom;
-    this.valueInHoursTo = res.valueInHoursTo;
-    this.sharedWith = res.sharedWith.map(s => s.groupId);
+  public form = new FormGroup({
+    id: new FormControl(undefined),
+    resource: this.resource
   });
 
-  groups$ = this.auth.session$.pipe(
+  public sharedWith = this.resource.controls.sharedWith as FormArray;
+
+  formValueChanged = this.form.valueChanges.subscribe((v) => {
+    const resourceControls = (this.form.controls.resource as FormGroup);
+    if (v.resource.valueInHoursFrom < 0) {
+      resourceControls.controls.valueInHoursFrom.setValue(0);
+    } else if (v.resource.valueInHoursTo < 0) {
+      resourceControls.controls.valueInHoursTo.setValue(0);
+    } else if (v.resource.valueInHoursFrom > v.resource.valueInHoursTo) {
+      resourceControls.controls.valueInHoursFrom.setValue(v.resource.valueInHoursTo);
+    }
+  });
+
+  memberships$ = this.auth.session$.pipe(
     filter(s => !!s),
     pluck('id'),
     switchMap(id => this.api.getMyMemberships(new GetMyMembershipsRequest())),
     pluck<GetMyMembershipsResponse, Membership[]>('memberships'),
     map<Membership[], Membership[]>(ms => ms.filter(m => m.userConfirmed && m.groupConfirmed)),
+    tap(memberships => {
+
+      console.log(this.resource.controls.sharedWith);
+    }),
+    shareReplay()
   );
 
-  public id: string;
-  public summary: string;
-  public description: string;
-  public resourceType: ResourceType = ResourceType.Offer;
-  public valueInHoursFrom = 1;
-  public valueInHoursTo = 3;
-  public isResourceOwner = true;
+  resourceSub = this.route.params.pipe(pluck('id')).pipe(
+    filter(id => !!id),
+    switchMap(id => this.api.getResource(id)),
+    shareReplay(),
+  ).subscribe((res) => {
+    this.sharedWith = new FormArray(res.resource.sharedWith.map(m => {
+      return new FormGroup({
+        groupId: new FormControl(m.groupId),
+      });
+    }));
+    this.resource.setControl('sharedWith', this.sharedWith);
+    const value = {
+      id: res.resource.id,
+      resource: {
+        type: res.resource.type,
+        summary: res.resource.summary,
+        description: res.resource.description,
+        valueInHoursFrom: res.resource.valueInHoursFrom,
+        valueInHoursTo: res.resource.valueInHoursTo,
+        sharedWith: res.resource.sharedWith.map(s => ({groupId: s.groupId}))
+      }
+    };
+    this.form.setValue(value);
+    this.resource.controls.type.disable();
+  });
+
   public error: any;
   public success = false;
   public pending = false;
-  public sharedWith: string[] = [];
 
   constructor(private api: BackendService, private route: ActivatedRoute, private auth: AuthService) {
   }
@@ -73,26 +117,18 @@ export class CreateOrEditResourceComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.resourceSub.unsubscribe();
-    this.isOwnerSub.unsubscribe();
+    this.formValueChanged.unsubscribe();
   }
 
   submit() {
 
+    this.submitted = true;
     this.error = undefined;
     this.success = undefined;
     this.pending = true;
 
-    if (this.id === undefined) {
-      const request = new CreateResourceRequest(
-        new CreateResourcePayload(
-          this.summary,
-          this.description,
-          this.resourceType,
-          this.valueInHoursFrom,
-          this.valueInHoursTo,
-          this.sharedWith.map(s => new SharedWithInput(s))
-        ));
-
+    if (this.form.value.id === null) {
+      const request = CreateResourceRequest.from(this.form.value);
       this.api.createResource(request).subscribe(res => {
         this.success = true;
         this.auth.goToMyResource(res.resource.id, res.resource.type);
@@ -100,19 +136,11 @@ export class CreateOrEditResourceComponent implements OnInit, OnDestroy {
         this.error = err;
         this.success = false;
         this.pending = false;
+      }, () => {
+        this.pending = false;
       });
     } else {
-      const request = new UpdateResourceRequest(
-        this.id,
-        new UpdateResourcePayload(
-          this.summary,
-          this.description,
-          this.resourceType,
-          this.valueInHoursFrom,
-          this.valueInHoursTo,
-          this.sharedWith.map(s => new SharedWithInput(s))
-        ));
-
+      const request = UpdateResourceRequest.from(this.form.value);
       this.api.updateResource(request).subscribe(res => {
         this.success = true;
         this.auth.goToMyResource(res.resource.id, res.resource.type);
@@ -120,20 +148,33 @@ export class CreateOrEditResourceComponent implements OnInit, OnDestroy {
         this.error = err;
         this.success = false;
         this.pending = false;
+      }, () => {
+        this.pending = false;
       });
     }
+  }
 
+  isToggled(groupId: string) {
+    for (const control of this.sharedWith.controls) {
+      const isGroup = (control as FormGroup).controls.groupId.value === groupId;
+      if (isGroup) {
+        return true;
+      }
+    }
   }
 
   toggleGroup(groupId: string) {
-    console.log(groupId)
-    if (this.sharedWith.includes(groupId)) {
-      this.sharedWith.splice(this.sharedWith.indexOf(groupId), 1);
-      this.sharedWith = [...this.sharedWith];
-    } else {
-      this.sharedWith.push(groupId);
-      this.sharedWith = [...this.sharedWith];
+    for (let i = 0; i < this.sharedWith.controls.length; i++) {
+      const grpCtrl = this.sharedWith.controls[i] as FormGroup;
+      const isGroup = grpCtrl.controls.groupId.value === groupId;
+      if (isGroup) {
+        this.sharedWith.removeAt(i);
+        return;
+      }
     }
-    console.log(this.sharedWith)
+    this.sharedWith.push(new FormGroup({
+      groupId: new FormControl(groupId)
+    }));
   }
+
 }

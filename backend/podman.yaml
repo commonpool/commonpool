@@ -109,16 +109,3 @@ spec:
         - containerPort: 25672
           hostPort: 25672
           protocol: TCP
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  namespace: metallb-system
-  name: config
-data:
-  config: |
-    address-pools:
-    - name: default
-      protocol: layer2
-      addresses:
-      - 172.42.42.0-172.42.42.255

@@ -244,7 +244,11 @@ func (t TradingStore) GetTradingHistory(ctx context.Context, ids *model.UserKeys
 			placeholders = append(placeholders, "?")
 			params = append(params, item.String())
 		}
-		qry = qry.Where(fmt.Sprintf("offers_items.user_id in (%s)", strings.Join(placeholders, ",")), params...)
+		for i := range ids.Items {
+			params = append(params, ids.Items[i].String())
+		}
+		sqlStr := strings.Join(placeholders, ",")
+		qry = qry.Where(fmt.Sprintf("offer_items.from_user_id in (%s) or offer_items.to_user_id in (%s)", sqlStr, sqlStr), params...)
 	}
 
 	err := qry.Find(&offerItems).Error

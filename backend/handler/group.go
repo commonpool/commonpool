@@ -28,10 +28,11 @@ import (
 // @Router /groups [post]
 func (h *Handler) CreateGroup(c echo.Context) error {
 
-	ctx, _ := GetEchoContext(c, "CreateGroup")
+	ctx, l := GetEchoContext(c, "CreateGroup")
 
 	req := web.CreateGroupRequest{}
 	if err := c.Bind(&req); err != nil {
+		l.Error("could not bind request", zap.Error(err))
 		return errors.ReturnException(c, err)
 	}
 
@@ -46,6 +47,7 @@ func (h *Handler) CreateGroup(c echo.Context) error {
 
 	createGroupResponse, err := h.groupService.CreateGroup(ctx, group.NewCreateGroupRequest(groupKey, req.Name, req.Description))
 	if err != nil {
+		l.Error("could not create group", zap.Error(err))
 		return errors.ReturnException(c, err)
 	}
 
@@ -104,7 +106,11 @@ func (h *Handler) GetLoggedInUserMemberships(c echo.Context) error {
 
 	l.Debug("getting logged in user memberships")
 
-	authUserKey := h.authorization.GetAuthUserKey(c)
+	authUser, err := auth.GetUserSession(ctx)
+	if err != nil {
+		return errors.ErrUnauthorized
+	}
+	authUserKey := authUser.GetUserKey()
 
 	userMembershipsResponse, err := h.groupService.GetUserMemberships(ctx, group.NewGetMembershipsForUserRequest(authUserKey, group.AnyMembershipStatus()))
 	if err != nil {

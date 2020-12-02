@@ -22,9 +22,7 @@ import {TextObject} from '../../api/models';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TextObjectComponent {
-  constructor() {
-    console.log('new textobject');
-  }
+
 
   _textObject: TextObject;
   @Input()

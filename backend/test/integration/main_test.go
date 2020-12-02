@@ -2,6 +2,7 @@ package integration
 
 import (
 	"context"
+	"fmt"
 	"github.com/commonpool/backend/amqp"
 	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/chat"
@@ -9,7 +10,6 @@ import (
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/handler"
 	"github.com/commonpool/backend/mock"
-	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/service"
 	"github.com/commonpool/backend/store"
@@ -17,6 +17,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
 	"os"
+	"sync"
 	"testing"
 )
 
@@ -33,41 +34,11 @@ var GroupStore store.GroupStore
 var ChatService service.ChatService
 var TradingService service.TradingService
 var GroupService service.GroupService
-var User1KeyStr = uuid.NewV4().String()
-var User1Key = model.NewUserKey(User1KeyStr)
-var User1 *auth.UserSession
-var User2KeyStr = uuid.NewV4().String()
-var User2Key = model.NewUserKey(User1KeyStr)
-var User2 *auth.UserSession
-var User3KeyStr = uuid.NewV4().String()
-var User3Key = model.NewUserKey(User1KeyStr)
-var User3 *auth.UserSession
 var Authorizer *mock.Authorizer
 
 func TestMain(m *testing.M) {
 
 	println("running main")
-
-	User1 = &auth.UserSession{
-		Username:        "user1",
-		Subject:         User1KeyStr,
-		Email:           "user1@email.com",
-		IsAuthenticated: true,
-	}
-
-	User2 = &auth.UserSession{
-		Username:        "user2",
-		Subject:         User2KeyStr,
-		Email:           "user2@email.com",
-		IsAuthenticated: true,
-	}
-
-	User3 = &auth.UserSession{
-		Username:        "user3",
-		Subject:         User3KeyStr,
-		Email:           "user3@email.com",
-		IsAuthenticated: true,
-	}
 
 	ctx := context.Background()
 
@@ -108,15 +79,37 @@ func TestMain(m *testing.M) {
 		TradingService,
 		GroupService)
 
+	cleanDb()
+	Db.Delete(auth.User{}, "1 = 1")
+
 	os.Exit(m.Run())
 
 }
 
-func teardown() {
+var userIncrementer = 0
+var userIncrementerMu sync.Mutex
 
-	ctx := context.Background()
+func NewUser() *auth.UserSession {
+	userIncrementerMu.Lock()
+	defer func() {
+		userIncrementerMu.Unlock()
+	}()
+	userIncrementer++
+	var userId = uuid.NewV4().String()
+	userEmail := fmt.Sprintf("user%d@email.com", userIncrementer)
+	userName := fmt.Sprintf("user%d", userIncrementer)
+	return &auth.UserSession{
+		Username:        userName,
+		Subject:         userId,
+		Email:           userEmail,
+		IsAuthenticated: true,
+	}
+}
 
-	Db.Delete(auth.User{}, "1 = 1")
+var createUserLock sync.Mutex
+
+func cleanDb() {
+
 	Db.Delete(resource.Resource{}, "1 = 1")
 	Db.Delete(resource.Sharing{}, "1 = 1")
 	Db.Delete(trading.Offer{}, "1 = 1")
@@ -127,17 +120,4 @@ func teardown() {
 	Db.Delete(store.Message{}, "1 = 1")
 	Db.Delete(group.Group{}, "1 = 1")
 	Db.Delete(group.Membership{}, "1 = 1")
-
-	ch, _ := AmqpClient.GetChannel()
-	_ = ch.ExchangeDelete(ctx, User1Key.GetExchangeName(), false, false)
-	_ = ch.ExchangeDelete(ctx, User2Key.GetExchangeName(), false, false)
-	_ = ch.ExchangeDelete(ctx, User3Key.GetExchangeName(), false, false)
-}
-
-func setup() {
-
-	PanicIfError(AuthStore.Upsert(User1.GetUserKey(), User1.Email, User1.Username))
-	PanicIfError(AuthStore.Upsert(User2.GetUserKey(), User2.Email, User2.Username))
-	PanicIfError(AuthStore.Upsert(User3.GetUserKey(), User3.Email, User3.Username))
-
 }

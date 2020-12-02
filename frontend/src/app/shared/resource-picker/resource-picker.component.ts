@@ -1,4 +1,4 @@
-import {Component, forwardRef, Input, OnInit} from '@angular/core';
+import {Component, forwardRef, Input, OnDestroy, OnInit} from '@angular/core';
 import {BackendService} from '../../api/backend.service';
 import {combineLatest, of, ReplaySubject, Subject, Subscription} from 'rxjs';
 import {distinctUntilChanged, map, pluck, shareReplay, startWith, switchMap, tap} from 'rxjs/operators';
@@ -17,8 +17,7 @@ import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
     }
   ]
 })
-export class ResourcePickerComponent implements OnInit, ControlValueAccessor {
-
+export class ResourcePickerComponent implements OnInit, OnDestroy, ControlValueAccessor {
 
   private createdBySubject = new Subject<string>();
   private createdBy$ = this.createdBySubject.asObservable().pipe(
@@ -33,7 +32,7 @@ export class ResourcePickerComponent implements OnInit, ControlValueAccessor {
   }
 
   querySubject = new Subject<string>();
-  query$ = this.querySubject.asObservable().pipe(startWith(''));
+  query$ = this.querySubject.asObservable().pipe(startWith(''), shareReplay(1));
   items$ = combineLatest([this.query$, this.createdBy$])
     .pipe(
       switchMap(([q, c]) => this.backend.searchResources(new SearchResourceRequest(q, ResourceType.Offer, c, undefined, 10, 0))),
@@ -42,7 +41,6 @@ export class ResourcePickerComponent implements OnInit, ControlValueAccessor {
 
   @Input()
   set createdBy(value: string | undefined) {
-    console.log('Created by : ', value);
     this.createdBySubject.next(value);
   }
 
@@ -59,26 +57,23 @@ export class ResourcePickerComponent implements OnInit, ControlValueAccessor {
 
   selectedSubject = new Subject<Resource | null>();
   selected$ = this.selectedSubject.asObservable().pipe(
-    tap(a => console.log('selected', a)),
     tap(a => this.propagateChange(a?.id))
   );
 
   selectedSub = combineLatest([this.selected$, this.createdBy$]).subscribe(([selected, createdBy]) => {
     if (selected && createdBy && selected.createdById !== createdBy) {
-      console.log('selected', selected, 'createdBy', createdBy);
       this.selectedIdSubject.next(null);
     }
   });
 
   // This is the control value
   flexibleSubject = new Subject<string | Resource | null>();
-  flexible$ = this.flexibleSubject.asObservable()
+  flexibleSub = this.flexibleSubject.asObservable()
     .pipe(
       startWith(null as string | Resource | null),
       distinctUntilChanged(),
       switchMap(res => {
-        console.log('hub', res);
-        if (res === null) {
+        if (res === null || res === '' || res === undefined) {
           return of(null as Resource | null);
         }
         if (isResource(res)) {
@@ -92,20 +87,16 @@ export class ResourcePickerComponent implements OnInit, ControlValueAccessor {
       this.selectedSubject.next(res);
     });
 
-
   // Begin ControlValueAccessor implementation
 
   propagateChange(val: string) {
-    console.log('propagate', val);
     if (this.propagateChangeFn) {
-      console.log('propagating', val);
       this.propagateChangeFn(val);
     }
   }
 
-
   ngOnInit(): void {
-    this.querySubject.asObservable().subscribe(q => console.log(q));
+
   }
 
   registerOnChange(fn: any): void {
@@ -119,13 +110,23 @@ export class ResourcePickerComponent implements OnInit, ControlValueAccessor {
   }
 
   writeValue(obj: any): void {
-    console.log('write', obj);
     this.flexibleSubject.next(obj);
   }
 
   // End ControlValueAccessor implementation
-}
 
+  ngOnDestroy(): void {
+    if (this.selectedIdSub) {
+      this.selectedIdSub.unsubscribe();
+    }
+    if (this.flexibleSub) {
+      this.flexibleSub.unsubscribe();
+    }
+    if (this.selectedSub) {
+      this.selectedSub.unsubscribe();
+    }
+  }
+}
 
 function isResource(res: string | Resource): res is Resource {
   return res && (res as Resource).id !== undefined;

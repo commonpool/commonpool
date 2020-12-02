@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/chat"
 	. "github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
@@ -48,7 +49,10 @@ func (h *Handler) GetRecentlyActiveSubscriptions(c echo.Context) error {
 
 	l.Debug("getting user auth session")
 
-	authUser := h.authorization.GetAuthUserSession2(ctx)
+	authUser, err := auth.GetUserSession(ctx)
+	if err != nil {
+		return ErrUnauthorized
+	}
 	userKey := model.NewUserKey(authUser.Subject)
 
 	l.Debug("parsing skip query param")
@@ -139,7 +143,10 @@ func (h *Handler) GetMessages(c echo.Context) error {
 
 	l.Debug("getting user session")
 
-	loggedInSession := h.authorization.GetAuthUserSession(c)
+	loggedInSession, err := auth.GetUserSession(ctx)
+	if err != nil {
+		return ErrUnauthorized
+	}
 	loggedInUserKey := loggedInSession.GetUserKey()
 
 	l.Debug("parsing 'channel' query param")
@@ -227,7 +234,10 @@ func (h *Handler) InquireAboutResource(c echo.Context) error {
 	l.Debug("getting logged in user")
 
 	// Get current user
-	loggedInUser := h.authorization.GetAuthUserSession(c)
+	loggedInUser, err := auth.GetUserSession(ctx)
+	if err != nil {
+		return ErrUnauthorized
+	}
 	loggedInUserKey := model.NewUserKey(loggedInUser.Subject)
 
 	l.Debug("getting 'id' resource key query param")
@@ -332,7 +342,10 @@ func (h *Handler) SubmitInteraction(c echo.Context) error {
 	ctx, l := GetEchoContext(c, "SubmitInteraction")
 
 	// Get current user
-	authSession := h.authorization.GetAuthUserSession(c)
+	authSession, err := auth.GetUserSession(ctx)
+	if err != nil {
+		return ErrUnauthorized
+	}
 	authUserKey := model.NewUserKey(authSession.Subject)
 
 	// Unmarshal request

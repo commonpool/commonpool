@@ -13,7 +13,6 @@ import (
 	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 	"sort"
 	"strings"
 	"time"
@@ -69,14 +68,11 @@ func (cs *ChatStore) CreateSubscription(ctx context.Context, key model.ChannelSu
 		Name:      name,
 	}
 
-	qry := cs.db.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "user_id"}, {Name: "channel_id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"name"}),
-	}).Create(&channelSubscription)
-
-	l.Info("rows affected", zap.Int64("rows", qry.RowsAffected))
+	qry := cs.db.Create(&channelSubscription)
 
 	err := qry.Error
+
+	l.Info("rows affected", zap.Int64("rows", qry.RowsAffected))
 
 	if err != nil {
 		l.Error("could not store channel subscription in database", zap.Error(err))

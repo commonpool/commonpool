@@ -5,80 +5,156 @@
     </div>
   </div>
 
-  <div class="row">
+
+  <div class="row" [formGroup]="form">
     <div class="col">
       <div class="card">
-        <ul class="list-group list-group-flush">
-          <li class="list-group-item" *ngFor="let item of items; let i = index; ">
-            <div class="btn btn-light mr-3" (click)="remove(i)">
-              <app-trash></app-trash>
-            </div>
-            <b>
-              <app-username [id]="item.from"></app-username>
-            </b>
-            gives
-            <b>
-              <span class="badge badge-pill badge-primary">
-                   <app-resource-name [resourceId]="item.resourceId" *ngIf="item.type === 0"></app-resource-name>
-              </span>
+        <ul class="list-group list-group-flush" formArrayName="items">
+          <li class="list-group-item" *ngFor="let formItem of form.items.controls; let i = index; ">
+            <ng-container *ngIf="form.getItem(i); let item">
 
-              <span *ngIf="item.type === 1">{{item.timeInSeconds / 60 / 60}}h</span>
-            </b>
-            to
-            <b>
-              <app-username [id]="item.to"></app-username>
-            </b>
+              <div>
+
+                <div class="btn btn-light mr-3" (click)="form.removeItem(i)">
+                  <app-trash></app-trash>
+                </div>
+
+                <b>
+                  <app-username [id]="item.fromControl.value"></app-username>
+                  <div *ngIf="item.fromControl.errors" class="invalid-feedback">
+                    {{item.fromControl.errors | json}}
+                  </div>
+                </b>
+
+                gives
+
+                <b>
+
+                <span class="badge badge-pill badge-primary">
+                     <app-resource-name
+                       *ngIf="item.typeControl.value === 0"
+                       [resourceId]="item.resourceIdControl.value">
+                     </app-resource-name>
+                </span>
+
+                  <span *ngIf="item.typeControl.value === 1">
+                  {{item.timeInSecondsControl.value / 60 / 60}}h
+                </span>
+
+                </b>
+                to
+
+                <b>
+                  <app-username [id]="item.toControl.value"></app-username>
+                </b>
+
+              </div>
+            </ng-container>
           </li>
         </ul>
       </div>
     </div>
   </div>
 
-  <div class="row mt-2 ">
+
+  <div class="row mt-2" [formGroup]="itemForm">
     <div class="col">
       <div class="card shadow">
         <div class="card-body">
           <div class="d-flex flex-direction-row align-items-center" id="new-row">
             <plus-icon></plus-icon>
-            <app-user-picker name="fromUser" [ngModel]="newFrom" (ngModelChange)="setNewFrom($event)"></app-user-picker>
-            <span>sends</span>
-            <span>to</span>
-            <app-user-picker name="toUser" [(ngModel)]="newTo" [predicate]="toPredicate"></app-user-picker>
+
+            <app-user-picker formControlName="from"></app-user-picker>
+
+            <span>sends to</span>
+
+            <app-user-picker formControlName="to" [predicate]="toPredicate"></app-user-picker>
+
             <div class="btn-group" role="group">
-              <button type="button" class="btn btn-light active" [ngClass]="{active: offerItemType === 1}"
-                      (click)="offerItemType = 1">Time
+
+              <button
+                type="button"
+                class="btn btn-light active"
+                [ngClass]="{active: itemForm.typeControl.value === 1}"
+                (click)="itemForm.typeControl.setValue(1)">Time
               </button>
-              <button type="button" class="btn btn-light" [ngClass]="{active: offerItemType === 0}"
-                      (click)="offerItemType = 0">A resource
+
+              <button
+                type="button"
+                class="btn btn-light"
+                [ngClass]="{active: itemForm.typeControl.value === 0}"
+                (click)="itemForm.typeControl.setValue(0)">A resource
               </button>
+
             </div>
-            <span *ngIf="offerItemType === 0">Select resource:</span>
-            <app-resource-picker name="resource" [createdBy]="newFrom" [(ngModel)]="resource"
-                                 *ngIf="offerItemType === 0"></app-resource-picker>
-            <input class="form-control" style="width: 7rem" type="number" step="0.25" min="0"
-                   *ngIf="offerItemType === 1" [(ngModel)]="time">
-            <span *ngIf="offerItemType === 1">Hours</span>
-            <button class="btn btn-secondary" (click)="add()">Add</button>
+
+            <ng-container *ngIf="itemForm.fromControl.value">
+
+              <span *ngIf="itemForm.typeControl.value === 0">Select resource:</span>
+
+              <app-resource-picker
+                [createdBy]="itemForm.fromControl.value"
+                formControlName="resourceId"
+                *ngIf="itemForm.typeControl.value === 0">
+              </app-resource-picker>
+
+            </ng-container>
+
+            <input class="form-control"
+                   style="width: 7rem"
+                   type="number"
+                   step="0.25"
+                   min="0"
+                   *ngIf="itemForm.typeControl.value === 1"
+                   formControlName="timeInSeconds">
+
+            <span *ngIf="itemForm.typeControl.value === 1">Hours</span>
+
+            <button class="btn btn-secondary" [disabled]="itemForm.invalid" (click)="add()">Add</button>
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="row mt-2">
+    <div class="col">
+      <div class="card">
+        <div class="card-body" [formGroup]="form">
+          <textarea
+            class="form-control"
+            placeholder="Send a message along with your offer..."
+            rows="6"
+            name="message"
+            [formControl]="form.message">
+          </textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-2">
+    <div class="col">
+      <button (click)="submit()" [class.disabled]="!form.valid" class="btn btn-lg btn-primary shadow">Submit
+        proposal
+      </button>
+    </div>
+  </div>
+
+  <div class="row mt-2" *ngIf="submitted && form.items.errors">
+    <div class="col">
+      <div class="card">
+        <div class="card-body">
+          <div *ngIf="submitted && form.items.errors" class="invalid-feedback d-block">
+            <div *ngIf="form.items.errors.MinLengthArray">You must add at least one item</div>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="row mt-2">
-    <div class="col">
-      <div class="card">
-        <div class="card-body">
-          <textarea class="form-control" placeholder="Send a message along with your offer..." rows="6" name="message" [(ngModel)]="message"></textarea>
-        </div>
-      </div>
 
-    </div>
-  </div>
-
-  <div class="row mt-2">
-    <div class="col">
-      <button (click)="submit()" [disabled]="pending" class="btn btn-lg btn-primary shadow">Submit proposal</button>
-    </div>
-  </div>
 </div>

@@ -101,7 +101,7 @@ export class AppHttpInterceptor implements HttpInterceptor {
 export class BackendService {
 
   constructor(private http: HttpClient) {
-
+    this.connect();
   }
 
   private socket$: WebSocketSubject<any>;

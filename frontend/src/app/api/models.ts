@@ -115,6 +115,17 @@ export class CreateResourcePayload {
     public valueInHoursTo: number,
     public sharedWith: SharedWithInput[]) {
   }
+
+  public static from(p: CreateResourcePayload): CreateResourcePayload {
+    return new CreateResourcePayload(
+      p.summary,
+      p.description,
+      p.type,
+      p.valueInHoursFrom,
+      p.valueInHoursTo,
+      p.sharedWith ? p.sharedWith.map(w => SharedWithInput.from(w)) : []
+    );
+  }
 }
 
 export class UpdateResourcePayload {
@@ -126,11 +137,26 @@ export class UpdateResourcePayload {
     public valueInHoursTo: number,
     public sharedWith: SharedWithInput[]) {
   }
+
+  public static from(r: UpdateResourcePayload): UpdateResourcePayload {
+    return new UpdateResourcePayload(
+      r.summary,
+      r.description,
+      r.type,
+      r.valueInHoursFrom,
+      r.valueInHoursTo,
+      r.sharedWith ? r.sharedWith.map(w => SharedWithInput.from(w)) : []
+    );
+  }
 }
 
 export class CreateResourceRequest {
   constructor(
     public resource: CreateResourcePayload) {
+  }
+
+  public static from(r: CreateResourceRequest): CreateResourceRequest {
+    return new CreateResourceRequest(CreateResourcePayload.from(r.resource));
   }
 }
 
@@ -138,6 +164,10 @@ export class UpdateResourceRequest {
   constructor(
     public id: string,
     public resource: UpdateResourcePayload) {
+  }
+
+  public static from(r: UpdateResourceRequest): UpdateResourceRequest {
+    return new UpdateResourceRequest(r.id, UpdateResourcePayload.from(r.resource));
   }
 }
 

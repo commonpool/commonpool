@@ -3,10 +3,11 @@ package auth
 import (
 	"context"
 	"github.com/commonpool/backend/config"
+	"github.com/commonpool/backend/logging"
 	"github.com/coreos/go-oidc"
 	"github.com/labstack/echo/v4"
 	"github.com/opentracing/opentracing-go/log"
-	"golang.org/x/oauth2"
+	"go.uber.org/zap"
 	"net/http"
 )
 
@@ -16,6 +17,7 @@ const oauthCallbackPath = "/oauth2/callback"
 func NewAuth(e *echo.Group, appConfig *config.AppConfig, groupPrefix string, as Store) IAuth {
 
 	ctx := context.Background()
+	l := logging.WithContext(ctx)
 
 	// Create the oidc provider
 	provider, err := oidc.NewProvider(ctx, appConfig.OidcDiscoveryUrl)
@@ -43,6 +45,8 @@ func NewAuth(e *echo.Group, appConfig *config.AppConfig, groupPrefix string, as 
 	// Setup the router for authentication
 	e.GET(oauthCallbackPath, func(c echo.Context) error {
 
+		l.Info("decoding state")
+
 		// decode the state
 		st, err := decodeState(ctx, c.Request().URL.Query().Get("state"))
 		if err != nil {
@@ -51,42 +55,59 @@ func NewAuth(e *echo.Group, appConfig *config.AppConfig, groupPrefix string, as 
 		}
 
 		if st.State != state {
+			l.Error("state mismatch")
 			return c.String(http.StatusBadRequest, "State mismatch")
 		}
 
-		code := c.Request().URL.Query().Get("code")
-		c.Logger().Info("code: ", code)
-		oauth2token, err := authz.oauth2Config.Exchange(ctx, code)
-		if err != nil {
-			return c.String(http.StatusInternalServerError, "Failed to exchange token: "+err.Error())
+		rawIdToken := c.Request().URL.Query().Get("id_token")
+		refreshToken := c.Request().URL.Query().Get("refresh_token")
+
+		if rawIdToken == "" {
+
+			l.Info("getting code")
+
+			code := c.Request().URL.Query().Get("code")
+
+			c.Logger().Info("code: ", code)
+
+			oauth2token, err := authz.oauth2Config.Exchange(ctx, code)
+			if err != nil {
+				l.Error("code exchange error", zap.Error(err))
+				return c.String(http.StatusInternalServerError, "Failed to exchange token: "+err.Error())
+			}
+
+			l.Debug("getting id token")
+
+			rawIdTokenFromCode, ok := oauth2token.Extra("id_token").(string)
+			if !ok {
+				l.Error("no id token", zap.Error(err))
+				return c.String(http.StatusInternalServerError, "No id field in oauth2 token")
+			}
+
+			rawIdToken = rawIdTokenFromCode
+			refreshToken = oauth2token.RefreshToken
+
 		}
 
-		rawIdToken, ok := oauth2token.Extra("id_token").(string)
-		if !ok {
-			return c.String(http.StatusInternalServerError, "No id field in oauth2 token")
-		}
+		l.Debug("verifying id token")
 
 		idToken, err := authz.verifier.Verify(ctx, rawIdToken)
 		if err != nil {
+			l.Error("invalid id token", zap.Error(err))
 			return c.String(http.StatusInternalServerError, "Failed to verify ID Token:"+err.Error())
 		}
 
 		resp := struct {
-			OAuth2Token   *oauth2.Token
+			OAuth2Token   *oidc.IDToken
 			IDTokenClaims *JwtClaims
-		}{oauth2token, new(JwtClaims)}
+		}{idToken, new(JwtClaims)}
 
 		if err := idToken.Claims(&resp.IDTokenClaims); err != nil {
 			return c.String(http.StatusInternalServerError, err.Error())
 		}
 
-		// update cookies
-		if oauth2token.AccessToken != "" {
-			setAccessTokenCookie(c, oauth2token.AccessToken, appConfig)
-		}
-		if oauth2token.RefreshToken != "" {
-			setRefreshTokenCookie(c, oauth2token.RefreshToken, appConfig)
-		}
+		setAccessTokenCookie(c, rawIdToken, appConfig)
+		setRefreshTokenCookie(c, refreshToken, appConfig)
 
 		err = saveAuthenticatedUser(c, as, resp.IDTokenClaims.Subject, resp.IDTokenClaims.Email, resp.IDTokenClaims.Email)
 		if err != nil {

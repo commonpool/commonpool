@@ -20,12 +20,8 @@ type Store interface {
 	GetGroup(ctx context.Context, groupKey model.GroupKey) (*Group, error)
 	GetGroups(take int, skip int) ([]Group, int64, error)
 	GetGroupsByKeys(ctx context.Context, groupKeys []model.GroupKey) (*Groups, error)
-	GrantPermission(ctx context.Context, membershipKey model.MembershipKey, permission PermissionType) error
-	RevokePermission(ctx context.Context, membershipKey model.MembershipKey, permission PermissionType) error
 	CreateMembership(ctx context.Context, membershipKey model.MembershipKey, isMember bool, isAdmin bool, isOwner bool, isDeactivated bool, groupConfirmed bool, userConfirmed bool) (*Membership, error)
-	Exclude(ctx context.Context, membershipKey model.MembershipKey) error
 	MarkInvitationAsAccepted(ctx context.Context, membershipKey model.MembershipKey, decisionFrom MembershipParty) error
-	MarkInvitationAsDeclined(ctx context.Context, membershipKey model.MembershipKey, decisionFrom MembershipParty) error
 	GetMembership(ctx context.Context, membershipKey model.MembershipKey) (*Membership, error)
 	GetMembershipsForUser(ctx context.Context, userKey model.UserKey, membershipStatus *MembershipStatus) (*Memberships, error)
 	GetMembershipsForGroup(ctx context.Context, groupKey model.GroupKey, membershipStatus *MembershipStatus) (*Memberships, error)

@@ -26,6 +26,7 @@ func newState(request *http.Request, state string) (string, error) {
 	}
 	b64 := base64.StdEncoding.EncodeToString(bytes)
 	return b64, nil
+
 }
 
 func decodeState(ctx context.Context, state string) (*Nonce, error) {

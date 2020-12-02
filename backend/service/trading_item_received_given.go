@@ -19,8 +19,6 @@ func (t TradingService) ConfirmItemReceivedOrGiven(ctx context.Context, confirme
 		return err
 	}
 
-	l.Debug("retrieving item")
-
 	// retrieving item
 	offerItem, err := t.tradingStore.GetItem(nil, confirmedItemKey)
 	if err != nil {
@@ -32,15 +30,11 @@ func (t TradingService) ConfirmItemReceivedOrGiven(ctx context.Context, confirme
 		return trading.ErrUserNotPartOfOfferItem
 	}
 
-	l.Debug("getting parent offer")
-
 	offer, err := t.tradingStore.GetOffer(offerItem.GetOfferKey())
 	if err != nil {
 		l.Error("could not get parent offer", zap.Error(err))
 		return err
 	}
-
-	l.Debug("make sure offer is not already completed")
 
 	// cannot confirm an item for an offer that's already completed
 	if offer.Status == trading.CompletedOffer {
@@ -48,16 +42,8 @@ func (t TradingService) ConfirmItemReceivedOrGiven(ctx context.Context, confirme
 		return err
 	}
 
-	l.Debug("make sure item being confirmed is either given or received by user making the request")
-
-	// making sure that the item being confirmed is either given or received by the user making the request
-
-	l.Debug("marking the item as either given or received")
-
 	// mark the item as either received or given
 	if userSession.GetUserKey() == offerItem.GetToUserKey() {
-
-		l.Debug("item is being marked as received")
 
 		// skip altogether when item is already marked as received
 		if offerItem.IsReceived() {
@@ -73,8 +59,6 @@ func (t TradingService) ConfirmItemReceivedOrGiven(ctx context.Context, confirme
 
 	} else {
 
-		l.Debug("item is being marked as given")
-
 		// skip altogether when item is already marked as given
 		if offerItem.IsGiven() {
 			l.Warn("aborting: item already given")
@@ -89,8 +73,6 @@ func (t TradingService) ConfirmItemReceivedOrGiven(ctx context.Context, confirme
 
 	}
 
-	l.Debug("getting all offer items for offer")
-
 	offerItems, err := t.tradingStore.GetItems(offerItem.GetOfferKey())
 	if err != nil {
 		l.Error("could not get all offer items", zap.Error(err))
@@ -100,8 +82,6 @@ func (t TradingService) ConfirmItemReceivedOrGiven(ctx context.Context, confirme
 	// retrieving the item's from and to users
 	confirmedItemFromUserKey := offerItem.GetFromUserKey()
 	confirmedItemToUserKey := offerItem.GetToUserKey()
-
-	l.Debug("getting all users involved in offer")
 
 	offerUsers, err := t.us.GetByKeys(nil, []model.UserKey{confirmedItemFromUserKey, confirmedItemToUserKey})
 	if err != nil {
@@ -114,8 +94,6 @@ func (t TradingService) ConfirmItemReceivedOrGiven(ctx context.Context, confirme
 		l.Error("could not get confirming user from user list")
 		return err
 	}
-
-	l.Debug("notifying concerned users that the offer item was either given or received")
 
 	err = t.notifyItemGivenOrReceived(ctx, offerItem, confirmingUser, offerUsers)
 	if err != nil {

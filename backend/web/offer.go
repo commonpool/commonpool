@@ -55,3 +55,23 @@ type SendOfferPayloadItem struct {
 	ResourceId    *string               `json:"resourceId" validate:"required,uuid"`
 	TimeInSeconds *int64                `json:"timeInSeconds"`
 }
+
+func NewSendOfferPayloadItemForResource(from string, to string, resourceId string) *SendOfferPayloadItem {
+	return &SendOfferPayloadItem{
+		From:          from,
+		To:            to,
+		Type:          trading.ResourceItem,
+		ResourceId:    &resourceId,
+		TimeInSeconds: nil,
+	}
+}
+
+func NewSendOfferPayloadItemForTime(from string, to string, time int64) *SendOfferPayloadItem {
+	return &SendOfferPayloadItem{
+		From:          from,
+		To:            to,
+		Type:          trading.TimeItem,
+		ResourceId:    nil,
+		TimeInSeconds: &time,
+	}
+}

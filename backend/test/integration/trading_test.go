@@ -5,18 +5,18 @@ import (
 	"fmt"
 	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/model"
-	"github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/trading"
 	"github.com/commonpool/backend/web"
-	"github.com/go-playground/assert/v2"
+	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
 )
 
 func SubmitOffer(t *testing.T, ctx context.Context, userSession *auth.UserSession, request *web.SendOfferRequest) (*web.GetOfferResponse, *http.Response) {
 	c, recorder := NewRequest(ctx, userSession, http.MethodPost, "/api/v1/offers", request)
-	PanicIfError(a.HandleSendOffer(c))
+	assert.NoError(t, a.HandleSendOffer(c))
 	response := &web.GetOfferResponse{}
+	t.Log(recorder.Body.String())
 	return response, ReadResponse(t, recorder, response)
 }
 
@@ -24,7 +24,7 @@ func AcceptOffer(t *testing.T, ctx context.Context, userSession *auth.UserSessio
 	c, recorder := NewRequest(ctx, userSession, http.MethodPost, fmt.Sprintf("/api/v1/offers/%s/accept", offerKey.ID.String()), nil)
 	c.SetParamNames("id")
 	c.SetParamValues(offerKey.ID.String())
-	PanicIfError(a.HandleAcceptOffer(c))
+	assert.NoError(t, a.HandleAcceptOffer(c))
 	return recorder.Result()
 }
 
@@ -32,7 +32,7 @@ func ConfirmItemGivenOrReceived(t *testing.T, ctx context.Context, userSession *
 	c, recorder := NewRequest(ctx, userSession, http.MethodPost, fmt.Sprintf("/api/v1/offer-items/%s/confirmation", offerItemKey.ID.String()), nil)
 	c.SetParamNames("id")
 	c.SetParamValues(offerItemKey.ID.String())
-	PanicIfError(a.ConfirmItemReceivedOrGiven(c))
+	assert.NoError(t, a.ConfirmItemReceivedOrGiven(c))
 	return recorder.Result()
 }
 
@@ -40,51 +40,37 @@ func DeclineOffer(t *testing.T, ctx context.Context, userSession *auth.UserSessi
 	c, recorder := NewRequest(ctx, userSession, http.MethodPost, fmt.Sprintf("/api/v1/offers/%s/decline", offerKey.ID.String()), nil)
 	c.SetParamNames("id")
 	c.SetParamValues(offerKey.ID.String())
-	PanicIfError(a.DeclineOffer(c))
+	assert.NoError(t, a.DeclineOffer(c))
 	return recorder.Result()
 }
 
 func GetTradingHistory(t *testing.T, ctx context.Context, userSession *auth.UserSession, request *web.GetTradingHistoryRequest) (*web.GetTradingHistoryResponse, *http.Response) {
 	c, recorder := NewRequest(ctx, userSession, http.MethodPost, "/api/v1/transactions", request)
-	PanicIfError(a.GetTradingHistory(c))
+	assert.NoError(t, a.GetTradingHistory(c))
 	response := &web.GetTradingHistoryResponse{}
+	t.Log(recorder.Body.String())
 	return response, ReadResponse(t, recorder, response)
 }
 
 func TestUserCanSubmitOffer(t *testing.T) {
-	teardown()
-	setup()
+	t.Parallel()
+
+	user1, delUser1 := testUser(t)
+	defer delUser1()
+
+	user2, delUser2 := testUser(t)
+	defer delUser2()
 
 	ctx := context.Background()
 
-	resp, _ := CreateResource(t, ctx, User1, &web.CreateResourceRequest{
-		Resource: web.CreateResourcePayload{
-			Summary:          "Summary",
-			Description:      "Description",
-			Type:             resource.Offer,
-			ValueInHoursFrom: 1,
-			ValueInHoursTo:   3,
-			SharedWith:       []web.InputResourceSharing{},
-		},
-	})
+	resp, _ := CreateResource(t, ctx, user1)
 
 	var seconds int64 = 6000
-	offerResp, httpOfferResp := SubmitOffer(t, ctx, User1, &web.SendOfferRequest{
+	offerResp, httpOfferResp := SubmitOffer(t, ctx, user1, &web.SendOfferRequest{
 		Offer: web.SendOfferPayload{
 			Items: []web.SendOfferPayloadItem{
-				{
-					From:          User1.Subject,
-					To:            User2.Subject,
-					Type:          trading.ResourceItem,
-					ResourceId:    &resp.Resource.Id,
-					TimeInSeconds: nil,
-				}, {
-					From:          User2.Subject,
-					To:            User1.Subject,
-					Type:          trading.TimeItem,
-					ResourceId:    nil,
-					TimeInSeconds: &seconds,
-				},
+				*web.NewSendOfferPayloadItemForResource(user1.Subject, user2.Subject, resp.Resource.Id),
+				*web.NewSendOfferPayloadItemForTime(user2.Subject, user1.Subject, seconds),
 			},
 			Message: "",
 		},
@@ -95,335 +81,278 @@ func TestUserCanSubmitOffer(t *testing.T) {
 }
 
 func TestCanAcceptOffer(t *testing.T) {
-	teardown()
-	setup()
+	t.Parallel()
+
+	user1, delUser1 := testUser(t)
+	defer delUser1()
+
+	user2, delUser2 := testUser(t)
+	defer delUser2()
 
 	ctx := context.Background()
 
-	resp, _ := CreateResource(t, ctx, User1, &web.CreateResourceRequest{
-		Resource: web.CreateResourcePayload{
-			Summary:          "Summary",
-			Description:      "Description",
-			Type:             resource.Offer,
-			ValueInHoursFrom: 1,
-			ValueInHoursTo:   3,
-			SharedWith:       []web.InputResourceSharing{},
-		},
-	})
+	resp, _ := CreateResource(t, ctx, user1)
 
 	var seconds int64 = 6000
-	offerResp, _ := SubmitOffer(t, ctx, User1, &web.SendOfferRequest{
+	offerResp, _ := SubmitOffer(t, ctx, user1, &web.SendOfferRequest{
 		Offer: web.SendOfferPayload{
 			Items: []web.SendOfferPayloadItem{
-				{
-					From:          User1.Subject,
-					To:            User2.Subject,
-					Type:          trading.ResourceItem,
-					ResourceId:    &resp.Resource.Id,
-					TimeInSeconds: nil,
-				}, {
-					From:          User2.Subject,
-					To:            User1.Subject,
-					Type:          trading.TimeItem,
-					ResourceId:    nil,
-					TimeInSeconds: &seconds,
-				},
+				*web.NewSendOfferPayloadItemForResource(user1.Subject, user2.Subject, resp.Resource.Id),
+				*web.NewSendOfferPayloadItemForTime(user2.Subject, user1.Subject, seconds),
 			},
 			Message: "Howdy :)",
 		},
 	})
 
 	key, err := model.ParseOfferKey(offerResp.Offer.ID)
-	PanicIfError(err)
+	assert.NoError(t, err)
 
-	httpResp := AcceptOffer(t, ctx, User2, key)
+	httpResp := AcceptOffer(t, ctx, user2, key)
 	assert.Equal(t, http.StatusOK, httpResp.StatusCode)
 
-	httpResp = AcceptOffer(t, ctx, User1, key)
+	httpResp = AcceptOffer(t, ctx, user1, key)
 	assert.Equal(t, http.StatusOK, httpResp.StatusCode)
 
 }
 
 func TestCanDeclineOffer(t *testing.T) {
-	teardown()
-	setup()
+	t.Parallel()
+
+	user1, delUser1 := testUser(t)
+	defer delUser1()
+
+	user2, delUser2 := testUser(t)
+	defer delUser2()
 
 	ctx := context.Background()
 
-	resp, _ := CreateResource(t, ctx, User1, &web.CreateResourceRequest{
-		Resource: web.CreateResourcePayload{
-			Summary:          "Summary",
-			Description:      "Description",
-			Type:             resource.Offer,
-			ValueInHoursFrom: 1,
-			ValueInHoursTo:   3,
-			SharedWith:       []web.InputResourceSharing{},
-		},
-	})
+	resp, _ := CreateResource(t, ctx, user1)
 
 	var seconds int64 = 6000
-	offerResp, _ := SubmitOffer(t, ctx, User1, &web.SendOfferRequest{
+	offerResp, _ := SubmitOffer(t, ctx, user1, &web.SendOfferRequest{
 		Offer: web.SendOfferPayload{
 			Items: []web.SendOfferPayloadItem{
-				{
-					From:          User1.Subject,
-					To:            User2.Subject,
-					Type:          trading.ResourceItem,
-					ResourceId:    &resp.Resource.Id,
-					TimeInSeconds: nil,
-				}, {
-					From:          User2.Subject,
-					To:            User1.Subject,
-					Type:          trading.TimeItem,
-					ResourceId:    nil,
-					TimeInSeconds: &seconds,
-				},
+				*web.NewSendOfferPayloadItemForResource(user1.Subject, user2.Subject, resp.Resource.Id),
+				*web.NewSendOfferPayloadItemForTime(user2.Subject, user1.Subject, seconds),
 			},
 			Message: "Howdy :)",
 		},
 	})
 
 	key, err := model.ParseOfferKey(offerResp.Offer.ID)
-	PanicIfError(err)
+	assert.NoError(t, err)
 
-	httpResp := AcceptOffer(t, ctx, User2, key)
+	httpResp := AcceptOffer(t, ctx, user2, key)
 	assert.Equal(t, http.StatusOK, httpResp.StatusCode)
 
-	httpResp = DeclineOffer(t, ctx, User1, key)
+	httpResp = DeclineOffer(t, ctx, user1, key)
 	assert.Equal(t, http.StatusOK, httpResp.StatusCode)
 
 	of, err := TradingStore.GetOffer(key)
-	PanicIfError(err)
+	assert.NoError(t, err)
 
 	assert.Equal(t, trading.DeclinedOffer, of.Status)
 
 	decisions, err := TradingStore.GetDecisions(key)
-	PanicIfError(err)
+	assert.NoError(t, err)
 
 	for _, decision := range decisions {
-		if decision.UserID == User1KeyStr {
+		if decision.UserID == user1.Subject {
 			assert.Equal(t, trading.DeclinedDecision, decision.Decision)
-		} else if decision.UserID == User2KeyStr {
+		} else if decision.UserID == user2.Subject {
 			assert.Equal(t, trading.AcceptedDecision, decision.Decision)
 		} else {
-			panic("")
+			assert.FailNow(t, fmt.Sprintf("unexpected decision %d", decision.Decision))
 		}
 	}
 
 }
 
 func TestSendingOfferShouldCreateChatChannelBetweenUsers(t *testing.T) {
-	teardown()
-	setup()
+	t.Parallel()
+
+	user1, delUser1 := testUser(t)
+	defer delUser1()
+
+	user2, delUser2 := testUser(t)
+	defer delUser2()
 
 	ctx := context.Background()
 
-	resp, _ := CreateResource(t, ctx, User1, &web.CreateResourceRequest{
-		Resource: web.CreateResourcePayload{
-			Summary:          "Summary",
-			Description:      "Description",
-			Type:             resource.Offer,
-			ValueInHoursFrom: 1,
-			ValueInHoursTo:   3,
-			SharedWith:       []web.InputResourceSharing{},
-		},
-	})
+	resp, _ := CreateResource(t, ctx, user1)
 
 	var seconds int64 = 6000
-	_, _ = SubmitOffer(t, ctx, User1, &web.SendOfferRequest{
+	_, _ = SubmitOffer(t, ctx, user1, &web.SendOfferRequest{
 		Offer: web.SendOfferPayload{
 			Items: []web.SendOfferPayloadItem{
-				{
-					From:          User1.Subject,
-					To:            User2.Subject,
-					Type:          trading.ResourceItem,
-					ResourceId:    &resp.Resource.Id,
-					TimeInSeconds: nil,
-				}, {
-					From:          User2.Subject,
-					To:            User1.Subject,
-					Type:          trading.TimeItem,
-					ResourceId:    nil,
-					TimeInSeconds: &seconds,
-				},
+				*web.NewSendOfferPayloadItemForResource(user1.Subject, user2.Subject, resp.Resource.Id),
+				*web.NewSendOfferPayloadItemForTime(user2.Subject, user1.Subject, seconds),
 			},
 			Message: "Howdy :)",
 		},
 	})
 
-	channelKey, err := ChatService.GetConversationChannelKey(ctx, model.NewUserKeys([]model.UserKey{User1.GetUserKey(), User2.GetUserKey()}))
-	PanicIfError(err)
+	channelKey, err := ChatService.GetConversationChannelKey(ctx, model.NewUserKeys([]model.UserKey{user1.GetUserKey(), user2.GetUserKey()}))
+	assert.NoError(t, err)
 
 	subs, err := ChatStore.GetSubscriptionsForChannel(ctx, channelKey)
-	PanicIfError(err)
+	assert.NoError(t, err)
 
 	assert.Equal(t, 2, len(subs))
 
 	_, err = ChatStore.GetChannel(ctx, channelKey)
-	PanicIfError(err)
+	assert.NoError(t, err)
 
 }
 
 func TestSendingOfferBetweenMultiplePeopleShouldCreateChatChannelBetweenUsers(t *testing.T) {
-	teardown()
-	setup()
+	t.Parallel()
+
+	user1, delUser1 := testUser(t)
+	defer delUser1()
+
+	user2, delUser2 := testUser(t)
+	defer delUser2()
+
+	user3, delUser2 := testUser(t)
+	defer delUser2()
 
 	ctx := context.Background()
 
-	resp1, _ := CreateResource(t, ctx, User1, &web.CreateResourceRequest{
-		Resource: web.CreateResourcePayload{
-			Summary:          "Summary",
-			Description:      "Description",
-			Type:             resource.Offer,
-			ValueInHoursFrom: 1,
-			ValueInHoursTo:   3,
-			SharedWith:       []web.InputResourceSharing{},
-		},
-	})
-
-	resp2, _ := CreateResource(t, ctx, User2, &web.CreateResourceRequest{
-		Resource: web.CreateResourcePayload{
-			Summary:          "Summary",
-			Description:      "Description",
-			Type:             resource.Offer,
-			ValueInHoursFrom: 1,
-			ValueInHoursTo:   3,
-			SharedWith:       []web.InputResourceSharing{},
-		},
-	})
-
+	resp1, _ := CreateResource(t, ctx, user1)
+	resp2, _ := CreateResource(t, ctx, user2)
 	var seconds int64 = 6000
-	_, _ = SubmitOffer(t, ctx, User1, &web.SendOfferRequest{
+
+	_, _ = SubmitOffer(t, ctx, user1, &web.SendOfferRequest{
 		Offer: web.SendOfferPayload{
 			Items: []web.SendOfferPayloadItem{
-				{
-					From:          User1.Subject,
-					To:            User2.Subject,
-					Type:          trading.ResourceItem,
-					ResourceId:    &resp1.Resource.Id,
-					TimeInSeconds: nil,
-				}, {
-					From:          User2.Subject,
-					To:            User1.Subject,
-					Type:          trading.TimeItem,
-					ResourceId:    nil,
-					TimeInSeconds: &seconds,
-				}, {
-					From:          User2.Subject,
-					To:            User3.Subject,
-					Type:          trading.ResourceItem,
-					ResourceId:    &resp2.Resource.Id,
-					TimeInSeconds: nil,
-				}, {
-					From:          User3.Subject,
-					To:            User2.Subject,
-					Type:          trading.TimeItem,
-					ResourceId:    nil,
-					TimeInSeconds: &seconds,
-				},
+				*web.NewSendOfferPayloadItemForResource(user1.Subject, user2.Subject, resp1.Resource.Id),
+				*web.NewSendOfferPayloadItemForTime(user2.Subject, user1.Subject, seconds),
+				*web.NewSendOfferPayloadItemForResource(user2.Subject, user3.Subject, resp2.Resource.Id),
+				*web.NewSendOfferPayloadItemForTime(user3.Subject, user2.Subject, seconds),
 			},
 			Message: "Howdy :)",
 		},
 	})
 
-	channelKey, err := ChatService.GetConversationChannelKey(ctx, model.NewUserKeys([]model.UserKey{User1.GetUserKey(), User2.GetUserKey(), User3.GetUserKey()}))
-	PanicIfError(err)
+	channelKey, err := ChatService.GetConversationChannelKey(ctx, model.NewUserKeys([]model.UserKey{user1.GetUserKey(), user2.GetUserKey(), user3.GetUserKey()}))
+	assert.NoError(t, err)
 
 	subs, err := ChatStore.GetSubscriptionsForChannel(ctx, channelKey)
-	PanicIfError(err)
+	assert.NoError(t, err)
 
 	assert.Equal(t, 3, len(subs))
 
 	_, err = ChatStore.GetChannel(ctx, channelKey)
-	PanicIfError(err)
+	assert.NoError(t, err)
 
 }
 
 func TestCanGetTradingHistory(t *testing.T) {
-	teardown()
-	setup()
+	t.Parallel()
+
+	user1, delUser1 := testUser(t)
+	defer delUser1()
+
+	user2, delUser2 := testUser(t)
+	defer delUser2()
 
 	ctx := context.Background()
 
-	Db.Delete(trading.Offer{}, "1 = 1")
-	Db.Delete(trading.OfferItem{}, "1 = 1")
-	Db.Delete(trading.OfferDecision{}, "1 = 1")
+	resource1, _ := CreateResource(t, ctx, user1)
+	resource2, _ := CreateResource(t, ctx, user2)
 
-	resource1, _ := CreateResource(t, ctx, User1, &web.CreateResourceRequest{
-		Resource: web.CreateResourcePayload{
-			Summary:          "Summary",
-			Description:      "Description",
-			Type:             resource.Offer,
-			ValueInHoursFrom: 1,
-			ValueInHoursTo:   3,
-			SharedWith:       []web.InputResourceSharing{},
-		},
-	})
-
-	resource2, _ := CreateResource(t, ctx, User2, &web.CreateResourceRequest{
-		Resource: web.CreateResourcePayload{
-			Summary:          "Summary",
-			Description:      "Description",
-			Type:             resource.Offer,
-			ValueInHoursFrom: 1,
-			ValueInHoursTo:   3,
-			SharedWith:       []web.InputResourceSharing{},
-		},
-	})
-
-	offer1, _ := SubmitOffer(t, ctx, User1, &web.SendOfferRequest{
+	offer1, _ := SubmitOffer(t, ctx, user1, &web.SendOfferRequest{
 		Offer: web.SendOfferPayload{
 			Items: []web.SendOfferPayloadItem{
-				AResourceOfferItem(User1.Subject, User2.Subject, resource1.Resource.Id),
-				ATimeOfferItem(User2.Subject, User1.Subject, 6000),
+				*web.NewSendOfferPayloadItemForResource(user1.Subject, user2.Subject, resource1.Resource.Id),
+				*web.NewSendOfferPayloadItemForTime(user2.Subject, user1.Subject, 6000),
 			},
 			Message: "Howdy :)",
 		},
 	})
 
-	PanicIfError(UsersAcceptOffer(t, ctx, offer1.Offer, []*auth.UserSession{User1, User2}))
-	PanicIfError(UsersConfirmItems(t, ctx, offer1.Offer, []*auth.UserSession{User1, User2}))
+	assert.NoError(t, UsersAcceptOffer(t, ctx, offer1.Offer, []*auth.UserSession{user1, user2}))
+	assert.NoError(t, UsersConfirmItems(t, ctx, offer1.Offer, []*auth.UserSession{user1, user2}))
 
-	offer2, _ := SubmitOffer(t, ctx, User1, &web.SendOfferRequest{
+	offer2, _ := SubmitOffer(t, ctx, user1, &web.SendOfferRequest{
 		Offer: web.SendOfferPayload{
 			Items: []web.SendOfferPayloadItem{
-				AResourceOfferItem(User2.Subject, User1.Subject, resource2.Resource.Id),
-				ATimeOfferItem(User1.Subject, User2.Subject, 6000),
+				*web.NewSendOfferPayloadItemForResource(user2.Subject, user1.Subject, resource2.Resource.Id),
+				*web.NewSendOfferPayloadItemForTime(user1.Subject, user2.Subject, 6000),
 			},
 			Message: "Howdy :)",
 		},
 	})
 
-	PanicIfError(UsersAcceptOffer(t, ctx, offer2.Offer, []*auth.UserSession{User1, User2}))
-	PanicIfError(UsersConfirmItems(t, ctx, offer2.Offer, []*auth.UserSession{User1, User2}))
+	assert.NoError(t, UsersAcceptOffer(t, ctx, offer2.Offer, []*auth.UserSession{user1, user2}))
+	assert.NoError(t, UsersConfirmItems(t, ctx, offer2.Offer, []*auth.UserSession{user1, user2}))
 
-	tradingHistory, httpRes := GetTradingHistory(t, ctx, User1, &web.GetTradingHistoryRequest{
-		UserIDs: []string{User1Key.String(), User2Key.String()},
+	tradingHistory, httpRes := GetTradingHistory(t, ctx, user1, &web.GetTradingHistoryRequest{
+		UserIDs: []string{user1.Subject, user2.Subject},
 	})
+
 	assert.Equal(t, http.StatusOK, httpRes.StatusCode)
-
 	assert.Equal(t, 4, len(tradingHistory.Entries))
 
 }
 
-func AResourceOfferItem(from string, to string, resourceId string) web.SendOfferPayloadItem {
-	return web.SendOfferPayloadItem{
-		From:          from,
-		To:            to,
-		Type:          trading.ResourceItem,
-		ResourceId:    &resourceId,
-		TimeInSeconds: nil,
-	}
+func TestGetExpandedTradingHistory(t *testing.T) {
+
+	t.Parallel()
+
+	user1, delUser1 := testUser(t)
+	defer delUser1()
+
+	user2, delUser2 := testUser(t)
+	defer delUser2()
+
+	user3, delUser3 := testUser(t)
+	defer delUser2()
+
+	ctx := context.Background()
+
+	resource1, resource1Http := CreateResource(t, ctx, user1)
+	assert.Equal(t, http.StatusCreated, resource1Http.StatusCode)
+
+	resource2, resource2Http := CreateResource(t, ctx, user2)
+	assert.Equal(t, http.StatusCreated, resource2Http.StatusCode)
+
+	SubmitConfirmAcceptOffer(t, ctx, user1, []*auth.UserSession{user1, user2, user3}, &web.SendOfferRequest{
+		Offer: web.SendOfferPayload{
+			Items: []web.SendOfferPayloadItem{
+				*web.NewSendOfferPayloadItemForResource(user1.Subject, user3.Subject, resource1.Resource.Id),
+				*web.NewSendOfferPayloadItemForTime(user3.Subject, user1.Subject, 6000),
+			},
+			Message: "Howdy :)",
+		},
+	})
+	SubmitConfirmAcceptOffer(t, ctx, user2, []*auth.UserSession{user1, user2, user3}, &web.SendOfferRequest{
+		Offer: web.SendOfferPayload{
+			Items: []web.SendOfferPayloadItem{
+				*web.NewSendOfferPayloadItemForResource(user2.Subject, user3.Subject, resource2.Resource.Id),
+				*web.NewSendOfferPayloadItemForTime(user3.Subject, user1.Subject, 6000),
+			},
+			Message: "Howdy :)",
+		},
+	})
+	SubmitConfirmAcceptOffer(t, ctx, user2, []*auth.UserSession{user1, user2, user3}, &web.SendOfferRequest{
+		Offer: web.SendOfferPayload{
+			Items: []web.SendOfferPayloadItem{
+				*web.NewSendOfferPayloadItemForResource(user3.Subject, user1.Subject, resource1.Resource.Id),
+				*web.NewSendOfferPayloadItemForTime(user3.Subject, user1.Subject, 6000),
+			},
+			Message: "Howdy :)",
+		},
+	})
+
 }
 
-func ATimeOfferItem(from string, to string, seconds int64) web.SendOfferPayloadItem {
-	return web.SendOfferPayloadItem{
-		From:          from,
-		To:            to,
-		Type:          trading.TimeItem,
-		ResourceId:    nil,
-		TimeInSeconds: &seconds,
-	}
+func SubmitConfirmAcceptOffer(t *testing.T, ctx context.Context, user *auth.UserSession, allUsers []*auth.UserSession, offer *web.SendOfferRequest) {
+	createdOffer, createdOfferHttp := SubmitOffer(t, ctx, user, offer)
+	assert.Equal(t, http.StatusCreated, createdOfferHttp.StatusCode)
+	assert.NoError(t, UsersAcceptOffer(t, ctx, createdOffer.Offer, allUsers))
+	assert.NoError(t, UsersConfirmItems(t, ctx, createdOffer.Offer, allUsers))
 }
 
 func UsersConfirmItems(t *testing.T, ctx context.Context, offer web.Offer, users []*auth.UserSession) error {
@@ -435,7 +364,10 @@ func UsersConfirmItems(t *testing.T, ctx context.Context, offer web.Offer, users
 
 		offerItemUsers := []model.UserKey{model.NewUserKey(offerItem.FromUserID), model.NewUserKey(offerItem.ToUserID)}
 		for _, offerItemUser := range offerItemUsers {
-			offerItemUserSession := findUserSession(offerItemUser.String(), users)
+			offerItemUserSession, err := findUserSession(offerItemUser.String(), users)
+			if err != nil {
+				panic(err)
+			}
 			if offerItemUserSession == nil {
 				continue
 			}
@@ -455,7 +387,10 @@ func UsersAcceptOffer(t *testing.T, ctx context.Context, offer web.Offer, users 
 			if alreadyAccepted, ok := usersAccepted[offerItemUser]; !alreadyAccepted || !ok {
 				usersAccepted[offerItemUser] = true
 
-				offerItemUserSession := findUserSession(offerItemUser.String(), users)
+				offerItemUserSession, err := findUserSession(offerItemUser.String(), users)
+				if err != nil {
+					panic(err)
+				}
 				if offerItemUserSession == nil {
 					continue
 				}
@@ -474,13 +409,11 @@ func UsersAcceptOffer(t *testing.T, ctx context.Context, offer web.Offer, users 
 	return nil
 }
 
-func findUserSession(subject string, users []*auth.UserSession) *auth.UserSession {
-	var offerItemUserSession *auth.UserSession
+func findUserSession(subject string, users []*auth.UserSession) (*auth.UserSession, error) {
 	for _, user := range users {
 		if user.Subject == subject {
-			offerItemUserSession = user
-			continue
+			return user, nil
 		}
 	}
-	return offerItemUserSession
+	return nil, fmt.Errorf("could not find user session")
 }

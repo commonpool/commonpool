@@ -1,6 +1,6 @@
 import {Component, forwardRef, Input, OnInit} from '@angular/core';
 import {combineLatest, Observable, of, Subject} from 'rxjs';
-import {map, pluck, startWith, switchMap, tap} from 'rxjs/operators';
+import {map, pluck, shareReplay, startWith, switchMap, tap} from 'rxjs/operators';
 import {BackendService} from '../../api/backend.service';
 import {SearchUsersQuery, UserInfoResponse} from '../../api/models';
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
@@ -26,11 +26,13 @@ export class UserPickerComponent implements OnInit, ControlValueAccessor {
 
   // Pass in a predicate to filter out UserInfo values
   private predicateSubject = new Subject<(val: string) => boolean>();
-  private predicate$ = this.predicateSubject.asObservable().pipe(startWith(() => true));
+  private predicate$ = this.predicateSubject.asObservable().pipe(
+    startWith(() => true),
+    shareReplay()
+  );
 
   // This is the control value
   _selectedUser: string;
-
 
   @Input()
   set predicate(predicate: (val: string) => boolean) {
@@ -59,9 +61,8 @@ export class UserPickerComponent implements OnInit, ControlValueAccessor {
         }, 0);
       }
     }),
-    map(([users, predicate]) => users.filter(u => predicate(u.id)))
+    map(([users, predicate]) => users.filter(u => predicate(u.id))),
   );
-
 
   _fetchUsers: UserPickerBackend;
   @Input()
@@ -112,6 +113,5 @@ export class UserPickerComponent implements OnInit, ControlValueAccessor {
   }
 
   // End ControlValueAccessor implementation
-
 
 }

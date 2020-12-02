@@ -4,76 +4,143 @@
       <div class="card mt-5">
         <h4 class="card-header">Hello</h4>
         <div class="card-body">
+          <div [formGroup]="form">
+            <div [formGroup]="resource">
 
-
-          <div class="input-group">
-            <div class="input-group-prepend">
-              <label class="input-group-text" for="resource-type" style="width: 8rem">Type</label>
-            </div>
-            <select class="custom-select"
-                    name="resource-type"
-                    id="resource-type"
-                    [(ngModel)]="resourceType"
-                    [disabled]="pending || !!id">
-              <option [ngValue]="0">Offer</option>
-              <option [ngValue]="1">Request</option>
-            </select>
-          </div>
-
-          <div class="input-group mt-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text"  style="width: 8rem">Title</span>
-            </div>
-            <input class="form-control" [(ngModel)]="summary" [disabled]="pending" type="text" id="summary" name="summary">
-          </div>
-
-          <div class="input-group mt-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text"  style="width: 8rem">Description</span>
-            </div>
-            <textarea class="form-control" [(ngModel)]="description" [disabled]="pending" id="description" name="description" rows="5"
-                      cols="40"></textarea>
-          </div>
-
-
-          <div class="input-group mt-3">
-            <div class="input-group-prepend">
-              <span class="input-group-text">Value between</span>
-            </div>
-            <input [(ngModel)]="valueInHoursFrom" [disabled]="pending" name="necessity-level" type="number"
-                   id="value-in-hours-to" class="form-control">
-            <input [(ngModel)]="valueInHoursTo" [disabled]="pending" name="necessity-level" type="number"
-                   id="value-in-hours-from" class="form-control">
-            <div class="input-group-append">
-              <span class="input-group-text">hours</span>
-            </div>
-          </div>
-
-          <div class="card mt-4 mb-5" *ngIf="resourceType === 0">
-            <div class="card-body">
-              <div *ngIf="groups$ | async; let groups">
-                <h4>Share with these groups:</h4>
-                <ul class="list-group mt-3">
-                  <li class="list-group-item" *ngFor="let group of groups">
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox" id="defaultCheck1" (change)="toggleGroup(group.groupId)" [checked]="sharedWith.includes(group.groupId)">
-                      <label class="form-check-label ml-1" for="defaultCheck1">
-                        {{group.groupName}}
-                      </label>
-                    </div>
-                  </li>
-                </ul>
+              <div class="input-group">
+                <div class="input-group-prepend">
+                  <label class="input-group-text" for="resource-type" style="width: 8rem">Type</label>
+                </div>
+                <select class="custom-select"
+                        name="resource-type"
+                        id="resource-type"
+                        data-cy="type"
+                        formControlName="type">
+                  <option [ngValue]="0">Offer</option>
+                  <option [ngValue]="1">Request</option>
+                </select>
               </div>
+
+              <div class="input-group mt-3">
+                <div class="input-group-prepend">
+                  <span class="input-group-text" style="width: 8rem">Title</span>
+                </div>
+                <input
+                  class="form-control"
+                  formControlName="summary"
+                  type="text"
+                  id="summary"
+                  name="summary"
+                  data-cy="summary"
+                  [ngClass]="{ 'is-invalid': submitted && resource.controls.summary.errors }"
+                >
+                <div *ngIf="submitted && resource.controls.summary.errors" class="invalid-feedback">
+                  <div *ngIf="resource.controls.summary.errors.required">Title is required</div>
+                </div>
+              </div>
+
+              <div class="input-group mt-3">
+                <div class="input-group-prepend">
+                  <span class="input-group-text" style="width: 8rem">Description</span>
+                </div>
+                <textarea
+                  class="form-control"
+                  formControlName="description"
+                  id="description"
+                  name="description"
+                  rows="5"
+                  cols="40"
+                  data-cy="description"
+                  [ngClass]="{ 'is-invalid': submitted && resource.controls.description.errors }"
+                ></textarea>
+                <div *ngIf="submitted && resource.controls.description.errors" class="invalid-feedback">
+                  <div *ngIf="resource.controls.description.errors.required">Description is required</div>
+                </div>
+              </div>
+
+
+              <div class="input-group mt-3">
+                <div class="input-group-prepend">
+                  <span class="input-group-text">Value between</span>
+                </div>
+
+                <input
+                  formControlName="valueInHoursFrom"
+                  name="necessity-level"
+                  type="number"
+                  id="value-in-hours-to"
+                  class="form-control"
+                  data-cy="valueInHoursFrom"
+                  min="0"
+                >
+
+                <input
+                  formControlName="valueInHoursTo"
+                  name="necessity-level"
+                  type="number"
+                  id="value-in-hours-from"
+                  class="form-control"
+                  data-cy="valueInHoursTo"
+                  min="0"
+                >
+                <div class="input-group-append">
+                  <span class="input-group-text">hours</span>
+                </div>
+              </div>
+
+              <div class="card mt-4 mb-5" formArrayName="sharedWith">
+                <div class="card-body" *ngIf="resource.controls.type.value === 0">
+                  <div *ngIf="memberships$ | async; let memberships">
+                    <h4>Share with these groups:</h4>
+                    <ul class="list-group mt-3">
+                      <li class="list-group-item" *ngFor="let membership of memberships; let i = index">
+                        <div class="form-check">
+
+                          <input
+                            class="form-check-input"
+                            type="checkbox"
+                            id="defaultCheck1"
+
+                            [checked]="isToggled(membership.groupId)"
+                            (click)="toggleGroup(membership.groupId)"
+                          >
+                          <label class="form-check-label ml-1" for="defaultCheck1">
+                            {{membership.groupName}}
+                          </label>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+
+              <div class="input-group mt-3">
+                <button
+                  class="btn btn-primary"
+                  type="button"
+                  [disabled]="pending"
+                  (click)="submit()"
+                  data-cy="submit"
+                >Submit
+                </button>
+              </div>
+              <div>
+                {{ error}}
+              </div>
+
+
             </div>
           </div>
-
-
-          <div class="input-group mt-3">
-            <button class="btn btn-primary" type="button" [disabled]="pending" (click)="submit()">Submit</button>
-          </div>
-          <div>
-            {{ error | json}}
-          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row mt-3">
+    <div class="col">
+      <div class="card">
+        <div class="card-body">
+          <pre>{{form.value | json}}</pre>
         </div>
       </div>
     </div>

@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/commonpool/backend/auth"
 	errs "github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
@@ -79,8 +80,7 @@ func (as *AuthStore) Upsert(key model.UserKey, email string, username string) er
 		}
 		err := as.db.Model(auth.User{}).Where("id = ?", key.String()).Updates(updates).Error
 		if err != nil {
-			log.Error(err, "could not upsert user")
-			return err
+			return fmt.Errorf("could not upsert user: %s", err.Error())
 		}
 		return nil
 	}

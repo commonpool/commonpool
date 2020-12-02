@@ -1,7 +1,7 @@
 import {Component, Input, OnInit} from '@angular/core';
 import {BackendService} from '../../api/backend.service';
 import {Subject} from 'rxjs';
-import {pluck, switchMap, tap} from 'rxjs/operators';
+import {filter, pluck, switchMap, tap} from 'rxjs/operators';
 
 @Component({
   selector: 'app-resource-name',
@@ -16,6 +16,7 @@ export class ResourceNameComponent implements OnInit {
   resourceName: string;
   resourceIdSubject = new Subject<string>();
   resourceName$ = this.resourceIdSubject.asObservable().pipe(
+    filter(id => !!id),
     switchMap(id => this.backend.getResource(id)),
     pluck('resource', 'summary')
   ).subscribe((a) => {

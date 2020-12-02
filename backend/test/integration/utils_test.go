@@ -15,10 +15,14 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 )
 
+var requestMu = sync.Mutex{}
+
 func NewRequest(ctx context.Context, session *auth.UserSession, method, target string, req interface{}) (echo.Context, *httptest.ResponseRecorder) {
+	requestMu.Lock()
 	e := router.NewRouter()
 	httpRequest := httptest.NewRequest(method, target, read(req))
 	httpRequest = httpRequest.WithContext(ctx)
@@ -32,6 +36,7 @@ func NewRequest(ctx context.Context, session *auth.UserSession, method, target s
 		authenticatedUser = nil
 		setUnauthenticated(c)
 	}
+	requestMu.Unlock()
 	return c, recorder
 }
 
@@ -58,12 +63,6 @@ func setAuthenticatedUser(c echo.Context, username, subject, email string) {
 }
 func setUnauthenticated(c echo.Context) {
 	c.Set(auth.IsAuthenticatedKey, false)
-}
-
-func PanicIfError(err error) {
-	if err != nil {
-		panic(err)
-	}
 }
 
 func ListenOnUserExchange(t *testing.T, ctx context.Context, userKey model.UserKey) *UserExchangeListener {

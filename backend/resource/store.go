@@ -132,9 +132,10 @@ type CreateResourceQuery struct {
 	SharedWith []model.GroupKey
 }
 
-func NewCreateResourceQuery(resource *Resource) *CreateResourceQuery {
+func NewCreateResourceQuery(resource *Resource, sharedWith []model.GroupKey) *CreateResourceQuery {
 	return &CreateResourceQuery{
-		Resource: resource,
+		Resource:   resource,
+		SharedWith: sharedWith,
 	}
 }
 

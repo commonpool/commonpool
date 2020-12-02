@@ -78,12 +78,15 @@ type PersonOffer struct {
 
 func (h *Handler) HandleSendOffer(c echo.Context) error {
 
-	ctx := c.Request().Context()
+	ctx, _ := GetEchoContext(c, "HandleSendOffer")
 
 	var err error
 
 	//  Getting Logged In User
-	loggedInUser := h.authorization.GetAuthUserSession(c)
+	loggedInUser, err := auth.GetUserSession(ctx)
+	if err != nil {
+		return NewErrResponse(c, errs.ErrUnauthorized)
+	}
 
 	//  Unmarshaling Request Body
 	req := web.SendOfferRequest{}
@@ -97,7 +100,7 @@ func (h *Handler) HandleSendOffer(c echo.Context) error {
 		return c.JSON(400, NewValidError(err.(validator.ValidationErrors)))
 	}
 
-	reference := UserReference(&loggedInUser)
+	reference := UserReference(loggedInUser)
 	response, err := h.SendOffer(ctx, req, reference)
 	if err != nil {
 		return err
@@ -119,10 +122,10 @@ func (h *Handler) SendOffer(ctx context.Context, req web.SendOfferRequest, fromU
 	//  Process each offer item
 	items := trading.NewOfferItems([]trading.OfferItem{})
 
-	for _, reqItem := range req.Offer.Items {
+	for _, offerItem := range req.Offer.Items {
 
-		if reqItem.Type == trading.ResourceItem {
-			resourceKey, err := ParseResourceKey(*reqItem.ResourceId)
+		if offerItem.Type == trading.ResourceItem {
+			resourceKey, err := ParseResourceKey(*offerItem.ResourceId)
 			if err != nil {
 				return nil, err
 			}
@@ -134,8 +137,8 @@ func (h *Handler) SendOffer(ctx context.Context, req web.SendOfferRequest, fromU
 		}
 
 		//  Getting participants
-		fromUser := NewUserKey(reqItem.From)
-		toUser := NewUserKey(reqItem.To)
+		fromUser := NewUserKey(offerItem.From)
+		toUser := NewUserKey(offerItem.To)
 
 		//  Making sure participants exist
 		fromUserFound := items.HasItemsForUser(fromUser)
@@ -174,12 +177,12 @@ func (h *Handler) SendOffer(ctx context.Context, req web.SendOfferRequest, fromU
 		itemKey := NewOfferItemKey(uuid.NewV4())
 
 		//  Building the offer item
-		if reqItem.Type == trading.TimeItem {
+		if offerItem.Type == trading.TimeItem {
 
 			//  Resource Item is a TimeItem
 
 			//  Making sure the offer has Positive time value
-			seconds := reqItem.TimeInSeconds
+			seconds := offerItem.TimeInSeconds
 			if *seconds <= 0 {
 				err := fmt.Errorf("time traded must be more than 0")
 				return nil, err
@@ -188,11 +191,11 @@ func (h *Handler) SendOffer(ctx context.Context, req web.SendOfferRequest, fromU
 			//  Building the offer item
 			item = trading.NewTimeOfferItem(offerKey, itemKey, fromUser, toUser, *seconds)
 
-		} else if reqItem.Type == trading.ResourceItem {
+		} else if offerItem.Type == trading.ResourceItem {
 
 			//  Resource Item is a ResourceItem
 			//  Retrieving the resource key
-			resourceId, err := uuid.FromString(*reqItem.ResourceId)
+			resourceId, err := uuid.FromString(*offerItem.ResourceId)
 			if err != nil {
 				return nil, err
 			}
@@ -219,7 +222,7 @@ func (h *Handler) SendOffer(ctx context.Context, req web.SendOfferRequest, fromU
 		} else {
 
 			//  Resource Type is of unknown type
-			err := fmt.Errorf("unexpected resource type %d", reqItem.Type)
+			err := fmt.Errorf("unexpected resource type %d", offerItem.Type)
 			return nil, err
 
 		}
@@ -409,8 +412,14 @@ func (h *Handler) HandleAcceptOffer(c echo.Context) error {
 
 func (h *Handler) DeclineOffer(c echo.Context) error {
 
+	ctx, _ := GetEchoContext(c, "DeclineOffer")
+
 	// retrieve current user
-	authSession := h.authorization.GetAuthUserSession(c)
+	authSession, err := auth.GetUserSession(ctx)
+	if err != nil {
+		return errs.ErrUnauthorized
+	}
+
 	authUserKey := authSession.GetUserKey()
 
 	// retrieve offer key

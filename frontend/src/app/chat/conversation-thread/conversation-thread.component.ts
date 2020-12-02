@@ -9,7 +9,7 @@ import {
   ViewChildren
 } from '@angular/core';
 import {BehaviorSubject, combineLatest, Observable, Subject} from 'rxjs';
-import {filter, map, pluck, startWith, switchMap} from 'rxjs/operators';
+import {filter, map, pluck, shareReplay, startWith, switchMap, takeLast, tap} from 'rxjs/operators';
 import {ActivatedRoute} from '@angular/router';
 import {BackendService} from '../../api/backend.service';
 import {Event, EventType, GetMessagesResponse, Message, SectionBlock, TextObject, TextType} from '../../api/models';
@@ -46,6 +46,8 @@ import {MapMessages, MessageGroup} from '../utils/messages-mapper';
     `
   ],
   template: `
+
+
     <div class="channel w-100 " style="position:relative">
 
       <div style="height: 3rem; position: relative; top:0; left: 0; width: 100%; z-index:1000"
@@ -66,6 +68,7 @@ import {MapMessages, MessageGroup} from '../utils/messages-mapper';
       </div>
 
       <div class="input-section px-2 mb-3 d-flex flex-row">
+
         <textarea class="form-control rounded-0"
                   [(ngModel)]="content"
                   (keydown.enter)="sendMessage($event)">
@@ -116,11 +119,27 @@ export class ConversationThreadComponent implements OnInit, OnDestroy, AfterView
   private triggerSubject = new Subject<void>();
   private trigger$ = this.triggerSubject.asObservable().pipe(startWith([undefined]));
 
+  public mostAncientMessageDate: number;
+  public mostRecentMessageDate: number;
+
   public messages$: Observable<GetMessagesResponse> = combineLatest([this.skip$, this.take$, this.channelId$, this.trigger$])
     .pipe(
       switchMap(([s, t, channelId, _]) => {
         return this.backend.getMessages(channelId, new Date().valueOf(), t);
       }),
+      shareReplay(),
+      tap((messages) => {
+        for (const message of messages.messages) {
+          console.log('SentAtDate', message.sentAtDate.valueOf());
+          const messageTimestamp = message.sentAtDate.valueOf();
+          if (messageTimestamp < this.mostAncientMessageDate) {
+            this.mostAncientMessageDate = messageTimestamp;
+          }
+          if (messageTimestamp > this.mostRecentMessageDate) {
+            this.mostRecentMessageDate = messageTimestamp;
+          }
+        }
+      })
     );
 
   public messageGroups$ = this.messages$.pipe(

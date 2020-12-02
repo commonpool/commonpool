@@ -133,68 +133,6 @@ func (g *GroupStore) GetGroupsByKeys(ctx context.Context, groupKeys []model.Grou
 	return group.NewGroups(result), nil
 }
 
-func (g *GroupStore) GrantPermission(ctx context.Context, membershipKey model.MembershipKey, permission group.PermissionType) error {
-
-	ctx, l := GetCtx(ctx, "GroupStore", "GrantPermission")
-
-	l.Debug("granting permission", zap.Object("membership", membershipKey))
-
-	err := g.updatePermission(ctx, membershipKey, permission, true)
-	if err != nil {
-		l.Error("could not update permission", zap.Error(err))
-		return err
-	}
-
-	return nil
-}
-
-func (g *GroupStore) RevokePermission(ctx context.Context, membershipKey model.MembershipKey, permission group.PermissionType) error {
-
-	ctx, l := GetCtx(ctx, "GroupStore", "RevokePermission")
-
-	l.Debug("revoking permission")
-
-	err := g.updatePermission(ctx, membershipKey, permission, false)
-	if err != nil {
-		l.Error("could not update permission", zap.Error(err))
-		return err
-	}
-
-	return nil
-}
-
-func (g *GroupStore) updatePermission(ctx context.Context, membershipKey model.MembershipKey, permission group.PermissionType, hasPermission bool) error {
-
-	ctx, l := GetCtx(ctx, "GroupStore", "updatePermission")
-
-	l.Debug("updating permissions")
-
-	updates := map[string]interface{}{}
-	if permission == group.MemberPermission {
-		updates["is_member"] = hasPermission
-	} else if permission == group.AdminPermission {
-		updates["is_admin"] = hasPermission
-	}
-
-	req := g.db.
-		Model(group.Membership{}).
-		Where("user_id = ? AND group_id = ?", membershipKey.UserKey.String(), membershipKey.GroupKey.ID.String()).
-		Updates(updates)
-	err := req.Error
-	if err != nil {
-		l.Error("could not update permission", zap.Error(err))
-		return err
-	}
-
-	if req.RowsAffected == 0 {
-		err := fmt.Errorf("not found")
-		l.Error(err.Error())
-		return err
-	}
-
-	return nil
-}
-
 func (g *GroupStore) CreateMembership(ctx context.Context, membershipKey model.MembershipKey, isMember bool, isAdmin bool, isOwner bool, isDeactivated bool, groupConfirmed bool, userConfirmed bool) (*group.Membership, error) {
 
 	ctx, l := GetCtx(ctx, "GroupStore", "CreateMembership")
@@ -222,58 +160,12 @@ func (g *GroupStore) CreateMembership(ctx context.Context, membershipKey model.M
 
 }
 
-func (g *GroupStore) Exclude(ctx context.Context, membershipKey model.MembershipKey) error {
-
-	ctx, l := GetCtx(ctx, "GroupStore", "Exclude")
-	l = l.With(zap.Object("membership", membershipKey))
-
-	l.Debug("excluding user from group")
-
-	req := g.db.Delete(group.Membership{}, "group_id = ? AND user_id = ?", membershipKey.GroupKey.ID.String(), membershipKey.UserKey.String())
-	err := req.Error
-	if err != nil {
-		l.Error("could not delete membership")
-		return err
-	}
-
-	if req.RowsAffected == 0 {
-		err := fmt.Errorf("not found")
-		l.Error(err.Error())
-		return err
-	}
-
-	return nil
-
-	// err = g.mq.UnregisterUserMembershipBinding(request.MembershipKey.UserKey, request.MembershipKey.GroupKey)
-	// if err != nil {
-	// 	return group.ExcludeResponse{
-	// 		Error: err,
-	// 	}
-	// }
-	// return group.ExcludeResponse{}
-}
-
 func (g *GroupStore) MarkInvitationAsAccepted(ctx context.Context, membershipKey model.MembershipKey, decisionFrom group.MembershipParty) error {
 
 	ctx, l := GetCtx(ctx, "GroupStore", "MarkInvitationAsAccepted")
 
 	l = l.With(zap.Object("membership", membershipKey))
 	l.Debug("marking invitation as accepted")
-
-	err := g.updateInvitationAcceptance(ctx, membershipKey, true, decisionFrom)
-	if err != nil {
-		l.Error("could not update invitation acceptance status", zap.Error(err))
-		return err
-	}
-
-	return nil
-}
-
-func (g *GroupStore) MarkInvitationAsDeclined(ctx context.Context, membershipKey model.MembershipKey, decisionFrom group.MembershipParty) error {
-	ctx, l := GetCtx(ctx, "GroupStore", "MarkInvitationAsDeclined")
-
-	l = l.With(zap.Object("membership", membershipKey))
-	l.Debug("marking invitation as declined")
 
 	err := g.updateInvitationAcceptance(ctx, membershipKey, true, decisionFrom)
 	if err != nil {
@@ -339,13 +231,6 @@ func (g *GroupStore) updateInvitationAcceptance(ctx context.Context, membershipK
 		l.Error("could not get membership", zap.Error(err))
 		return err
 	}
-
-	// if membership.GroupConfirmed && membership.UserConfirmed {
-	// 	err = g.mq.RegisterUserMembershipBinding(membership.GetUserKey(), membership.GetGroupKey())
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
 
 	return nil
 }
@@ -456,10 +341,4 @@ func (g *GroupStore) DeleteMembership(ctx context.Context, membershipKey model.M
 
 	return nil
 
-	// err = g.mq.UnregisterUserMembershipBinding(request.MembershipKey.UserKey, request.MembershipKey.GroupKey)
-	// if err != nil {
-	// 	return group.DeleteMembershipResponse{
-	// 		Error: err,
-	// 	}
-	// }
 }

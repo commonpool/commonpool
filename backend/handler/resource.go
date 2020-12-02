@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"github.com/commonpool/backend/auth"
 	. "github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
@@ -268,7 +269,7 @@ func (h *Handler) CreateResource(c echo.Context) error {
 		sanitized.ValueInHoursTo,
 	)
 
-	createResourceResponse := h.resourceStore.Create(resource.NewCreateResourceQuery(&res))
+	createResourceResponse := h.resourceStore.Create(resource.NewCreateResourceQuery(&res, sharedWithGroupKeys))
 	if createResourceResponse.Error != nil {
 		c.Logger().Error(createResourceResponse.Error, "CreateResource: could not persist resource")
 		return NewErrResponse(c, createResourceResponse.Error)
@@ -342,7 +343,11 @@ func (h *Handler) UpdateResource(c echo.Context) error {
 	resToUpdate := getResourceByKeyResponse.Resource
 
 	// make sure user is owner of resource
-	loggedInUser := h.authorization.GetAuthUserSession(c)
+
+	loggedInUser, err := auth.GetUserSession(ctx)
+	if err != nil {
+		return ErrUnauthorized
+	}
 	if resToUpdate.GetOwnerKey() != loggedInUser.GetUserKey() {
 		err := fmt.Errorf("cannot update a resource you do not own")
 		c.Logger().Errorf("UpdateResource: %v", err)
