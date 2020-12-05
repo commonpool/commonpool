@@ -8,6 +8,7 @@ import (
 	"github.com/commonpool/backend/chat"
 	"github.com/commonpool/backend/config"
 	_ "github.com/commonpool/backend/docs"
+	"github.com/commonpool/backend/graph"
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/handler"
 	"github.com/commonpool/backend/resource"
@@ -36,6 +37,10 @@ var (
 	e             *echo.Echo
 )
 
+/*
+{"neo4j":"FOLLOWER","system":"FOLLOWER","bla":"LEADER"}
+*/
+
 // @title commonpool api
 // @version 1.0
 // @description resources api
@@ -56,6 +61,16 @@ func main() {
 		log.Fatal(err, "cannot crate amqp client")
 	}
 
+	err = graph.InitGraphDatabase(appConfig)
+	if err != nil {
+		panic(err)
+	}
+
+	driver, err := graph.NewNeo4jDriver(appConfig, appConfig.Neo4jDatabase)
+	if err != nil {
+		panic(err)
+	}
+
 	r := router.NewRouter()
 
 	r.GET("/api/swagger/*", echoSwagger.WrapHandler)
@@ -63,15 +78,15 @@ func main() {
 	db := getDb(appConfig)
 	store.AutoMigrate(db)
 
-	resourceStore = store.NewResourceStore(db)
-	authStore = store.NewAuthStore(db)
+	resourceStore = store.NewResourceStore(driver)
+	authStore = store.NewAuthStore(db, driver)
 	chatStore := store.NewChatStore(db, authStore, amqpCli)
 	tradingStore := store.NewTradingStore(db)
-	groupStore := store.NewGroupStore(db, amqpCli)
+	groupStore := store.NewGroupStore(driver)
 
 	chatService := service.NewChatService(authStore, groupStore, resourceStore, amqpCli, chatStore)
-	tradingService := service.NewTradingService(tradingStore, resourceStore, authStore, chatService)
 	groupService := service.NewGroupService(groupStore, amqpCli, chatService, authStore)
+	tradingService := service.NewTradingService(tradingStore, resourceStore, authStore, chatService, groupService)
 
 	v1 := r.Group("/api/v1")
 	authorization := auth.NewAuth(v1, appConfig, "/api/v1", authStore)
@@ -107,7 +122,6 @@ func main() {
 	go func() {
 		if err := r.Start("0.0.0.0:8585"); err != nil {
 			r.Logger.Error(err)
-			r.Logger.Info("shutting down the server")
 		}
 	}()
 
@@ -117,10 +131,12 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	r.Logger.Info("shutting down amqp client")
 	if err := amqpCli.Shutdown(); err != nil {
 		r.Logger.Fatal(err)
 	}
 
+	r.Logger.Info("shutting down router")
 	if err := r.Shutdown(ctx); err != nil {
 		r.Logger.Fatal(err)
 	}

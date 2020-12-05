@@ -129,7 +129,6 @@ func (a *OidcAuthenticator) Authenticate(redirectOnError bool) echo.MiddlewareFu
 			}
 
 			if rawAccessToken == "" {
-				l.Warn("access token not present")
 				// access token not present
 				return a.redirectOrNext(c, redirectOnError, handlerFunc, a.RedirectToAuth)
 			}

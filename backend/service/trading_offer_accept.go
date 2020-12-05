@@ -50,7 +50,7 @@ func (t TradingService) AcceptOffer(ctx context.Context, request *trading.Accept
 
 	// todo: wrap in collection struct
 
-	for _, decision := range decisions {
+	for _, decision := range decisions.Items {
 		decisionKey := decision.GetKey()
 		decisionUserKey := decisionKey.GetUserKey()
 		if decisionUserKey != loggedInUserKey {
@@ -58,7 +58,7 @@ func (t TradingService) AcceptOffer(ctx context.Context, request *trading.Accept
 				didAllOtherParticipantsAlreadyAccept = false
 			}
 		} else {
-			currentUserDecision = &decision
+			currentUserDecision = decision
 		}
 	}
 
@@ -82,7 +82,7 @@ func (t TradingService) AcceptOffer(ctx context.Context, request *trading.Accept
 
 	// todo: wrap in collection object
 	var userKeyLst []model.UserKey
-	for _, decision := range decisions {
+	for _, decision := range decisions.Items {
 		userKeyLst = append(userKeyLst, decision.GetUserKey())
 	}
 	userKeys := model.NewUserKeys(userKeyLst)
@@ -112,9 +112,9 @@ func (t TradingService) AcceptOffer(ctx context.Context, request *trading.Accept
 
 	for _, user := range users.Items {
 		var userDecision *trading.OfferDecision
-		for _, decision := range decisions {
+		for _, decision := range decisions.Items {
 			if decision.GetUserKey() == user.GetUserKey() {
-				userDecision = &decision
+				userDecision = decision
 				break
 			}
 		}
@@ -154,7 +154,7 @@ func (t TradingService) AcceptOffer(ctx context.Context, request *trading.Accept
 		[]chat.Attachment{},
 		nil,
 	)
-	_, err = t.cs.SendConversationMessage(ctx, sendMessage)
+	_, err = t.chatService.SendConversationMessage(ctx, sendMessage)
 	if err != nil {
 		l.Error("could not send message", zap.Error(err))
 		return nil, err
@@ -186,7 +186,7 @@ func (t TradingService) AcceptOffer(ctx context.Context, request *trading.Accept
 			[]chat.Attachment{},
 			nil,
 		)
-		_, err = t.cs.SendConversationMessage(ctx, sendMessage)
+		_, err = t.chatService.SendConversationMessage(ctx, sendMessage)
 		if err != nil {
 			l.Error("could not send conversation message", zap.Error(err))
 			return nil, err
@@ -200,15 +200,14 @@ func (t TradingService) AcceptOffer(ctx context.Context, request *trading.Accept
 		return nil, err
 	}
 
-	var resources = resource.NewResources([]resource.Resource{})
+	var resources = resource.NewEmptyResources()
 	if len(offerItems.Items) > 0 {
-		getByKeys := resource.NewGetResourceByKeysQuery(offerItems.GetResourceKeys())
-		getResourcesByKeysResponse, err := t.rs.GetByKeys(getByKeys)
+		getResourcesByKeysResponse, err := t.rs.GetByKeys(ctx, offerItems.GetResourceKeys())
 		if err != nil {
 			l.Error("could not get resources by keys", zap.Error(err))
 			return nil, err
 		}
-		resources = getResourcesByKeysResponse.Items
+		resources = getResourcesByKeysResponse
 	}
 
 	if currentUserLastOneToDecide {
@@ -287,7 +286,7 @@ func (t TradingService) AcceptOffer(ctx context.Context, request *trading.Accept
 				[]chat.Attachment{},
 				&userKey,
 			)
-			_, err = t.cs.SendConversationMessage(nil, sendMessage)
+			_, err = t.chatService.SendConversationMessage(nil, sendMessage)
 			if err != nil {
 				l.Error("could not send conversation message", zap.Error(err))
 				return nil, err

@@ -68,11 +68,7 @@ func (cs *ChatStore) CreateSubscription(ctx context.Context, key model.ChannelSu
 		Name:      name,
 	}
 
-	qry := cs.db.Create(&channelSubscription)
-
-	err := qry.Error
-
-	l.Info("rows affected", zap.Int64("rows", qry.RowsAffected))
+	err := cs.db.Create(&channelSubscription).Error
 
 	if err != nil {
 		l.Error("could not store channel subscription in database", zap.Error(err))

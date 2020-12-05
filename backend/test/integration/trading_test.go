@@ -156,7 +156,7 @@ func TestCanDeclineOffer(t *testing.T) {
 	decisions, err := TradingStore.GetDecisions(key)
 	assert.NoError(t, err)
 
-	for _, decision := range decisions {
+	for _, decision := range decisions.Items {
 		if decision.UserID == user1.Subject {
 			assert.Equal(t, trading.DeclinedDecision, decision.Decision)
 		} else if decision.UserID == user2.Subject {
@@ -297,56 +297,54 @@ func TestCanGetTradingHistory(t *testing.T) {
 
 }
 
-func TestGetExpandedTradingHistory(t *testing.T) {
-
-	t.Parallel()
-
-	user1, delUser1 := testUser(t)
-	defer delUser1()
-
-	user2, delUser2 := testUser(t)
-	defer delUser2()
-
-	user3, delUser3 := testUser(t)
-	defer delUser2()
-
-	ctx := context.Background()
-
-	resource1, resource1Http := CreateResource(t, ctx, user1)
-	assert.Equal(t, http.StatusCreated, resource1Http.StatusCode)
-
-	resource2, resource2Http := CreateResource(t, ctx, user2)
-	assert.Equal(t, http.StatusCreated, resource2Http.StatusCode)
-
-	SubmitConfirmAcceptOffer(t, ctx, user1, []*auth.UserSession{user1, user2, user3}, &web.SendOfferRequest{
-		Offer: web.SendOfferPayload{
-			Items: []web.SendOfferPayloadItem{
-				*web.NewSendOfferPayloadItemForResource(user1.Subject, user3.Subject, resource1.Resource.Id),
-				*web.NewSendOfferPayloadItemForTime(user3.Subject, user1.Subject, 6000),
-			},
-			Message: "Howdy :)",
-		},
-	})
-	SubmitConfirmAcceptOffer(t, ctx, user2, []*auth.UserSession{user1, user2, user3}, &web.SendOfferRequest{
-		Offer: web.SendOfferPayload{
-			Items: []web.SendOfferPayloadItem{
-				*web.NewSendOfferPayloadItemForResource(user2.Subject, user3.Subject, resource2.Resource.Id),
-				*web.NewSendOfferPayloadItemForTime(user3.Subject, user1.Subject, 6000),
-			},
-			Message: "Howdy :)",
-		},
-	})
-	SubmitConfirmAcceptOffer(t, ctx, user2, []*auth.UserSession{user1, user2, user3}, &web.SendOfferRequest{
-		Offer: web.SendOfferPayload{
-			Items: []web.SendOfferPayloadItem{
-				*web.NewSendOfferPayloadItemForResource(user3.Subject, user1.Subject, resource1.Resource.Id),
-				*web.NewSendOfferPayloadItemForTime(user3.Subject, user1.Subject, 6000),
-			},
-			Message: "Howdy :)",
-		},
-	})
-
-}
+//
+// func TestGetExpandedTradingHistory(t *testing.T) {
+//
+// 	t.Parallel()
+//
+// 	user1, delUser1 := testUser(t)
+// 	defer delUser1()
+//
+// 	user2, delUser2 := testUser(t)
+// 	defer delUser2()
+//
+// 	ctx := context.Background()
+//
+// 	resource1, resource1Http := CreateResource(t, ctx, user1)
+// 	assert.Equal(t, http.StatusCreated, resource1Http.StatusCode)
+//
+// 	resource2, resource2Http := CreateResource(t, ctx, user2)
+// 	assert.Equal(t, http.StatusCreated, resource2Http.StatusCode)
+//
+// 	SubmitConfirmAcceptOffer(t, ctx, user1, []*auth.UserSession{user1, user2, user3}, &web.SendOfferRequest{
+// 		Offer: web.SendOfferPayload{
+// 			Items: []web.SendOfferPayloadItem{
+// 				*web.NewSendOfferPayloadItemForResource(user1.Subject, user3.Subject, resource1.Resource.Id),
+// 				*web.NewSendOfferPayloadItemForTime(user3.Subject, user1.Subject, 6000),
+// 			},
+// 			Message: "Howdy :)",
+// 		},
+// 	})
+// 	SubmitConfirmAcceptOffer(t, ctx, user2, []*auth.UserSession{user1, user2, user3}, &web.SendOfferRequest{
+// 		Offer: web.SendOfferPayload{
+// 			Items: []web.SendOfferPayloadItem{
+// 				*web.NewSendOfferPayloadItemForResource(user2.Subject, user3.Subject, resource2.Resource.Id),
+// 				*web.NewSendOfferPayloadItemForTime(user3.Subject, user1.Subject, 6000),
+// 			},
+// 			Message: "Howdy :)",
+// 		},
+// 	})
+// 	SubmitConfirmAcceptOffer(t, ctx, user2, []*auth.UserSession{user1, user2, user3}, &web.SendOfferRequest{
+// 		Offer: web.SendOfferPayload{
+// 			Items: []web.SendOfferPayloadItem{
+// 				*web.NewSendOfferPayloadItemForResource(user3.Subject, user1.Subject, resource1.Resource.Id),
+// 				*web.NewSendOfferPayloadItemForTime(user3.Subject, user1.Subject, 6000),
+// 			},
+// 			Message: "Howdy :)",
+// 		},
+// 	})
+//
+// }
 
 func SubmitConfirmAcceptOffer(t *testing.T, ctx context.Context, user *auth.UserSession, allUsers []*auth.UserSession, offer *web.SendOfferRequest) {
 	createdOffer, createdOfferHttp := SubmitOffer(t, ctx, user, offer)

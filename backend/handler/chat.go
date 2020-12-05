@@ -267,7 +267,7 @@ func (h *Handler) InquireAboutResource(c echo.Context) error {
 
 	// todo: send the channel id back to the client so he can redirect
 	_, err = h.chatService.NotifyUserInterestedAboutResource(
-		ctx, chat.NewNotifyUserInterestedAboutResource(loggedInUserKey, *resourceKey, req.Message))
+		ctx, chat.NewNotifyUserInterestedAboutResource(loggedInUserKey, resourceKey, req.Message))
 
 	if err != nil {
 		l.Error("could not notify user interested about resource", zap.Error(err))

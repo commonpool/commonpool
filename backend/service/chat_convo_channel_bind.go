@@ -48,8 +48,8 @@ func (c ChatService) createSubscriptionsAndMqBindingsForUserConversation(ctx con
 // are also properly routed to the user's exchange.
 func (c ChatService) createSubscriptionAndMqBindingForUserConversation(
 	ctx context.Context,
-	user auth.User,
-	conversationUsers auth.Users,
+	user *auth.User,
+	conversationUsers *auth.Users,
 	channelKey model.ChannelKey,
 ) (*chat.ChannelSubscription, error) {
 

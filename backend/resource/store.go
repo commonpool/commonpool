@@ -21,7 +21,7 @@ func NewGetResourceByKeysQuery(keys []model.ResourceKey) *GetResourceByKeysQuery
 
 type Store interface {
 	GetByKey(ctx ctx.Context, getResourceByKeyQuery *GetResourceByKeyQuery) *GetResourceByKeyResponse
-	GetByKeys(getResourceByKeysQuery *GetResourceByKeysQuery) (*GetResourceByKeysResponse, error)
+	GetByKeys(ctx ctx.Context, resourceKeys *model.ResourceKeys) (*Resources, error)
 	Search(searchResourcesQuery *SearchResourcesQuery) *SearchResourcesResponse
 	Delete(deleteResourceQuery *DeleteResourceQuery) *DeleteResourceResponse
 	Create(createResourceQuery *CreateResourceQuery) *CreateResourceResponse
@@ -129,10 +129,10 @@ func NewDeleteResourceResponse(err error) *DeleteResourceResponse {
 
 type CreateResourceQuery struct {
 	Resource   *Resource
-	SharedWith []model.GroupKey
+	SharedWith *model.GroupKeys
 }
 
-func NewCreateResourceQuery(resource *Resource, sharedWith []model.GroupKey) *CreateResourceQuery {
+func NewCreateResourceQuery(resource *Resource, sharedWith *model.GroupKeys) *CreateResourceQuery {
 	return &CreateResourceQuery{
 		Resource:   resource,
 		SharedWith: sharedWith,
@@ -151,10 +151,10 @@ func NewCreateResourceResponse(err error) *CreateResourceResponse {
 
 type UpdateResourceQuery struct {
 	Resource   *Resource
-	SharedWith []model.GroupKey
+	SharedWith *model.GroupKeys
 }
 
-func NewUpdateResourceQuery(resource *Resource, sharedWith []model.GroupKey) *UpdateResourceQuery {
+func NewUpdateResourceQuery(resource *Resource, sharedWith *model.GroupKeys) *UpdateResourceQuery {
 	return &UpdateResourceQuery{
 		Resource:   resource,
 		SharedWith: sharedWith,

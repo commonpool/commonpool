@@ -61,12 +61,15 @@ func CreateResource(t *testing.T, ctx context.Context, userSession *auth.UserSes
 	return response, ReadResponse(t, recorder, response)
 }
 
-func SearchResources(t *testing.T, ctx context.Context, userSession *auth.UserSession, take int, skip int, query string, resourceType resource.Type) (*web.SearchResourcesResponse, *http.Response) {
+func SearchResources(t *testing.T, ctx context.Context, userSession *auth.UserSession, take int, skip int, query string, resourceType resource.Type, sharedWithGroup *string) (*web.SearchResourcesResponse, *http.Response) {
 	c, recorder := NewRequest(ctx, userSession, http.MethodGet, "/api/v1/resources", nil)
 	c.QueryParams()["take"] = []string{strconv.Itoa(take)}
 	c.QueryParams()["skip"] = []string{strconv.Itoa(skip)}
 	c.QueryParams()["query"] = []string{query}
 	c.QueryParams()["type"] = []string{strconv.Itoa(int(resourceType))}
+	if sharedWithGroup != nil {
+		c.QueryParams()["group_id"] = []string{*sharedWithGroup}
+	}
 	assert.NoError(t, a.SearchResources(c))
 	response := &web.SearchResourcesResponse{}
 	t.Log(recorder.Body.String())
@@ -136,7 +139,7 @@ func TestUserCanSearchResources(t *testing.T) {
 		},
 	})
 
-	res, httpRes := SearchResources(t, ctx, user1, 10, 0, "Blabbers", resource.Offer)
+	res, httpRes := SearchResources(t, ctx, user1, 10, 0, "Blabbers", resource.Offer, nil)
 	assert.Equal(t, http.StatusOK, httpRes.StatusCode)
 
 	assert.Equal(t, 10, res.Take)
@@ -144,6 +147,172 @@ func TestUserCanSearchResources(t *testing.T) {
 	assert.Equal(t, 1, len(res.Resources))
 	assert.Equal(t, 1, res.TotalCount)
 	assert.Equal(t, "Blabbers", res.Resources[0].Summary)
+
+}
+
+func TestUserCanSearchResourcesWhenNoMatch(t *testing.T) {
+	t.Parallel()
+
+	user1, delUser1 := testUser(t)
+	defer delUser1()
+
+	ctx := context.Background()
+
+	CreateResource(t, ctx, user1, &web.CreateResourceRequest{
+		Resource: web.CreateResourcePayload{
+			Summary: "SizzlersBopBiBouWap",
+		},
+	})
+
+	res, httpRes := SearchResources(t, ctx, user1, 10, 0, "ResourceNoMatchQuery", resource.Offer, nil)
+	assert.Equal(t, http.StatusOK, httpRes.StatusCode)
+
+	assert.Equal(t, 10, res.Take)
+	assert.Equal(t, 0, res.Skip)
+	assert.Equal(t, 0, len(res.Resources))
+	assert.Equal(t, 0, res.TotalCount)
+
+}
+
+func TestUserCanSearchResourcesWithSkip(t *testing.T) {
+	t.Parallel()
+
+	user1, delUser1 := testUser(t)
+	defer delUser1()
+
+	ctx := context.Background()
+
+	CreateResource(t, ctx, user1, &web.CreateResourceRequest{
+		Resource: web.CreateResourcePayload{
+			Summary: "ResourceSkip1",
+		},
+	})
+	CreateResource(t, ctx, user1, &web.CreateResourceRequest{
+		Resource: web.CreateResourcePayload{
+			Summary: "ResourceSkip2",
+		},
+	})
+
+	res, httpRes := SearchResources(t, ctx, user1, 10, 1, "ResourceSkip", resource.Offer, nil)
+	assert.Equal(t, http.StatusOK, httpRes.StatusCode)
+
+	assert.Equal(t, 10, res.Take)
+	assert.Equal(t, 1, res.Skip)
+	assert.Equal(t, 1, len(res.Resources))
+	assert.Equal(t, 2, res.TotalCount)
+	assert.Equal(t, "ResourceSkip2", res.Resources[0].Summary)
+
+}
+
+func TestUserCanSearchResourcesSharedWithGroup(t *testing.T) {
+	t.Parallel()
+
+	user1, delUser1 := testUser(t)
+	defer delUser1()
+
+	ctx := context.Background()
+
+	createGroup1, createGroup1Http := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
+		Name:        "group1",
+		Description: "Group 1",
+	})
+	assert.Equal(t, http.StatusCreated, createGroup1Http.StatusCode)
+	createGroup2, createGroup2Http := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
+		Name:        "group2",
+		Description: "Group 2",
+	})
+	assert.Equal(t, http.StatusCreated, createGroup2Http.StatusCode)
+	CreateResource(t, ctx, user1, &web.CreateResourceRequest{
+		Resource: web.CreateResourcePayload{
+			Summary: "SharedWithGroup",
+			SharedWith: []web.InputResourceSharing{
+				{
+					GroupID: createGroup1.Group.ID,
+				},
+			},
+		},
+	})
+	CreateResource(t, ctx, user1, &web.CreateResourceRequest{
+		Resource: web.CreateResourcePayload{
+			Summary: "SharedWithGroup",
+			SharedWith: []web.InputResourceSharing{
+				{
+					GroupID: createGroup2.Group.ID,
+				},
+			},
+		},
+	})
+
+	res, httpRes := SearchResources(t, ctx, user1, 10, 0, "SharedWithGroup", resource.Offer, &createGroup1.Group.ID)
+	assert.Equal(t, http.StatusOK, httpRes.StatusCode)
+
+	assert.Equal(t, 10, res.Take)
+	assert.Equal(t, 0, res.Skip)
+	assert.Equal(t, 1, len(res.Resources))
+	assert.Equal(t, 1, res.TotalCount)
+	assert.Equal(t, "SharedWithGroup", res.Resources[0].Summary)
+
+}
+
+func TestUserCanSearchResourcesSharedWithMultipleGroups(t *testing.T) {
+	t.Parallel()
+
+	user1, delUser1 := testUser(t)
+	defer delUser1()
+
+	ctx := context.Background()
+
+	createGroup1, createGroup1Http := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
+		Name:        "group1",
+		Description: "Group 1",
+	})
+	assert.Equal(t, http.StatusCreated, createGroup1Http.StatusCode)
+	createGroup2, createGroup2Http := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
+		Name:        "group2",
+		Description: "Group 2",
+	})
+	assert.Equal(t, http.StatusCreated, createGroup2Http.StatusCode)
+	createResource1, createResource1Http := CreateResource(t, ctx, user1, &web.CreateResourceRequest{
+		Resource: web.CreateResourcePayload{
+			Summary: "A-4ccf1c0f-d791-437b-becd-8c4592d3bc1d",
+			SharedWith: []web.InputResourceSharing{
+				{
+					GroupID: createGroup1.Group.ID,
+				}, {
+					GroupID: createGroup2.Group.ID,
+				},
+			},
+		},
+	})
+	assert.Equal(t, http.StatusCreated, createResource1Http.StatusCode)
+	createResource2, createResource2Http := CreateResource(t, ctx, user1, &web.CreateResourceRequest{
+		Resource: web.CreateResourcePayload{
+			Summary: "B-4ccf1c0f-d791-437b-becd-8c4592d3bc1d",
+			SharedWith: []web.InputResourceSharing{
+				{
+					GroupID: createGroup2.Group.ID,
+				},
+			},
+		},
+	})
+	assert.Equal(t, http.StatusCreated, createResource2Http.StatusCode)
+
+	searchResource1, searchResources1Http := SearchResources(t, ctx, user1, 10, 0, "4ccf1c0f-d791-437b-becd-8c4592d3bc1d", resource.Offer, &createGroup1.Group.ID)
+	assert.Equal(t, http.StatusOK, searchResources1Http.StatusCode)
+	assert.Equal(t, 10, searchResource1.Take)
+	assert.Equal(t, 0, searchResource1.Skip)
+	assert.Equal(t, 1, len(searchResource1.Resources))
+	assert.Equal(t, 1, searchResource1.TotalCount)
+	assert.Equal(t, createResource1.Resource.Id, searchResource1.Resources[0].Id)
+
+	searchResource2, searchResources2Http := SearchResources(t, ctx, user1, 10, 0, "4ccf1c0f-d791-437b-becd-8c4592d3bc1d", resource.Offer, &createGroup2.Group.ID)
+	assert.Equal(t, http.StatusOK, searchResources2Http.StatusCode)
+	assert.Equal(t, 10, searchResource2.Take)
+	assert.Equal(t, 0, searchResource2.Skip)
+	assert.Equal(t, 2, len(searchResource2.Resources))
+	assert.Equal(t, 2, searchResource2.TotalCount)
+	assert.Equal(t, createResource1.Resource.Id, searchResource1.Resources[0].Id)
+	assert.Equal(t, createResource2.Resource.Id, searchResource2.Resources[1].Id)
 
 }
 
@@ -202,6 +371,74 @@ func TestUserCanUpdateResource(t *testing.T) {
 
 }
 
+func TestUserCanUpdateResourceSharings(t *testing.T) {
+	t.Parallel()
+
+	user1, delUser1 := testUser(t)
+	defer delUser1()
+
+	ctx := context.Background()
+
+	createGroup1, createGroup1Http := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
+		Name:        "My Group 1",
+		Description: "Nice Group 1",
+	})
+	assert.Equal(t, http.StatusCreated, createGroup1Http.StatusCode)
+
+	createGroup2, createGroup2Http := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
+		Name:        "My Group 3",
+		Description: "Nice Group 3",
+	})
+	assert.Equal(t, http.StatusCreated, createGroup2Http.StatusCode)
+
+	createResource, createResourceHttp := CreateResource(t, ctx, user1, &web.CreateResourceRequest{
+		Resource: web.CreateResourcePayload{
+			Summary:          "Snippers Boop",
+			Description:      "Description",
+			Type:             resource.Offer,
+			ValueInHoursFrom: 1,
+			ValueInHoursTo:   3,
+			SharedWith: []web.InputResourceSharing{
+				{GroupID: createGroup1.Group.ID},
+				{GroupID: createGroup2.Group.ID},
+			},
+		},
+	})
+	assert.Equal(t, http.StatusCreated, createResourceHttp.StatusCode)
+
+	updateResource1, updateResource1Http := UpdateResource(t, ctx, user1, createResource.Resource.Id, &web.UpdateResourceRequest{
+		Resource: web.UpdateResourcePayload{
+			Summary:          "New Summary",
+			Description:      "New Description",
+			Type:             resource.Offer,
+			ValueInHoursFrom: 5,
+			ValueInHoursTo:   10,
+			SharedWith: []web.InputResourceSharing{
+				{GroupID: createGroup1.Group.ID},
+			},
+		},
+	})
+	assert.Equal(t, http.StatusOK, updateResource1Http.StatusCode)
+	assert.Equal(t, 1, len(updateResource1.Resource.SharedWith))
+
+	updateResource2, updateResource2Http := UpdateResource(t, ctx, user1, createResource.Resource.Id, &web.UpdateResourceRequest{
+		Resource: web.UpdateResourcePayload{
+			Summary:          "New Summary",
+			Description:      "New Description",
+			Type:             resource.Offer,
+			ValueInHoursFrom: 5,
+			ValueInHoursTo:   10,
+			SharedWith: []web.InputResourceSharing{
+				{GroupID: createGroup1.Group.ID},
+				{GroupID: createGroup2.Group.ID},
+			},
+		},
+	})
+	assert.Equal(t, http.StatusOK, updateResource2Http.StatusCode)
+	assert.Equal(t, 2, len(updateResource2.Resource.SharedWith))
+
+}
+
 func TestUserCanShareResourceWithGroup(t *testing.T) {
 	t.Parallel()
 
@@ -210,20 +447,73 @@ func TestUserCanShareResourceWithGroup(t *testing.T) {
 
 	ctx := context.Background()
 
-	createGroupResponse, _ := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
+	createGroup1, createGroup1Http := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
 		Name:        "My Group",
 		Description: "Nice Group",
 	})
+	assert.Equal(t, http.StatusCreated, createGroup1Http.StatusCode)
 
 	res, httpRes := CreateResource(t, ctx, user1, &web.CreateResourceRequest{
 		Resource: web.CreateResourcePayload{
-			SharedWith: []web.InputResourceSharing{{GroupID: createGroupResponse.Group.ID}},
+			SharedWith: []web.InputResourceSharing{{GroupID: createGroup1.Group.ID}},
 		},
 	})
 
 	assert.Equal(t, http.StatusCreated, httpRes.StatusCode)
 	assert.Equal(t, 1, len(res.Resource.SharedWith))
-	assert.Equal(t, createGroupResponse.Group.ID, res.Resource.SharedWith[0].GroupID)
+	assert.Equal(t, createGroup1.Group.ID, res.Resource.SharedWith[0].GroupID)
 	assert.Equal(t, "My Group", res.Resource.SharedWith[0].GroupName)
+
+}
+
+func TestUserCanShareResourceWithMultipleGroups(t *testing.T) {
+	t.Parallel()
+
+	user1, delUser1 := testUser(t)
+	defer delUser1()
+
+	ctx := context.Background()
+
+	createGroup1, createGroup1Http := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
+		Name:        "My Group 1",
+		Description: "Nice Group 1",
+	})
+	assert.Equal(t, http.StatusCreated, createGroup1Http.StatusCode)
+
+	createGroup2, createGroup2Http := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
+		Name:        "My Group 3",
+		Description: "Nice Group 3",
+	})
+	assert.Equal(t, http.StatusCreated, createGroup2Http.StatusCode)
+
+	createGroup3, createGroup3Http := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
+		Name:        "My Group 3",
+		Description: "Nice Group 3",
+	})
+	assert.Equal(t, http.StatusCreated, createGroup3Http.StatusCode)
+
+	res, httpRes := CreateResource(t, ctx, user1, &web.CreateResourceRequest{
+		Resource: web.CreateResourcePayload{
+			SharedWith: []web.InputResourceSharing{
+				{GroupID: createGroup1.Group.ID},
+				{GroupID: createGroup2.Group.ID},
+				{GroupID: createGroup3.Group.ID},
+			},
+		},
+	})
+
+	assert.Equal(t, http.StatusCreated, httpRes.StatusCode)
+	assert.Equal(t, 3, len(res.Resource.SharedWith))
+
+	for _, groupId := range []string{createGroup1.Group.ID, createGroup2.Group.ID, createGroup3.Group.ID} {
+		found := false
+		for _, sharing := range res.Resource.SharedWith {
+			if sharing.GroupID == groupId {
+				found = true
+				break
+			}
+		}
+		assert.Equal(t, true, found, "resource sharings should contain group id %s", groupId)
+	}
 
 }

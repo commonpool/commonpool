@@ -6,12 +6,12 @@ import (
 )
 
 type Store interface {
-	SaveOffer(offer Offer, items *OfferItems) error
-	GetOffer(key model.OfferKey) (Offer, error)
+	SaveOffer(offer *Offer, items *OfferItems, decisions *OfferDecisions) (*Offer, *OfferItems, *OfferDecisions, error)
+	GetOffer(key model.OfferKey) (*Offer, error)
 	GetItems(key model.OfferKey) (*OfferItems, error)
 	GetItem(ctx context.Context, key model.OfferItemKey) (*OfferItem, error)
 	GetOffers(qry GetOffersQuery) (GetOffersResult, error)
-	GetDecisions(key model.OfferKey) ([]OfferDecision, error)
+	GetDecisions(key model.OfferKey) (*OfferDecisions, error)
 	SaveDecision(key model.OfferKey, user model.UserKey, decision Decision) error
 	ConfirmItemReceived(ctx context.Context, key model.OfferItemKey) error
 	ConfirmItemGiven(ctx context.Context, key model.OfferItemKey) error

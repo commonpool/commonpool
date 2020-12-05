@@ -64,14 +64,11 @@ func (r RabbitMqClient) GetChannel() (Channel, error) {
 }
 
 func (r RabbitMqClient) Shutdown() error {
-	log.Info("Shutting down amqp client...")
 	r.isShuttingDown = true
 	if !r.connection.IsClosed() {
 		if err := r.connection.Close(); err != nil {
 			log.Errorf("could not shut down amqp client: %v", err)
 			return err
-		} else {
-			log.Info("amqp client was shut down.")
 		}
 	}
 	return nil

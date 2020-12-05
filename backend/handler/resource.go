@@ -104,7 +104,7 @@ func (h *Handler) SearchResources(c echo.Context) error {
 
 	l.Debug("building groupKey -> group map")
 
-	groupMap := map[model.GroupKey]group.Group{}
+	groupMap := map[model.GroupKey]*group.Group{}
 	for _, g := range getGroupsResponse.Items {
 		groupMap[g.GetKey()] = g
 	}
@@ -118,7 +118,7 @@ func (h *Handler) SearchResources(c echo.Context) error {
 
 	l.Debug("fetching resource owners")
 
-	createdByUsers, err := h.authStore.GetByKeys(nil, createdByKeys)
+	createdByUsers, err := h.authStore.GetByKeys(ctx, createdByKeys)
 	if err != nil {
 		l.Error("failed to get users by keys", zap.Error(err))
 		return c.String(http.StatusInternalServerError, err.Error())
@@ -137,14 +137,14 @@ func (h *Handler) SearchResources(c echo.Context) error {
 		}
 
 		// building list of groups that the resource is shared with
-		var groups []group.Group
+		var groups []*group.Group
 		sharings := searchResourcesResponse.Sharings.GetSharingsForResource(item.GetKey())
-		for _, groupKey := range sharings.GetAllGroupKeys() {
+		for _, groupKey := range sharings.GetAllGroupKeys().Items {
 			groups = append(groups, groupMap[groupKey])
 		}
 
 		// appending to result array
-		resourcesResponse[i] = NewResourceResponse(&item, createdBy.Username, createdBy.ID, groups)
+		resourcesResponse[i] = NewResourceResponse(item, createdBy.Username, createdBy.ID, group.NewGroups(groups))
 	}
 
 	// return
@@ -181,7 +181,7 @@ func (h *Handler) GetResource(c echo.Context) error {
 
 	l.Debug("getting resource")
 
-	getResourceByKeyResponse := h.resourceStore.GetByKey(ctx, resource.NewGetResourceByKeyQuery(*resourceKey))
+	getResourceByKeyResponse := h.resourceStore.GetByKey(ctx, resource.NewGetResourceByKeyQuery(resourceKey))
 	if getResourceByKeyResponse.Error != nil {
 		l.Error("could not get resource by key", zap.Error(err))
 		return NewErrResponse(c, getResourceByKeyResponse.Error)
@@ -205,7 +205,7 @@ func (h *Handler) GetResource(c echo.Context) error {
 
 	// return
 	return c.JSON(http.StatusOK, web.GetResourceResponse{
-		Resource: NewResourceResponse(res, username, ownerKey.String(), groups.Items),
+		Resource: NewResourceResponse(res, username, ownerKey.String(), groups),
 	})
 }
 
@@ -289,7 +289,7 @@ func (h *Handler) CreateResource(c echo.Context) error {
 
 	// send response
 	return c.JSON(http.StatusCreated, web.CreateResourceResponse{
-		Resource: NewResourceResponse(&res, loggedInUserSession.Username, loggedInUserSession.Subject, groups.Items),
+		Resource: NewResourceResponse(&res, loggedInUserSession.Username, loggedInUserSession.Subject, groups),
 	})
 }
 
@@ -334,7 +334,7 @@ func (h *Handler) UpdateResource(c echo.Context) error {
 	}
 
 	// Retrieves the resource
-	getResourceByKeyResponse := h.resourceStore.GetByKey(ctx, resource.NewGetResourceByKeyQuery(*resourceKey))
+	getResourceByKeyResponse := h.resourceStore.GetByKey(ctx, resource.NewGetResourceByKeyQuery(resourceKey))
 	if getResourceByKeyResponse.Error != nil {
 		c.Logger().Error(err, "UpdateResource: could not retrieve resource by key")
 		return NewErrResponse(c, err)
@@ -388,7 +388,7 @@ func (h *Handler) UpdateResource(c echo.Context) error {
 	}
 
 	// saving changes
-	updateResourceQuery := resource.NewUpdateResourceQuery(resToUpdate, groupKeys)
+	updateResourceQuery := resource.NewUpdateResourceQuery(resToUpdate, model.NewGroupKeys(groupKeys))
 	updateResourceResponse := h.resourceStore.Update(updateResourceQuery)
 	if updateResourceResponse.Error != nil {
 		c.Logger().Warn(updateResourceResponse.Error, "UpdateResource: error updating resource")
@@ -410,12 +410,12 @@ func (h *Handler) UpdateResource(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, web.GetResourceResponse{
-		Resource: NewResourceResponse(getResourceResponse.Resource, loggedInUser.Username, loggedInUser.Subject, groups.Items),
+		Resource: NewResourceResponse(getResourceResponse.Resource, loggedInUser.Username, loggedInUser.Subject, groups),
 	})
 
 }
 
-func (h *Handler) ensureResourceIsSharedWithGroupsTheUserIsActiveMemberOf(c echo.Context, loggedInUserKey model.UserKey, sharedWithGroups []model.GroupKey) (error, bool) {
+func (h *Handler) ensureResourceIsSharedWithGroupsTheUserIsActiveMemberOf(c echo.Context, loggedInUserKey model.UserKey, sharedWithGroups *model.GroupKeys) (error, bool) {
 
 	ctx, l := GetEchoContext(c, "ensureResourceIsSharedWithGroupsTheUserIsActiveMemberOf")
 
@@ -428,7 +428,7 @@ func (h *Handler) ensureResourceIsSharedWithGroupsTheUserIsActiveMemberOf(c echo
 	}
 
 	// Checking if resource is shared with groups the user is part of
-	for _, sharedWith := range sharedWithGroups {
+	for _, sharedWith := range sharedWithGroups.Items {
 		hasMembershipInGroup := userMemberships.Memberships.ContainsMembershipForGroup(sharedWith)
 		if !hasMembershipInGroup {
 			return c.String(http.StatusBadRequest, "cannot share resource with a group you are not part of"), true
@@ -449,7 +449,7 @@ func sanitizeUpdateResource(resource web.UpdateResourcePayload) web.UpdateResour
 	return resource
 }
 
-func (h *Handler) parseGroupKeys(c echo.Context, sharedWith []web.InputResourceSharing) ([]model.GroupKey, error, bool) {
+func (h *Handler) parseGroupKeys(c echo.Context, sharedWith []web.InputResourceSharing) (*model.GroupKeys, error, bool) {
 	sharedWithGroupKeys := make([]model.GroupKey, len(sharedWith))
 	for i := range sharedWith {
 		groupKeyStr := sharedWith[i].GroupID
@@ -459,22 +459,22 @@ func (h *Handler) parseGroupKeys(c echo.Context, sharedWith []web.InputResourceS
 		}
 		sharedWithGroupKeys[i] = groupKey
 	}
-	return sharedWithGroupKeys, nil, false
+	return model.NewGroupKeys(sharedWithGroupKeys), nil, false
 }
 
-func NewResourceResponse(res *resource.Resource, creatorUsername string, creatorId string, sharedWithGroups []group.Group) web.Resource {
+func NewResourceResponse(res *resource.Resource, creatorUsername string, creatorId string, sharedWithGroups *group.Groups) web.Resource {
 
 	//goland:noinspection GoPreferNilSlice
 	var sharings = []web.OutputResourceSharing{}
-	for _, withGroup := range sharedWithGroups {
+	for _, withGroup := range sharedWithGroups.Items {
 		sharings = append(sharings, web.OutputResourceSharing{
-			GroupID:   withGroup.ID.String(),
+			GroupID:   withGroup.Key.String(),
 			GroupName: withGroup.Name,
 		})
 	}
 
 	return web.Resource{
-		Id:               res.ID.String(),
+		Id:               res.Key.String(),
 		Type:             res.Type,
 		Description:      res.Description,
 		Summary:          res.Summary,

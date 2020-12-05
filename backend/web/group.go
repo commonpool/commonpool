@@ -15,7 +15,7 @@ type Group struct {
 
 func NewGroup(group *group.Group) *Group {
 	return &Group{
-		ID:          group.ID.String(),
+		ID:          group.Key.String(),
 		CreatedAt:   group.CreatedAt,
 		Name:        group.Name,
 		Description: group.Description,
@@ -38,8 +38,8 @@ type Membership struct {
 
 func NewMembership(membership *group.Membership, groupNames group.Names, names auth.UserNames) Membership {
 	return Membership{
-		UserID:         membership.UserID,
-		GroupID:        membership.GroupID.String(),
+		UserID:         membership.Key.UserKey.String(),
+		GroupID:        membership.Key.GroupKey.String(),
 		IsAdmin:        membership.IsAdmin,
 		IsMember:       membership.IsMember,
 		IsOwner:        membership.IsOwner,
@@ -88,7 +88,7 @@ type GetUserMembershipsResponse struct {
 func NewGetUserMembershipsResponse(memberships *group.Memberships, groupNames group.Names, userNames auth.UserNames) GetUserMembershipsResponse {
 	responseMemberships := make([]Membership, len(memberships.Items))
 	for i, membership := range memberships.Items {
-		responseMemberships[i] = NewMembership(&membership, groupNames, userNames)
+		responseMemberships[i] = NewMembership(membership, groupNames, userNames)
 	}
 	return GetUserMembershipsResponse{
 		Memberships: responseMemberships,

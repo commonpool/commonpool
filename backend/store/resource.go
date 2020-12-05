@@ -2,252 +2,514 @@ package store
 
 import (
 	ctx "context"
-	"errors"
 	errs "github.com/commonpool/backend/errors"
+	"github.com/commonpool/backend/graph"
+	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/resource"
-	"github.com/commonpool/backend/utils"
-	"gorm.io/gorm"
+	"github.com/mitchellh/mapstructure"
+	"github.com/neo4j/neo4j-go-driver/neo4j"
 	"strings"
+	"time"
 )
 
 type ResourceStore struct {
-	db *gorm.DB
-}
-
-func (rs *ResourceStore) GetByKeys(getResourceByKeysQuery *resource.GetResourceByKeysQuery) (*resource.GetResourceByKeysResponse, error) {
-
-	var result []resource.Resource
-
-	var sql []string
-	var params []interface{}
-	for _, item := range getResourceByKeysQuery.ResourceKeys {
-		sql = append(sql, "?")
-		params = append(params, item.String())
-	}
-	sqlQuery := "id in (" + strings.Join(sql, ",") + ")"
-
-	err := rs.db.Model(resource.Resource{}).Where(sqlQuery, params...).Find(&result).Error
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &resource.GetResourceByKeysResponse{
-		Items: resource.NewResources(result),
-	}, nil
+	graphDriver graph.GraphDriver
 }
 
 var _ resource.Store = &ResourceStore{}
 
-func NewResourceStore(db *gorm.DB) *ResourceStore {
+func NewResourceStore(graphDriver graph.GraphDriver) *ResourceStore {
 	return &ResourceStore{
-		db: db,
+		graphDriver: graphDriver,
 	}
+}
+
+func (rs *ResourceStore) GetByKeys(ctx ctx.Context, resourceKeys *model.ResourceKeys) (*resource.Resources, error) {
+
+	graphSession, err := rs.graphDriver.GetSession()
+	if err != nil {
+		return nil, err
+	}
+
+	return rs.getByKeys(ctx, graphSession, resourceKeys)
+}
+
+func (rs *ResourceStore) getByKeys(ctx ctx.Context, session neo4j.Session, resourceKeys *model.ResourceKeys) (*resource.Resources, error) {
+
+	getResult, err := session.Run(`
+		MATCH (r:Resource) 
+		WHERE r.id IN $ids		
+		OPTIONAL MATCH (r)-[s:SharedWith]->(g:Group)
+		RETURN r, s, g`,
+		map[string]interface{}{
+			"ids": resourceKeys.Strings(),
+		})
+
+	if err != nil {
+		return nil, err
+	}
+	if getResult.Err() != nil {
+		return nil, getResult.Err()
+	}
+
+	var resources []*resource.Resource
+	for getResult.Next() {
+		r, err := rs.mapGraphResourceRecord(getResult.Record(), "r")
+		if err != nil {
+			return nil, err
+		}
+		resources = append(resources, r)
+	}
+
+	return resource.NewResources(resources), nil
+
 }
 
 // GetByKey Gets a resource by key
 func (rs *ResourceStore) GetByKey(ctx ctx.Context, getResourceByKeyQuery *resource.GetResourceByKeyQuery) *resource.GetResourceByKeyResponse {
 
-	result := resource.Resource{}
-	resourceKey := getResourceByKeyQuery.ResourceKey
-	resourceKeyStr := resourceKey.String()
-
-	db := rs.db.WithContext(ctx)
-
-	if err := db.First(&result, "id = ?", resourceKeyStr).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			response := errs.ErrResourceNotFound(resourceKeyStr)
-			return resource.NewGetResourceByKeyResponseError(&response)
-		}
-		return resource.NewGetResourceByKeyResponseError(err)
-	}
-
-	sharings, err := getResourceSharings(db, []model.ResourceKey{resourceKey})
+	graphSession, err := rs.graphDriver.GetSession()
 	if err != nil {
-		return resource.NewGetResourceByKeyResponseError(err)
+		return &resource.GetResourceByKeyResponse{
+			Error: err,
+		}
 	}
 
-	return resource.NewGetResourceByKeyResponseSuccess(&result, sharings)
+	return rs.getByKey(ctx, graphSession, getResourceByKeyQuery)
+
+}
+
+func (rs *ResourceStore) getByKey(ctx ctx.Context, session neo4j.Session, getResourceByKeyQuery *resource.GetResourceByKeyQuery) *resource.GetResourceByKeyResponse {
+
+	getResult, err := session.Run(`
+		MATCH (r:Resource {id : $id})
+		OPTIONAL MATCH (r)-[s:SharedWith]->(g:Group)
+		RETURN r, collect(g.id) as groupIds`,
+		map[string]interface{}{
+			"id": getResourceByKeyQuery.ResourceKey.String(),
+		})
+
+	if err != nil {
+		return &resource.GetResourceByKeyResponse{
+			Error: err,
+		}
+	}
+
+	if getResult.Err() != nil {
+		return &resource.GetResourceByKeyResponse{
+			Error: getResult.Err(),
+		}
+	}
+
+	if !getResult.Next() {
+		return &resource.GetResourceByKeyResponse{
+			Error: errs.ErrResourceNotFound,
+		}
+	}
+
+	res, err := rs.mapGraphResourceRecord(getResult.Record(), "r")
+	if err != nil {
+		return &resource.GetResourceByKeyResponse{
+			Error: err,
+		}
+	}
+
+	sharings, err := rs.mapGraphSharingRecord(getResult.Record(), "r", "groupIds")
+	if err != nil {
+		return &resource.GetResourceByKeyResponse{
+			Error: err,
+		}
+	}
+
+	return &resource.GetResourceByKeyResponse{
+		Resource: res,
+		Sharings: sharings,
+	}
+
 }
 
 // Delete deletes a resource
 func (rs *ResourceStore) Delete(deleteResourceQuery *resource.DeleteResourceQuery) *resource.DeleteResourceResponse {
-	err := rs.db.Transaction(func(tx *gorm.DB) error {
 
-		resourceKey := deleteResourceQuery.ResourceKey
-		resourceKeyStr := resourceKey.GetUUID().String()
-
-		err := rs.db.Delete(&resource.Sharing{}, "resource_id = ?", resourceKeyStr).Error
-		if err != nil {
-			return err
+	graphSession, err := rs.graphDriver.GetSession()
+	if err != nil {
+		return &resource.DeleteResourceResponse{
+			Error: err,
 		}
+	}
 
-		result := rs.db.Delete(&resource.Resource{}, "id = ?", resourceKeyStr)
-		if result.RowsAffected == 0 {
-			response := errs.ErrResourceNotFound(resourceKeyStr)
-			return &response
-		}
-
-		if result.Error != nil {
-			return result.Error
-		}
-
-		return rs.db.Delete(&resource.Sharing{}, "resource_id = ?", resourceKey.String()).Error
+	graphSession.Run(`MATCH (r:Resource {id:$id}) DETACH DELETE`, map[string]interface{}{
+		"id": deleteResourceQuery.ResourceKey.String(),
 	})
-	return resource.NewDeleteResourceResponse(err)
+
+	now := time.Now()
+	deleteResult, err := graphSession.Run(`
+			MATCH (r:Resource {id:$id})
+			SET r += {
+				deletedAt:$deletedAt
+			}
+			RETURN r`,
+		map[string]interface{}{
+			"id":        deleteResourceQuery.ResourceKey.String(),
+			"deletedAt": now,
+		})
+	if err != nil {
+		return &resource.DeleteResourceResponse{
+			Error: err,
+		}
+	}
+	if deleteResult.Err() != nil {
+		return &resource.DeleteResourceResponse{
+			Error: deleteResult.Err(),
+		}
+	}
+	if !deleteResult.Next() {
+		return &resource.DeleteResourceResponse{
+			Error: errs.ErrResourceNotFound,
+		}
+	}
+
+	return &resource.DeleteResourceResponse{}
+
 }
 
 // Create creates a resource
 func (rs *ResourceStore) Create(createResourceQuery *resource.CreateResourceQuery) *resource.CreateResourceResponse {
-	err := rs.db.Transaction(func(tx *gorm.DB) error {
-		res := createResourceQuery.Resource
 
-		err := tx.Create(res).Error
-		if err != nil {
-			return err
-		}
-		return createResourceSharings(createResourceQuery.SharedWith, res.GetKey(), tx)
-	})
-	return resource.NewCreateResourceResponse(err)
-}
-
-// Update updates a resource
-func (rs *ResourceStore) Update(updateResourceRequest *resource.UpdateResourceQuery) *resource.UpdateResourceResponse {
-	err := rs.db.Transaction(func(tx *gorm.DB) error {
-		res := updateResourceRequest.Resource
-		resKey := res.GetKey()
-
-		update := tx.Model(res).Save(res)
-
-		if update.RowsAffected == 0 {
-			key := resKey
-			response := errs.ErrResourceNotFound(key.String())
-			return &response
-		}
-
-		if update.Error != nil {
-			return update.Error
-		}
-
-		err := tx.Delete(&resource.Sharing{}, "resource_id = ?", res.ID.String()).Error
-		if err != nil {
-			return err
-		}
-
-		return createResourceSharings(updateResourceRequest.SharedWith, resKey, tx)
-	})
-
-	return resource.NewUpdateResourceResponse(err)
-
-}
-
-// Search search for resources
-func (rs *ResourceStore) Search(query *resource.SearchResourcesQuery) *resource.SearchResourcesResponse {
-	var resources []resource.Resource
-
-	chain := rs.db.Model(&resource.Resource{})
-
-	if query.Type != nil {
-		chain = chain.Where(`"resources"."type" = ?`, query.Type)
-	}
-
-	if query.Query != nil {
-		chain = chain.Where(`"resources"."summary" like ?`, "%"+*query.Query+"%")
-	}
-
-	if query.CreatedBy != "" {
-		chain = chain.Where(`"resources"."created_by" = ?`, query.CreatedBy)
-	}
-
-	if query.SharedWithGroup != nil {
-		println(query.SharedWithGroup.ID.String())
-		chain = chain.Joins("join resource_sharings on (resource_sharings.resource_id = resources.id and resource_sharings.group_id = ?)", query.SharedWithGroup.ID.String())
-	}
-
-	var totalCount int64
-	err := chain.Count(&totalCount).Error
+	graphSession, err := rs.graphDriver.GetSession()
 	if err != nil {
-		return resource.NewSearchResourcesResponseError(err)
+		return &resource.CreateResourceResponse{
+			Error: err,
+		}
 	}
 
-	err = chain.
-		Offset(query.Skip).
-		Limit(query.Take).
-		Order("created_at desc").
-		Find(&resources).
-		Error
+	resourceKey := createResourceQuery.Resource.GetKey()
+	now := time.Now().UTC().UnixNano() / 1e6
+
+	params := map[string]interface{}{
+		"userId":           createResourceQuery.Resource.CreatedBy,
+		"id":               resourceKey.String(),
+		"createdAt":        now,
+		"updatedAt":        now,
+		"deletedAt":        nil,
+		"summary":          createResourceQuery.Resource.Summary,
+		"description":      createResourceQuery.Resource.Description,
+		"createdBy":        createResourceQuery.Resource.CreatedBy,
+		"type":             createResourceQuery.Resource.Type,
+		"valueInHoursFrom": createResourceQuery.Resource.ValueInHoursFrom,
+		"valueInHoursTo":   createResourceQuery.Resource.ValueInHoursTo,
+	}
+
+	cypher := `
+			MATCH(u:User {id:$userId})
+			CREATE (r:Resource {
+				id:$id,
+				createdAt:datetime({epochMillis:$createdAt}),
+				updatedAt:datetime({epochMillis:$updatedAt}),
+				deletedAt:null,
+				summary:$summary,
+				description:$description,
+				createdBy:$createdBy,
+				type:$type,
+				valueInHoursFrom:$valueInHoursFrom,
+				valueInHoursTo:$valueInHoursTo
+			})-[c:CreatedBy]->(u)
+			`
+
+	if createResourceQuery.SharedWith != nil && len(createResourceQuery.SharedWith.Items) > 0 {
+		params["groupIds"] = createResourceQuery.SharedWith.Strings()
+		cypher = cypher + `
+			WITH u, r
+			OPTIONAL MATCH (g:Group)
+			WHERE g.id IN $groupIds
+			CALL apoc.do.when(
+				g IS NOT NULL,
+				'MERGE (r)-[s:SharedWith]->(g) return s, g',
+				'',
+				{r: r, g: g})
+			YIELD value
+			RETURN r, g`
+	} else {
+		cypher = cypher + `
+			RETURN r, null as g`
+	}
+
+	createResult, err := graphSession.Run(cypher, params)
 
 	if err != nil {
-		return resource.NewSearchResourcesResponseError(err)
+		return &resource.CreateResourceResponse{
+			Error: err,
+		}
+	}
+	if createResult.Err() != nil {
+		return &resource.CreateResourceResponse{
+			Error: createResult.Err(),
+		}
 	}
 
-	resourceKeys := make([]model.ResourceKey, len(resources))
-	for i := range resources {
-		resourceKeys[i] = resources[i].GetKey()
-	}
+	createResult.Next()
 
-	sharings, err := getResourceSharings(rs.db, resourceKeys)
+	record := createResult.Record()
+	_, err = rs.mapGraphResourceRecord(record, "r")
 	if err != nil {
-		return resource.NewSearchResourcesResponseError(err)
+		return &resource.CreateResourceResponse{
+			Error: err,
+		}
 	}
 
-	return resource.NewSearchResourcesResponseSuccess(
-		resource.NewResources(resources),
-		sharings,
-		int(totalCount),
-		query.Take,
-		query.Skip)
+	return &resource.CreateResourceResponse{}
 
 }
 
-func getResourceSharings(db *gorm.DB, resources []model.ResourceKey) (*resource.Sharings, error) {
-
-	var sharings []resource.Sharing
-
-	if len(resources) == 0 {
-		rs, _ := resource.NewResourceSharings([]resource.Sharing{})
-		return rs, nil
-	}
-
-	err := utils.Partition(len(resources), 999, func(i1 int, i2 int) error {
-		var qryPart []string
-		var qryParam []interface{}
-		for _, res := range resources[i1:i2] {
-			qryPart = append(qryPart, "?")
-			qryParam = append(qryParam, res.String())
-		}
-		qry := "resource_id IN ( " + strings.Join(qryPart, ",") + ")"
-		var part []resource.Sharing
-		err := db.Model(resource.Sharing{}).Where(qry, qryParam...).Find(&part).Error
-		if err != nil {
-			return err
-		}
-		for _, sharing := range part {
-			sharings = append(sharings, sharing)
-		}
-		return nil
-	})
+func (rs *ResourceStore) mapGraphResourceRecord(record neo4j.Record, key string) (*resource.Resource, error) {
+	resourceRecord, _ := record.Get(key)
+	node := resourceRecord.(neo4j.Node)
+	var graphResource = GraphResource{}
+	err := mapstructure.Decode(node.Props(), &graphResource)
 	if err != nil {
 		return nil, err
 	}
 
-	if sharings == nil {
-		sharings = []resource.Sharing{}
+	mappedResource, err := mapGraphResourceToResource(&graphResource)
+	if err != nil {
+		return nil, err
 	}
 
-	return resource.NewResourceSharings(sharings)
+	return mappedResource, nil
 }
 
-func createResourceSharings(with []model.GroupKey, resourceKey model.ResourceKey, db *gorm.DB) error {
-	if len(with) == 0 {
-		return nil
-	}
-	var resourceSharings = make([]resource.Sharing, len(with))
-	for i, groupKey := range with {
-		resourceSharing := resource.NewResourceSharing(resourceKey, groupKey)
-		resourceSharings[i] = resourceSharing
+func (rs *ResourceStore) mapGraphSharingRecord(record neo4j.Record, resourceFieldKey string, groupIdsFieldKey string) (*resource.Sharings, error) {
+	resourceField, _ := record.Get(resourceFieldKey)
+	resourceNode := resourceField.(neo4j.Node)
+	resourceId := resourceNode.Props()["id"].(string)
+	resourceKey, err := model.ParseResourceKey(resourceId)
+	if err != nil {
+		return nil, err
 	}
 
-	return db.Create(resourceSharings).Error
+	groupIdsField, _ := record.Get(groupIdsFieldKey)
+	if groupIdsField == nil {
+		return resource.NewEmptyResourceSharings(), nil
+	}
+	groupIds := groupIdsField.([]interface{})
+	var sharings []*resource.Sharing
+	for _, groupId := range groupIds {
+		groupKey, err := group.ParseGroupKey(groupId.(string))
+		if err != nil {
+			return nil, err
+		}
+		sharing := &resource.Sharing{
+			ResourceKey: resourceKey,
+			GroupKey:    groupKey,
+		}
+		sharings = append(sharings, sharing)
+	}
+
+	return resource.NewResourceSharings(sharings), nil
+}
+
+// Update updates a resource
+func (rs *ResourceStore) Update(request *resource.UpdateResourceQuery) *resource.UpdateResourceResponse {
+
+	session, err := rs.graphDriver.GetSession()
+	if err != nil {
+		return &resource.UpdateResourceResponse{
+			Error: err,
+		}
+	}
+	defer session.Close()
+
+	now := time.Now().UTC().UnixNano() / 1e6
+	resourceKey := request.Resource.GetKey()
+	updateResult, err := session.Run(`
+			MATCH (r:Resource {id:$id})
+			OPTIONAL MATCH (r)-[notSharedWith:SharedWith]-(g1:Group)
+			WHERE NOT (g1.id IN $groupIds)			
+			OPTIONAL MATCH (g:Group)
+			WHERE g.id in $groupIds
+			SET r += {
+				updatedAt:datetime({epochMillis:$updatedAt}),
+				summary:$summary,
+				description:$description,
+				valueInHoursFrom:$valueInHoursFrom,
+				valueInHoursTo:$valueInHoursTo
+			}
+			DELETE notSharedWith
+			WITH r, g
+			CALL apoc.do.when(
+				g IS NOT NULL,
+				'MERGE (r)-[s:SharedWith]->(g) return s, g',
+				'',
+				{r: r, g: g})
+			YIELD value
+			RETURN r`,
+		map[string]interface{}{
+			"id":               resourceKey.String(),
+			"updatedAt":        now,
+			"summary":          request.Resource.Summary,
+			"description":      request.Resource.Description,
+			"valueInHoursFrom": request.Resource.ValueInHoursFrom,
+			"valueInHoursTo":   request.Resource.ValueInHoursTo,
+			"groupIds":         request.SharedWith.Strings(),
+		})
+
+	if err != nil {
+		return &resource.UpdateResourceResponse{
+			Error: err,
+		}
+	}
+
+	if updateResult.Err() != nil {
+		return &resource.UpdateResourceResponse{
+			Error: updateResult.Err(),
+		}
+	}
+
+	if !updateResult.Next() {
+		return &resource.UpdateResourceResponse{
+			Error: errs.ErrResourceNotFound,
+		}
+	}
+
+	return resource.NewUpdateResourceResponse(nil)
+
+}
+
+// Search search for resources
+func (rs *ResourceStore) Search(request *resource.SearchResourcesQuery) *resource.SearchResourcesResponse {
+
+	session, err := rs.graphDriver.GetSession()
+	if err != nil {
+		return &resource.SearchResourcesResponse{
+			Error: err,
+		}
+	}
+	defer session.Close()
+
+	propertyValues := map[string]interface{}{}
+	var matchClauses = []string{
+		"(r:Resource)",
+	}
+	var whereClauses []string
+
+	if request.CreatedBy != "" {
+		matchClauses = append([]string{"(createdBy:User {id:$createdById})"}, matchClauses...)
+		whereClauses = append(whereClauses, "(r)<-[:CreatedBy]-(createdBy)")
+		propertyValues["createdById"] = request.CreatedBy
+	}
+
+	if request.Type != nil {
+		whereClauses = append(whereClauses, "r.type = $type")
+		propertyValues["type"] = *request.Type
+	}
+
+	if request.Query != nil && *request.Query != "" {
+		whereClauses = append(whereClauses, "r.summary =~ $query")
+		propertyValues["query"] = ".*" + *request.Query + ".*"
+	}
+
+	var cyper = "MATCH "
+	cyper = cyper + strings.Join(matchClauses, ",")
+
+	if len(whereClauses) > 0 {
+		cyper = cyper + "\n WHERE "
+		cyper = cyper + strings.Join(whereClauses, " AND ")
+	}
+
+	if request.SharedWithGroup != nil {
+		propertyValues["groupId"] = request.SharedWithGroup.String()
+		cyper = cyper + "\nMATCH (r)-[s:SharedWith]->(g:Group {id:$groupId})"
+	} else {
+		cyper = cyper + "\nOPTIONAL MATCH (r)-[s:SharedWith]->(g:Group)"
+	}
+
+	countCypher := cyper + `
+RETURN count(r) as totalCount
+`
+
+	countResult, err := session.Run(countCypher, propertyValues)
+	if err != nil {
+		return &resource.SearchResourcesResponse{
+			Error: err,
+		}
+	}
+
+	if countResult.Err() != nil {
+		return &resource.SearchResourcesResponse{
+			Error: countResult.Err(),
+		}
+	}
+
+	countResult.Next()
+
+	countField, _ := countResult.Record().Get("totalCount")
+	totalCount := countField.(int64)
+
+	propertyValues["take"] = request.Take
+	propertyValues["skip"] = request.Skip
+	cyper = cyper + `
+RETURN r, g
+ORDER BY r.summary
+SKIP $skip 
+LIMIT $take
+`
+
+	searchResult, err := session.Run(cyper, propertyValues)
+
+	if err != nil {
+		return &resource.SearchResourcesResponse{
+			Error: err,
+		}
+	}
+
+	if searchResult.Err() != nil {
+		return &resource.SearchResourcesResponse{
+			Error: searchResult.Err(),
+		}
+	}
+
+	var resources []*resource.Resource
+
+	for searchResult.Next() {
+
+		res, err := rs.mapGraphResourceRecord(searchResult.Record(), "r")
+		if err != nil {
+			return &resource.SearchResourcesResponse{
+				Error: err,
+			}
+		}
+
+		resources = append(resources, res)
+
+	}
+
+	return &resource.SearchResourcesResponse{
+		Resources:  resource.NewResources(resources),
+		Sharings:   resource.NewEmptyResourceSharings(),
+		Skip:       request.Skip,
+		Take:       request.Take,
+		TotalCount: int(totalCount),
+	}
+
+}
+
+func mapGraphResourceToResource(dbResultItem *GraphResource) (*resource.Resource, error) {
+
+	key, err := model.ParseResourceKey(dbResultItem.ID)
+	if err != nil {
+		return nil, err
+	}
+	return &resource.Resource{
+		Key:              key,
+		CreatedAt:        dbResultItem.CreatedAt,
+		UpdatedAt:        dbResultItem.UpdatedAt,
+		DeletedAt:        dbResultItem.DeletedAt,
+		Summary:          dbResultItem.Summary,
+		Description:      dbResultItem.Description,
+		CreatedBy:        dbResultItem.CreatedBy,
+		Type:             dbResultItem.Type,
+		ValueInHoursFrom: dbResultItem.ValueInHoursFrom,
+		ValueInHoursTo:   dbResultItem.ValueInHoursTo,
+	}, nil
 }

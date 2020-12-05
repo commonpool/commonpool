@@ -15,16 +15,16 @@ func NewResourceKey(id uuid.UUID) ResourceKey {
 	}
 }
 
-func ParseResourceKey(key string) (*ResourceKey, error) {
+func ParseResourceKey(key string) (ResourceKey, error) {
 	resourceUuid, err := uuid.FromString(key)
 	if err != nil {
 		response := errs.ErrInvalidResourceKey(key)
-		return nil, &response
+		return ResourceKey{}, &response
 	}
 	resourceKey := ResourceKey{
 		ID: resourceUuid,
 	}
-	return &resourceKey, nil
+	return resourceKey, nil
 }
 
 func (r *ResourceKey) GetUUID() uuid.UUID {
@@ -33,4 +33,41 @@ func (r *ResourceKey) GetUUID() uuid.UUID {
 
 func (r *ResourceKey) String() string {
 	return r.ID.String()
+}
+
+type ResourceKeys struct {
+	Items []ResourceKey
+}
+
+func (k ResourceKeys) Count() int {
+	return len(k.Items)
+}
+
+func (k ResourceKeys) IsEmpty() bool {
+	return k.Count() == 0
+}
+
+func (k ResourceKeys) Strings() []string {
+	var strings []string
+	for _, item := range k.Items {
+		strings = append(strings, item.String())
+	}
+	if strings == nil {
+		strings = []string{}
+	}
+	return strings
+}
+
+func NewResourceKeys(resourceKeys []ResourceKey) *ResourceKeys {
+	copied := make([]ResourceKey, len(resourceKeys))
+	copy(copied, resourceKeys)
+	return &ResourceKeys{
+		Items: copied,
+	}
+}
+
+func NewEmptyResourceKeys() *ResourceKeys {
+	return &ResourceKeys{
+		Items: []ResourceKey{},
+	}
 }

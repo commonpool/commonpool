@@ -12,6 +12,10 @@ type GroupKey struct {
 
 var _ zapcore.ObjectMarshaler = &GroupKey{}
 
+func (k GroupKey) String() string {
+	return k.ID.String()
+}
+
 func (k GroupKey) Equals(g GroupKey) bool {
 	return k.ID == g.ID
 }
@@ -30,4 +34,27 @@ func NewGroupKey(id uuid.UUID) GroupKey {
 func (k GroupKey) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
 	encoder.AddString("group_id", k.ID.String())
 	return nil
+}
+
+type GroupKeys struct {
+	Items []GroupKey
+}
+
+func NewGroupKeys(groupKeys []GroupKey) *GroupKeys {
+	copied := make([]GroupKey, len(groupKeys))
+	copy(copied, groupKeys)
+	return &GroupKeys{
+		Items: copied,
+	}
+}
+
+func (k GroupKeys) Strings() []string {
+	var groupKeys []string
+	for _, groupKey := range k.Items {
+		groupKeys = append(groupKeys, groupKey.String())
+	}
+	if groupKeys == nil {
+		groupKeys = []string{}
+	}
+	return groupKeys
 }

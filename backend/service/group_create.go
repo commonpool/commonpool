@@ -19,16 +19,9 @@ func (g GroupService) CreateGroup(ctx context.Context, request *group.CreateGrou
 		return nil, err
 	}
 
-	grp, err := g.groupStore.CreateGroup(ctx, request.GroupKey, userSession.GetUserKey(), request.Name, request.Description)
+	grp, membership, err := g.groupStore.CreateGroupAndMembership(ctx, request.GroupKey, userSession.GetUserKey(), request.Name, request.Description)
 	if err != nil {
 		l.Error("could not save group to store", zap.Error(err))
-		return nil, err
-	}
-
-	membershipKey := model.NewMembershipKey(grp.GetKey(), userSession.GetUserKey())
-	membership, err := g.groupStore.CreateMembership(ctx, membershipKey, true, true, true, false, true, true)
-	if err != nil {
-		l.Error("could not create membership", zap.Error(err))
 		return nil, err
 	}
 

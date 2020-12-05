@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/commonpool/backend/auth"
+	errs "github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/web"
@@ -139,7 +140,7 @@ func TestCreateGroupShouldCreateOwnerMembership(t *testing.T) {
 	assert.Equal(t, false, grps.Memberships.Items[0].IsDeactivated)
 	assert.Equal(t, true, grps.Memberships.Items[0].IsAdmin)
 	assert.Equal(t, true, grps.Memberships.Items[0].IsMember)
-	assert.Equal(t, user1.Subject, grps.Memberships.Items[0].UserID)
+	assert.Equal(t, user1.Subject, grps.Memberships.Items[0].Key.UserKey.String())
 }
 
 func TestCreatingGroupShouldSubscribeOwnerToChanel(t *testing.T) {
@@ -273,7 +274,7 @@ func TestInviteeShouldBeAbleToDeclineInvitationFromOwner(t *testing.T) {
 
 	grpKey, _ := group.ParseGroupKey(createGroup.Group.ID)
 	_, err := GroupStore.GetMembership(ctx, model.NewMembershipKey(grpKey, user2.GetUserKey()))
-	assert.True(t, errors.Is(err, group.ErrMembershipNotFound))
+	assert.True(t, errors.Is(err, errs.ErrMembershipNotFound))
 }
 
 func TestOwnerShouldBeAbleToDeclineInvitationFromOwner(t *testing.T) {
@@ -302,7 +303,7 @@ func TestOwnerShouldBeAbleToDeclineInvitationFromOwner(t *testing.T) {
 	assert.Equal(t, http.StatusAccepted, httpRes.StatusCode)
 	grpKey, _ := group.ParseGroupKey(createGroup.Group.ID)
 	_, err := GroupStore.GetMembership(ctx, model.NewMembershipKey(grpKey, user2.GetUserKey()))
-	assert.True(t, errors.Is(err, group.ErrMembershipNotFound))
+	assert.True(t, errors.Is(err, errs.ErrMembershipNotFound))
 }
 
 func TestRandomUserShouldNotBeAbleToAcceptInvitation(t *testing.T) {

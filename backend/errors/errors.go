@@ -12,6 +12,13 @@ type WebServiceException struct {
 	Message string
 }
 
+var ErrUserNotFound = NewWebServiceException("user not found", "ErrUserNotFound", http.StatusNotFound)
+var ErrResourceNotFound = NewWebServiceException("resource not found", "ErrResourceNotFound", http.StatusNotFound)
+var ErrGroupNotFound = NewWebServiceException("group not found", "ErrGroupNotFound", http.StatusNotFound)
+var ErrMembershipNotFound = NewWebServiceException("membership not found", "ErrMembershipNotFound", http.StatusNotFound)
+var ErrUserOrGroupNotFound = NewWebServiceException("user or group not found", "ErrUserOrGroupNotFound", http.StatusNotFound)
+var ErrUnknownParty = NewWebServiceException("unknown party", "ErrUnknownParty", http.StatusBadRequest)
+
 func (e WebServiceException) Error() string {
 	return e.Message
 }
@@ -56,12 +63,6 @@ func ReturnException(c echo.Context, err error) error {
 }
 
 var (
-	ErrUserNotFound = func(user string) ErrorResponse {
-		return NewError(fmt.Sprintf("user with id '%s' could not be found", user), "ErrUserNotFound", http.StatusNotFound)
-	}
-	ErrResourceNotFound = func(resource string) ErrorResponse {
-		return NewError(fmt.Sprintf("resource with id '%s' could not be found", resource), "ErrResourceNotFound", http.StatusNotFound)
-	}
 	ErrCreateResourceBadRequest = func(err error) ErrorResponse {
 		return NewError("could not process create resource request: "+err.Error(), "ErrCreateResourceBadRequest", http.StatusBadRequest)
 	}

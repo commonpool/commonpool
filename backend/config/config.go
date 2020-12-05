@@ -3,7 +3,6 @@ package config
 import (
 	"fmt"
 	"strconv"
-	"strings"
 )
 
 type AppConfig struct {
@@ -19,130 +18,101 @@ type AppConfig struct {
 	DbPassword       string
 	CallbackToken    string
 	AmqpUrl          string
+	BoltUrl          string
+	BoltUsername     string
+	BoltPassword     string
+	Neo4jDatabase    string
 }
 
 func GetAppConfig(readEnv EnvReader, readFile FileReader) (*AppConfig, error) {
 
-	dbUser, hasDbUser := readEnv(dbUserEnv)
-	dbUserFile, hasDbUserFile := readEnv(dbUserFileEnv)
+	var (
+		err           error
+		boltUrl       string
+		boltPassword  string
+		boltUsername  string
+		dbUser        string
+		dbPassword    string
+		dbName        string
+		dbPort        string
+		callbackToken string
+		amqpUrl       string
+		dbHost        string
+		baseUri       string
+		discoveryUrl  string
+		clientId      string
+		clientSecret  string
+		secureCookies string
+		neo4jDatabase string
+	)
 
-	if !hasDbUser && !hasDbUserFile {
-		panic(fmt.Errorf("%s or %s environment variable is required", dbUserFileEnv, dbUserEnv))
-	}
-
-	if hasDbUserFile {
-		dbUserIo, err := readFile(dbUserFile)
-		if err != nil {
-			return nil, err
-		}
-		dbUser = string(dbUserIo)
-	}
-
-	dbPassword, hasDbPassword := readEnv(dbPasswordEnv)
-	dbPasswordFile, hasDbPasswordFile := readEnv(dbPasswordFileEnv)
-
-	if !hasDbPassword && !hasDbPasswordFile {
-		return nil, fmt.Errorf("%s or %s environment variable is required", dbPasswordEnv, dbPasswordFileEnv)
-	}
-
-	if hasDbPasswordFile {
-		dbUserIo, err := readFile(dbPasswordFile)
-		if err != nil {
-			return nil, err
-		}
-		dbPassword = string(dbUserIo)
-	}
-
-	callbackToken, hasCallbackToken := readEnv(callbackTokenEnv)
-	callbackTokenFile, hasCallbackTokenFile := readEnv(callbackTokenFileEnv)
-
-	if !hasCallbackToken && !hasCallbackTokenFile {
-		return nil, fmt.Errorf("%s or %s  environment variable is required", callbackTokenEnv, callbackTokenFileEnv)
-	}
-
-	if hasCallbackTokenFile {
-		callbackTokenIo, err := readFile(callbackTokenFile)
-		if err != nil {
-			return nil, err
-		}
-		callbackToken = string(callbackTokenIo)
-	}
-
-	amqpUrl, hasAmqpUrl := readEnv(amqpUrlEnv)
-	amqpUrlFile, hasAmqpUrlFile := readEnv(amqpUrlFileEnv)
-
-	if !hasAmqpUrl && !hasAmqpUrlFile {
-		return nil, fmt.Errorf("%s or %s  environment variable is required", amqpUrlEnv, amqpUrlFileEnv)
-	}
-
-	if hasAmqpUrlFile {
-		amqpUrlIo, err := readFile(amqpUrlFile)
-		if err != nil {
-			return nil, err
-		}
-		amqpUrl = string(amqpUrlIo)
-	}
-
-	dbName, ok := readEnv(dbNameEnv)
-	if !ok {
-		return nil, fmt.Errorf("%s environment variable is required", dbNameEnv)
-	}
-
-	dbPortStr, ok := readEnv(dbPortEnv)
-	if !ok {
-		return nil, fmt.Errorf("%s environment variable is required", dbPortEnv)
-	}
-
-	dbPort, err := strconv.Atoi(dbPortStr)
-	if err != nil {
+	if dbName, err = readEnvVarOrFile(readFile, readEnv, dbNameEnv); err != nil {
 		return nil, err
 	}
 
-	dbHost, ok := readEnv(dbHostEnv)
-	if !ok {
-		return nil, fmt.Errorf("%s environment variable is required", dbHostEnv)
+	if dbPort, err = readEnvVarOrFile(readFile, readEnv, dbPortEnv); err != nil {
+		return nil, err
 	}
 
-	baseUri, hasBaseUrl := readEnv(baseUrlEnv)
-	if !hasBaseUrl {
-		panic(fmt.Errorf("%s env var is required", baseUrlEnv))
+	if dbHost, err = readEnvVarOrFile(readFile, readEnv, dbHostEnv); err != nil {
+		return nil, err
 	}
 
-	discoveryUrl, hasConfigUrl := readEnv(oidcDiscoveryUrlEnv)
-	if !hasConfigUrl {
-		panic(fmt.Errorf("%s is required", oidcDiscoveryUrlEnv))
+	if dbUser, err = readEnvVarOrFile(readFile, readEnv, dbUserEnv); err != nil {
+		return nil, err
 	}
 
-	clientIdFile, hasClientIdFile := readEnv(oidcClientIdFileEnv)
-	clientId, hasClientId := readEnv(oidcClientIdEnv)
-	if !hasClientIdFile && !hasClientId {
-		panic(fmt.Errorf("%s or %s env var is required", oidcClientIdEnv, oidcClientIdFileEnv))
-	}
-	if hasClientIdFile {
-		clientIdIo, err := readFile(clientIdFile)
-		if err != nil {
-			panic(err)
-		}
-		clientId = string(clientIdIo)
+	if dbPassword, err = readEnvVarOrFile(readFile, readEnv, dbPasswordEnv); err != nil {
+		return nil, err
 	}
 
-	clientSecretFile, hasClientSecretFile := readEnv(oidcClientSecretFileEnv)
-	clientSecret, hasClientSecret := readEnv(oidcClientSecretEnv)
-	if !hasClientSecretFile && !hasClientSecret {
-		panic(fmt.Errorf("%s or %s env var is required", oidcClientSecretEnv, oidcClientSecretFileEnv))
-	}
-	if hasClientSecretFile {
-		clientSecretIo, err := readFile(clientSecretFile)
-		if err != nil {
-			panic(err)
-		}
-		clientSecret = string(clientSecretIo)
+	if boltUrl, err = readEnvVarOrFile(readFile, readEnv, boltUrlEnv); err != nil {
+		return nil, err
 	}
 
-	secureCookies := true
-	secureCookiesStr, hasSecureCookies := readEnv(secureCookiesEnv)
-	if hasSecureCookies {
-		secureCookies = strings.ToLower(secureCookiesStr) == "true"
+	if boltUsername, err = readEnvVarOrFile(readFile, readEnv, boltUsernameEnv); err != nil {
+		return nil, err
+	}
+
+	if boltPassword, err = readEnvVarOrFile(readFile, readEnv, boltPasswordEnv); err != nil {
+		return nil, err
+	}
+
+	if neo4jDatabase, err = readEnvVarOrFile(readFile, readEnv, neo4jDatabaseName); err != nil {
+		return nil, err
+	}
+
+	if callbackToken, err = readEnvVarOrFile(readFile, readEnv, callbackTokenEnv); err != nil {
+		return nil, err
+	}
+
+	if amqpUrl, err = readEnvVarOrFile(readFile, readEnv, amqpUrlEnv); err != nil {
+		return nil, err
+	}
+
+	if baseUri, err = readEnvVarOrFile(readFile, readEnv, baseUrlEnv); err != nil {
+		return nil, err
+	}
+
+	if discoveryUrl, err = readEnvVarOrFile(readFile, readEnv, oidcDiscoveryUrlEnv); err != nil {
+		return nil, err
+	}
+
+	if clientId, err = readEnvVarOrFile(readFile, readEnv, oidcClientIdEnv); err != nil {
+		return nil, err
+	}
+
+	if clientSecret, err = readEnvVarOrFile(readFile, readEnv, oidcClientSecretEnv); err != nil {
+		return nil, err
+	}
+
+	if secureCookies, err = readEnvVarOrFile(readFile, readEnv, secureCookiesEnv); err != nil {
+		return nil, err
+	}
+
+	dbPortValue, err := strconv.Atoi(dbPort)
+	if err != nil {
+		return nil, err
 	}
 
 	appConfig := &AppConfig{
@@ -151,38 +121,64 @@ func GetAppConfig(readEnv EnvReader, readFile FileReader) (*AppConfig, error) {
 		OidcClientSecret: clientSecret,
 		OidcDiscoveryUrl: discoveryUrl,
 		DbHost:           dbHost,
-		DbPort:           dbPort,
+		DbPort:           dbPortValue,
 		DbName:           dbName,
 		DbUsername:       dbUser,
 		DbPassword:       dbPassword,
-		SecureCookies:    secureCookies,
+		SecureCookies:    secureCookies == "true",
 		CallbackToken:    callbackToken,
 		AmqpUrl:          amqpUrl,
+		BoltUrl:          boltUrl,
+		BoltUsername:     boltUsername,
+		BoltPassword:     boltPassword,
+		Neo4jDatabase:    neo4jDatabase,
 	}
 	return appConfig, nil
+}
+
+func readFileValue(readFile FileReader, filePath string) (string, error) {
+	fileBytes, err := readFile(filePath)
+	if err != nil {
+		return "", err
+	}
+	fileValue := string(fileBytes)
+	return fileValue, nil
+}
+
+func readEnvVarOrFile(readFile FileReader, readEnv EnvReader, envValueName string) (string, error) {
+	var err error
+	value, hasValue := readEnv(envValueName)
+	file, hasFile := readEnv(envValueName + "_FILE")
+	if !hasValue && !hasFile {
+		return "", fmt.Errorf("%s or %s environment variable is required", envValueName, envValueName+"_FILE")
+	}
+	if hasFile {
+		if value, err = readFileValue(readFile, file); err != nil {
+			return "", err
+		}
+	}
+	return value, nil
 }
 
 type EnvReader func(string) (string, bool)
 
 const (
-	dbUserEnv               = "DB_USER"
-	dbUserFileEnv           = "DB_USER_FILE"
-	dbPasswordEnv           = "DB_PASSWORD"
-	dbPasswordFileEnv       = "DB_PASSWORD_FILE"
-	dbNameEnv               = "DB_NAME"
-	dbPortEnv               = "DB_PORT"
-	dbHostEnv               = "DB_HOST"
-	baseUrlEnv              = "BASE_URL"
-	oidcDiscoveryUrlEnv     = "OIDC_DISCOVERY_URL"
-	oidcClientIdFileEnv     = "OIDC_CLIENT_ID_FILE"
-	oidcClientIdEnv         = "OIDC_CLIENT_ID"
-	oidcClientSecretFileEnv = "OIDC_CLIENT_SECRET_FILE"
-	oidcClientSecretEnv     = "OIDC_CLIENT_SECRET"
-	secureCookiesEnv        = "SECURE_COOKIES"
-	callbackTokenEnv        = "CALLBACK_TOKEN"
-	callbackTokenFileEnv    = "CALLBACK_TOKEN_FILE"
-	amqpUrlEnv              = "AMQP_URL"
-	amqpUrlFileEnv          = "AMQP_URL_FILE"
+	dbUserEnv           = "DB_USER"
+	dbPasswordEnv       = "DB_PASSWORD"
+	dbNameEnv           = "DB_NAME"
+	dbPortEnv           = "DB_PORT"
+	dbHostEnv           = "DB_HOST"
+	baseUrlEnv          = "BASE_URL"
+	oidcDiscoveryUrlEnv = "OIDC_DISCOVERY_URL"
+	oidcClientIdEnv     = "OIDC_CLIENT_ID"
+	oidcClientSecretEnv = "OIDC_CLIENT_SECRET"
+	secureCookiesEnv    = "SECURE_COOKIES"
+	callbackTokenEnv    = "CALLBACK_TOKEN"
+	amqpUrlEnv          = "AMQP_URL"
+	boltUrlEnv          = "BOLT_URL"
+	boltUsernameEnv     = "BOLT_USERNAME"
+	boltPasswordEnv     = "BOLT_PASSWORD"
+	neo4jDatabaseName   = "NEO4J_DATABASE_NAME"
 )
 
 type FileReader func(string) ([]byte, error)

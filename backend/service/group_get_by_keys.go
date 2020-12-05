@@ -7,9 +7,13 @@ import (
 	"go.uber.org/zap"
 )
 
-func (g GroupService) GetGroupsByKeys(ctx context.Context, groupKeys []model.GroupKey) (*group.Groups, error) {
+func (g GroupService) GetGroupsByKeys(ctx context.Context, groupKeys *model.GroupKeys) (*group.Groups, error) {
 
 	ctx, l := GetCtx(ctx, "GroupService", "GetGroupsByKeys")
+
+	if groupKeys == nil || len(groupKeys.Items) == 0 {
+		return group.NewGroups([]*group.Group{}), nil
+	}
 
 	groups, err := g.groupStore.GetGroupsByKeys(ctx, groupKeys)
 	if err != nil {

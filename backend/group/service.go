@@ -9,7 +9,7 @@ type Service interface {
 	CreateGroup(ctx context.Context, request *CreateGroupRequest) (*CreateGroupResponse, error)
 	GetGroup(ctx context.Context, request *GetGroupRequest) (*GetGroupResult, error)
 	GetGroups(ctx context.Context, request *GetGroupsRequest) (*GetGroupsResult, error)
-	GetGroupsByKeys(ctx context.Context, groupKeys []model.GroupKey) (*Groups, error)
+	GetGroupsByKeys(ctx context.Context, groupKeys *model.GroupKeys) (*Groups, error)
 	GetMembership(ctx context.Context, request *GetMembershipRequest) (*GetMembershipResponse, error)
 	GetUserMemberships(ctx context.Context, request *GetMembershipsForUserRequest) (*GetMembershipsForUserResponse, error)
 	GetGroupsMemberships(ctx context.Context, request *GetMembershipsForGroupRequest) (*GetMembershipsForGroupResponse, error)

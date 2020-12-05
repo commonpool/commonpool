@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/commonpool/backend/auth"
-	"github.com/commonpool/backend/chat"
 	errs "github.com/commonpool/backend/errors"
 	. "github.com/commonpool/backend/model"
 	resource2 "github.com/commonpool/backend/resource"
@@ -103,7 +102,7 @@ func (h *Handler) HandleSendOffer(c echo.Context) error {
 	reference := UserReference(loggedInUser)
 	response, err := h.SendOffer(ctx, req, reference)
 	if err != nil {
-		return err
+		return errs.ReturnException(c, err)
 	}
 
 	return c.JSON(http.StatusCreated, response)
@@ -112,273 +111,31 @@ func (h *Handler) HandleSendOffer(c echo.Context) error {
 
 func (h *Handler) SendOffer(ctx context.Context, req web.SendOfferRequest, fromUser UserReference) (*web.GetOfferResponse, error) {
 
-	//  Creating new Key for Offer
-	offerKey := NewOfferKey(uuid.NewV4())
+	var tradingOfferItems []*trading.OfferItem
+	for _, tradingOfferItem := range req.Offer.Items {
 
-	// keep track of resources so that one resource is not traded twice in the same transaction
-	var usedResources = resource2.NewResources([]resource2.Resource{})
-	var participants = auth.NewUsers([]auth.User{})
-
-	//  Process each offer item
-	items := trading.NewOfferItems([]trading.OfferItem{})
-
-	for _, offerItem := range req.Offer.Items {
-
-		if offerItem.Type == trading.ResourceItem {
-			resourceKey, err := ParseResourceKey(*offerItem.ResourceId)
-			if err != nil {
-				return nil, err
-			}
-			//  A resource can only appears once in an offer
-			if usedResources.ContainsKey(*resourceKey) {
-				err := fmt.Errorf("resources can only appear once in a transaction")
-				return nil, err
-			}
-		}
-
-		//  Getting participants
-		fromUser := NewUserKey(offerItem.From)
-		toUser := NewUserKey(offerItem.To)
-
-		//  Making sure participants exist
-		fromUserFound := items.HasItemsForUser(fromUser)
-		toUserFound := items.HasItemsForUser(toUser)
-
-		//  Make sure offer item.from != item.to
-		if fromUser == toUser {
-			return nil, fmt.Errorf("one cannot trade with oneself")
-		}
-
-		if !fromUserFound || !toUserFound {
-
-			var userKeys []UserKey
-			if !fromUserFound {
-				userKeys = append(userKeys, fromUser)
-			}
-			if !toUserFound {
-				userKeys = append(userKeys, toUser)
-			}
-
-			foundUsers, err := h.authStore.GetByKeys(ctx, userKeys)
-			if err != nil {
-				return nil, err
-			}
-
-			userQueryCount := len(foundUsers.Items)
-			if userQueryCount != len(userKeys) {
-				err := fmt.Errorf("participant not found")
-				return nil, err
-			}
-
-			participants = participants.AppendAll(foundUsers)
-		}
-
-		var item trading.OfferItem
 		itemKey := NewOfferItemKey(uuid.NewV4())
+		fromUser := NewUserKey(tradingOfferItem.From)
+		toUser := NewUserKey(tradingOfferItem.To)
 
-		//  Building the offer item
-		if offerItem.Type == trading.TimeItem {
-
-			//  Resource Item is a TimeItem
-
-			//  Making sure the offer has Positive time value
-			seconds := offerItem.TimeInSeconds
-			if *seconds <= 0 {
-				err := fmt.Errorf("time traded must be more than 0")
-				return nil, err
-			}
-
-			//  Building the offer item
-			item = trading.NewTimeOfferItem(offerKey, itemKey, fromUser, toUser, *seconds)
-
-		} else if offerItem.Type == trading.ResourceItem {
-
-			//  Resource Item is a ResourceItem
-			//  Retrieving the resource key
-			resourceId, err := uuid.FromString(*offerItem.ResourceId)
+		if tradingOfferItem.Type == trading.TimeItem {
+			tradingOfferItems = append(tradingOfferItems, trading.NewTimeOfferItem(itemKey, fromUser, toUser, *tradingOfferItem.TimeInSeconds))
+		} else if tradingOfferItem.Type == trading.ResourceItem {
+			resourceKey, err := ParseResourceKey(*tradingOfferItem.ResourceId)
 			if err != nil {
 				return nil, err
 			}
-			resourceKey := NewResourceKey(resourceId)
-
-			//  Retrieving the resource from the store
-			getResourceByKeyResponse := h.resourceStore.GetByKey(ctx, resource2.NewGetResourceByKeyQuery(resourceKey))
-			if getResourceByKeyResponse.Error != nil {
-				return nil, err
-			}
-			resource := getResourceByKeyResponse.Resource
-			usedResources = usedResources.Append(*resource)
-
-			//  Making sure the Item.From = Resource.Owner > Someone cannot make an offer where someone would trade a resource he's not the owner of
-			//
-			if resource.GetOwnerKey() != fromUser {
-				res := errs.ErrTransactionResourceOwnerMismatch()
-				return nil, &res
-			}
-
-			//  Building the Resource Offer item
-			item = trading.NewResourceOfferItem(offerKey, itemKey, fromUser, toUser, resourceKey)
-
-		} else {
-
-			//  Resource Type is of unknown type
-			err := fmt.Errorf("unexpected resource type %d", offerItem.Type)
-			return nil, err
-
-		}
-
-		//  Appending the built item to the list of items
-		items = items.Append(item)
-
-	}
-
-	//  Saving Offer
-	err := h.tradingStore.SaveOffer(trading.NewOffer(offerKey, fromUser.GetUserKey(), req.Offer.Message, nil), items)
-	if err != nil {
-		return nil, err
-	}
-
-	//
-	// Sending message to concerned users
-	//
-
-	for i, item := range participants.GetUserKeys().Items {
-		fmt.Println(fmt.Sprintf("Participant %d : %s", i, item.String()))
-	}
-
-	for _, itemUserKey := range items.GetUserKeys().Items {
-
-		userOfferItems := items.GetOfferItemsForUser(itemUserKey)
-
-		// Will contain the formatted message
-		var blocks []chat.Block
-
-		// Adding a descriptive header
-		blocks = append(blocks, *chat.NewHeaderBlock(
-			chat.NewMarkdownObject(
-				fmt.Sprintf("%s is proposing an exchange", h.chatService.GetUserLink(fromUser.GetUserKey())),
-			), nil))
-
-		// Looping through each item to construct the message
-		for _, userOfferItem := range userOfferItems.Items {
-
-			toUser, err := participants.GetUser(userOfferItem.GetToUserKey())
-			if err != nil {
-				return nil, err
-			}
-
-			fromUser, err := participants.GetUser(userOfferItem.GetFromUserKey())
-			if err != nil {
-				return nil, err
-			}
-
-			if userOfferItem.GetFromUserKey() == itemUserKey {
-
-				if userOfferItem.IsTimeExchangeItem() {
-					message := fmt.Sprintf("%s would like %s of your time",
-						h.chatService.GetUserLink(toUser.GetUserKey()),
-						userOfferItem.FormatOfferedTimeInSeconds())
-					block := chat.NewSectionBlock(chat.NewMarkdownObject(message), nil, nil, nil)
-					blocks = append(blocks, *block)
-				} else if userOfferItem.IsResourceExchangeItem() {
-					message := fmt.Sprintf("%s would like %s",
-						h.chatService.GetUserLink(toUser.GetUserKey()),
-						h.chatService.GetResourceLink(userOfferItem.GetResourceKey()))
-					block := chat.NewSectionBlock(chat.NewMarkdownObject(message), nil, nil, nil)
-					blocks = append(blocks, *block)
-				}
-
-			} else {
-
-				if userOfferItem.IsTimeExchangeItem() {
-					message := fmt.Sprintf("you would get %s of time bank credits from %s",
-						userOfferItem.FormatOfferedTimeInSeconds(),
-						h.chatService.GetUserLink(fromUser.GetUserKey()))
-					block := chat.NewSectionBlock(chat.NewMarkdownObject(message), nil, nil, nil)
-					blocks = append(blocks, *block)
-				} else if userOfferItem.IsResourceExchangeItem() {
-					resourceKey := userOfferItem.GetResourceKey()
-					message := fmt.Sprintf("you would get %s from %s",
-						h.chatService.GetResourceLink(resourceKey),
-						h.chatService.GetUserLink(fromUser.GetUserKey()))
-					block := chat.NewSectionBlock(chat.NewMarkdownObject(message), nil, nil, nil)
-					blocks = append(blocks, *block)
-				}
-			}
-		}
-
-		primaryButtonStyle := chat.Primary
-		dangerButtonStyle := chat.Danger
-		acceptOfferActionId := "accept_offer"
-		declineOfferActionId := "decline_offer"
-		offerId := offerKey.ID.String()
-		acceptButton := chat.NewButtonElement(chat.NewPlainTextObject("Accept"), &primaryButtonStyle, &acceptOfferActionId, nil, &offerId, nil)
-		declineButton := chat.NewButtonElement(chat.NewPlainTextObject("Decline"), &dangerButtonStyle, &declineOfferActionId, nil, &offerId, nil)
-		actionBlock := chat.NewActionBlock([]chat.BlockElement{
-			*acceptButton,
-			*declineButton,
-		}, nil)
-		blocks = append(blocks, *actionBlock)
-
-		linkBlock := chat.NewSectionBlock(
-			chat.NewMarkdownObject(
-				fmt.Sprintf("[View offer details](/users/%s/transactions/%s)", itemUserKey.String(), offerKey.ID)),
-			nil,
-			nil,
-			nil)
-		blocks = append(blocks, *linkBlock)
-
-		sendMsgRequest := chat.NewSendConversationMessage(
-			fromUser.GetUserKey(),
-			fromUser.GetUsername(),
-			participants.GetUserKeys(),
-			"New offer",
-			blocks,
-			[]chat.Attachment{},
-			&itemUserKey,
-		)
-		_, err := h.chatService.SendConversationMessage(ctx, sendMsgRequest)
-		if err != nil {
-			return nil, err
+			tradingOfferItems = append(tradingOfferItems, trading.NewResourceOfferItem(itemKey, fromUser, toUser, resourceKey))
 		}
 	}
 
-	if req.Offer.Message != "" {
-		sendMsgRequest := chat.NewSendConversationMessage(
-			fromUser.GetUserKey(),
-			fromUser.GetUsername(),
-			participants.GetUserKeys(),
-			req.Offer.Message,
-			[]chat.Block{},
-			[]chat.Attachment{},
-			nil,
-		)
-		_, err := h.chatService.SendConversationMessage(ctx, sendMsgRequest)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	//  Getting Offer
-	o, err := h.tradingStore.GetOffer(offerKey)
-	if err != nil {
-		return nil, err
-	}
-
-	//  Getting Offer Items
-	i, err := h.tradingStore.GetItems(offerKey)
-	if err != nil {
-		return nil, err
-	}
-
-	//  Getting Offer Decisions
-	d, err := h.tradingStore.GetDecisions(offerKey)
+	offer, items, decisions, err := h.tradingService.SendOffer(ctx, trading.NewOfferItems(tradingOfferItems), req.Offer.Message)
 	if err != nil {
 		return nil, err
 	}
 
 	//  Mapping Offer to Web Response
-	webOffer, err := h.mapToWebOffer(o, i, d)
+	webOffer, err := h.mapToWebOffer(offer, items, decisions)
 	if err != nil {
 		return nil, err
 	}
@@ -449,11 +206,11 @@ func (h *Handler) DeclineOffer(c echo.Context) error {
 
 	// retrieving the current user decision
 	// also retrieve is this approval is the last one needed so that everyone approved the offer
-	for _, decision := range decisions {
+	for _, decision := range decisions.Items {
 		decisionKey := decision.GetKey()
 		decisionUserKey := decisionKey.GetUserKey()
 		if decisionUserKey == authUserKey {
-			currentUserDecision = &decision
+			currentUserDecision = decision
 			break
 		}
 	}
@@ -512,7 +269,7 @@ func (h *Handler) GetOffers(c echo.Context) error {
 
 		//  Filtering item if user already declined this offer
 		loggedInUserDeclined := false
-		for _, decision := range decisions {
+		for _, decision := range decisions.Items {
 			if decision.GetUserKey() == loggedInUserKey && decision.Decision == trading.DeclinedDecision {
 				loggedInUserDeclined = true
 			}
@@ -528,7 +285,7 @@ func (h *Handler) GetOffers(c echo.Context) error {
 		}
 
 		//  Mapping offer to web response
-		webOffer, err := h.mapToWebOffer(item.Offer, items, decisions)
+		webOffer, err := h.mapToWebOffer(&item.Offer, items, decisions)
 		if err != nil {
 			return NewErrResponse(c, err)
 		}
@@ -565,6 +322,7 @@ func (h *Handler) GetOffer(c echo.Context) error {
 }
 
 func (h *Handler) GetWebOffer(offerKey OfferKey) (*web.GetOfferResponse, error) {
+
 	offer, err := h.tradingStore.GetOffer(offerKey)
 	if err != nil {
 		return nil, err
@@ -697,7 +455,7 @@ func (h *Handler) GetTradingHistory(c echo.Context) error {
 	})
 }
 
-func (h *Handler) mapToWebOffer(offer trading.Offer, items *trading.OfferItems, decisions []trading.OfferDecision) (*web.Offer, error) {
+func (h *Handler) mapToWebOffer(offer *trading.Offer, items *trading.OfferItems, decisions *trading.OfferDecisions) (*web.Offer, error) {
 
 	authorUsername, err := h.authStore.GetUsername(offer.GetAuthorKey())
 	if err != nil {
@@ -738,8 +496,8 @@ func (h *Handler) mapToWebOffer(offer trading.Offer, items *trading.OfferItems, 
 	}
 	webOffer.Items = responseItems
 
-	var responseDecisions = make([]web.OfferDecision, len(decisions))
-	for i, decision := range decisions {
+	var responseDecisions = make([]web.OfferDecision, len(decisions.Items))
+	for i, decision := range decisions.Items {
 		webDecision := web.OfferDecision{
 			OfferID:  decision.OfferID.String(),
 			UserID:   decision.UserID,

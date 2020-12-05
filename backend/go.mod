@@ -13,6 +13,8 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/labstack/echo/v4 v4.1.17
 	github.com/labstack/gommon v0.3.0
+	github.com/mitchellh/mapstructure v1.4.0
+	github.com/neo4j/neo4j-go-driver v1.8.3
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pquerna/cachecontrol v0.0.0-20200921180117-858c6e7e6b7e // indirect

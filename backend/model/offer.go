@@ -12,6 +12,10 @@ func NewOfferKey(id uuid.UUID) OfferKey {
 	return OfferKey{ID: id}
 }
 
+func (o OfferKey) String() string {
+	return o.ID.String()
+}
+
 func ParseOfferKey(value string) (OfferKey, error) {
 	offerId, err := uuid.FromString(value)
 	if err != nil {

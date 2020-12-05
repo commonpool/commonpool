@@ -26,7 +26,7 @@ export class AuthService implements OnDestroy {
     )
   );
 
-  loginSubscription = interval(10000).pipe(
+  loginSubscription = interval(600000).pipe(
     startWith([null]),
     switchMap(a => this.backend.getSession())
   ).subscribe(value => {

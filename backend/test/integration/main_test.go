@@ -7,15 +7,15 @@ import (
 	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/chat"
 	"github.com/commonpool/backend/config"
-	"github.com/commonpool/backend/group"
+	"github.com/commonpool/backend/graph"
 	"github.com/commonpool/backend/handler"
 	"github.com/commonpool/backend/mock"
-	"github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/service"
 	"github.com/commonpool/backend/store"
 	"github.com/commonpool/backend/trading"
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
+	"io/ioutil"
 	"os"
 	"sync"
 	"testing"
@@ -35,10 +35,16 @@ var ChatService service.ChatService
 var TradingService service.TradingService
 var GroupService service.GroupService
 var Authorizer *mock.Authorizer
+var Driver *graph.Neo4jGraphDriver
 
 func TestMain(m *testing.M) {
 
 	println("running main")
+
+	appConfig, err := config.GetAppConfig(os.LookupEnv, ioutil.ReadFile)
+	if err != nil {
+		panic(err)
+	}
 
 	ctx := context.Background()
 
@@ -53,17 +59,25 @@ func TestMain(m *testing.M) {
 		return *authenticatedUser
 	}
 
-	appConfig := &config.AppConfig{}
+	err = graph.InitGraphDatabase(appConfig)
+	if err != nil {
+		panic(err)
+	}
+
+	Driver, err = graph.NewNeo4jDriver(appConfig, appConfig.Neo4jDatabase)
+	if err != nil {
+		panic(err)
+	}
 
 	Db = store.NewTestDb()
-	ResourceStore = *store.NewResourceStore(Db)
-	AuthStore = *store.NewAuthStore(Db)
+	ResourceStore = *store.NewResourceStore(Driver)
+	AuthStore = *store.NewAuthStore(Db, Driver)
 	ChatStore = *store.NewChatStore(Db, &AuthStore, AmqpClient)
 	TradingStore = *store.NewTradingStore(Db)
-	GroupStore = *store.NewGroupStore(Db, AmqpClient)
+	GroupStore = *store.NewGroupStore(Driver)
 	ChatService = *service.NewChatService(&AuthStore, &GroupStore, &ResourceStore, AmqpClient, &ChatStore)
-	TradingService = *service.NewTradingService(TradingStore, &ResourceStore, &AuthStore, ChatService)
 	GroupService = *service.NewGroupService(&GroupStore, AmqpClient, ChatService, &AuthStore)
+	TradingService = *service.NewTradingService(TradingStore, &ResourceStore, &AuthStore, ChatService, GroupService)
 
 	store.AutoMigrate(Db)
 
@@ -110,14 +124,21 @@ var createUserLock sync.Mutex
 
 func cleanDb() {
 
-	Db.Delete(resource.Resource{}, "1 = 1")
-	Db.Delete(resource.Sharing{}, "1 = 1")
+	session, err := Driver.GetSession()
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = session.Run(`MATCH (n) DETACH DELETE n`, map[string]interface{}{})
+	if err != nil {
+		panic(err)
+	}
+
+	Db.Delete(store.Sharing{}, "1 = 1")
 	Db.Delete(trading.Offer{}, "1 = 1")
 	Db.Delete(trading.OfferItem{}, "1 = 1")
 	Db.Delete(trading.OfferDecision{}, "1 = 1")
 	Db.Delete(chat.Channel{}, "1 = 1")
 	Db.Delete(chat.ChannelSubscription{}, "1 = 1")
 	Db.Delete(store.Message{}, "1 = 1")
-	Db.Delete(group.Group{}, "1 = 1")
-	Db.Delete(group.Membership{}, "1 = 1")
 }

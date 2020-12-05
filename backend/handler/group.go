@@ -228,7 +228,7 @@ func (h *Handler) GetMembership(c echo.Context) error {
 		return NewErrResponse(c, err)
 	}
 
-	var memberships = group.NewMemberships([]group.Membership{*getMemberships.Membership})
+	var memberships = group.NewMemberships([]*group.Membership{getMemberships.Membership})
 
 	groupNames, err := h.getGroupNamesForMemberships(ctx, memberships)
 	if err != nil {
@@ -445,7 +445,7 @@ func (h *Handler) CreateOrAcceptMembership(c echo.Context) error {
 		return errors.ReturnException(c, err)
 	}
 
-	memberships := group.NewMemberships([]group.Membership{*acceptInvitationResponse.Membership})
+	memberships := group.NewMemberships([]*group.Membership{acceptInvitationResponse.Membership})
 
 	userNames, err := h.getUserNamesForMemberships(ctx, memberships)
 	if err != nil {

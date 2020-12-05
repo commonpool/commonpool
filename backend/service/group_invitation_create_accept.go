@@ -7,6 +7,7 @@ import (
 	"github.com/commonpool/backend/amqp"
 	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/chat"
+	errs "github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
 	"go.uber.org/zap"
@@ -27,12 +28,12 @@ func (g GroupService) CreateOrAcceptInvitation(ctx context.Context, request *gro
 	isNewMembership := false
 	membershipKey := request.MembershipKey
 	membershipToAccept, err := g.groupStore.GetMembership(ctx, membershipKey)
-	if err != nil && !errors.Is(err, group.ErrMembershipNotFound) {
+	if err != nil && !errors.Is(err, errs.ErrMembershipNotFound) {
 		l.Error("could not get membership to accept", zap.Error(err))
 		return nil, err
 	}
 
-	if err != nil && errors.Is(err, group.ErrMembershipNotFound) {
+	if err != nil && errors.Is(err, errs.ErrMembershipNotFound) {
 		isNewMembership = true
 	}
 

@@ -11,15 +11,15 @@ type GetGroupsRequest struct {
 }
 
 type GetGroupsResult struct {
-	Items      []Group
+	Items      *Groups
 	TotalCount int64
 }
 
 type Store interface {
-	CreateGroup(ctx context.Context, groupKey model.GroupKey, createdBy model.UserKey, name string, description string) (*Group, error)
+	CreateGroupAndMembership(ctx context.Context, groupKey model.GroupKey, createdBy model.UserKey, name string, description string) (*Group, *Membership, error)
 	GetGroup(ctx context.Context, groupKey model.GroupKey) (*Group, error)
-	GetGroups(take int, skip int) ([]Group, int64, error)
-	GetGroupsByKeys(ctx context.Context, groupKeys []model.GroupKey) (*Groups, error)
+	GetGroups(take int, skip int) (*Groups, int64, error)
+	GetGroupsByKeys(ctx context.Context, groupKeys *model.GroupKeys) (*Groups, error)
 	CreateMembership(ctx context.Context, membershipKey model.MembershipKey, isMember bool, isAdmin bool, isOwner bool, isDeactivated bool, groupConfirmed bool, userConfirmed bool) (*Membership, error)
 	MarkInvitationAsAccepted(ctx context.Context, membershipKey model.MembershipKey, decisionFrom MembershipParty) error
 	GetMembership(ctx context.Context, membershipKey model.MembershipKey) (*Membership, error)

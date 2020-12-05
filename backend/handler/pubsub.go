@@ -256,7 +256,7 @@ func (h *Handler) websocketAnonymous(ctx context.Context, response *echo.Respons
 
 	client.send <- jsBytes
 
-	time.Sleep(time.Second * 10)
+	time.Sleep(time.Minute * 10)
 
 	return nil
 
@@ -282,7 +282,6 @@ func (h *Handler) Websocket(c echo.Context) error {
 		return err
 	}
 	defer ws.Close()
-
 
 	l.Debug("creating new hub")
 

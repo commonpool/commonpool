@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="7cd8279a-e3af-42a0-8513-69224f91376a" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/backend/graph/graph_init.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/k8s/neo4j.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/k8s/pg.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/k8s/rabbit.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/resource/service.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/amqp/client.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/amqp/client.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/auth/store.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/auth/store.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/auth/user.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/auth/user.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/auth/users.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/auth/users.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/config/config.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/config/config.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/errors/errors.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/errors/errors.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/backend/go.mod" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/backend/go.sum" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/group/errors.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/group/errors.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/group/models.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/group/models.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/group/service.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/group/service.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/group/store.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/group/store.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/handler/chat.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/handler/chat.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/handler/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/handler/group.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/handler/resource.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/handler/resource.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/handler/trading.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/handler/trading.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/handler/users.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/handler/users.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/mock/amcp_ack_mock.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/mock/amqp_channel_mock.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/mock/amqp_client_mock.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/mock/resource_store_mock.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/model/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/model/group.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/model/offer.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/model/offer.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/model/resource.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/model/resource.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/podman.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/resource/models.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/resource/models.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/resource/store.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/resource/store.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/service/chat.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/service/chat.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/service/chat_convo_channel_bind.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/service/chat_convo_channel_bind.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/service/group_create.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/service/group_create.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/service/group_get_by_keys.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/service/group_get_by_keys.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/service/group_invitation_create_accept.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/service/group_invitation_create_accept.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/service/trading.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/service/trading.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/service/trading_item_given_received_notify.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/service/trading_item_given_received_notify.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/service/trading_offer_accept.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/service/trading_offer_accept.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/service/trading_send_offer.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/service/trading_send_offer.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/store/auth.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/store/auth.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/store/chat.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/store/chat.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/store/db.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/store/db.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/store/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/store/group.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/store/models.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/store/models.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/store/resource.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/store/resource.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/store/trading.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/store/trading.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/test/integration/group_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test/integration/group_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/test/integration/main_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test/integration/main_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/test/integration/resource_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test/integration/resource_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/test/integration/trading_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test/integration/trading_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/trading/models.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/trading/models.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/trading/service.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/trading/service.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/trading/store.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/trading/store.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/web/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/web/group.go" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="KubernetesApiPersistence">
+    <option name="context" value="DigitalBackboneOpsK8s-admin" />
+    <option name="namespace" value="default" />
+  </component>
+  <component name="ProjectId" id="1lE2NveqT4lceYGPcXKwcaoot3v" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="go.import.settings.migrated" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/backend" />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="7cd8279a-e3af-42a0-8513-69224f91376a" name="Default Changelist" comment="" />
+      <created>1607147893376</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1607147893376</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="685" y="851" width="424" height="491" key="FileChooserDialogImpl" timestamp="1607147904385">
+      <screen x="0" y="27" width="3840" height="2133" />
+    </state>
+    <state x="685" y="851" width="424" height="491" key="FileChooserDialogImpl/0.27.3840.2133@0.27.3840.2133" timestamp="1607147904385" />
+  </component>
+</project>

@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func (t TradingService) notifyItemGivenOrReceived(ctx context.Context, offerItemBeingConfirmed *trading.OfferItem, confirmingUser auth.User, concernedOfferUsers auth.Users) error {
+func (t TradingService) notifyItemGivenOrReceived(ctx context.Context, offerItemBeingConfirmed *trading.OfferItem, confirmingUser *auth.User, concernedOfferUsers *auth.Users) error {
 
 	l := logging.WithContext(ctx)
 
@@ -59,7 +59,7 @@ func (t TradingService) notifyItemGivenOrReceived(ctx context.Context, offerItem
 
 	}
 
-	_, err := t.cs.SendConversationMessage(ctx, chat.NewSendConversationMessage(
+	_, err := t.chatService.SendConversationMessage(ctx, chat.NewSendConversationMessage(
 		confirmingUser.GetUserKey(),
 		confirmingUser.Username,
 		concernedOfferUsers.GetUserKeys(),

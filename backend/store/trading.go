@@ -72,47 +72,37 @@ func (t TradingStore) ConfirmItemGiven(ctx context.Context, key model.OfferItemK
 	return req.Error
 }
 
-func (t TradingStore) SaveOffer(offer trading.Offer, items *trading.OfferItems) error {
+func (t TradingStore) SaveOffer(offer *trading.Offer, items *trading.OfferItems, decisions *trading.OfferDecisions) (*trading.Offer, *trading.OfferItems, *trading.OfferDecisions, error) {
 
-	err := t.db.Create(&offer).Error
+	err := t.db.Create(offer).Error
 	if err != nil {
-		return err
+		return nil, nil, nil, err
 	}
 
-	userKeys := map[string]bool{}
-	for _, item := range items.Items {
-		err := t.db.Create(item).Error
-		if err != nil {
-			return err
-		}
-		userKeys[item.FromUserID] = true
-		userKeys[item.ToUserID] = true
+	for _, offerItem := range items.Items {
+		offerItem.OfferID = offer.ID
 	}
 
-	for userKey := range userKeys {
-		decision := trading.OfferDecision{
-			OfferID:  offer.ID,
-			UserID:   userKey,
-			Decision: trading.PendingDecision,
-		}
-		err := t.db.Create(decision).Error
-		if err != nil {
-			return err
-		}
+	if err := t.db.Create(items.Items).Error; err != nil {
+		return nil, nil, nil, err
 	}
 
-	return nil
+	if err := t.db.Create(decisions.Items).Error; err != nil {
+		return nil, nil, nil, err
+	}
+
+	return offer, items, decisions, nil
 }
 
-func (t TradingStore) GetOffer(key model.OfferKey) (trading.Offer, error) {
+func (t TradingStore) GetOffer(key model.OfferKey) (*trading.Offer, error) {
 	var offer trading.Offer
 	err := t.db.First(&offer, "id = ?", key.ID.String()).Error
-	return offer, err
+	return &offer, err
 }
 
 func (t TradingStore) GetItems(key model.OfferKey) (*trading.OfferItems, error) {
-	var items []trading.OfferItem
-	err := t.db.Find(&items, "offer_id = ?", key.ID.String()).Error
+	var items []*trading.OfferItem
+	err := t.db.Model(trading.OfferItem{}).Find(&items, "offer_id = ?", key.ID.String()).Error
 	return trading.NewOfferItems(items), err
 }
 
@@ -215,10 +205,10 @@ func (t TradingStore) GetOffers(qry trading.GetOffersQuery) (trading.GetOffersRe
 
 }
 
-func (t TradingStore) GetDecisions(key model.OfferKey) ([]trading.OfferDecision, error) {
-	var decisions []trading.OfferDecision
+func (t TradingStore) GetDecisions(key model.OfferKey) (*trading.OfferDecisions, error) {
+	var decisions []*trading.OfferDecision
 	err := t.db.Model(trading.OfferDecision{}).Find(&decisions, "offer_id = ?", key.ID.String()).Error
-	return decisions, err
+	return trading.NewOfferDecisions(decisions), err
 }
 
 func (t TradingStore) SaveDecision(key model.OfferKey, user model.UserKey, decision trading.Decision) error {

@@ -25,8 +25,7 @@ func (h *Handler) GetUserInfo(c echo.Context) error {
 	userId := c.Param("id")
 	userKey := model.NewUserKey(userId)
 
-	user := &auth.User{}
-	err := h.authStore.GetByKey(userKey, user)
+	user, err := h.authStore.GetByKey(userKey)
 
 	if err != nil {
 		return NewErrResponse(c, err)

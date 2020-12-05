@@ -3,32 +3,31 @@ package group
 import (
 	"fmt"
 	"github.com/commonpool/backend/model"
-	"github.com/satori/go.uuid"
 	"strconv"
 	"time"
 )
 
 type Group struct {
-	ID          uuid.UUID `gorm:"type:uuid;primary_key"`
-	CreatedBy   string
+	Key         model.GroupKey
+	CreatedBy   model.UserKey
 	CreatedAt   time.Time
 	Name        string
 	Description string
 }
 
 func (o *Group) GetKey() model.GroupKey {
-	return model.NewGroupKey(o.ID)
+	return o.Key
 }
 
 func (o *Group) GetCreatedByKey() model.UserKey {
-	return model.NewUserKey(o.CreatedBy)
+	return o.CreatedBy
 }
 
 type Groups struct {
-	Items []Group
+	Items []*Group
 }
 
-func NewGroups(groups []Group) *Groups {
+func NewGroups(groups []*Group) *Groups {
 	return &Groups{
 		Items: groups,
 	}
@@ -44,8 +43,7 @@ const (
 )
 
 type Membership struct {
-	GroupID        uuid.UUID `gorm:"type:uuid;primary_key"`
-	UserID         string    `gorm:"primary_key"`
+	Key            model.MembershipKey
 	IsMember       bool
 	IsAdmin        bool
 	IsOwner        bool
@@ -56,11 +54,11 @@ type Membership struct {
 }
 
 func (m *Membership) GetGroupKey() model.GroupKey {
-	return model.NewGroupKey(m.GroupID)
+	return m.Key.GroupKey
 }
 
 func (m *Membership) GetUserKey() model.UserKey {
-	return model.NewUserKey(m.UserID)
+	return m.Key.UserKey
 }
 
 func (m *Membership) GetKey() model.MembershipKey {
@@ -68,10 +66,10 @@ func (m *Membership) GetKey() model.MembershipKey {
 }
 
 type Memberships struct {
-	Items []Membership
+	Items []*Membership
 }
 
-func NewMemberships(items []Membership) *Memberships {
+func NewMemberships(items []*Membership) *Memberships {
 	return &Memberships{Items: items}
 }
 

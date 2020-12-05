@@ -166,14 +166,14 @@ func (c ChatService) getUserSessionAndKey(ctx context.Context) (*auth.UserSessio
 // Mark would see "Dana, Joe"
 func (c ChatService) getConversationNameForUser(
 	ctx context.Context,
-	us auth.Users,
-	u auth.User,
+	us *auth.Users,
+	u *auth.User,
 ) string {
 
 	// First, sort the user names
 	userList := us.Items
 
-	copied := make([]auth.User, len(userList))
+	copied := make([]*auth.User, len(userList))
 	copy(copied, userList)
 	sort.Slice(copied, func(i, j int) bool {
 		return copied[i].Username > copied[j].Username

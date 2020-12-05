@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/chat"
-	"github.com/commonpool/backend/group"
-	"github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/trading"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -34,14 +32,11 @@ func AutoMigrate(db *gorm.DB) {
 	err := db.AutoMigrate(
 		&chat.Channel{},
 		&chat.ChannelSubscription{},
-		&group.Group{},
-		&group.Membership{},
 		&Message{},
 		&trading.Offer{},
 		&trading.OfferItem{},
 		&trading.OfferDecision{},
-		&resource.Resource{},
-		&resource.Sharing{},
+		&Sharing{},
 		&auth.User{},
 	)
 	if err != nil {

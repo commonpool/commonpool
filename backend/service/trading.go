@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/chat"
+	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
 	res "github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/trading"
@@ -14,23 +15,30 @@ import (
 
 type TradingService struct {
 	tradingStore trading.Store
+	groupService group.Service
 	rs           res.Store
 	us           auth.Store
-	cs           chat.Service
+	chatService  chat.Service
 }
 
 var _ trading.Service = &TradingService{}
 
-func NewTradingService(tradingStore trading.Store, resourceStore res.Store, authStore auth.Store, chatService chat.Service) *TradingService {
+func NewTradingService(
+	tradingStore trading.Store,
+	resourceStore res.Store,
+	authStore auth.Store,
+	chatService chat.Service,
+	groupService group.Service) *TradingService {
 	return &TradingService{
 		tradingStore: tradingStore,
 		rs:           resourceStore,
 		us:           authStore,
-		cs:           chatService,
+		chatService:  chatService,
+		groupService: groupService,
 	}
 }
 
-func (t TradingService) checkOfferCompleted(ctx context.Context, offerKey model.OfferKey, offerItems *trading.OfferItems, userConfirmingItem auth.User, usersInOffer auth.Users) error {
+func (t TradingService) checkOfferCompleted(ctx context.Context, offerKey model.OfferKey, offerItems *trading.OfferItems, userConfirmingItem *auth.User, usersInOffer *auth.Users) error {
 
 	ctx, l := GetCtx(ctx, "TradingService", "checkOfferCompleted")
 
@@ -52,7 +60,7 @@ func (t TradingService) checkOfferCompleted(ctx context.Context, offerKey model.
 			return err
 		}
 
-		_, err = t.cs.SendConversationMessage(ctx, chat.NewSendConversationMessage(
+		_, err = t.chatService.SendConversationMessage(ctx, chat.NewSendConversationMessage(
 			userConfirmingItem.GetUserKey(),
 			userConfirmingItem.Username,
 			usersInOffer.GetUserKeys(),
@@ -65,7 +73,7 @@ func (t TradingService) checkOfferCompleted(ctx context.Context, offerKey model.
 	return nil
 }
 
-func (t TradingService) buildOfferCompletedMessage(ctx context.Context, items *trading.OfferItems, users auth.Users) ([]chat.Block, string, error) {
+func (t TradingService) buildOfferCompletedMessage(ctx context.Context, items *trading.OfferItems, users *auth.Users) ([]chat.Block, string, error) {
 
 	ctx, l := GetCtx(ctx, "TradingService", "buildOfferCompletedMessage")
 

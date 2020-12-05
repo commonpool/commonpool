@@ -35,8 +35,8 @@ type HistoryEntry struct {
 	TimeAmountSeconds *int64
 }
 
-func NewOffer(offerKey model.OfferKey, author model.UserKey, message string, expiration *time.Time) Offer {
-	return Offer{
+func NewOffer(offerKey model.OfferKey, author model.UserKey, message string, expiration *time.Time) *Offer {
+	return &Offer{
 		ID:             offerKey.ID,
 		AuthorID:       author.String(),
 		Status:         PendingOffer,
@@ -67,6 +67,14 @@ type OfferDecision struct {
 	Decision Decision
 }
 
+func NewOfferDecision(offerKey model.OfferKey, userKey model.UserKey, decision Decision) *OfferDecision {
+	return &OfferDecision{
+		OfferID:  offerKey.ID,
+		UserID:   userKey.String(),
+		Decision: decision,
+	}
+}
+
 func (d *OfferDecision) GetKey() model.OfferDecisionKey {
 	return model.NewOfferDecisionKey(d.GetOfferKey(), d.GetUserKey())
 }
@@ -76,6 +84,24 @@ func (d *OfferDecision) GetOfferKey() model.OfferKey {
 }
 func (d *OfferDecision) GetUserKey() model.UserKey {
 	return model.NewUserKey(d.UserID)
+}
+
+type OfferDecisions struct {
+	Items []*OfferDecision
+}
+
+func NewOfferDecisions(items []*OfferDecision) *OfferDecisions {
+	copied := make([]*OfferDecision, len(items))
+	copy(copied, items)
+	return &OfferDecisions{
+		Items: copied,
+	}
+}
+
+func NewEmptyOfferDecisions() *OfferDecisions {
+	return &OfferDecisions{
+		Items: []*OfferDecision{},
+	}
 }
 
 type OfferItemType int
@@ -129,11 +155,10 @@ func (i *OfferItem) IsGiven() bool {
 	return i.Given
 }
 
-func NewTimeOfferItem(offerKey model.OfferKey, key model.OfferItemKey, fromUser model.UserKey, toUser model.UserKey, offeredSeconds int64) OfferItem {
-	return OfferItem{
+func NewTimeOfferItem(key model.OfferItemKey, fromUser model.UserKey, toUser model.UserKey, offeredSeconds int64) *OfferItem {
+	return &OfferItem{
 		ID:                   key.ID,
 		ItemType:             TimeItem,
-		OfferID:              offerKey.ID,
 		OfferedTimeInSeconds: &offeredSeconds,
 		FromUserID:           fromUser.String(),
 		ToUserID:             toUser.String(),
@@ -143,11 +168,10 @@ func NewTimeOfferItem(offerKey model.OfferKey, key model.OfferItemKey, fromUser 
 	}
 }
 
-func NewResourceOfferItem(offerKey model.OfferKey, key model.OfferItemKey, fromUser model.UserKey, toUser model.UserKey, offeredResource model.ResourceKey) OfferItem {
-	return OfferItem{
+func NewResourceOfferItem(key model.OfferItemKey, fromUser model.UserKey, toUser model.UserKey, offeredResource model.ResourceKey) *OfferItem {
+	return &OfferItem{
 		ID:                   key.ID,
 		ItemType:             ResourceItem,
-		OfferID:              offerKey.ID,
 		OfferedTimeInSeconds: nil,
 		FromUserID:           fromUser.String(),
 		ToUserID:             toUser.String(),
@@ -194,9 +218,9 @@ func (i *OfferItem) GetResourceKey() model.ResourceKey {
 }
 
 type OfferItems struct {
-	Items        []OfferItem
+	Items        []*OfferItem
 	Users        []model.UserKey
-	ItemsPerUser map[model.UserKey][]OfferItem
+	ItemsPerUser map[model.UserKey][]*OfferItem
 }
 
 func (i *OfferItems) AllResourceItemsReceivedAndGiven() bool {
@@ -211,11 +235,11 @@ func (i *OfferItems) AllResourceItemsReceivedAndGiven() bool {
 	return true
 }
 
-func NewOfferItems(offerItems []OfferItem) *OfferItems {
+func NewOfferItems(offerItems []*OfferItem) *OfferItems {
 
 	itemsMap := map[model.OfferItemKey]bool{}
-	itemsPerUser := map[model.UserKey][]OfferItem{}
-	var items []OfferItem
+	itemsPerUser := map[model.UserKey][]*OfferItem{}
+	var items []*OfferItem
 	var userKeys []model.UserKey
 
 	for _, item := range offerItems {
@@ -227,11 +251,11 @@ func NewOfferItems(offerItems []OfferItem) *OfferItems {
 		toUser := item.GetToUserKey()
 		fromUser := item.GetFromUserKey()
 		if _, ok := itemsPerUser[toUser]; !ok {
-			itemsPerUser[toUser] = []OfferItem{}
+			itemsPerUser[toUser] = []*OfferItem{}
 			userKeys = append(userKeys, toUser)
 		}
 		if _, ok := itemsPerUser[fromUser]; !ok {
-			itemsPerUser[fromUser] = []OfferItem{}
+			itemsPerUser[fromUser] = []*OfferItem{}
 			userKeys = append(userKeys, fromUser)
 		}
 		itemsPerUser[toUser] = append(itemsPerUser[toUser], item)
@@ -247,15 +271,24 @@ func NewOfferItems(offerItems []OfferItem) *OfferItems {
 
 }
 
+func (i *OfferItems) GetOfferItemInvolvingResource(resourceKey model.ResourceKey) (*OfferItem, bool) {
+	for _, offerItem := range i.Items {
+		if offerItem.IsResourceExchangeItem() && offerItem.GetResourceKey() == resourceKey {
+			return offerItem, true
+		}
+	}
+	return nil, false
+}
+
 func (i *OfferItems) GetOfferItemsForUser(userKey model.UserKey) *OfferItems {
 	itemsForUser, ok := i.ItemsPerUser[userKey]
 	if !ok {
-		return NewOfferItems([]OfferItem{})
+		return NewOfferItems([]*OfferItem{})
 	}
 	return NewOfferItems(itemsForUser)
 }
 
-func (i *OfferItems) Append(offerItem OfferItem) *OfferItems {
+func (i *OfferItems) Append(offerItem *OfferItem) *OfferItems {
 	newOfferItems := append(i.Items, offerItem)
 	return NewOfferItems(newOfferItems)
 }
@@ -283,7 +316,7 @@ func (i *OfferItems) GetUserKeys() *model.UserKeys {
 	return model.NewUserKeys(userKeys)
 }
 
-func (i *OfferItems) GetResourceKeys() []model.ResourceKey {
+func (i *OfferItems) GetResourceKeys() *model.ResourceKeys {
 	var resourceKeys []model.ResourceKey
 	for _, item := range i.Items {
 		if item.IsTimeExchangeItem() {
@@ -294,5 +327,5 @@ func (i *OfferItems) GetResourceKeys() []model.ResourceKey {
 	if resourceKeys == nil {
 		resourceKeys = []model.ResourceKey{}
 	}
-	return resourceKeys
+	return model.NewResourceKeys(resourceKeys)
 }

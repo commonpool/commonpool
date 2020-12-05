@@ -4,21 +4,20 @@ import (
 	"fmt"
 	"github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
-	"github.com/satori/go.uuid"
 	"time"
 )
 
 type Resource struct {
-	ID               uuid.UUID `gorm:"type:uuid;primary_key"`
+	Key              model.ResourceKey
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
-	DeletedAt        *time.Time `sql:"index"`
-	Summary          string     `gorm:"not null;"`
-	Description      string     `gorm:"not null;"`
-	CreatedBy        string     `gorm:"not null;"`
-	Type             Type       `gorm:"not null;"`
-	ValueInHoursFrom int        `gorm:"not null;'"`
-	ValueInHoursTo   int        `gorm:"not null"`
+	DeletedAt        *time.Time
+	Summary          string
+	Description      string
+	CreatedBy        string
+	Type             Type
+	ValueInHoursFrom int
+	ValueInHoursTo   int
 }
 
 func NewResource(
@@ -31,7 +30,7 @@ func NewResource(
 	valueInHoursTo int,
 ) Resource {
 	return Resource{
-		ID:               key.ID,
+		Key:              key,
 		Summary:          summary,
 		Description:      description,
 		CreatedBy:        createdBy,
@@ -42,7 +41,7 @@ func NewResource(
 }
 
 func (r *Resource) GetKey() model.ResourceKey {
-	return model.NewResourceKey(r.ID)
+	return r.Key
 }
 
 func (r *Resource) GetOwnerKey() model.UserKey {
@@ -50,12 +49,12 @@ func (r *Resource) GetOwnerKey() model.UserKey {
 }
 
 type Resources struct {
-	ItemMap map[model.ResourceKey]Resource
-	Items   []Resource
+	ItemMap map[model.ResourceKey]*Resource
+	Items   []*Resource
 }
 
-func NewResources(items []Resource) *Resources {
-	rsMap := map[model.ResourceKey]Resource{}
+func NewResources(items []*Resource) *Resources {
+	rsMap := map[model.ResourceKey]*Resource{}
 	for _, item := range items {
 		rsMap[item.GetKey()] = item
 	}
@@ -65,20 +64,27 @@ func NewResources(items []Resource) *Resources {
 	}
 }
 
-func (r *Resources) GetResource(key model.ResourceKey) (Resource, error) {
+func NewEmptyResources() *Resources {
+	return &Resources{
+		ItemMap: map[model.ResourceKey]*Resource{},
+		Items:   []*Resource{},
+	}
+}
+
+func (r *Resources) GetResource(key model.ResourceKey) (*Resource, error) {
 	rs, ok := r.ItemMap[key]
 	if !ok {
-		return Resource{}, fmt.Errorf("resource not found")
+		return nil, fmt.Errorf("resource not found")
 	}
 	return rs, nil
 }
 
-func (r *Resources) Append(resource Resource) *Resources {
+func (r *Resources) Append(resource *Resource) *Resources {
 	items := append(r.Items, resource)
 	return NewResources(items)
 }
 
-func (r *Resources) Contains(resource Resource) bool {
+func (r *Resources) Contains(resource *Resource) bool {
 	return r.ContainsKey(resource.GetKey())
 }
 
@@ -87,67 +93,83 @@ func (r *Resources) ContainsKey(key model.ResourceKey) bool {
 	return ok
 }
 
+func (r *Resources) GetKeys() *model.ResourceKeys {
+	var resourceKeys []model.ResourceKey
+	for _, resource := range r.Items {
+		resourceKeys = append(resourceKeys, resource.GetKey())
+	}
+	if resourceKeys == nil {
+		resourceKeys = []model.ResourceKey{}
+	}
+	return model.NewResourceKeys(resourceKeys)
+}
+
 type Sharing struct {
-	ResourceID uuid.UUID `gorm:"type:uuid;primary_key"`
-	GroupID    uuid.UUID `gorm:"type:uuid;primary_key"`
+	ResourceKey model.ResourceKey
+	GroupKey    model.GroupKey
 }
 
 func NewResourceSharing(resourceKey model.ResourceKey, groupKey model.GroupKey) Sharing {
 	return Sharing{
-		ResourceID: resourceKey.ID,
-		GroupID:    groupKey.ID,
+		ResourceKey: resourceKey,
+		GroupKey:    groupKey,
 	}
 }
 
 type Sharings struct {
-	sharings map[model.ResourceKey][]Sharing
+	sharingMap map[model.ResourceKey][]*Sharing
 }
 
-func NewResourceSharings(sharings []Sharing) (*Sharings, error) {
-	var result = map[model.ResourceKey][]Sharing{}
+func NewResourceSharings(sharings []*Sharing) *Sharings {
+	var result = map[model.ResourceKey][]*Sharing{}
 	for _, sharing := range sharings {
-		resourceKey, err := model.ParseResourceKey(sharing.ResourceID.String())
-		if err != nil {
-			return &Sharings{}, err
-		}
-		_, ok := result[*resourceKey]
+		_, ok := result[sharing.ResourceKey]
 		if !ok {
-			result[*resourceKey] = []Sharing{}
+			result[sharing.ResourceKey] = []*Sharing{}
 		}
-		result[*resourceKey] = append(result[*resourceKey], sharing)
+		result[sharing.ResourceKey] = append(result[sharing.ResourceKey], sharing)
 	}
-	return &Sharings{sharings: result}, nil
+	return &Sharings{sharingMap: result}
 }
 
-func (s *Sharings) GetAllGroupKeys() []model.GroupKey {
+func NewEmptyResourceSharings() *Sharings {
+	return &Sharings{
+		sharingMap: map[model.ResourceKey][]*Sharing{},
+	}
+}
+
+func (s *Sharings) GetAllGroupKeys() *model.GroupKeys {
 	groupMap := map[model.GroupKey]bool{}
 	var groupKeys []model.GroupKey
 	for _, sharing := range s.Items() {
-		groupKey := model.NewGroupKey(sharing.GroupID)
-		if !groupMap[groupKey] {
-			groupMap[groupKey] = true
-			groupKeys = append(groupKeys, groupKey)
+		if !groupMap[sharing.GroupKey] {
+			groupMap[sharing.GroupKey] = true
+			groupKeys = append(groupKeys, sharing.GroupKey)
 		}
 	}
-	return groupKeys
+	return model.NewGroupKeys(groupKeys)
 }
 
 func (s *Sharings) GetSharingsForResource(key model.ResourceKey) *Sharings {
-	list, ok := s.sharings[key]
+	list, ok := s.sharingMap[key]
 	if !ok {
-		response, _ := NewResourceSharings([]Sharing{})
-		return response
+		return NewResourceSharings([]*Sharing{})
 	}
-	response, _ := NewResourceSharings(list)
-	return response
+	return NewResourceSharings(list)
 }
 
-func (s *Sharings) Items() []Sharing {
-	var result []Sharing
-	for _, sharings := range s.sharings {
-		for _, sharing := range sharings {
+func (s *Sharings) Items() []*Sharing {
+	var result []*Sharing
+	if s.sharingMap == nil {
+		return []*Sharing{}
+	}
+	for _, sharingMapEntry := range s.sharingMap {
+		for _, sharing := range sharingMapEntry {
 			result = append(result, sharing)
 		}
+	}
+	if result == nil {
+		return []*Sharing{}
 	}
 	return result
 }
