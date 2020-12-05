@@ -26,6 +26,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b50bce1a-5445-4a69-8265-74993e439f0e" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/../.idea/commonpool.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/graph/graph_init.go" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/k8s/neo4j.yaml" afterDir="false" />
       <change afterPath="$PROJECT_DIR$/k8s/pg.yaml" afterDir="false" />
@@ -353,7 +358,14 @@
       <option name="project" value="LOCAL" />
       <updated>1606887749805</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="work">
+      <created>1607148745979</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1607148745979</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
