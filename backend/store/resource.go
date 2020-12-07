@@ -265,17 +265,23 @@ func (rs *ResourceStore) Create(createResourceQuery *resource.CreateResourceQuer
 func (rs *ResourceStore) mapGraphResourceRecord(record neo4j.Record, key string) (*resource.Resource, error) {
 	resourceRecord, _ := record.Get(key)
 	node := resourceRecord.(neo4j.Node)
+	return MapResourceNode(node)
+}
+
+func IsResourceNode(node neo4j.Node) bool {
+	return NodeHasLabel(node, "Resource")
+}
+
+func MapResourceNode(node neo4j.Node) (*resource.Resource, error) {
 	var graphResource = GraphResource{}
 	err := mapstructure.Decode(node.Props(), &graphResource)
 	if err != nil {
 		return nil, err
 	}
-
 	mappedResource, err := mapGraphResourceToResource(&graphResource)
 	if err != nil {
 		return nil, err
 	}
-
 	return mappedResource, nil
 }
 

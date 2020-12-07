@@ -6,17 +6,18 @@ import (
 )
 
 type Store interface {
-	SaveOffer(offer *Offer, items *OfferItems, decisions *OfferDecisions) (*Offer, *OfferItems, *OfferDecisions, error)
+	SaveOffer(offer *Offer, offerItems *OfferItems) error
 	GetOffer(key model.OfferKey) (*Offer, error)
-	GetItems(key model.OfferKey) (*OfferItems, error)
-	GetItem(ctx context.Context, key model.OfferItemKey) (*OfferItem, error)
-	GetOffers(qry GetOffersQuery) (GetOffersResult, error)
-	GetDecisions(key model.OfferKey) (*OfferDecisions, error)
-	SaveDecision(key model.OfferKey, user model.UserKey, decision Decision) error
-	ConfirmItemReceived(ctx context.Context, key model.OfferItemKey) error
-	ConfirmItemGiven(ctx context.Context, key model.OfferItemKey) error
+	GetOfferItemsForOffer(key model.OfferKey) (*OfferItems, error)
+	GetOfferItem(ctx context.Context, key model.OfferItemKey) (OfferItem2, error)
+	GetOffersForUser(userKey model.UserKey) (*GetOffersResult, error)
+	UpdateOfferItem(ctx context.Context, offerItem OfferItem2) error
 	SaveOfferStatus(key model.OfferKey, offer OfferStatus) error
 	GetTradingHistory(ctx context.Context, ids *model.UserKeys) ([]HistoryEntry, error)
+	FindApproversForOffer(offerKey model.OfferKey) (*OfferApprovers, error)
+	FindReceivingApproversForOfferItem(offerItemKey model.OfferItemKey) (*model.UserKeys, error)
+	FindGivingApproversForOfferItem(offerItemKey model.OfferItemKey) (*model.UserKeys, error)
+	MarkOfferItemsAsAccepted(ctx context.Context, approvedByGiver *model.OfferItemKeys, approvedByReceiver *model.OfferItemKeys) error
 }
 
 type GetOffersQuery struct {
@@ -26,11 +27,10 @@ type GetOffersQuery struct {
 }
 
 type GetOffersResult struct {
-	Items []GetOffersResultItem
+	Items []*GetOffersResultItem
 }
 
 type GetOffersResultItem struct {
-	Offer          Offer
-	OfferItems     []OfferItem
-	OfferDecisions []OfferDecision
+	Offer      *Offer
+	OfferItems *OfferItems
 }

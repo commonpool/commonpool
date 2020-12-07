@@ -49,44 +49,44 @@ func NewTestOfferItem() TestOfferItem {
 		Resource1Key: resource1Key,
 		Resource2Key: resource2Key,
 		ResourceItem1: OfferItem{
-			ID:         resourceItem1.ID,
-			ResourceID: &resource1Key.ID,
-			FromUserID: user1Key.String(),
-			ToUserID:   user2Key.String(),
-			ItemType:   ResourceItem,
-			OfferID:    offerKey.ID,
+			Key:         resourceItem1.ID,
+			ResourceKey: &resource1Key.ID,
+			From:        user1Key.String(),
+			To:          user2Key.String(),
+			ItemType:    ResourceItem,
+			OfferKey:    offerKey.ID,
 		},
 		ResourceItem2: OfferItem{
-			ID:         resourceItem2.ID,
-			ResourceID: &resource1Key.ID,
-			FromUserID: user2Key.String(),
-			ToUserID:   user1Key.String(),
-			ItemType:   ResourceItem,
-			OfferID:    offerKey.ID,
+			Key:         resourceItem2.ID,
+			ResourceKey: &resource1Key.ID,
+			From:        user2Key.String(),
+			To:          user1Key.String(),
+			ItemType:    ResourceItem,
+			OfferKey:    offerKey.ID,
 		},
 		ResourceItem3: OfferItem{
-			ID:         resourceItem3.ID,
-			OfferID:    offerKey.ID,
-			ItemType:   ResourceItem,
-			FromUserID: user1Key.String(),
-			ToUserID:   user3Key.String(),
-			ResourceID: &resource3Key.ID,
+			Key:         resourceItem3.ID,
+			OfferKey:    offerKey.ID,
+			ItemType:    ResourceItem,
+			From:        user1Key.String(),
+			To:          user3Key.String(),
+			ResourceKey: &resource3Key.ID,
 		},
 		TimeItem1: OfferItem{
-			ID:                   timeItem1.ID,
+			Key:                  timeItem1.ID,
 			OfferedTimeInSeconds: &timeInSeconds1,
-			FromUserID:           user2Key.String(),
-			ToUserID:             user1Key.String(),
+			From:                 user2Key.String(),
+			To:                   user1Key.String(),
 			ItemType:             TimeItem,
-			OfferID:              offerKey.ID,
+			OfferKey:             offerKey.ID,
 		},
 		TimeItem2: OfferItem{
-			ID:                   timeItem2.ID,
+			Key:                  timeItem2.ID,
 			OfferedTimeInSeconds: &timeInSeconds2,
-			FromUserID:           user2Key.String(),
-			ToUserID:             user1Key.String(),
+			From:                 user2Key.String(),
+			To:                   user1Key.String(),
 			ItemType:             TimeItem,
-			OfferID:              offerKey.ID,
+			OfferKey:             offerKey.ID,
 		},
 	}
 
@@ -117,7 +117,7 @@ func TestGetItemsForUser(t *testing.T) {
 		test.ResourceItem2,
 		test.ResourceItem3,
 	})
-	assert.Equal(t, 5, len(i.GetOfferItemsForUser(test.User1Key).Items))
-	assert.Equal(t, 4, len(i.GetOfferItemsForUser(test.User2Key).Items))
-	assert.Equal(t, 0, len(i.GetOfferItemsForUser(model.NewUserKey("abc")).Items))
+	assert.Equal(t, 5, len(i.GetOfferItemsReceivedByUser(test.User1Key).Items))
+	assert.Equal(t, 4, len(i.GetOfferItemsReceivedByUser(test.User2Key).Items))
+	assert.Equal(t, 0, len(i.GetOfferItemsReceivedByUser(model.NewUserKey("abc")).Items))
 }

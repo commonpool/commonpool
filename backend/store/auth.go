@@ -8,7 +8,6 @@ import (
 	"github.com/commonpool/backend/graph"
 	"github.com/commonpool/backend/model"
 	"github.com/labstack/gommon/log"
-	"github.com/mitchellh/mapstructure"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
 	"gorm.io/gorm"
 	"strings"
@@ -110,8 +109,6 @@ func (as *AuthStore) Upsert(key model.UserKey, email string, username string) er
 
 func (as *AuthStore) getByKey(session neo4j.Session, key model.UserKey) (*auth.User, error) {
 
-	var user = auth.User{}
-
 	getResult, err := session.Run(`
 		MATCH (n:User {id:$id}) 
 		RETURN n`,
@@ -137,15 +134,8 @@ func (as *AuthStore) getByKey(session neo4j.Session, key model.UserKey) (*auth.U
 
 	record := getResult.Record()
 	userRecord, _ := record.Get("n")
-	node := userRecord.(neo4j.Node)
+	return MapUserNode(userRecord.(neo4j.Node)), nil
 
-	if err := mapstructure.Decode(node.Props(), &user); err != nil {
-		return nil, err
-	}
-
-	_, err = getResult.Consume()
-
-	return &user, err
 }
 
 func (as *AuthStore) getByKeys(session neo4j.Session, key *model.UserKeys) (*auth.Users, error) {
@@ -171,14 +161,10 @@ func (as *AuthStore) getByKeys(session neo4j.Session, key *model.UserKeys) (*aut
 	var users []*auth.User
 
 	for getResult.Next() {
-		var user = auth.User{}
 		record := getResult.Record()
 		userRecord, _ := record.Get("n")
 		node := userRecord.(neo4j.Node)
-		if err := mapstructure.Decode(node.Props(), &user); err != nil {
-			return nil, err
-		}
-		users = append(users, &user)
+		users = append(users, MapUserNode(node))
 	}
 
 	_, err = getResult.Consume()
@@ -209,7 +195,7 @@ func (as *AuthStore) GetUsername(key model.UserKey) (string, error) {
 	return user.Username, err
 }
 
-func (as *AuthStore) Find(query auth.UserQuery) ([]auth.User, error) {
+func (as *AuthStore) Find(query auth.UserQuery) ([]*auth.User, error) {
 
 	session, err := as.graphDriver.GetSession()
 	if err != nil {
@@ -251,19 +237,24 @@ func (as *AuthStore) Find(query auth.UserQuery) ([]auth.User, error) {
 		return nil, result.Err()
 	}
 
-	var users []auth.User
+	var users []*auth.User
 
 	for result.Next() {
 		record := result.Record()
 		field, _ := record.Get("u")
-		node := field.(neo4j.Node)
-		props := node.Props()
-		users = append(users, auth.User{
-			ID:       props["id"].(string),
-			Username: props["username"].(string),
-			Email:    props["email"].(string),
-		})
+		users = append(users, MapUserNode(field.(neo4j.Node)))
 	}
 
 	return users, err
+}
+func IsUserNode(node neo4j.Node) bool {
+	return NodeHasLabel(node, "User")
+}
+
+func MapUserNode(node neo4j.Node) *auth.User {
+	return &auth.User{
+		ID:       node.Props()["id"].(string),
+		Username: node.Props()["username"].(string),
+		Email:    node.Props()["email"].(string),
+	}
 }

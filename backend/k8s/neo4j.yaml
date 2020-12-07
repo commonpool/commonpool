@@ -1,3 +1,5 @@
+
+
 ---
 # Source: neo4j/templates/service-account.yaml
 apiVersion: v1
@@ -87,9 +89,9 @@ data:
     NEO4J_SETTINGS[NEO4J_dbms_connector_https_advertised__address]=${NEO4J_dbms_connector_https_advertised__address:-$HOST:7473}
     NEO4J_SETTINGS[NEO4J_causal__clustering_discovery__advertised__address]=${NEO4J_causal__clustering_discovery__advertised__address:-$HOST:5000}
 
-    export graphdb_neo4j_core_0_NEO4J_dbms_connector_bolt_advertised__address=192.168.39.47:31081
-    export graphdb_neo4j_core_1_NEO4J_dbms_connector_bolt_advertised__address=192.168.39.47:32041
-    export graphdb_neo4j_core_2_NEO4J_dbms_connector_bolt_advertised__address=192.168.39.47:31882
+    export graphdb_neo4j_core_0_NEO4J_dbms_connector_bolt_advertised__address=192.168.39.47:31104
+    export graphdb_neo4j_core_1_NEO4J_dbms_connector_bolt_advertised__address=192.168.39.47:32263
+    export graphdb_neo4j_core_2_NEO4J_dbms_connector_bolt_advertised__address=192.168.39.47:32572
 
     neo4jAdminMemrec() {
         echo "Calling neo4j-admin memrec to suggest memory settings"

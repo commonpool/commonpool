@@ -2,7 +2,6 @@ package trading
 
 import (
 	"github.com/commonpool/backend/model"
-	"github.com/satori/go.uuid"
 	"time"
 )
 
@@ -17,9 +16,37 @@ const (
 	CompletedOffer
 )
 
+type OfferItemTargetType string
+
+const (
+	UserTarget  OfferItemTargetType = "user"
+	GroupTarget OfferItemTargetType = "group"
+)
+
+type OfferItemTarget struct {
+	UserKey  *model.UserKey
+	GroupKey *model.GroupKey
+	Type     OfferItemTargetType
+}
+
+func (t OfferItemTarget) IsForGroup() bool {
+	return t.Type == GroupTarget
+}
+
+func (t OfferItemTarget) IsForUser() bool {
+	return t.Type == UserTarget
+}
+
+func (t OfferItemTarget) GetGroupKey() model.GroupKey {
+	return *t.GroupKey
+}
+func (t OfferItemTarget) GetUserKey() model.UserKey {
+	return *t.UserKey
+}
+
 type Offer struct {
-	ID             uuid.UUID `gorm:"type:uuid;primary_key"`
-	AuthorID       string
+	Key            model.OfferKey
+	CreatedByKey   model.UserKey
 	Status         OfferStatus
 	CreatedAt      time.Time
 	ExpirationTime *time.Time
@@ -36,296 +63,140 @@ type HistoryEntry struct {
 }
 
 func NewOffer(offerKey model.OfferKey, author model.UserKey, message string, expiration *time.Time) *Offer {
+
 	return &Offer{
-		ID:             offerKey.ID,
-		AuthorID:       author.String(),
+		Key:            offerKey,
+		CreatedByKey:   author,
 		Status:         PendingOffer,
 		ExpirationTime: expiration,
 		Message:        message,
+		CreatedAt:      time.Now().UTC(),
 	}
 }
 
 func (o *Offer) GetKey() model.OfferKey {
-	return model.NewOfferKey(o.ID)
+	return o.Key
 }
 
 func (o *Offer) GetAuthorKey() model.UserKey {
-	return model.NewUserKey(o.AuthorID)
+	return o.CreatedByKey
 }
 
-type Decision int
-
-const (
-	PendingDecision Decision = iota
-	AcceptedDecision
-	DeclinedDecision
-)
-
-type OfferDecision struct {
-	OfferID  uuid.UUID `gorm:"type:uuid;primary_key"`
-	UserID   string    `gorm:"primary_key"`
-	Decision Decision
-}
-
-func NewOfferDecision(offerKey model.OfferKey, userKey model.UserKey, decision Decision) *OfferDecision {
-	return &OfferDecision{
-		OfferID:  offerKey.ID,
-		UserID:   userKey.String(),
-		Decision: decision,
-	}
-}
-
-func (d *OfferDecision) GetKey() model.OfferDecisionKey {
-	return model.NewOfferDecisionKey(d.GetOfferKey(), d.GetUserKey())
-}
-
-func (d *OfferDecision) GetOfferKey() model.OfferKey {
-	return model.NewOfferKey(d.OfferID)
-}
-func (d *OfferDecision) GetUserKey() model.UserKey {
-	return model.NewUserKey(d.UserID)
-}
-
-type OfferDecisions struct {
-	Items []*OfferDecision
-}
-
-func NewOfferDecisions(items []*OfferDecision) *OfferDecisions {
-	copied := make([]*OfferDecision, len(items))
-	copy(copied, items)
-	return &OfferDecisions{
-		Items: copied,
-	}
-}
-
-func NewEmptyOfferDecisions() *OfferDecisions {
-	return &OfferDecisions{
-		Items: []*OfferDecision{},
-	}
-}
-
-type OfferItemType int
-
-const (
-	ResourceItem OfferItemType = iota
-	TimeItem
-)
-
-type OfferItemBond string
-
-const (
-	OfferItemGiving    OfferItemBond = "giving"
-	OfferItemReceiving OfferItemBond = "receiving"
-	OfferItemNeither   OfferItemBond = "none"
-)
-
-type OfferItem struct {
-	ID         uuid.UUID `gorm:"type:uuid;primary_key"`
-	OfferID    uuid.UUID `gorm:"type:uuid"`
-	ItemType   OfferItemType
-	FromUserID string
-	ToUserID   string
-	// Only available when ItemType = TimeItem
-	OfferedTimeInSeconds *int64
-	// Only available when ItemType = ResourceItem
-	ResourceID *uuid.UUID
-	Received   bool
-	Given      bool
-}
-
-func (i *OfferItem) FormatOfferedTimeInSeconds() string {
-	return time.Duration(int64(time.Second) * *i.OfferedTimeInSeconds).Truncate(time.Minute * 1).String()
-}
-
-func (i *OfferItem) GetUserBondDirection(user model.UserKey) OfferItemBond {
-	if i.GetFromUserKey() == user {
-		return OfferItemGiving
-	} else if i.GetToUserKey() == user {
-		return OfferItemReceiving
-	} else {
-		return OfferItemNeither
-	}
-}
-
-func (i *OfferItem) IsReceived() bool {
-	return i.Received
-}
-
-func (i *OfferItem) IsGiven() bool {
-	return i.Given
-}
-
-func NewTimeOfferItem(key model.OfferItemKey, fromUser model.UserKey, toUser model.UserKey, offeredSeconds int64) *OfferItem {
-	return &OfferItem{
-		ID:                   key.ID,
-		ItemType:             TimeItem,
-		OfferedTimeInSeconds: &offeredSeconds,
-		FromUserID:           fromUser.String(),
-		ToUserID:             toUser.String(),
-		ResourceID:           nil,
-		Received:             false,
-		Given:                false,
-	}
-}
-
-func NewResourceOfferItem(key model.OfferItemKey, fromUser model.UserKey, toUser model.UserKey, offeredResource model.ResourceKey) *OfferItem {
-	return &OfferItem{
-		ID:                   key.ID,
-		ItemType:             ResourceItem,
-		OfferedTimeInSeconds: nil,
-		FromUserID:           fromUser.String(),
-		ToUserID:             toUser.String(),
-		ResourceID:           &offeredResource.ID,
-		Received:             false,
-		Given:                false,
-	}
-}
-
-func (i *OfferItem) IsTimeExchangeItem() bool {
-	return i.ItemType == TimeItem
-}
-
-func (i *OfferItem) IsResourceExchangeItem() bool {
-	return i.ItemType == ResourceItem
-}
-
-func (i *OfferItem) GetOfferKey() model.OfferKey {
-	return model.NewOfferKey(i.OfferID)
-}
-
-func (i *OfferItem) GetKey() model.OfferItemKey {
-	return model.NewOfferItemKey(i.ID)
-}
-
-func (i *OfferItem) GetFromUserKey() model.UserKey {
-	return model.NewUserKey(i.FromUserID)
-}
-
-func (i *OfferItem) GetToUserKey() model.UserKey {
-	return model.NewUserKey(i.ToUserID)
-}
-
-func (i *OfferItem) IsReceivedBy(userKey model.UserKey) bool {
-	return i.GetToUserKey() == userKey
-}
-
-func (i *OfferItem) IsGivenBy(userKey model.UserKey) bool {
-	return i.GetFromUserKey() == userKey
-}
-
-func (i *OfferItem) GetResourceKey() model.ResourceKey {
-	return model.NewResourceKey(*i.ResourceID)
+func (o *Offer) IsPending() bool {
+	return o.Status == PendingOffer
 }
 
 type OfferItems struct {
-	Items        []*OfferItem
-	Users        []model.UserKey
-	ItemsPerUser map[model.UserKey][]*OfferItem
+	Items []OfferItem2
 }
 
-func (i *OfferItems) AllResourceItemsReceivedAndGiven() bool {
+func (i *OfferItems) AllUserActionsCompleted() bool {
 	for _, item := range i.Items {
-		if item.IsTimeExchangeItem() {
-			continue
-		}
-		if !item.Received || !item.Given {
+		if !item.IsCompleted() {
 			return false
 		}
 	}
 	return true
 }
 
-func NewOfferItems(offerItems []*OfferItem) *OfferItems {
-
-	itemsMap := map[model.OfferItemKey]bool{}
-	itemsPerUser := map[model.UserKey][]*OfferItem{}
-	var items []*OfferItem
-	var userKeys []model.UserKey
-
-	for _, item := range offerItems {
-		if _, ok := itemsMap[item.GetKey()]; ok {
-			continue
+func (i *OfferItems) AllPartiesAccepted() bool {
+	for _, item := range i.Items {
+		if !item.IsAccepted() {
+			return false
 		}
-		itemsMap[item.GetKey()] = true
-
-		toUser := item.GetToUserKey()
-		fromUser := item.GetFromUserKey()
-		if _, ok := itemsPerUser[toUser]; !ok {
-			itemsPerUser[toUser] = []*OfferItem{}
-			userKeys = append(userKeys, toUser)
-		}
-		if _, ok := itemsPerUser[fromUser]; !ok {
-			itemsPerUser[fromUser] = []*OfferItem{}
-			userKeys = append(userKeys, fromUser)
-		}
-		itemsPerUser[toUser] = append(itemsPerUser[toUser], item)
-		itemsPerUser[fromUser] = append(itemsPerUser[fromUser], item)
-		items = append(items, item)
 	}
+	return true
+}
 
+func NewOfferItems(offerItems []OfferItem2) *OfferItems {
+	copied := make([]OfferItem2, len(offerItems))
+	copy(copied, offerItems)
 	return &OfferItems{
-		Items:        items,
-		Users:        userKeys,
-		ItemsPerUser: itemsPerUser,
+		Items: copied,
 	}
-
 }
 
-func (i *OfferItems) GetOfferItemInvolvingResource(resourceKey model.ResourceKey) (*OfferItem, bool) {
+func (i *OfferItems) GetOfferItem(key model.OfferItemKey) OfferItem2 {
 	for _, offerItem := range i.Items {
-		if offerItem.IsResourceExchangeItem() && offerItem.GetResourceKey() == resourceKey {
-			return offerItem, true
+		if offerItem.GetKey() == key {
+			return offerItem
 		}
 	}
-	return nil, false
+	return nil
 }
 
-func (i *OfferItems) GetOfferItemsForUser(userKey model.UserKey) *OfferItems {
-	itemsForUser, ok := i.ItemsPerUser[userKey]
-	if !ok {
-		return NewOfferItems([]*OfferItem{})
+func (i *OfferItems) GetOfferItemsReceivedByUser(userKey model.UserKey) *OfferItems {
+	var offerItems []OfferItem2
+	for _, offerItem := range i.Items {
+		if offerItem.GetReceiverKey().IsForUser() && offerItem.GetReceiverKey().GetUserKey() == userKey {
+			offerItems = append(offerItems, offerItem)
+		}
 	}
-	return NewOfferItems(itemsForUser)
-}
-
-func (i *OfferItems) Append(offerItem *OfferItem) *OfferItems {
-	newOfferItems := append(i.Items, offerItem)
-	return NewOfferItems(newOfferItems)
+	return NewOfferItems(offerItems)
 }
 
 func (i *OfferItems) ItemCount() int {
 	return len(i.Items)
 }
 
-func (i *OfferItems) HasItemsForUser(userKey model.UserKey) bool {
-	itemsForUser, ok := i.ItemsPerUser[userKey]
-	if !ok {
-		return false
-	}
-	if len(itemsForUser) == 0 {
-		return false
-	}
-	return true
-}
-
-func (i *OfferItems) GetUserKeys() *model.UserKeys {
-	var userKeys []model.UserKey
-	for _, user := range i.Users {
-		userKeys = append(userKeys, user)
-	}
-	return model.NewUserKeys(userKeys)
-}
-
 func (i *OfferItems) GetResourceKeys() *model.ResourceKeys {
 	var resourceKeys []model.ResourceKey
 	for _, item := range i.Items {
-		if item.IsTimeExchangeItem() {
-			continue
+		if item.IsBorrowingResource() {
+			resourceKeys = append(resourceKeys, item.(*BorrowResourceItem).ResourceKey)
+		} else if item.IsServiceProviding() {
+			resourceKeys = append(resourceKeys, item.(*ProvideServiceItem).ResourceKey)
+		} else if item.IsResourceTransfer() {
+			resourceKeys = append(resourceKeys, item.(*ResourceTransferItem).ResourceKey)
 		}
-		resourceKeys = append(resourceKeys, item.GetResourceKey())
 	}
 	if resourceKeys == nil {
 		resourceKeys = []model.ResourceKey{}
 	}
 	return model.NewResourceKeys(resourceKeys)
+}
+
+func (i *OfferItems) GetUserKeys() *model.UserKeys {
+	var userKeys []model.UserKey
+	for _, offerItem := range i.Items {
+		if offerItem.GetReceiverKey().IsForUser() {
+			userKeys = append(userKeys, offerItem.GetReceiverKey().GetUserKey())
+		}
+		if offerItem.IsCreditTransfer() {
+			creditTransfer := offerItem.(*CreditTransferItem)
+			if creditTransfer.From.IsForUser() {
+				userKeys = append(userKeys, creditTransfer.From.GetUserKey())
+			}
+		}
+	}
+	return model.NewUserKeys(userKeys)
+}
+
+func (i *OfferItems) GetGroupKeys() *model.GroupKeys {
+	var groupKeys []model.GroupKey
+	for _, offerItem := range i.Items {
+		if offerItem.GetReceiverKey().IsForGroup() {
+			groupKeys = append(groupKeys, offerItem.GetReceiverKey().GetGroupKey())
+		}
+		if offerItem.IsCreditTransfer() {
+			creditTransfer := offerItem.(*CreditTransferItem)
+			if creditTransfer.From.IsForGroup() {
+				groupKeys = append(groupKeys, creditTransfer.From.GetGroupKey())
+			}
+		}
+	}
+	return model.NewGroupKeys(groupKeys)
+}
+
+type OfferApprovers struct {
+	OfferItemsUsersCanGive    map[model.UserKey]*model.OfferItemKeys
+	OfferItemsUsersCanReceive map[model.UserKey]*model.OfferItemKeys
+	UsersAbleToGiveItem       map[model.OfferItemKey]*model.UserKeys
+	UsersAbleToReceiveItem    map[model.OfferItemKey]*model.UserKeys
+}
+
+func (o OfferApprovers) IsUserAnApprover(userKey model.UserKey) bool {
+	_, canApproveGive := o.OfferItemsUsersCanGive[userKey]
+	_, canApproveReceive := o.OfferItemsUsersCanReceive[userKey]
+	return canApproveGive || canApproveReceive
 }

@@ -25,66 +25,105 @@ func (h *Handler) Chatback(c echo.Context) error {
 
 	if req.Payload.Actions[0].ActionID == "accept_offer" {
 		return h.HandleChatbackOfferAccepted(c, req)
-	} else if req.Payload.Actions[0].ActionID == "confirm_item_received" {
-		return h.HandleChatbackConfirmItemReceived(c, req)
-	} else if req.Payload.Actions[0].ActionID == "confirm_item_given" {
-		return h.HandleChatbackConfirmItemGiven(c, req)
+	} else if req.Payload.Actions[0].ActionID == "confirm_service_provided" {
+		return h.HandleChatbackConfirmServiceProvided(c, req)
+	} else if req.Payload.Actions[0].ActionID == "confirm_resource_transferred" {
+		return h.HandleChatbackConfirmResourceTransferred(c, req)
+	} else if req.Payload.Actions[0].ActionID == "confirm_resource_borrowed" {
+		return h.HandleChatbackConfirmResourceBorrowed(c, req)
+	} else if req.Payload.Actions[0].ActionID == "confirm_resource_borrowed_returned" {
+		return h.HandleChatbackConfirmResourceBorrowedReturned(c, req)
 	}
 
 	return nil
 
 }
 
-func (h *Handler) HandleChatbackConfirmItemReceived(c echo.Context, req web.InteractionCallback) error {
-	return h.HandleChatbackConfirmItemGivenOrReceived(
-		c,
-		req,
-		trading.OfferItemReceiving)
-}
+func (h *Handler) HandleChatbackConfirmServiceProvided(c echo.Context, req web.InteractionCallback) error {
 
-func (h *Handler) HandleChatbackConfirmItemGiven(c echo.Context, req web.InteractionCallback) error {
-	return h.HandleChatbackConfirmItemGivenOrReceived(
-		c,
-		req,
-		trading.OfferItemGiving)
-
-}
-
-func (h *Handler) HandleChatbackConfirmItemGivenOrReceived(
-	c echo.Context,
-	req web.InteractionCallback,
-	bond trading.OfferItemBond) error {
-
-	var err error
-
-	ctx, l := GetEchoContext(c, "HandleChatbackConfirmItemGivenOrReceived")
-
-	l.Debug("retrieving offer item id from payload")
+	ctx, l := GetEchoContext(c, "HandleChatbackConfirmServiceProvided")
 
 	// retrieving item id from payload
-	itemId := req.Payload.Actions[0].Value
-	if itemId == nil {
+	offerItemId := req.Payload.Actions[0].Value
+	if offerItemId == nil {
 		l.Error("value is required")
 		return c.String(http.StatusBadRequest, "value is required")
 	}
 
-	l.Debug("converting item id to item key")
-
 	// converting item id to item key
-	offerItemKey, err := model.ParseOfferItemKey(*itemId)
+	offerItemKey, err := model.ParseOfferItemKey(*offerItemId)
 	if err != nil {
 		l.Error("could not get offer item id from request", zap.Error(err))
 		return c.String(http.StatusBadRequest, err.Error())
 	}
 
-	err = h.tradingService.ConfirmItemReceivedOrGiven(ctx, offerItemKey)
+	return h.tradingService.ConfirmServiceProvided(ctx, offerItemKey)
 
-	if err != nil {
-		l.Error("could not confirm item was received or given", zap.Error(err))
-		return err
+}
+
+func (h *Handler) HandleChatbackConfirmResourceTransferred(c echo.Context, req web.InteractionCallback) error {
+
+	ctx, l := GetEchoContext(c, "HandleChatbackConfirmResourceTransferred")
+
+	// retrieving item id from payload
+	offerItemId := req.Payload.Actions[0].Value
+	if offerItemId == nil {
+		l.Error("value is required")
+		return c.String(http.StatusBadRequest, "value is required")
 	}
 
-	return c.JSON(http.StatusOK, "OK")
+	// converting item id to item key
+	offerItemKey, err := model.ParseOfferItemKey(*offerItemId)
+	if err != nil {
+		l.Error("could not get offer item id from request", zap.Error(err))
+		return c.String(http.StatusBadRequest, err.Error())
+	}
+
+	return h.tradingService.ConfirmResourceTransferred(ctx, offerItemKey)
+
+}
+
+func (h *Handler) HandleChatbackConfirmResourceBorrowed(c echo.Context, req web.InteractionCallback) error {
+
+	ctx, l := GetEchoContext(c, "HandleChatbackConfirmResourceBorrowed")
+
+	// retrieving item id from payload
+	offerItemId := req.Payload.Actions[0].Value
+	if offerItemId == nil {
+		l.Error("value is required")
+		return c.String(http.StatusBadRequest, "value is required")
+	}
+
+	// converting item id to item key
+	offerItemKey, err := model.ParseOfferItemKey(*offerItemId)
+	if err != nil {
+		l.Error("could not get offer item id from request", zap.Error(err))
+		return c.String(http.StatusBadRequest, err.Error())
+	}
+
+	return h.tradingService.ConfirmResourceBorrowed(ctx, offerItemKey)
+
+}
+
+func (h *Handler) HandleChatbackConfirmResourceBorrowedReturned(c echo.Context, req web.InteractionCallback) error {
+
+	ctx, l := GetEchoContext(c, "HandleChatbackConfirmResourceBorrowed")
+
+	// retrieving item id from payload
+	offerItemId := req.Payload.Actions[0].Value
+	if offerItemId == nil {
+		l.Error("value is required")
+		return c.String(http.StatusBadRequest, "value is required")
+	}
+
+	// converting item id to item key
+	offerItemKey, err := model.ParseOfferItemKey(*offerItemId)
+	if err != nil {
+		l.Error("could not get offer item id from request", zap.Error(err))
+		return c.String(http.StatusBadRequest, err.Error())
+	}
+
+	return h.tradingService.ConfirmBorrowedResourceReturned(ctx, offerItemKey)
 
 }
 

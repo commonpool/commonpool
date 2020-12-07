@@ -26,17 +26,20 @@ func (h *Handler) Register(v1 *echo.Group) {
 	users.GET("/:id/memberships", h.GetUserMemberships)
 
 	offers := v1.Group("/offers", h.authorization.Authenticate(true))
-	offers.GET("/:id", h.GetOffer)
-	offers.GET("", h.GetOffers)
+	offers.GET("/:id", h.HandleGetOffer)
+	offers.GET("", h.HandleGetOffers)
 	offers.POST("", h.HandleSendOffer)
 	offers.POST("/:id/accept", h.HandleAcceptOffer)
-	offers.POST("/:id/decline", h.DeclineOffer)
+	offers.POST("/:id/decline", h.HandleDeclineOffer)
 
 	tradingHistory := v1.Group("/trading-history", h.authorization.Authenticate(false))
 	tradingHistory.POST("", h.GetTradingHistory)
 
 	offerItems := v1.Group("/offer-items", h.authorization.Authenticate(true))
-	offerItems.POST("/:id/confirmation", h.ConfirmItemReceivedOrGiven)
+	offerItems.POST("/:id/confirm/service-provided", h.HandleConfirmServiceProvided)
+	offerItems.POST("/:id/confirm/resource-transferred", h.HandleConfirmResourceTransferred)
+	offerItems.POST("/:id/confirm/resource-borrowed", h.HandleConfirmResourceBorrowed)
+	offerItems.POST("/:id/confirm/resource-borrowed-returned", h.HandleConfirmBorrowedResourceReturned)
 
 	my := v1.Group("/my", h.authorization.Authenticate(true))
 	my.GET("/memberships", h.GetLoggedInUserMemberships)

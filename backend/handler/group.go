@@ -194,7 +194,7 @@ func (h *Handler) GetUserMemberships(c echo.Context) error {
 
 }
 
-// GetUserMemberships godoc
+// GetMembership godoc
 // @Summary Gets the membership for a given user and group
 // @Description Gets the membership for a given user and group
 // @ID getMembership

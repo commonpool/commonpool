@@ -8,6 +8,10 @@ type OfferItemKey struct {
 	ID uuid.UUID
 }
 
+func (o OfferItemKey) String() string {
+	return o.ID.String()
+}
+
 func NewOfferItemKey(id uuid.UUID) OfferItemKey {
 	return OfferItemKey{ID: id}
 }
@@ -26,4 +30,24 @@ func MustParseOfferItemKey(str string) OfferItemKey {
 		panic(err)
 	}
 	return NewOfferItemKey(uid)
+}
+
+type OfferItemKeys struct {
+	Items []OfferItemKey
+}
+
+func (t *OfferItemKeys) Strings() []string {
+	var strings []string
+	for _, item := range t.Items {
+		strings = append(strings, item.String())
+	}
+	return strings
+}
+
+func NewOfferItemKeys(items []OfferItemKey) *OfferItemKeys {
+	copied := make([]OfferItemKey, len(items))
+	copy(copied, items)
+	return &OfferItemKeys{
+		Items: copied,
+	}
 }

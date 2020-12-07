@@ -1,6 +1,9 @@
 package web
 
 import (
+	"fmt"
+	"github.com/commonpool/backend/group"
+	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/trading"
 	"time"
 )
@@ -12,24 +15,18 @@ type Offer struct {
 	Status         trading.OfferStatus `json:"status"`
 	AuthorID       string              `json:"authorId"`
 	AuthorUsername string              `json:"authorUsername"`
-	Items          []OfferItem         `json:"items"`
-	Decisions      []OfferDecision     `json:"decisions"`
+	Items          []*OfferItem        `json:"items"`
 	Message        string              `json:"message"`
 }
 
 type OfferItem struct {
-	ID            string                `json:"id"`
-	FromUserID    string                `json:"fromUserId"`
-	ToUserID      string                `json:"toUserId"`
-	Type          trading.OfferItemType `json:"type"`
-	ResourceId    *string               `json:"resourceId"`
-	TimeInSeconds *int64                `json:"timeInSeconds"`
-}
-
-type OfferDecision struct {
-	OfferID  string           `json:"offerId"`
-	UserID   string           `json:"userId"`
-	Decision trading.Decision `json:"decision"`
+	ID         string                 `json:"id"`
+	From       *OfferItemTarget       `json:"from"`
+	To         *OfferItemTarget       `json:"to"`
+	Type       trading.OfferItemType2 `json:"type"`
+	ResourceId *string                `json:"resourceId"`
+	Duration   *int64                 `json:"duration"`
+	Amount     *int64                 `json:"amount"`
 }
 
 type GetOfferResponse struct {
@@ -48,30 +45,142 @@ type SendOfferPayload struct {
 	Message string                 `json:"message"`
 }
 
-type SendOfferPayloadItem struct {
-	From          string                `json:"from" validate:"required,uuid"`
-	To            string                `json:"to" validate:"required,uuid"`
-	Type          trading.OfferItemType `json:"type" validate:"required,min=0,max=1"`
-	ResourceId    *string               `json:"resourceId" validate:"required,uuid"`
-	TimeInSeconds *int64                `json:"timeInSeconds"`
+type OfferItemTarget struct {
+	UserID  *string                     `json:"userId"`
+	GroupID *string                     `json:"groupId" validatde:"uuid"`
+	Type    trading.OfferItemTargetType `json:"type"`
 }
 
-func NewSendOfferPayloadItemForResource(from string, to string, resourceId string) *SendOfferPayloadItem {
-	return &SendOfferPayloadItem{
-		From:          from,
-		To:            to,
-		Type:          trading.ResourceItem,
-		ResourceId:    &resourceId,
-		TimeInSeconds: nil,
+func MapWebOfferItemTarget(target OfferItemTarget) (*trading.OfferItemTarget, error) {
+	if target.Type == trading.UserTarget {
+		userKey := model.NewUserKey(*target.UserID)
+		return &trading.OfferItemTarget{
+			UserKey:  &userKey,
+			GroupKey: nil,
+			Type:     trading.UserTarget,
+		}, nil
+	} else if target.Type == trading.GroupTarget {
+		groupKey, err := group.ParseGroupKey(*target.GroupID)
+		if err != nil {
+			return nil, err
+		}
+		return &trading.OfferItemTarget{
+			UserKey:  nil,
+			GroupKey: &groupKey,
+			Type:     trading.GroupTarget,
+		}, nil
+	}
+	return nil, fmt.Errorf("invalid target")
+}
+
+func MapOfferItemTarget(target *trading.OfferItemTarget) (*OfferItemTarget, error) {
+
+	if target == nil {
+		return nil, nil
+	}
+	if target.IsForGroup() {
+		groupId := target.GetGroupKey().String()
+		return &OfferItemTarget{
+			UserID:  nil,
+			GroupID: &groupId,
+			Type:    trading.GroupTarget,
+		}, nil
+
+	} else if target.IsForUser() {
+		userId := target.GetUserKey().String()
+		return &OfferItemTarget{
+			UserID:  &userId,
+			GroupID: nil,
+			Type:    trading.GroupTarget,
+		}, nil
+	} else {
+		return nil, fmt.Errorf("unexpected offer item type")
+	}
+
+}
+
+func (t OfferItemTarget) Parse() (*trading.OfferItemTarget, error) {
+	if t.Type == trading.GroupTarget {
+		groupKey, err := group.ParseGroupKey(*t.GroupID)
+		if err != nil {
+			return nil, err
+		}
+		return &trading.OfferItemTarget{
+			UserKey:  nil,
+			GroupKey: &groupKey,
+			Type:     trading.GroupTarget,
+		}, nil
+	} else if t.Type == trading.UserTarget {
+		userKey := model.NewUserKey(*t.UserID)
+		return &trading.OfferItemTarget{
+			UserKey:  &userKey,
+			GroupKey: nil,
+			Type:     trading.UserTarget,
+		}, nil
+	}
+	return nil, fmt.Errorf("unexpected target type: %s", t.Type)
+}
+
+func NewWebOfferItemTarget(offerItemTarget *trading.OfferItemTarget) *OfferItemTarget {
+
+	var userId *string = nil
+	var groupId *string = nil
+
+	if offerItemTarget.IsForGroup() {
+		groupIdStr := offerItemTarget.GroupKey.String()
+		groupId = &groupIdStr
+	} else if offerItemTarget.IsForUser() {
+		userIdStr := offerItemTarget.UserKey.String()
+		userId = &userIdStr
+	}
+
+	return &OfferItemTarget{
+		UserID:  userId,
+		GroupID: groupId,
+		Type:    offerItemTarget.Type,
+	}
+
+}
+
+func NewGroupTarget(group string) *OfferItemTarget {
+	return &OfferItemTarget{
+		UserID:  nil,
+		GroupID: &group,
+		Type:    trading.GroupTarget,
 	}
 }
 
-func NewSendOfferPayloadItemForTime(from string, to string, time int64) *SendOfferPayloadItem {
+func NewUserTarget(user string) *OfferItemTarget {
+	return &OfferItemTarget{
+		UserID:  &user,
+		GroupID: nil,
+		Type:    trading.UserTarget,
+	}
+}
+
+type SendOfferPayloadItem struct {
+	Type       trading.OfferItemType2 `json:"type"`
+	To         OfferItemTarget        `json:"to" validate:"required,uuid"`
+	From       *OfferItemTarget       `json:"from" validate:"required,uuid"`
+	ResourceId *string                `json:"resourceId" validate:"required,uuid"`
+	Duration   *int64                 `json:"duration"`
+	Amount     *int64                 `json:"amount"`
+}
+
+func NewResourceTransferItem(to *OfferItemTarget, resourceId string) *SendOfferPayloadItem {
 	return &SendOfferPayloadItem{
-		From:          from,
-		To:            to,
-		Type:          trading.TimeItem,
-		ResourceId:    nil,
-		TimeInSeconds: &time,
+		To:         *to,
+		Type:       trading.ResourceTransfer,
+		ResourceId: &resourceId,
+	}
+}
+
+func NewCreditTransferItem(from *OfferItemTarget, to *OfferItemTarget, time time.Duration) *SendOfferPayloadItem {
+	seconds := int64(time.Seconds())
+	return &SendOfferPayloadItem{
+		From:   from,
+		To:     *to,
+		Type:   trading.CreditTransfer,
+		Amount: &seconds,
 	}
 }

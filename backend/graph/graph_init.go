@@ -1,28 +1,79 @@
 package graph
 
 import (
+	"context"
 	"fmt"
 	"github.com/commonpool/backend/config"
+	"github.com/commonpool/backend/logging"
 	"github.com/mitchellh/mapstructure"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
+	"go.uber.org/zap"
 	"strings"
 )
 
-func InitGraphDatabase(appConfig *config.AppConfig) error {
+func InitGraphDatabase(ctx context.Context, appConfig *config.AppConfig) error {
 
-	systemLeaderSessionPtr, err := GetDatabaseLeaderSession(appConfig, "system")
+	l := logging.WithContext(ctx)
+
+	systemLeaderSession, err := getDatabaseLeaderSession(appConfig, "system")
 	if err != nil {
+		l.Error("could not get database leader session", zap.Error(err))
 		return err
 	}
-	defer (*systemLeaderSessionPtr).Close()
-	systemLeaderSession := *systemLeaderSessionPtr
+	defer systemLeaderSession.Close()
 
 	result, err := systemLeaderSession.Run("CREATE DATABASE "+appConfig.Neo4jDatabase+" IF NOT EXISTS", map[string]interface{}{})
 	if err != nil {
-		return fmt.Errorf("could not create database: %v", err)
+		l.Error("could not create database", zap.Error(err))
+		return err
 	}
 	if result.Err() != nil {
-		return fmt.Errorf("could not create database: %v", err)
+		l.Error("could not create database", zap.Error(result.Err()))
+		return result.Err()
+	}
+
+	dbSession, err := getDatabaseLeaderSession(appConfig, appConfig.Neo4jDatabase)
+	if err != nil {
+		l.Error("could not get database leader session", zap.Error(err))
+		return err
+	}
+
+	return initGraphConstraints(ctx, dbSession)
+
+}
+
+func initGraphConstraints(ctx context.Context, session neo4j.Session) error {
+
+	l := logging.WithContext(ctx)
+
+	nodeNames := []string{
+		"User",
+		"Resource",
+		"Offer",
+		"OfferItem",
+		"Group",
+	}
+	for _, nodeName := range nodeNames {
+		if err := createIdConstraint(ctx, session, nodeName); err != nil {
+			l.Error("could not create constraint", zap.Error(err))
+			return err
+		}
+	}
+	return nil
+}
+
+func createIdConstraint(ctx context.Context, session neo4j.Session, nodeName string) error {
+
+	l := logging.WithContext(ctx)
+
+	result, err := session.Run(`CREATE CONSTRAINT IF NOT EXISTS idx`+nodeName+` ON (n:`+nodeName+`) ASSERT (n.id) IS UNIQUE`, map[string]interface{}{})
+	if err != nil {
+		l.Error("could not create constraint", zap.Error(err))
+		return err
+	}
+
+	if result.Err() != nil {
+
 	}
 
 	return nil
@@ -146,7 +197,7 @@ func findDatabaseLeaderBoltUrl(session neo4j.Session, databaseName string) (stri
 
 }
 
-func GetDatabaseLeaderSession(appConfig *config.AppConfig, databaseName string) (*neo4j.Session, error) {
+func getDatabaseLeaderSession(appConfig *config.AppConfig, databaseName string) (neo4j.Session, error) {
 
 	tempDriver, err := neo4j.NewDriver(
 		appConfig.BoltUrl,
@@ -191,6 +242,6 @@ func GetDatabaseLeaderSession(appConfig *config.AppConfig, databaseName string) 
 		DatabaseName: databaseName,
 	})
 
-	return &leaderSession, nil
+	return leaderSession, nil
 
 }

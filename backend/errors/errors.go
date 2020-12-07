@@ -2,6 +2,8 @@ package errors
 
 import (
 	"fmt"
+	route "github.com/commonpool/backend/router"
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
@@ -15,9 +17,15 @@ type WebServiceException struct {
 var ErrUserNotFound = NewWebServiceException("user not found", "ErrUserNotFound", http.StatusNotFound)
 var ErrResourceNotFound = NewWebServiceException("resource not found", "ErrResourceNotFound", http.StatusNotFound)
 var ErrGroupNotFound = NewWebServiceException("group not found", "ErrGroupNotFound", http.StatusNotFound)
+var ErrOfferNotFound = NewWebServiceException("offer not found", "ErrOfferNotFound", http.StatusNotFound)
+var ErrOfferItemNotFound = NewWebServiceException("offer item not found", "ErrOfferItemNotFound", http.StatusNotFound)
 var ErrMembershipNotFound = NewWebServiceException("membership not found", "ErrMembershipNotFound", http.StatusNotFound)
 var ErrUserOrGroupNotFound = NewWebServiceException("user or group not found", "ErrUserOrGroupNotFound", http.StatusNotFound)
 var ErrUnknownParty = NewWebServiceException("unknown party", "ErrUnknownParty", http.StatusBadRequest)
+var ErrNegativeDuration = NewWebServiceException("time offers must have positive time value", "ErrNegativeDuration", http.StatusBadRequest)
+var ErrWrongOfferItemType = NewWebServiceException("wrong offer item type", "ErrWrongOfferItemType", http.StatusBadRequest)
+var ErrUnauthorized = NewWebServiceException("unauthorized", "ErrUnauthorized", http.StatusUnauthorized)
+var ErrForbidden = NewWebServiceException("forbidden", "ErrForbidden", http.StatusForbidden)
 
 func (e WebServiceException) Error() string {
 	return e.Message
@@ -40,26 +48,75 @@ func NewWebServiceException(message string, code string, status int) error {
 	return &e
 }
 
-type ErrorIs interface {
-	Is(error) bool
+type ValidError struct {
+	Tag             string `json:"tag"`
+	ActualTag       string `json:"actualTag"`
+	Namespace       string `json:"namespace"`
+	StructNamespace string `json:"structNamespace"`
+	Field           string `json:"field"`
+	StructField     string `json:"structField"`
+	Param           string `json:"param"`
+	Kind            string `json:"kind"`
+	Type            string `json:"type"`
 }
 
-var ErrUnauthorized = NewWebServiceException("unauthorized", "ErrUnauthorized", http.StatusUnauthorized)
+type ValidErrors struct {
+	Errors  []ValidError      `json:"errors"`
+	Message string            `json:"message"`
+	Trans   map[string]string `json:"trans"`
+}
 
-func ReturnException(c echo.Context, err error) error {
-	ws, ok := err.(*WebServiceException)
-	if !ok {
-		return c.JSON(http.StatusInternalServerError, &ErrorResponse{
-			Message:    "Internal server error",
-			Code:       "ErrInternalServerError",
-			StatusCode: http.StatusInternalServerError,
+func NewValidError(validerr validator.ValidationErrors) ValidErrors {
+
+	var validErrors []ValidError
+
+	for _, err := range validerr {
+		validErrors = append(validErrors, ValidError{
+			Tag:             err.Tag(),
+			ActualTag:       err.ActualTag(),
+			Namespace:       err.Namespace(),
+			StructNamespace: err.StructNamespace(),
+			Field:           err.Field(),
+			StructField:     err.StructField(),
+			Param:           err.Param(),
+			Kind:            err.Kind().String(),
+			Type:            err.Type().String(),
 		})
 	}
-	return c.JSON(ws.Status, &ErrorResponse{
-		Message:    ws.Message,
-		Code:       ws.Code,
-		StatusCode: ws.Status,
+
+	translation := validerr.Translate(route.Trans)
+
+	if validErrors == nil {
+		validErrors = []ValidError{}
+	}
+
+	return ValidErrors{
+		Message: validerr.Error(),
+		Errors:  validErrors,
+		Trans:   translation,
+	}
+
+}
+
+func ReturnException(c echo.Context, err error) error {
+	if ws, ok := err.(*WebServiceException); ok {
+		return c.JSON(ws.Status, &ErrorResponse{
+			Message:    ws.Message,
+			Code:       ws.Code,
+			StatusCode: ws.Status,
+		})
+	}
+
+	if ve, ok := err.(*validator.ValidationErrors); ok {
+		return c.JSON(http.StatusBadRequest, ve)
+	}
+
+	return c.JSON(http.StatusInternalServerError, &ErrorResponse{
+		Message:    "Internal server error",
+		Code:       "ErrInternalServerError",
+		StatusCode: http.StatusInternalServerError,
 	})
+
 }
 
 var (

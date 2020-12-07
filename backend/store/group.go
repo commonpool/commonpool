@@ -82,6 +82,14 @@ func (g *GroupStore) GetGroups(take int, skip int) (*group.Groups, int64, error)
 func mapRecordToGroup(record neo4j.Record, key string) (*group.Group, error) {
 	field, _ := record.Get(key)
 	node := field.(neo4j.Node)
+	return MapGroupNode(node)
+}
+
+func IsGroupNode(node neo4j.Node) bool {
+	return NodeHasLabel(node, "Group")
+}
+
+func MapGroupNode(node neo4j.Node) (*group.Group, error) {
 	graphGroup := GraphGroup{}
 	err := mapstructure.Decode(node.Props(), &graphGroup)
 	if err != nil {

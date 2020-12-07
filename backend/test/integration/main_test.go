@@ -12,7 +12,6 @@ import (
 	"github.com/commonpool/backend/mock"
 	"github.com/commonpool/backend/service"
 	"github.com/commonpool/backend/store"
-	"github.com/commonpool/backend/trading"
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
 	"io/ioutil"
@@ -48,7 +47,10 @@ func TestMain(m *testing.M) {
 
 	ctx := context.Background()
 
-	AmqpClient, _ = amqp.NewRabbitMqClient(ctx, "amqp://guest:guest@192.168.39.47:31991/")
+	AmqpClient, err = amqp.NewRabbitMqClient(ctx, appConfig.AmqpUrl)
+	if err != nil {
+		panic(err)
+	}
 	Authorizer = mock.NewTestAuthorizer()
 	Authorizer.MockCurrentSession = func() auth.UserSession {
 		if authenticatedUser == nil {
@@ -59,7 +61,7 @@ func TestMain(m *testing.M) {
 		return *authenticatedUser
 	}
 
-	err = graph.InitGraphDatabase(appConfig)
+	err = graph.InitGraphDatabase(nil, appConfig)
 	if err != nil {
 		panic(err)
 	}
@@ -73,7 +75,7 @@ func TestMain(m *testing.M) {
 	ResourceStore = *store.NewResourceStore(Driver)
 	AuthStore = *store.NewAuthStore(Db, Driver)
 	ChatStore = *store.NewChatStore(Db, &AuthStore, AmqpClient)
-	TradingStore = *store.NewTradingStore(Db)
+	TradingStore = *store.NewTradingStore(Driver)
 	GroupStore = *store.NewGroupStore(Driver)
 	ChatService = *service.NewChatService(&AuthStore, &GroupStore, &ResourceStore, AmqpClient, &ChatStore)
 	GroupService = *service.NewGroupService(&GroupStore, AmqpClient, ChatService, &AuthStore)
@@ -134,10 +136,6 @@ func cleanDb() {
 		panic(err)
 	}
 
-	Db.Delete(store.Sharing{}, "1 = 1")
-	Db.Delete(trading.Offer{}, "1 = 1")
-	Db.Delete(trading.OfferItem{}, "1 = 1")
-	Db.Delete(trading.OfferDecision{}, "1 = 1")
 	Db.Delete(chat.Channel{}, "1 = 1")
 	Db.Delete(chat.ChannelSubscription{}, "1 = 1")
 	Db.Delete(store.Message{}, "1 = 1")

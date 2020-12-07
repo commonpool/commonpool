@@ -3,109 +3,229 @@ package service
 import (
 	"context"
 	"github.com/commonpool/backend/auth"
+	errs "github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/trading"
 	"go.uber.org/zap"
 )
 
-// ConfirmItemReceivedOrGiven will send a notification to concerned users that an offer item was either accepted or given
-// It will also complete the offer if all offer items have been given and received, moving time credits around
-func (t TradingService) ConfirmItemReceivedOrGiven(ctx context.Context, confirmedItemKey model.OfferItemKey) error {
+/**
+CreditTransfer   OfferItemType2 = "transfer_credits"
+ProvideService   OfferItemType2 = "provide_service"
+BorrowResource   OfferItemType2 = "borrow_resource"
+ResourceTransfer OfferItemType2 = "transfer_resource"
+*/
 
-	ctx, l := GetCtx(ctx, "ChatService", "ConfirmItemReceived")
+func (t TradingService) ConfirmServiceProvided(ctx context.Context, confirmedItemKey model.OfferItemKey) error {
+
+	ctx, l := GetCtx(ctx, "TradingService", "ConfirmServiceProvided")
 
 	userSession, err := auth.GetUserSession(ctx)
 	if err != nil {
 		return err
 	}
+	loggedInUserKey := userSession.GetUserKey()
 
 	// retrieving item
-	offerItem, err := t.tradingStore.GetItem(nil, confirmedItemKey)
+	offerItem, err := t.tradingStore.GetOfferItem(nil, confirmedItemKey)
 	if err != nil {
 		l.Error("could not get offer item", zap.Error(err))
 		return err
 	}
 
-	if offerItem.GetFromUserKey() != userSession.GetUserKey() && offerItem.GetToUserKey() != userSession.GetUserKey() {
-		return trading.ErrUserNotPartOfOfferItem
+	if !offerItem.IsServiceProviding() {
+		return errs.ErrWrongOfferItemType
 	}
 
-	offer, err := t.tradingStore.GetOffer(offerItem.GetOfferKey())
-	if err != nil {
-		l.Error("could not get parent offer", zap.Error(err))
-		return err
-	}
+	serviceProvided := offerItem.(trading.ProvideServiceItem)
 
-	// cannot confirm an item for an offer that's already completed
-	if offer.Status == trading.CompletedOffer {
-		l.Warn("cannot complete offer: already completed")
-		return err
-	}
-
-	// mark the item as either received or given
-	if userSession.GetUserKey() == offerItem.GetToUserKey() {
-
-		// skip altogether when item is already marked as received
-		if offerItem.IsReceived() {
-			l.Warn("could not complete item: item already received")
-			return err
-		}
-
-		err := t.tradingStore.ConfirmItemReceived(ctx, confirmedItemKey)
-		if err != nil {
-			l.Error("could not confirm having received offer item", zap.Error(err))
-			return err
-		}
-
-	} else {
-
-		// skip altogether when item is already marked as given
-		if offerItem.IsGiven() {
-			l.Warn("aborting: item already given")
-			return err
-		}
-
-		err := t.tradingStore.ConfirmItemGiven(ctx, confirmedItemKey)
-		if err != nil {
-			l.Error("could not confirm having given the item", zap.Error(err))
-			return err
-		}
-
-	}
-
-	offerItems, err := t.tradingStore.GetItems(offerItem.GetOfferKey())
-	if err != nil {
-		l.Error("could not get all offer items", zap.Error(err))
-		return err
-	}
-
-	// retrieving the item's from and to users
-	confirmedItemFromUserKey := offerItem.GetFromUserKey()
-	confirmedItemToUserKey := offerItem.GetToUserKey()
-
-	offerUsers, err := t.us.GetByKeys(nil, []model.UserKey{confirmedItemFromUserKey, confirmedItemToUserKey})
-	if err != nil {
-		l.Error("could not get users", zap.Error(err))
-		return err
-	}
-
-	confirmingUser, err := offerUsers.GetUser(userSession.GetUserKey())
-	if err != nil {
-		l.Error("could not get confirming user from user list")
-		return err
-	}
-
-	err = t.notifyItemGivenOrReceived(ctx, offerItem, confirmingUser, offerUsers)
-	if err != nil {
-		l.Error("could not notify users the item was given/received", zap.Error(err))
-		return err
-	}
-
-	err = t.checkOfferCompleted(ctx, offerItem.GetOfferKey(), offerItems, confirmingUser, offerUsers)
+	receivingApprovers, err := t.tradingStore.FindReceivingApproversForOfferItem(offerItem.GetKey())
 	if err != nil {
 		return err
 	}
 
+	givingApprovers, err := t.tradingStore.FindGivingApproversForOfferItem(offerItem.GetKey())
+	if err != nil {
+		return err
+	}
+
+	if receivingApprovers.Contains(loggedInUserKey) {
+		serviceProvided.ServiceReceivedConfirmation = true
+	}
+	if givingApprovers.Contains(loggedInUserKey) {
+		serviceProvided.ServiceGivenConfirmation = true
+	}
+
+	err = t.tradingStore.UpdateOfferItem(ctx, serviceProvided)
+	if err != nil {
+		return err
+	}
+
+	return t.checkIfAllItemsCompleted(err, offerItem)
+
+}
+
+func (t TradingService) ConfirmResourceTransferred(ctx context.Context, confirmedItemKey model.OfferItemKey) error {
+
+	ctx, l := GetCtx(ctx, "TradingService", "ConfirmResourceTransferred")
+
+	userSession, err := auth.GetUserSession(ctx)
+	if err != nil {
+		return err
+	}
+	loggedInUserKey := userSession.GetUserKey()
+
+	// retrieving item
+	offerItem, err := t.tradingStore.GetOfferItem(nil, confirmedItemKey)
+	if err != nil {
+		l.Error("could not get offer item", zap.Error(err))
+		return err
+	}
+
+	if !offerItem.IsResourceTransfer() {
+		return errs.ErrWrongOfferItemType
+	}
+
+	resourceTransfer := offerItem.(trading.ResourceTransferItem)
+
+	receivingApprovers, err := t.tradingStore.FindReceivingApproversForOfferItem(offerItem.GetKey())
+	if err != nil {
+		return err
+	}
+
+	givingApprovers, err := t.tradingStore.FindGivingApproversForOfferItem(offerItem.GetKey())
+	if err != nil {
+		return err
+	}
+
+	if receivingApprovers.Contains(loggedInUserKey) {
+		resourceTransfer.ItemReceived = true
+	}
+	if givingApprovers.Contains(loggedInUserKey) {
+		resourceTransfer.ItemGiven = true
+	}
+
+	err = t.tradingStore.UpdateOfferItem(ctx, resourceTransfer)
+	if err != nil {
+		return err
+	}
+
+	return t.checkIfAllItemsCompleted(err, offerItem)
+
+}
+
+func (t TradingService) ConfirmResourceBorrowed(ctx context.Context, confirmedItemKey model.OfferItemKey) error {
+
+	ctx, l := GetCtx(ctx, "TradingService", "ConfirmResourceBorrowed")
+
+	userSession, err := auth.GetUserSession(ctx)
+	if err != nil {
+		return err
+	}
+	loggedInUserKey := userSession.GetUserKey()
+
+	// retrieving item
+	offerItem, err := t.tradingStore.GetOfferItem(nil, confirmedItemKey)
+	if err != nil {
+		l.Error("could not get offer item", zap.Error(err))
+		return err
+	}
+
+	if !offerItem.IsBorrowingResource() {
+		return errs.ErrWrongOfferItemType
+	}
+
+	resourceTransfer := offerItem.(trading.BorrowResourceItem)
+
+	if resourceTransfer.ItemGiven && resourceTransfer.ItemTaken {
+		return nil
+	}
+
+	receivingApprovers, err := t.tradingStore.FindReceivingApproversForOfferItem(offerItem.GetKey())
+	if err != nil {
+		return err
+	}
+
+	givingApprovers, err := t.tradingStore.FindGivingApproversForOfferItem(offerItem.GetKey())
+	if err != nil {
+		return err
+	}
+
+	if receivingApprovers.Contains(loggedInUserKey) {
+		resourceTransfer.ItemTaken = true
+	}
+	if givingApprovers.Contains(loggedInUserKey) {
+		resourceTransfer.ItemGiven = true
+	}
+
+	err = t.tradingStore.UpdateOfferItem(ctx, resourceTransfer)
+	if err != nil {
+		return err
+	}
+
+	return t.checkIfAllItemsCompleted(err, offerItem)
+
+}
+
+func (t TradingService) ConfirmBorrowedResourceReturned(ctx context.Context, confirmedItemKey model.OfferItemKey) error {
+
+	ctx, l := GetCtx(ctx, "TradingService", "ConfirmResourceBorrowed")
+
+	userSession, err := auth.GetUserSession(ctx)
+	if err != nil {
+		return err
+	}
+	loggedInUserKey := userSession.GetUserKey()
+
+	// retrieving item
+	offerItem, err := t.tradingStore.GetOfferItem(nil, confirmedItemKey)
+	if err != nil {
+		l.Error("could not get offer item", zap.Error(err))
+		return err
+	}
+
+	if !offerItem.IsBorrowingResource() {
+		return errs.ErrWrongOfferItemType
+	}
+
+	resourceTransfer := offerItem.(trading.BorrowResourceItem)
+
+	receivingApprovers, err := t.tradingStore.FindReceivingApproversForOfferItem(offerItem.GetKey())
+	if err != nil {
+		return err
+	}
+
+	givingApprovers, err := t.tradingStore.FindGivingApproversForOfferItem(offerItem.GetKey())
+	if err != nil {
+		return err
+	}
+
+	if receivingApprovers.Contains(loggedInUserKey) {
+		resourceTransfer.ItemTaken = true
+		resourceTransfer.ItemReturnedBack = true
+	}
+	if givingApprovers.Contains(loggedInUserKey) {
+		resourceTransfer.ItemGiven = true
+		resourceTransfer.ItemReceivedBack = true
+	}
+
+	err = t.tradingStore.UpdateOfferItem(ctx, resourceTransfer)
+	if err != nil {
+		return err
+	}
+
+	return t.checkIfAllItemsCompleted(err, offerItem)
+
+}
+
+func (t TradingService) checkIfAllItemsCompleted(err error, offerItem trading.OfferItem2) error {
+	offerItems, err := t.tradingStore.GetOfferItemsForOffer(offerItem.GetOfferKey())
+	if err != nil {
+		return err
+	}
+
+	if offerItems.AllUserActionsCompleted() {
+		return t.tradingStore.SaveOfferStatus(offerItem.GetOfferKey(), trading.CompletedOffer)
+	}
 	return nil
-
 }

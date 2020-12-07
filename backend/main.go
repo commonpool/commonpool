@@ -61,7 +61,7 @@ func main() {
 		log.Fatal(err, "cannot crate amqp client")
 	}
 
-	err = graph.InitGraphDatabase(appConfig)
+	err = graph.InitGraphDatabase(ctx, appConfig)
 	if err != nil {
 		panic(err)
 	}
@@ -81,7 +81,7 @@ func main() {
 	resourceStore = store.NewResourceStore(driver)
 	authStore = store.NewAuthStore(db, driver)
 	chatStore := store.NewChatStore(db, authStore, amqpCli)
-	tradingStore := store.NewTradingStore(db)
+	tradingStore := store.NewTradingStore(driver)
 	groupStore := store.NewGroupStore(driver)
 
 	chatService := service.NewChatService(authStore, groupStore, resourceStore, amqpCli, chatStore)

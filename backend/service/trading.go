@@ -42,7 +42,7 @@ func (t TradingService) checkOfferCompleted(ctx context.Context, offerKey model.
 
 	ctx, l := GetCtx(ctx, "TradingService", "checkOfferCompleted")
 
-	if offerItems.AllResourceItemsReceivedAndGiven() {
+	if offerItems.AllUserActionsCompleted() {
 
 		l.Debug("all items have been given and received. Marking offer as completed")
 
@@ -75,7 +75,7 @@ func (t TradingService) checkOfferCompleted(ctx context.Context, offerKey model.
 
 func (t TradingService) buildOfferCompletedMessage(ctx context.Context, items *trading.OfferItems, users *auth.Users) ([]chat.Block, string, error) {
 
-	ctx, l := GetCtx(ctx, "TradingService", "buildOfferCompletedMessage")
+	ctx, _ = GetCtx(ctx, "TradingService", "buildOfferCompletedMessage")
 
 	var blocks []chat.Block
 
@@ -87,24 +87,30 @@ func (t TradingService) buildOfferCompletedMessage(ctx context.Context, items *t
 
 	for _, offerItem := range items.Items {
 
-		fromUser, err := users.GetUser(offerItem.GetFromUserKey())
-		if err != nil {
-			l.Error("could not get 'fromUser'", zap.Error(err))
-			return nil, "", err
-		}
+		if offerItem.IsCreditTransfer() {
 
-		toUser, err := users.GetUser(offerItem.GetToUserKey())
-		if err != nil {
-			l.Error("could not get 'toUser'", zap.Error(err))
-			return nil, "", err
-		}
+			creditTransfer := offerItem.(trading.CreditTransferItem)
 
-		if offerItem.IsTimeExchangeItem() {
+			var toLink = ""
+			var fromLink = ""
+
+			if creditTransfer.To.IsForGroup() {
+				toLink = t.chatService.GetGroupLink(creditTransfer.To.GetGroupKey())
+			} else if creditTransfer.To.IsForUser() {
+				toLink = t.chatService.GetUserLink(creditTransfer.To.GetUserKey())
+			}
+
+			if creditTransfer.From.IsForGroup() {
+				fromLink = t.chatService.GetGroupLink(creditTransfer.From.GetGroupKey())
+			} else if creditTransfer.From.IsForUser() {
+				fromLink = t.chatService.GetUserLink(creditTransfer.From.GetUserKey())
+			}
+
 			blocks = append(blocks, *chat.NewSectionBlock(
-				chat.NewMarkdownObject(fmt.Sprintf("**%s** sent **%s** `%s` timebank credits",
-					fromUser.Username,
-					toUser.Username,
-					time.Duration(int64(time.Second)**offerItem.OfferedTimeInSeconds).Truncate(time.Minute*1).String(),
+				chat.NewMarkdownObject(fmt.Sprintf("%s received `%s` timebank credits from %s",
+					toLink,
+					creditTransfer.Amount.Truncate(time.Minute*1).String(),
+					fromLink,
 				)),
 				nil,
 				nil,

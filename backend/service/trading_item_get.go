@@ -6,9 +6,9 @@ import (
 	"github.com/commonpool/backend/trading"
 )
 
-func (t TradingService) GetOfferItem(ctx context.Context, offerItemKey model.OfferItemKey) (*trading.OfferItem, error) {
+func (t TradingService) GetOfferItem(ctx context.Context, offerItemKey model.OfferItemKey) (trading.OfferItem2, error) {
 
-	offerItem, err := t.tradingStore.GetItem(ctx, offerItemKey)
+	offerItem, err := t.tradingStore.GetOfferItem(ctx, offerItemKey)
 	if err != nil {
 		return nil, err
 	}

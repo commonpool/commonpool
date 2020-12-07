@@ -149,6 +149,10 @@ func (c ChatService) GetResourceLink(resource model.ResourceKey) string {
 	return fmt.Sprintf("<commonpool-resource id='%s'><commonpool-resource>", resource.String())
 }
 
+func (c ChatService) GetGroupLink(groupKey model.GroupKey) string {
+	return fmt.Sprintf("<commonpool-group id='%s'><commonpool-group>", groupKey.String())
+}
+
 func (c ChatService) getUserSessionAndKey(ctx context.Context) (*auth.UserSession, model.UserKey, error) {
 	userSession, err := auth.GetUserSession(ctx)
 	if err != nil {

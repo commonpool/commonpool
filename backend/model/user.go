@@ -19,11 +19,11 @@ func NewUserKey(subject string) UserKey {
 	return UserKey{subject: subject}
 }
 
-func (k *UserKey) String() string {
+func (k UserKey) String() string {
 	return k.subject
 }
 
-func (k *UserKey) GetExchangeName() string {
+func (k UserKey) GetExchangeName() string {
 	return "users." + k.String()
 }
 

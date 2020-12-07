@@ -2,6 +2,7 @@ package model
 
 import (
 	uuid "github.com/satori/go.uuid"
+	"go.uber.org/zap/zapcore"
 )
 
 type OfferKey struct {
@@ -31,4 +32,9 @@ func MustParseOfferKey(value string) OfferKey {
 		panic(err)
 	}
 	return NewOfferKey(offerId)
+}
+
+func (m OfferKey) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
+	encoder.AddString("offer_id", m.String())
+	return nil
 }

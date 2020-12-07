@@ -18,6 +18,7 @@ type Service interface {
 	CreateUserExchange(ctx context.Context, userKey model.UserKey) (string, error)
 	GetUserExchangeName(ctx context.Context, userKey model.UserKey) string
 	GetUserLink(userKey model.UserKey) string
+	GetGroupLink(groupKey model.GroupKey) string
 	GetResourceLink(resource model.ResourceKey) string
 }
 

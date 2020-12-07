@@ -27,11 +27,11 @@ func TestTrading(t *testing.T) {
 	)
 
 	assert.Equal(t, 2, len(offer.Offer.Items))
-	assert.Equal(t, user1.Subject, offer.Offer.Items[0].FromUserID)
-	assert.Equal(t, user2.Subject, offer.Offer.Items[0].ToUserID)
+	assert.Equal(t, user1.Subject, offer.Offer.Items[0].From)
+	assert.Equal(t, user2.Subject, offer.Offer.Items[0].To)
 	assert.Equal(t, res1.Resource.Id, offer.Offer.Items[0].ResourceId)
-	assert.Equal(t, user2.Subject, offer.Offer.Items[1].FromUserID)
-	assert.Equal(t, user1.Subject, offer.Offer.Items[1].ToUserID)
+	assert.Equal(t, user2.Subject, offer.Offer.Items[1].From)
+	assert.Equal(t, user1.Subject, offer.Offer.Items[1].To)
 	assert.Equal(t, res2.Resource.Id, offer.Offer.Items[1].ResourceId)
 	assert.Equal(t, 2, len(offer.Offer.Decisions))
 	assert.Equal(t, user1.Subject, offer.Offer.Decisions[0].UserID)
@@ -66,7 +66,7 @@ func aTimeOffer(from string, to string, time int64) web.SendOfferPayloadItem {
 
 func getOffers(t *testing.T) web.GetOffersResponse {
 	_, _, rec, c := newRequest(echo.GET, "/api/v1/offers", nil)
-	err := h.GetOffers(c)
+	err := h.HandleGetOffers(c)
 	if err != nil {
 		panic(err)
 	}
