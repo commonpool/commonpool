@@ -181,10 +181,10 @@ func (h *Handler) GetResource(c echo.Context) error {
 
 	l.Debug("getting resource")
 
-	getResourceByKeyResponse := h.resourceStore.GetByKey(ctx, resource.NewGetResourceByKeyQuery(resourceKey))
-	if getResourceByKeyResponse.Error != nil {
+	getResourceByKeyResponse, err := h.resourceStore.GetByKey(ctx, resource.NewGetResourceByKeyQuery(resourceKey))
+	if err != nil {
 		l.Error("could not get resource by key", zap.Error(err))
-		return NewErrResponse(c, getResourceByKeyResponse.Error)
+		return NewErrResponse(c, err)
 	}
 	res := getResourceByKeyResponse.Resource
 
@@ -262,6 +262,7 @@ func (h *Handler) CreateResource(c echo.Context) error {
 	res := resource.NewResource(
 		model.NewResourceKey(uuid.NewV4()),
 		sanitized.Type,
+		sanitized.SubType,
 		loggedInUserSession.Subject,
 		sanitized.Summary,
 		sanitized.Description,
@@ -275,10 +276,10 @@ func (h *Handler) CreateResource(c echo.Context) error {
 		return NewErrResponse(c, createResourceResponse.Error)
 	}
 
-	getResourceResponse := h.resourceStore.GetByKey(ctx, resource.NewGetResourceByKeyQuery(res.GetKey()))
-	if getResourceResponse.Error != nil {
-		c.Logger().Error(getResourceResponse.Error, "CreateResource: error while retrieving resource")
-		return c.JSON(http.StatusBadRequest, getResourceResponse.Error)
+	getResourceResponse, err := h.resourceStore.GetByKey(ctx, resource.NewGetResourceByKeyQuery(res.GetKey()))
+	if err != nil {
+		c.Logger().Error(err, "CreateResource: error while retrieving resource")
+		return c.JSON(http.StatusBadRequest, err)
 	}
 
 	groups, err := h.groupService.GetGroupsByKeys(ctx, getResourceResponse.Sharings.GetAllGroupKeys())
@@ -334,8 +335,8 @@ func (h *Handler) UpdateResource(c echo.Context) error {
 	}
 
 	// Retrieves the resource
-	getResourceByKeyResponse := h.resourceStore.GetByKey(ctx, resource.NewGetResourceByKeyQuery(resourceKey))
-	if getResourceByKeyResponse.Error != nil {
+	getResourceByKeyResponse, err := h.resourceStore.GetByKey(ctx, resource.NewGetResourceByKeyQuery(resourceKey))
+	if err != nil {
 		c.Logger().Error(err, "UpdateResource: could not retrieve resource by key")
 		return NewErrResponse(c, err)
 	}
@@ -396,10 +397,10 @@ func (h *Handler) UpdateResource(c echo.Context) error {
 	}
 
 	// retrieving resource
-	getResourceResponse := h.resourceStore.GetByKey(ctx, resource.NewGetResourceByKeyQuery(resToUpdate.GetKey()))
-	if getResourceResponse.Error != nil {
+	getResourceResponse, err := h.resourceStore.GetByKey(ctx, resource.NewGetResourceByKeyQuery(resToUpdate.GetKey()))
+	if err != nil {
 		c.Logger().Warn(err, "UpdateResource: error getting resource after update")
-		return c.JSON(http.StatusBadRequest, getResourceResponse.Error)
+		return c.JSON(http.StatusBadRequest, err)
 	}
 
 	// retrieving groups

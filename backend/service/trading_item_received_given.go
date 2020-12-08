@@ -225,7 +225,7 @@ func (t TradingService) checkIfAllItemsCompleted(err error, offerItem trading.Of
 	}
 
 	if offerItems.AllUserActionsCompleted() {
-		return t.tradingStore.SaveOfferStatus(offerItem.GetOfferKey(), trading.CompletedOffer)
+		return t.tradingStore.UpdateOfferStatus(offerItem.GetOfferKey(), trading.CompletedOffer)
 	}
 	return nil
 }

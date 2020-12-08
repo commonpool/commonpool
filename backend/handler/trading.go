@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	errs "github.com/commonpool/backend/errors"
+	"github.com/commonpool/backend/group"
 	. "github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/trading"
 	"github.com/commonpool/backend/web"
@@ -40,7 +41,12 @@ func (h *Handler) HandleSendOffer(c echo.Context) error {
 		tradingOfferItems = append(tradingOfferItems, tradingOfferItem)
 	}
 
-	offer, offerItems, err := h.tradingService.SendOffer(ctx, trading.NewOfferItems(tradingOfferItems), "")
+	groupKey, err := group.ParseGroupKey(req.Offer.GroupID)
+	if err != nil {
+		return errs.ReturnException(c, err)
+	}
+
+	offer, offerItems, err := h.tradingService.SendOffer(ctx, groupKey, trading.NewOfferItems(tradingOfferItems), "")
 	if err != nil {
 		return errs.ReturnException(c, err)
 	}
@@ -50,7 +56,9 @@ func (h *Handler) HandleSendOffer(c echo.Context) error {
 		return errs.ReturnException(c, err)
 	}
 
-	return c.JSON(http.StatusCreated, webOffer)
+	return c.JSON(http.StatusCreated, &web.GetOfferResponse{
+		Offer: webOffer,
+	})
 
 }
 
@@ -427,7 +435,7 @@ func (h *Handler) getWebOffer(offerKey OfferKey) (*web.GetOfferResponse, error) 
 	}
 
 	response := web.GetOfferResponse{
-		Offer: *webOffer,
+		Offer: webOffer,
 	}
 
 	return &response, nil

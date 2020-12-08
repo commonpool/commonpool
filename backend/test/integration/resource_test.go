@@ -24,6 +24,7 @@ func CreateResource(t *testing.T, ctx context.Context, userSession *auth.UserSes
 			Summary:          resourceName,
 			Description:      resourceName,
 			Type:             resource.Offer,
+			SubType:          resource.ObjectResource,
 			ValueInHoursFrom: 0,
 			ValueInHoursTo:   0,
 			SharedWith:       []web.InputResourceSharing{},
@@ -51,6 +52,9 @@ func CreateResource(t *testing.T, ctx context.Context, userSession *auth.UserSes
 		}
 		if option.Resource.Type != resource.Offer {
 			payload.Resource.Type = option.Resource.Type
+		}
+		if option.Resource.SubType != "" && option.Resource.SubType != resource.ObjectResource {
+			payload.Resource.SubType = option.Resource.SubType
 		}
 	}
 
@@ -288,6 +292,8 @@ func TestUserCanSearchResourcesSharedWithMultipleGroups(t *testing.T) {
 	createResource2, createResource2Http := CreateResource(t, ctx, user1, &web.CreateResourceRequest{
 		Resource: web.CreateResourcePayload{
 			Summary: "B-4ccf1c0f-d791-437b-becd-8c4592d3bc1d",
+			Type:    resource.Offer,
+			SubType: resource.ObjectResource,
 			SharedWith: []web.InputResourceSharing{
 				{
 					GroupID: createGroup2.Group.ID,
@@ -344,10 +350,8 @@ func TestUserCanUpdateResource(t *testing.T) {
 		Resource: web.CreateResourcePayload{
 			Summary:          "Snippers Boop",
 			Description:      "Description",
-			Type:             resource.Offer,
 			ValueInHoursFrom: 1,
 			ValueInHoursTo:   3,
-			SharedWith:       []web.InputResourceSharing{},
 		},
 	})
 
@@ -355,10 +359,8 @@ func TestUserCanUpdateResource(t *testing.T) {
 		Resource: web.UpdateResourcePayload{
 			Summary:          "New Summary",
 			Description:      "New Description",
-			Type:             resource.Offer,
 			ValueInHoursFrom: 5,
 			ValueInHoursTo:   10,
-			SharedWith:       []web.InputResourceSharing{},
 		},
 	})
 	assert.Equal(t, http.StatusOK, httpRes.StatusCode)
@@ -396,6 +398,7 @@ func TestUserCanUpdateResourceSharings(t *testing.T) {
 			Summary:          "Snippers Boop",
 			Description:      "Description",
 			Type:             resource.Offer,
+			SubType:          resource.ObjectResource,
 			ValueInHoursFrom: 1,
 			ValueInHoursTo:   3,
 			SharedWith: []web.InputResourceSharing{
@@ -410,7 +413,6 @@ func TestUserCanUpdateResourceSharings(t *testing.T) {
 		Resource: web.UpdateResourcePayload{
 			Summary:          "New Summary",
 			Description:      "New Description",
-			Type:             resource.Offer,
 			ValueInHoursFrom: 5,
 			ValueInHoursTo:   10,
 			SharedWith: []web.InputResourceSharing{
@@ -425,7 +427,6 @@ func TestUserCanUpdateResourceSharings(t *testing.T) {
 		Resource: web.UpdateResourcePayload{
 			Summary:          "New Summary",
 			Description:      "New Description",
-			Type:             resource.Offer,
 			ValueInHoursFrom: 5,
 			ValueInHoursTo:   10,
 			SharedWith: []web.InputResourceSharing{

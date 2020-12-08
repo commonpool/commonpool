@@ -41,16 +41,18 @@ type OfferItem2 interface {
 	IsAccepted() bool
 	IsAcceptedByReceiver() bool
 	IsAcceptedByGiver() bool
-	GetReceiverKey() *OfferItemTarget
+	GetReceiverKey() *model.Target
 }
 
 type OfferItemBase struct {
 	Type             OfferItemType2
 	Key              model.OfferItemKey
 	OfferKey         model.OfferKey
-	To               *OfferItemTarget
+	To               *model.Target
 	ReceiverAccepted bool
 	GiverAccepted    bool
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
 }
 
 func (c OfferItemBase) GetKey() model.OfferItemKey {
@@ -76,7 +78,7 @@ func (c OfferItemBase) IsResourceTransfer() bool {
 	return c.Type == ResourceTransfer
 }
 
-func (c OfferItemBase) GetReceiverKey() *OfferItemTarget {
+func (c OfferItemBase) GetReceiverKey() *model.Target {
 	return c.To
 }
 
@@ -94,7 +96,7 @@ func (c OfferItemBase) IsAcceptedByGiver() bool {
 
 type CreditTransferItem struct {
 	OfferItemBase
-	From               *OfferItemTarget
+	From               *model.Target
 	Amount             time.Duration
 	CreditsTransferred bool
 }

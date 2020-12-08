@@ -12,12 +12,12 @@ type Store interface {
 	GetOfferItem(ctx context.Context, key model.OfferItemKey) (OfferItem2, error)
 	GetOffersForUser(userKey model.UserKey) (*GetOffersResult, error)
 	UpdateOfferItem(ctx context.Context, offerItem OfferItem2) error
-	SaveOfferStatus(key model.OfferKey, offer OfferStatus) error
+	UpdateOfferStatus(key model.OfferKey, offer OfferStatus) error
 	GetTradingHistory(ctx context.Context, ids *model.UserKeys) ([]HistoryEntry, error)
 	FindApproversForOffer(offerKey model.OfferKey) (*OfferApprovers, error)
 	FindReceivingApproversForOfferItem(offerItemKey model.OfferItemKey) (*model.UserKeys, error)
 	FindGivingApproversForOfferItem(offerItemKey model.OfferItemKey) (*model.UserKeys, error)
-	MarkOfferItemsAsAccepted(ctx context.Context, approvedByGiver *model.OfferItemKeys, approvedByReceiver *model.OfferItemKeys) error
+	MarkOfferItemsAsAccepted(ctx context.Context, approvedBy model.UserKey, approvedByGiver *model.OfferItemKeys, approvedByReceiver *model.OfferItemKeys) error
 }
 
 type GetOffersQuery struct {

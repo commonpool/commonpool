@@ -46,7 +46,7 @@ func (t TradingService) checkOfferCompleted(ctx context.Context, offerKey model.
 
 		l.Debug("all items have been given and received. Marking offer as completed")
 
-		err := t.tradingStore.SaveOfferStatus(offerKey, trading.CompletedOffer)
+		err := t.tradingStore.UpdateOfferStatus(offerKey, trading.CompletedOffer)
 		if err != nil {
 			l.Error("could not mark offer as completed", zap.Error(err))
 			return err

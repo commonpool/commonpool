@@ -17,6 +17,7 @@ import (
 
 const (
 	CompletedKey          = "completed"
+	CreatedAtKey          = "created_at"
 	TypeKey               = "type"
 	AmountKey             = "amount"
 	FromApprovedKey       = "from_approved"
@@ -28,6 +29,12 @@ const (
 	ReceivedBacKey        = "received_back"
 	ReceivedKey           = "received"
 	DurationKey           = "duration"
+	AcceptedAtKey         = "accepted_at"
+	DeclinedAtKey         = "declined_at"
+	CanceledAtKey         = "canceled_at"
+	CompletedAtKey        = "completed_at"
+	UpdatedAtKey          = "updated_at"
+	StatusKey             = "status"
 )
 
 type TradingStore struct {
@@ -42,7 +49,11 @@ func NewTradingStore(graphDriver graph.GraphDriver) *TradingStore {
 	}
 }
 
-func (t TradingStore) MarkOfferItemsAsAccepted(ctx context.Context, approvedByGiver *model.OfferItemKeys, approvedByReceiver *model.OfferItemKeys) error {
+func (t TradingStore) MarkOfferItemsAsAccepted(
+	ctx context.Context,
+	approvedBy model.UserKey,
+	approvedByGiver *model.OfferItemKeys,
+	approvedByReceiver *model.OfferItemKeys) error {
 
 	session, err := t.graphDriver.GetSession()
 	if err != nil {
@@ -52,13 +63,18 @@ func (t TradingStore) MarkOfferItemsAsAccepted(ctx context.Context, approvedByGi
 
 	if len(approvedByReceiver.Items) > 0 {
 		result, err := session.Run(`
+			MATCH (approver:User {id:$userId})
+			WITH approver
 			MATCH 
 			(offerItem:OfferItem)
 			WHERE 
 			offerItem.id in $ids
-			SET offerItem += {`+ToApprovedKey+`: true}`,
+			SET offerItem += {`+ToApprovedKey+`: true}
+			MERGE (approver)-[:ApprovedReceiving]->(offerItem)
+			`,
 			map[string]interface{}{
 				"ids": approvedByReceiver.Strings(),
+				"userId": approvedBy.String(),
 			})
 		if err != nil {
 			return err
@@ -70,13 +86,18 @@ func (t TradingStore) MarkOfferItemsAsAccepted(ctx context.Context, approvedByGi
 
 	if len(approvedByGiver.Items) > 0 {
 		result, err := session.Run(`
+			MATCH (approver:User {id:$userId})
+			WITH approver
 			MATCH 
 			(offerItem:OfferItem)
 			WHERE 
 			offerItem.id in $ids
-			SET offerItem += {`+FromApprovedKey+`: true}`,
+			SET offerItem += {`+FromApprovedKey+`: true}
+			MERGE (approver)-[:ApprovedGiving]->(offerItem)
+			`,
 			map[string]interface{}{
 				"ids": approvedByGiver.Strings(),
+				"userId": approvedBy.String(),
 			})
 		if err != nil {
 			return err
@@ -350,60 +371,6 @@ func (t TradingStore) FindApproversForOffer(offerKey model.OfferKey) (*trading.O
 
 func (t TradingStore) SaveOffer(offer *trading.Offer, offerItems *trading.OfferItems) error {
 
-	/**
-
-	Expected resulting query :
-
-	MATCH
-
-	(user1:User {id:'user1'}),
-	(user2:User {id:'user2'}),
-	(group1:Group {id:'group1'}),
-	(resource1:Resource {id:'resource1'})
-
-	CREATE
-
-	(offer:Offer {id:'offer1'}),
-
-	// When the offer item is about credits being transferred from one person to another
-	// then we create an offer item node, and 2 relationships between the users
-	//
-	// example: (receivingUser)<-[:To]-(offerItem)-[:From]-(givingUser)
-
-	(offerItem1:OfferItem {id:'offerItem1', type:'credits_transfer', seconds:6000})-[:IsPartOf]-(offer),
-	(user1)<-[:From]-(offerItem1),
-	(user2)<-[:To]-(offerItem1),
-
-	// When the offer item is about a resource being given or borrowed,
-	// We create an offer item with 2 relationships, between the receiving
-	// user and the resource being given
-	//
-	// example: (receivingUser)<-[:To]-(offerItem)-(resource)
-
-	(offerItem2:OfferItem {id:'offerItem2', type:'resource_transfer'}-[:IsPartOf]-(offer),
-	(resource1)<-[:From]-(offerItem3)
-	(user2)<-[:To]-(offerItem2),
-
-	(offerItem3:OfferItem {id:'offerItem3', type:'borrow_resource', starting:'2020-04-15 08:00:00', duration:'5d'}-[:IsPartOf]-(offer),
-	(resource1)<-[:From]-(offerItem3)
-	(user2)<-[:To]-(offerItem2),
-
-	// When the offer item is about services being given, we create an offer item node
-	// and a relationship between the receiving user and the 'service' resource
-
-	(offerItem4:OfferItem {id:'offerItem4', type:'provide_service', duration:'10h'}-[:IsPartOf]-(offer),
-	(resource1)<-[:From]-(offerItem3)
-	(user2)<-[:To]-(offerItem2),
-
-	// If the recipient or the giver of a time credits / resources is a group, the receiving or giving end
-	// is a group node
-
-	(offerItem5:OfferItem {id:'offerItem5', type:'credits_transfer', seconds:6000})-[:IsPartOf]-(offer),
-	(group1)<-[:From]-(offerItem1),
-	(user3)<-[:To]-(offerItem1),
-
-	*/
-
 	var matchClauses []string
 	var createClauses []string
 	var params = map[string]interface{}{}
@@ -424,7 +391,7 @@ func (t TradingStore) SaveOffer(offer *trading.Offer, offerItems *trading.OfferI
 		groupRefMap[groupKey] = groupStr
 		groupIdParamName := groupStr + "_id"
 		params[groupIdParamName] = groupKey.String()
-		matchClauses = append(matchClauses, "("+groupStr+":Group {id:"+groupIdParamName+"})")
+		matchClauses = append(matchClauses, "("+groupStr+":Group {id:$"+groupIdParamName+"})")
 	}
 	for i, resourceKey := range offerItems.GetResourceKeys().Items {
 		resourceStr := "resource" + strconv.Itoa(i+1)
@@ -437,23 +404,49 @@ func (t TradingStore) SaveOffer(offer *trading.Offer, offerItems *trading.OfferI
 	matchClauses = append(matchClauses, "(createdBy:User{id:$created_by_id})")
 	params["created_by_id"] = offer.CreatedByKey.String()
 
+	matchClauses = append(matchClauses, "(group:Group{id:$group_id})")
+	params["group_id"] = offer.GroupKey.String()
+
+	now := time.Now().UTC()
+
+	params["offer_id"] = offer.GetKey().String()
+	params[CompletedKey] = offerItems.AllUserActionsCompleted()
+
+	var completedAt *time.Time = nil
+	if offerItems.AllUserActionsCompleted() {
+		completedAt = &now
+	}
+
+	var acceptedAt *time.Time = nil
+	if offerItems.AllPartiesAccepted() {
+		acceptedAt = &now
+	}
+
+	params[CreatedAtKey] = now
+	params[CompletedAtKey] = completedAt
+	params[AcceptedAtKey] = acceptedAt
+	statusStr, err := statusToString(offer.Status)
+
+	if err != nil {
+		return err
+	}
+	params[StatusKey] = statusStr
+
 	// Add the CREATE (offer:Offer {id:$offer_id}) clause
 	createClauses = append(createClauses, `
 		(offer:Offer 
 			{
-				id         :$offer_id,
-				status     :$status,
-				created_at :$created_at
+				id                 : $offer_id,
+				`+StatusKey+`      : $status,
+				`+CreatedAtKey+`   : $created_at,
+				`+UpdatedAtKey+`   : $created_at,
+				`+CompletedKey+`   : $completed,
+				`+CompletedAtKey+` : $completed_at,
+				`+DeclinedAtKey+`  : null,
+				`+CanceledAtKey+`  : null,
+				`+AcceptedAtKey+`  : $accepted_at
 			}
-		)-[:CreatedBy]->(createdBy)`)
-
-	params["offer_id"] = offer.GetKey().String()
-	params["created_at"] = offer.CreatedAt
-	statusStr, err := statusToString(offer.Status)
-	if err != nil {
-		return err
-	}
-	params["status"] = statusStr
+		)-[:CreatedBy]->(createdBy),(offer)-[:In]->(group)`)
 
 	// Loop through each item
 	for i, offerItem := range offerItems.Items {
@@ -473,7 +466,9 @@ func (t TradingStore) SaveOffer(offer *trading.Offer, offerItems *trading.OfferI
 					`+FromApprovedKey+`:       $`+offerItemRef+`_from_approved,
 					`+ToApprovedKey+`:         $`+offerItemRef+`_to_approved,
 					`+CreditsTransferredKey+`: $`+offerItemRef+`_credits_transferred,
-					`+CompletedKey+`:          $`+offerItemRef+`_completed
+					`+CompletedKey+`:          $`+offerItemRef+`_completed,
+					`+CreatedAtKey+`:          $`+offerItemRef+`_created_at,
+					`+UpdatedAtKey+`:          $`+offerItemRef+`_updated_at
 				})-[:IsPartOf]->(offer)`)
 
 			params[offerItemRef+"_id"] = offerItem.GetKey().String()
@@ -483,6 +478,8 @@ func (t TradingStore) SaveOffer(offer *trading.Offer, offerItems *trading.OfferI
 			params[offerItemRef+"_to_approved"] = creditTransfer.ReceiverAccepted
 			params[offerItemRef+"_credits_transferred"] = creditTransfer.CreditsTransferred
 			params[offerItemRef+"_completed"] = creditTransfer.IsCompleted()
+			params[offerItemRef+"_created_at"] = now
+			params[offerItemRef+"_updated_at"] = now
 
 			fromStr := ""
 			toStr := ""
@@ -508,13 +505,15 @@ func (t TradingStore) SaveOffer(offer *trading.Offer, offerItems *trading.OfferI
 			provideService := offerItem.(*trading.ProvideServiceItem)
 
 			createClauses = append(createClauses, "("+offerItemRef+`:OfferItem {
-					id:                  $`+offerItemRef+`_id
-					`+TypeKey+`:         $`+offerItemRef+`_type
-					`+DurationKey+`:     $`+offerItemRef+`_duration
-					`+FromApprovedKey+`: $`+offerItemRef+`_from_approved
-					`+ToApprovedKey+`:   $`+offerItemRef+`_to_approved
-					`+GivenKey+`:        $`+offerItemRef+`_given
-					`+ReceivedKey+`:     $`+offerItemRef+`_received
+					id:                  $`+offerItemRef+`_id,
+					`+TypeKey+`:         $`+offerItemRef+`_type,
+					`+DurationKey+`:     $`+offerItemRef+`_duration,
+					`+FromApprovedKey+`: $`+offerItemRef+`_from_approved,
+					`+ToApprovedKey+`:   $`+offerItemRef+`_to_approved,
+					`+GivenKey+`:        $`+offerItemRef+`_given,
+					`+ReceivedKey+`:     $`+offerItemRef+`_received,
+					`+CreatedAtKey+`:    $`+offerItemRef+`_created_at,
+					`+UpdatedAtKey+`:    $`+offerItemRef+`_updated_at
 				})-[:IsPartOf]->(offer)`)
 
 			params[offerItemRef+"_id"] = provideService.Key.String()
@@ -524,6 +523,8 @@ func (t TradingStore) SaveOffer(offer *trading.Offer, offerItems *trading.OfferI
 			params[offerItemRef+"_to_approved"] = provideService.ReceiverAccepted
 			params[offerItemRef+"_given"] = provideService.ServiceGivenConfirmation
 			params[offerItemRef+"_received"] = provideService.ServiceReceivedConfirmation
+			params[offerItemRef+"_created_at"] = now
+			params[offerItemRef+"_updated_at"] = now
 
 			fromStr := ""
 			toStr := ""
@@ -545,16 +546,18 @@ func (t TradingStore) SaveOffer(offer *trading.Offer, offerItems *trading.OfferI
 			borrowResource := offerItem.(*trading.BorrowResourceItem)
 
 			createClauses = append(createClauses, "("+offerItemRef+`:OfferItem {
-					id:                  $`+offerItemRef+`_id
-					`+TypeKey+`:         $`+offerItemRef+`_type
-					`+DurationKey+`:     $`+offerItemRef+`_duration
-					`+FromApprovedKey+`: $`+offerItemRef+`_from_approved
-					`+ToApprovedKey+`:   $`+offerItemRef+`_to_approved
-					`+GivenKey+`:        $`+offerItemRef+`_given
-					`+TakenKey+`:        $`+offerItemRef+`_taken
-					`+ReturnedBackKey+`: $`+offerItemRef+`_returned_back
+					id:                  $`+offerItemRef+`_id,
+					`+TypeKey+`:         $`+offerItemRef+`_type,
+					`+DurationKey+`:     $`+offerItemRef+`_duration,
+					`+FromApprovedKey+`: $`+offerItemRef+`_from_approved,
+					`+ToApprovedKey+`:   $`+offerItemRef+`_to_approved,
+					`+GivenKey+`:        $`+offerItemRef+`_given,
+					`+TakenKey+`:        $`+offerItemRef+`_taken,
+					`+ReturnedBackKey+`: $`+offerItemRef+`_returned_back,
 					`+ReceivedBacKey+`:  $`+offerItemRef+`_received_back,
-					`+CompletedKey+`:    $`+offerItemRef+`_completed
+					`+CompletedKey+`:    $`+offerItemRef+`_completed,
+					`+CreatedAtKey+`:    $`+offerItemRef+`_created_at,
+					`+UpdatedAtKey+`:    $`+offerItemRef+`_updated_at
 				})-[:IsPartOf]->(offer)`)
 
 			params[offerItemRef+"_id"] = borrowResource.Key.String()
@@ -567,6 +570,8 @@ func (t TradingStore) SaveOffer(offer *trading.Offer, offerItems *trading.OfferI
 			params[offerItemRef+"_returned_back"] = borrowResource.ItemReturnedBack
 			params[offerItemRef+"_received_back"] = borrowResource.ItemReceivedBack
 			params[offerItemRef+"_completed"] = borrowResource.IsCompleted()
+			params[offerItemRef+"_created_at"] = now
+			params[offerItemRef+"_updated_at"] = now
 
 			fromStr := ""
 			toStr := ""
@@ -594,7 +599,9 @@ func (t TradingStore) SaveOffer(offer *trading.Offer, offerItems *trading.OfferI
 					`+ToApprovedKey+`:   $`+offerItemRef+`_to_approved,
 					`+GivenKey+`:        $`+offerItemRef+`_given,
 					`+ReceivedKey+`:     $`+offerItemRef+`_received,
-					`+CompletedKey+`:    $`+offerItemRef+`_completed
+					`+CompletedKey+`:    $`+offerItemRef+`_completed,
+					`+CreatedAtKey+`:    $`+offerItemRef+`_created_at,
+					`+UpdatedAtKey+`:    $`+offerItemRef+`_updated_at
 				})-[:IsPartOf]->(offer)`)
 
 			params[offerItemRef+"_id"] = resourceTransfer.Key.String()
@@ -604,6 +611,8 @@ func (t TradingStore) SaveOffer(offer *trading.Offer, offerItems *trading.OfferI
 			params[offerItemRef+"_given"] = resourceTransfer.ItemGiven
 			params[offerItemRef+"_received"] = resourceTransfer.ItemReceived
 			params[offerItemRef+"_completed"] = resourceTransfer.IsCompleted()
+			params[offerItemRef+"_created_at"] = now
+			params[offerItemRef+"_updated_at"] = now
 
 			fromStr := ""
 			toStr := ""
@@ -687,7 +696,7 @@ func stringToStatus(offerStatus string) (trading.OfferStatus, error) {
 	}
 }
 
-func (t TradingStore) SaveOfferStatus(key model.OfferKey, status trading.OfferStatus) error {
+func (t TradingStore) UpdateOfferStatus(key model.OfferKey, status trading.OfferStatus) error {
 	session, err := t.graphDriver.GetSession()
 	if err != nil {
 		return err
@@ -697,10 +706,35 @@ func (t TradingStore) SaveOfferStatus(key model.OfferKey, status trading.OfferSt
 	if err != nil {
 		return err
 	}
-	result, err := session.Run(`MATCH (o:Offer {id:$id}) SET o += {status: $status} return o`, map[string]interface{}{
-		"id":     key.String(),
-		"status": statusString,
-	})
+
+	now := time.Now().UTC()
+
+	params := map[string]interface{}{
+		"id":         key.String(),
+		StatusKey:    statusString,
+		UpdatedAtKey: now,
+	}
+
+	cypherUpdates := []string{
+		StatusKey + ": $status",
+		UpdatedAtKey + ": $updated_at",
+	}
+
+	if status == trading.AcceptedOffer {
+		cypherUpdates = append(cypherUpdates, AcceptedAtKey+": $accepted_at")
+		params[AcceptedAtKey] = now
+	} else if status == trading.DeclinedOffer {
+		cypherUpdates = append(cypherUpdates, DeclinedAtKey+": $declined_at")
+		params[DeclinedAtKey] = now
+	} else if status == trading.CanceledOffer {
+		cypherUpdates = append(cypherUpdates, CanceledAtKey+": $canceled_at")
+		params[CanceledAtKey] = now
+	} else if status == trading.CompletedOffer {
+		cypherUpdates = append(cypherUpdates, CompletedAtKey+": $completed_at")
+		params[CompletedAtKey] = now
+	}
+
+	result, err := session.Run(`MATCH (o:Offer {id:$id}) SET o += {`+strings.Join(cypherUpdates, ",")+`} return o`, params)
 	if err != nil {
 		return err
 	}
@@ -760,7 +794,7 @@ func (t TradingStore) GetOfferItem(ctx context.Context, key model.OfferItemKey) 
 
 }
 
-func MapOfferItemTarget(node neo4j.Node) (*trading.OfferItemTarget, error) {
+func MapOfferItemTarget(node neo4j.Node) (*model.Target, error) {
 	if node == nil {
 		return nil, fmt.Errorf("node is nil")
 	}
@@ -775,15 +809,15 @@ func MapOfferItemTarget(node neo4j.Node) (*trading.OfferItemTarget, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &trading.OfferItemTarget{
+		return &model.Target{
 			GroupKey: &groupKey,
-			Type:     trading.GroupTarget,
+			Type:     model.GroupTarget,
 		}, nil
 	}
 	userKey := model.NewUserKey(node.Props()["id"].(string))
-	return &trading.OfferItemTarget{
+	return &model.Target{
 		UserKey: &userKey,
-		Type:    trading.UserTarget,
+		Type:    model.UserTarget,
 	}, nil
 }
 
@@ -791,8 +825,8 @@ func MapOfferItem(offerKey model.OfferKey, offerItemNode neo4j.Node, fromNode ne
 
 	offerItemType := offerItemNode.Props()["type"].(string)
 	var fromResource *resource.Resource
-	var fromTarget *trading.OfferItemTarget
-	var toTarget *trading.OfferItemTarget
+	var fromTarget *model.Target
+	var toTarget *model.Target
 	var err error
 
 	if fromNode != nil {
@@ -831,6 +865,8 @@ func MapOfferItem(offerKey model.OfferKey, offerItemNode neo4j.Node, fromNode ne
 		To:               toTarget,
 		ReceiverAccepted: offerItemNode.Props()[ToApprovedKey].(bool),
 		GiverAccepted:    offerItemNode.Props()[FromApprovedKey].(bool),
+		CreatedAt:        offerItemNode.Props()[CreatedAtKey].(time.Time),
+		UpdatedAt:        offerItemNode.Props()[UpdatedAtKey].(time.Time),
 	}
 
 	if offerItemType == string(trading.CreditTransfer) {

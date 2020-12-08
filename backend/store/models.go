@@ -77,32 +77,15 @@ func MapGraphMembership(record neo4j.Record, key string) (*group.Membership, err
 }
 
 type GraphResource struct {
-	ID               string        `mapstructure:"id"`
-	CreatedAt        time.Time     `mapstructure:"createdAt"`
-	UpdatedAt        time.Time     `mapstructure:"updatedAt"`
-	DeletedAt        *time.Time    `mapstructure:"deletedAt"`
-	Summary          string        `mapstructure:"summary"`
-	Description      string        `mapstructure:"description"`
-	CreatedBy        string        `mapstructure:"createdBy"`
-	Type             resource.Type `mapstructure:"type"`
-	ValueInHoursFrom int           `mapstructure:"valueInHoursFrom"`
-	ValueInHoursTo   int           `mapstructure:"valueInHoursTo"`
-}
-
-type GraphSharing struct {
-	ID               string        `mapstructure:"id"`
-	CreatedAt        time.Time     `mapstructure:"createdAt"`
-	UpdatedAt        time.Time     `mapstructure:"updatedAt"`
-	DeletedAt        *time.Time    `mapstructure:"deletedAt"`
-	Summary          string        `mapstructure:"summary"`
-	Description      string        `mapstructure:"description"`
-	CreatedBy        string        `mapstructure:"createdBy"`
-	Type             resource.Type `mapstructure:"type"`
-	ValueInHoursFrom int           `mapstructure:"valueInHoursFrom"`
-	ValueInHoursTo   int           `mapstructure:"valueInHoursTo"`
-}
-
-type Sharing struct {
-	ResourceID uuid.UUID `gorm:"type:uuid;primary_key"`
-	GroupID    uuid.UUID `gorm:"type:uuid;primary_key"`
+	ID               string           `mapstructure:"id"`
+	CreatedAt        time.Time        `mapstructure:"createdAt"`
+	UpdatedAt        time.Time        `mapstructure:"updatedAt"`
+	DeletedAt        *time.Time       `mapstructure:"deletedAt"`
+	Summary          string           `mapstructure:"summary"`
+	Description      string           `mapstructure:"description"`
+	CreatedBy        string           `mapstructure:"createdBy"`
+	Type             resource.Type    `mapstructure:"type"`
+	SubType          resource.SubType `mapstructure:"subType"`
+	ValueInHoursFrom int              `mapstructure:"valueInHoursFrom"`
+	ValueInHoursTo   int              `mapstructure:"valueInHoursTo"`
 }

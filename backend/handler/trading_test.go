@@ -82,11 +82,12 @@ func newSendOfferRequest(js string) (*httptest.ResponseRecorder, echo.Context) {
 	return rec, c
 }
 
-func sendOffer(t *testing.T, items ...web.SendOfferPayloadItem) web.GetOfferResponse {
+func sendOffer(t *testing.T, groupId string, items ...web.SendOfferPayloadItem) web.GetOfferResponse {
 
 	request := web.SendOfferRequest{
 		Offer: web.SendOfferPayload{
-			Items: items,
+			GroupID: groupId,
+			Items:   items,
 		},
 	}
 

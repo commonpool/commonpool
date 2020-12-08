@@ -42,7 +42,7 @@ func (t TradingService) DeclineOffer(ctx context.Context, offerKey model.OfferKe
 		return errs.ErrForbidden
 	}
 
-	err = t.tradingStore.SaveOfferStatus(offerKey, trading.DeclinedOffer)
+	err = t.tradingStore.UpdateOfferStatus(offerKey, trading.DeclinedOffer)
 	if err != nil {
 		return err
 	}
@@ -121,10 +121,16 @@ func (t TradingService) AcceptOffer(ctx context.Context, request *trading.Accept
 		return nil, fmt.Errorf("Nothing left to approve by you")
 	}
 
-	err = t.tradingStore.MarkOfferItemsAsAccepted(ctx, model.NewOfferItemKeys(offerItemsPendingGiverApproval), model.NewOfferItemKeys(offerItemsPendingReceiverApproval))
+	err = t.tradingStore.MarkOfferItemsAsAccepted(
+		ctx,
+		loggedInUserKey,
+		model.NewOfferItemKeys(offerItemsPendingGiverApproval),
+		model.NewOfferItemKeys(offerItemsPendingReceiverApproval))
+
 	if err != nil {
 		return nil, err
 	}
+
 	//
 	// var blocks []chat.Block
 	//
@@ -189,7 +195,7 @@ func (t TradingService) AcceptOffer(ctx context.Context, request *trading.Accept
 	}
 
 	if offerItems.AllPartiesAccepted() {
-		err := t.tradingStore.SaveOfferStatus(request.OfferKey, trading.AcceptedOffer)
+		err := t.tradingStore.UpdateOfferStatus(request.OfferKey, trading.AcceptedOffer)
 		if err != nil {
 			l.Error("could not update offer status", zap.Error(err))
 			return nil, err

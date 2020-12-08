@@ -70,10 +70,10 @@ func (c ChatService) NotifyUserInterestedAboutResource(ctx context.Context, requ
 
 	l.Debug("retrieving resource")
 
-	getResource := c.rs.GetByKey(ctx, res.NewGetResourceByKeyQuery(request.ResourceKey))
-	if getResource.Error != nil {
+	getResource, err := c.rs.GetByKey(ctx, res.NewGetResourceByKeyQuery(request.ResourceKey))
+	if err != nil {
 		l.Error("could not get resource", zap.Error(err))
-		return nil, getResource.Error
+		return nil,err
 	}
 	resource := getResource.Resource
 	resourceOwnerKey := resource.GetOwnerKey()

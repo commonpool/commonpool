@@ -15,7 +15,7 @@ type Service interface {
 	AcceptOffer(ctx ctx.Context, request *AcceptOffer) (*AcceptOfferResponse, error)
 	DeclineOffer(ctx ctx.Context, offerKey model.OfferKey) error
 	GetTradingHistory(ctx context.Context, userIDs *model.UserKeys) ([]HistoryEntry, error)
-	SendOffer(ctx context.Context, offerItems *OfferItems, message string) (*Offer, *OfferItems, error)
+	SendOffer(ctx context.Context, groupKey model.GroupKey, offerItems *OfferItems, message string) (*Offer, *OfferItems, error)
 }
 
 type AcceptOffer struct {

@@ -25,7 +25,7 @@ func NewResourceStore(graphDriver graph.GraphDriver) *ResourceStore {
 	}
 }
 
-func (rs *ResourceStore) GetByKeys(ctx ctx.Context, resourceKeys *model.ResourceKeys) (*resource.Resources, error) {
+func (rs *ResourceStore) GetByKeys(ctx ctx.Context, resourceKeys *model.ResourceKeys) (*resource.GetResourceByKeysResponse, error) {
 
 	graphSession, err := rs.graphDriver.GetSession()
 	if err != nil {
@@ -35,13 +35,26 @@ func (rs *ResourceStore) GetByKeys(ctx ctx.Context, resourceKeys *model.Resource
 	return rs.getByKeys(ctx, graphSession, resourceKeys)
 }
 
-func (rs *ResourceStore) getByKeys(ctx ctx.Context, session neo4j.Session, resourceKeys *model.ResourceKeys) (*resource.Resources, error) {
+func (rs *ResourceStore) getByKeys(ctx ctx.Context, session neo4j.Session, resourceKeys *model.ResourceKeys) (*resource.GetResourceByKeysResponse, error) {
 
 	getResult, err := session.Run(`
-		MATCH (r:Resource) 
-		WHERE r.id IN $ids		
-		OPTIONAL MATCH (r)-[s:SharedWith]->(g:Group)
-		RETURN r, s, g`,
+		MATCH (resource:Resource) 
+		WHERE resource.id IN $ids
+		
+		WITH resource
+		OPTIONAL MATCH (resource)-[:SharedWith]->(group:Group)
+
+		WITH resource, collect(DISTINCT group.id) as sharedWithGroupIds
+		OPTIONAL MATCH (resource)-[:SharedWith]->(viewer)
+
+		WITH resource, sharedWithGroupIds, collect(distinct viewer) as viewers
+		OPTIONAL MATCH (resource)-[:OwnedBy]->(owner)
+
+		WITH resource, sharedWithGroupIds, viewers, collect(DISTINCT owner) as owners
+		OPTIONAL MATCH (resource)-[:ManagedBy]->(manager)
+
+		WITH resource, sharedWithGroupIds, viewers, owners, collect(DISTINCT manager) as managers
+		RETURN resource, sharedWithGroupIds, viewers, owners, managers`,
 		map[string]interface{}{
 			"ids": resourceKeys.Strings(),
 		})
@@ -54,78 +67,113 @@ func (rs *ResourceStore) getByKeys(ctx ctx.Context, session neo4j.Session, resou
 	}
 
 	var resources []*resource.Resource
+
+	sharings := resource.NewEmptyResourceSharings()
+	claims := resource.NewEmptyClaims()
+
 	for getResult.Next() {
-		r, err := rs.mapGraphResourceRecord(getResult.Record(), "r")
+		r, err := rs.mapGraphResourceRecord(getResult.Record(), "resource")
 		if err != nil {
 			return nil, err
 		}
+
+		sharingsForResource, err := rs.mapGraphSharingRecord(getResult.Record(), "resource", "sharedWithGroupIds")
+		if err != nil {
+			return nil, err
+		}
+		sharings.AppendAll(sharingsForResource)
+
+		ownerTargets, err := MapOfferItemTargets(getResult.Record(), "owners")
+		if err != nil {
+			return nil, err
+		}
+		claims.AppendAll(CreateClaimsForTargets(r.Key, resource.OwnershipClaim, ownerTargets))
+
+		managerTargets, err := MapOfferItemTargets(getResult.Record(), "managers")
+		if err != nil {
+			return nil, err
+		}
+		claims.AppendAll(CreateClaimsForTargets(r.Key, resource.ManagerClaim, managerTargets))
+
+		viewerTargets, err := MapOfferItemTargets(getResult.Record(), "viewers")
+		if err != nil {
+			return nil, err
+		}
+		claims.AppendAll(CreateClaimsForTargets(r.Key, resource.ViewerClaim, viewerTargets))
+
 		resources = append(resources, r)
 	}
 
-	return resource.NewResources(resources), nil
+	return &resource.GetResourceByKeysResponse{
+		Sharings:  sharings,
+		Resources: resource.NewResources(resources),
+		Claims:    claims,
+	}, nil
 
 }
 
+func CreateClaimsForTargets(resourceKey model.ResourceKey, claimType resource.ClaimType, targets *model.Targets) *resource.Claims {
+	var claims []*resource.Claim
+	for _, target := range targets.Items {
+		claims = append(claims, &resource.Claim{
+			ResourceKey: resourceKey,
+			ClaimType:   claimType,
+			For:         target,
+		})
+	}
+	return resource.NewClaims(claims)
+}
+
+func MapOfferItemTargets(record neo4j.Record, targetsFieldName string) (*model.Targets, error) {
+	field, _ := record.Get(targetsFieldName)
+
+	if field == nil {
+		return model.NewEmptyTargets(), nil
+	}
+
+	intfs := field.([]interface{})
+	var targets []*model.Target
+	for _, intf := range intfs {
+		node := intf.(neo4j.Node)
+		target, err := MapOfferItemTarget(node)
+		if err != nil {
+			return nil, err
+		}
+		targets = append(targets, target)
+	}
+	return model.NewTargets(targets), nil
+}
+
 // GetByKey Gets a resource by key
-func (rs *ResourceStore) GetByKey(ctx ctx.Context, getResourceByKeyQuery *resource.GetResourceByKeyQuery) *resource.GetResourceByKeyResponse {
+func (rs *ResourceStore) GetByKey(ctx ctx.Context, getResourceByKeyQuery *resource.GetResourceByKeyQuery) (*resource.GetResourceByKeyResponse, error) {
 
 	graphSession, err := rs.graphDriver.GetSession()
 	if err != nil {
-		return &resource.GetResourceByKeyResponse{
-			Error: err,
-		}
+		return nil, err
 	}
 
 	return rs.getByKey(ctx, graphSession, getResourceByKeyQuery)
 
 }
 
-func (rs *ResourceStore) getByKey(ctx ctx.Context, session neo4j.Session, getResourceByKeyQuery *resource.GetResourceByKeyQuery) *resource.GetResourceByKeyResponse {
+func (rs *ResourceStore) getByKey(ctx ctx.Context, session neo4j.Session, getResourceByKeyQuery *resource.GetResourceByKeyQuery) (*resource.GetResourceByKeyResponse, error) {
 
-	getResult, err := session.Run(`
-		MATCH (r:Resource {id : $id})
-		OPTIONAL MATCH (r)-[s:SharedWith]->(g:Group)
-		RETURN r, collect(g.id) as groupIds`,
-		map[string]interface{}{
-			"id": getResourceByKeyQuery.ResourceKey.String(),
-		})
-
+	key := getResourceByKeyQuery.ResourceKey
+	response, err := rs.GetByKeys(ctx, model.NewResourceKeys([]model.ResourceKey{key}))
 	if err != nil {
-		return &resource.GetResourceByKeyResponse{
-			Error: err,
-		}
+		return nil, err
 	}
 
-	if getResult.Err() != nil {
-		return &resource.GetResourceByKeyResponse{
-			Error: getResult.Err(),
-		}
-	}
-
-	if !getResult.Next() {
-		return &resource.GetResourceByKeyResponse{
-			Error: errs.ErrResourceNotFound,
-		}
-	}
-
-	res, err := rs.mapGraphResourceRecord(getResult.Record(), "r")
+	r, err := response.Resources.GetResource(key)
 	if err != nil {
-		return &resource.GetResourceByKeyResponse{
-			Error: err,
-		}
-	}
-
-	sharings, err := rs.mapGraphSharingRecord(getResult.Record(), "r", "groupIds")
-	if err != nil {
-		return &resource.GetResourceByKeyResponse{
-			Error: err,
-		}
+		return nil, err
 	}
 
 	return &resource.GetResourceByKeyResponse{
-		Resource: res,
-		Sharings: sharings,
-	}
+		Resource: r,
+		Sharings: response.Sharings,
+		Claims:   response.Claims,
+	}, nil
 
 }
 
@@ -197,6 +245,7 @@ func (rs *ResourceStore) Create(createResourceQuery *resource.CreateResourceQuer
 		"description":      createResourceQuery.Resource.Description,
 		"createdBy":        createResourceQuery.Resource.CreatedBy,
 		"type":             createResourceQuery.Resource.Type,
+		"subType":          createResourceQuery.Resource.SubType,
 		"valueInHoursFrom": createResourceQuery.Resource.ValueInHoursFrom,
 		"valueInHoursTo":   createResourceQuery.Resource.ValueInHoursTo,
 	}
@@ -212,9 +261,11 @@ func (rs *ResourceStore) Create(createResourceQuery *resource.CreateResourceQuer
 				description:$description,
 				createdBy:$createdBy,
 				type:$type,
+				subType:$subType,
 				valueInHoursFrom:$valueInHoursFrom,
 				valueInHoursTo:$valueInHoursTo
-			})-[c:CreatedBy]->(u)
+			})-[c:CreatedBy]->(u),
+			(r)-[:OwnedBy]->(u)
 			`
 
 	if createResourceQuery.SharedWith != nil && len(createResourceQuery.SharedWith.Items) > 0 {
@@ -515,6 +566,7 @@ func mapGraphResourceToResource(dbResultItem *GraphResource) (*resource.Resource
 		Description:      dbResultItem.Description,
 		CreatedBy:        dbResultItem.CreatedBy,
 		Type:             dbResultItem.Type,
+		SubType:          dbResultItem.SubType,
 		ValueInHoursFrom: dbResultItem.ValueInHoursFrom,
 		ValueInHoursTo:   dbResultItem.ValueInHoursTo,
 	}, nil

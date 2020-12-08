@@ -16,36 +16,9 @@ const (
 	CompletedOffer
 )
 
-type OfferItemTargetType string
-
-const (
-	UserTarget  OfferItemTargetType = "user"
-	GroupTarget OfferItemTargetType = "group"
-)
-
-type OfferItemTarget struct {
-	UserKey  *model.UserKey
-	GroupKey *model.GroupKey
-	Type     OfferItemTargetType
-}
-
-func (t OfferItemTarget) IsForGroup() bool {
-	return t.Type == GroupTarget
-}
-
-func (t OfferItemTarget) IsForUser() bool {
-	return t.Type == UserTarget
-}
-
-func (t OfferItemTarget) GetGroupKey() model.GroupKey {
-	return *t.GroupKey
-}
-func (t OfferItemTarget) GetUserKey() model.UserKey {
-	return *t.UserKey
-}
-
 type Offer struct {
 	Key            model.OfferKey
+	GroupKey       model.GroupKey
 	CreatedByKey   model.UserKey
 	Status         OfferStatus
 	CreatedAt      time.Time
@@ -62,10 +35,11 @@ type HistoryEntry struct {
 	TimeAmountSeconds *int64
 }
 
-func NewOffer(offerKey model.OfferKey, author model.UserKey, message string, expiration *time.Time) *Offer {
+func NewOffer(offerKey model.OfferKey, groupKey model.GroupKey, author model.UserKey, message string, expiration *time.Time) *Offer {
 
 	return &Offer{
 		Key:            offerKey,
+		GroupKey:       groupKey,
 		CreatedByKey:   author,
 		Status:         PendingOffer,
 		ExpirationTime: expiration,

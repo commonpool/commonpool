@@ -58,3 +58,12 @@ func (k GroupKeys) Strings() []string {
 	}
 	return groupKeys
 }
+
+func (k GroupKeys) Contains(groupKey GroupKey) bool {
+	for _, gk := range k.Items {
+		if groupKey == gk {
+			return true
+		}
+	}
+	return false
+}

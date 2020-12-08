@@ -18,23 +18,17 @@ type Resource struct {
 	Type             Type
 	ValueInHoursFrom int
 	ValueInHoursTo   int
+	SubType          SubType
 }
 
-func NewResource(
-	key model.ResourceKey,
-	resourceType Type,
-	createdBy string,
-	summary string,
-	description string,
-	valueInHoursFrom int,
-	valueInHoursTo int,
-) Resource {
+func NewResource(key model.ResourceKey, resourceType Type, subType SubType, createdBy string, summary string, description string, valueInHoursFrom int, valueInHoursTo int, ) Resource {
 	return Resource{
 		Key:              key,
 		Summary:          summary,
 		Description:      description,
 		CreatedBy:        createdBy,
 		Type:             resourceType,
+		SubType:          subType,
 		ValueInHoursFrom: valueInHoursFrom,
 		ValueInHoursTo:   valueInHoursTo,
 	}
@@ -46,6 +40,22 @@ func (r *Resource) GetKey() model.ResourceKey {
 
 func (r *Resource) GetOwnerKey() model.UserKey {
 	return model.NewUserKey(r.CreatedBy)
+}
+
+func (r *Resource) IsOffer() bool {
+	return r.Type == Offer
+}
+
+func (r *Resource) IsRequest() bool {
+	return r.Type == Request
+}
+
+func (r *Resource) IsService() bool {
+	return r.SubType == ServiceResource
+}
+
+func (r *Resource) IsObject() bool {
+	return r.SubType == ObjectResource
 }
 
 type Resources struct {
@@ -116,8 +126,87 @@ func NewResourceSharing(resourceKey model.ResourceKey, groupKey model.GroupKey) 
 	}
 }
 
+type ClaimType string
+
+const (
+	OwnershipClaim ClaimType = "owner"
+	ManagerClaim   ClaimType = "manager"
+	ViewerClaim    ClaimType = "viewer"
+)
+
+type Claim struct {
+	ResourceKey model.ResourceKey
+	ClaimType   ClaimType
+	For         *model.Target
+}
+
+type Claims struct {
+	Items []*Claim
+}
+
+func NewClaims(items []*Claim) *Claims {
+	copied := make([]*Claim, len(items))
+	copy(copied, items)
+	return &Claims{
+		Items: copied,
+	}
+}
+
+func NewEmptyClaims() *Claims {
+	return &Claims{
+		Items: []*Claim{},
+	}
+}
+
+func (c *Claims) AppendAll(claims *Claims) {
+	for _, claim := range claims.Items {
+		c.Items = append(c.Items, claim)
+	}
+}
+
+func (c *Claims) UserHasClaim(userKey model.UserKey, resourceKey model.ResourceKey, claimType ClaimType) bool {
+	for _, claim := range c.Items {
+		if claim.ClaimType == claimType && claim.ResourceKey == resourceKey && claim.For.IsForUser() && claim.For.GetUserKey() == userKey {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *Claims) GroupHasClaim(groupKey model.GroupKey, resourceKey model.ResourceKey, claimType ClaimType) bool {
+	for _, claim := range c.Items {
+		if claim.ClaimType == claimType && claim.ResourceKey == resourceKey && claim.For.IsForGroup() && claim.For.GetGroupKey() == groupKey {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *Claims) HasClaim(target *model.Target, resourceKey model.ResourceKey, claimType ClaimType) bool {
+	for _, claim := range c.Items {
+		if claim.ClaimType == claimType &&
+			claim.ResourceKey == resourceKey &&
+			claim.For.Equals(target) {
+			return true
+		}
+	}
+	return false
+}
+
 type Sharings struct {
 	sharingMap map[model.ResourceKey][]*Sharing
+}
+
+func (s *Sharings) AppendAll(appendSharings *Sharings) {
+	for _, item := range appendSharings.Items() {
+		if _, ok := s.sharingMap[item.ResourceKey]; !ok {
+			s.sharingMap[item.ResourceKey] = []*Sharing{}
+		}
+		s.sharingMap[item.ResourceKey] = append(s.sharingMap[item.ResourceKey], &Sharing{
+			ResourceKey: item.ResourceKey,
+			GroupKey:    item.GroupKey,
+		})
+	}
 }
 
 func NewResourceSharings(sharings []*Sharing) *Sharings {
@@ -179,6 +268,13 @@ type Type int
 const (
 	Offer Type = iota
 	Request
+)
+
+type SubType string
+
+const (
+	ServiceResource SubType = "service"
+	ObjectResource  SubType = "object"
 )
 
 func ParseResourceType(s string) (*Type, error) {

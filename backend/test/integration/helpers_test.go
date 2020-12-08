@@ -3,6 +3,9 @@ package integration
 import (
 	"context"
 	"github.com/commonpool/backend/auth"
+	"github.com/commonpool/backend/web"
+	"net/http"
+	"strconv"
 	"testing"
 )
 
@@ -36,4 +39,31 @@ func testUser(t *testing.T) (*auth.UserSession, func()) {
 			createUserLock.Unlock()
 		}
 	}(user)
+}
+
+var groupCounter = 0
+
+func testGroup(t *testing.T, owner *auth.UserSession, members ...*auth.UserSession) *web.Group {
+	ctx := context.Background()
+	groupCounter++
+	response, httpResponse := CreateGroup(t, ctx, owner, &web.CreateGroupRequest{
+		Name:        "group-" + strconv.Itoa(groupCounter),
+		Description: "group-" + strconv.Itoa(groupCounter),
+	})
+	if httpResponse.StatusCode != http.StatusCreated {
+		t.Fatalf("could not create group")
+	}
+
+	for _, member := range members {
+		CreateOrAcceptInvitation(t, ctx, owner, &web.CreateOrAcceptInvitationRequest{
+			UserID:  member.Subject,
+			GroupID: response.Group.ID,
+		})
+		CreateOrAcceptInvitation(t, ctx, member, &web.CreateOrAcceptInvitationRequest{
+			UserID:  member.Subject,
+			GroupID: response.Group.ID,
+		})
+	}
+
+	return response.Group
 }

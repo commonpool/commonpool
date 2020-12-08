@@ -103,3 +103,12 @@ type UserExchangeListener struct {
 func (l *UserExchangeListener) Close() error {
 	return l.Channel.Close()
 }
+
+
+func AssertStatusCreated(t *testing.T, httpResponse *http.Response){
+	assert.Equal(t, http.StatusCreated, httpResponse.StatusCode)
+}
+
+func AssertOK(t *testing.T, httpResponse *http.Response){
+	assert.Equal(t, http.StatusOK, httpResponse.StatusCode)
+}
