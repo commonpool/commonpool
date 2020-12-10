@@ -6,6 +6,18 @@ export enum ResourceType {
   Request = 1
 }
 
+export enum ResourceSubType {
+  Object = 'object',
+  Service = 'service'
+}
+
+export enum OfferItemType {
+  CreditTransfer = 'transfer_credits',
+  ProvideService = 'provide_service',
+  BorrowResource = 'borrow_resource',
+  ResourceTransfer = 'transfer_resource'
+}
+
 export class SharedWithOutput {
   public constructor(public groupId: string, public groupName: string) {
   }
@@ -30,6 +42,7 @@ export class Resource {
     public summary: string,
     public description: string,
     public type: ResourceType,
+    public subType: ResourceSubType,
     public valueInHoursFrom: number,
     public valueInHoursTo: number,
     public createdBy: string,
@@ -45,6 +58,7 @@ export class Resource {
       res.summary,
       res.description,
       res.type,
+      res.subType,
       res.valueInHoursFrom,
       res.valueInHoursTo,
       res.createdBy,
@@ -64,6 +78,7 @@ export class ExtendedResource extends Resource {
       resource.summary,
       resource.description,
       resource.type,
+      resource.subType,
       resource.valueInHoursFrom,
       resource.valueInHoursTo,
       resource.createdBy,
@@ -99,6 +114,7 @@ export class SearchResourceRequest {
   constructor(
     public query: string,
     public type: ResourceType,
+    public subType: ResourceSubType,
     public createdBy: string,
     public groupId,
     public take: number,
@@ -113,6 +129,7 @@ export class CreateResourcePayload {
     public type: ResourceType,
     public valueInHoursFrom: number,
     public valueInHoursTo: number,
+    public subType: ResourceSubType,
     public sharedWith: SharedWithInput[]) {
   }
 
@@ -123,6 +140,7 @@ export class CreateResourcePayload {
       p.type,
       p.valueInHoursFrom,
       p.valueInHoursTo,
+      p.subType,
       p.sharedWith ? p.sharedWith.map(w => SharedWithInput.from(w)) : []
     );
   }
@@ -132,7 +150,6 @@ export class UpdateResourcePayload {
   constructor(
     public summary: string,
     public description: string,
-    public type: ResourceType,
     public valueInHoursFrom: number,
     public valueInHoursTo: number,
     public sharedWith: SharedWithInput[]) {
@@ -142,7 +159,6 @@ export class UpdateResourcePayload {
     return new UpdateResourcePayload(
       r.summary,
       r.description,
-      r.type,
       r.valueInHoursFrom,
       r.valueInHoursTo,
       r.sharedWith ? r.sharedWith.map(w => SharedWithInput.from(w)) : []
@@ -368,25 +384,43 @@ export class GetOffersRequest {
 }
 
 export class SendOfferRequestPayload {
-  constructor(public items: SendOfferRequestItem[], public message: string) {
+  constructor(public items: SendOfferRequestItem[], public message: string, public groupId: string) {
   }
 
   public static from(req: SendOfferRequestPayload): SendOfferRequestPayload {
-    return new SendOfferRequestPayload(req.items.map(i => SendOfferRequestItem.from(i)), req.message);
+    return new SendOfferRequestPayload(req.items.map(i => SendOfferRequestItem.from(i)), req.message, req.groupId);
   }
 }
 
-export enum OfferItemType {
-  ResourceItem = 0,
-  TimeItem = 1
+export enum TargetType {
+  User = 'user',
+  Group = 'group'
+}
+
+export class Target {
+  constructor(public type: TargetType, public userId: string | undefined, public  groupId: string | undefined) {
+  }
+
+  public static from(target: Target): Target {
+    if (!target) {
+      return undefined;
+    }
+    return new Target(target.type, target.userId, target.groupId);
+  }
 }
 
 export class SendOfferRequestItem {
-  constructor(public from: string, public to: string, public type: OfferItemType, public resourceId: string, public timeInSeconds: number) {
+  constructor(
+    public to: Target,
+    public type: OfferItemType,
+    public from: Target | undefined,
+    public resourceId: string | undefined,
+    public duration: string | undefined,
+    public amount: string | undefined) {
   }
 
   static from(req: SendOfferRequestItem) {
-    return new SendOfferRequestItem(req.from, req.to, req.type, req.resourceId, req.timeInSeconds);
+    return new SendOfferRequestItem(Target.from(req.to), req.type, Target.from(req.from), req.resourceId, req.duration, req.amount);
   }
 }
 
@@ -455,36 +489,50 @@ export enum OfferStatus {
   AcceptedOffer = 1,
   CanceledOffer = 2,
   DeclinedOffer = 3,
-  ExpiredOffer = 4
+  ExpiredOffer = 4,
+  CompletedOffer = 5,
 }
 
 export class OfferItem {
   constructor(
     public id: string,
-    public fromUserId: string,
-    public toUserId: string,
+    public to: Target,
     public type: OfferItemType,
-    public resourceId: string,
-    public timeInSeconds: number) {
+    public from: Target | undefined,
+    public resourceId: string | undefined,
+    public duration: number | undefined,
+    public amount: number | undefined,
+    public receivingApprovers: string[],
+    public givingApprovers: string[],
+    public giverApproved: boolean,
+    public receiverApproved: boolean,
+    public serviceGivenConfirmation: boolean,
+    public serviceReceivedConfirmation: boolean,
+    public itemTaken: boolean,
+    public itemGiven: boolean,
+    public itemReturnedBack: boolean,
+    public itemReceivedBack: boolean) {
   }
 
   public static from(res: OfferItem): OfferItem {
-    return new OfferItem(res.id, res.fromUserId, res.toUserId, res.type, res.resourceId, res.timeInSeconds);
-  }
-}
-
-export enum Decision {
-  PendingDecision = 0,
-  AcceptedDecision = 1,
-  DeclinedDecision = 2
-}
-
-export class OfferDecision {
-  constructor(public offerId: string, public userId: string, public decision: Decision) {
-  }
-
-  public static from(res: OfferDecision): OfferDecision {
-    return new OfferDecision(res.offerId, res.userId, res.decision);
+    return new OfferItem(
+      res.id,
+      Target.from(res.to),
+      res.type,
+      Target.from(res.from),
+      res.resourceId,
+      res.duration,
+      res.amount,
+      res.receivingApprovers,
+      res.givingApprovers,
+      res.giverApproved,
+      res.receiverApproved,
+      res.serviceGivenConfirmation,
+      res.serviceReceivedConfirmation,
+      res.itemTaken,
+      res.itemGiven,
+      res.itemReturnedBack,
+      res.itemReceivedBack);
   }
 }
 
@@ -496,8 +544,7 @@ export class Offer {
     public status: OfferStatus,
     public authorId: string,
     public authorUsername: string,
-    public items: OfferItem[],
-    public decisions: OfferDecision[]) {
+    public items: OfferItem[]) {
   }
 
   public static from(o: Offer): Offer {
@@ -508,8 +555,7 @@ export class Offer {
       o.status,
       o.authorId,
       o.authorUsername,
-      o.items.map(i => OfferItem.from(i)),
-      o.decisions.map(d => OfferDecision.from(d)));
+      o.items.map(i => OfferItem.from(i)));
   }
 }
 
@@ -1309,3 +1355,58 @@ export class GetTradingHistoryResponse {
     );
   }
 }
+
+export class OfferGroupOrUserPickerItem {
+  public constructor(public type: TargetType, public name: string, public userId: string | undefined, public groupId: string | undefined) {
+
+  }
+
+  public static from(i: OfferGroupOrUserPickerItem): OfferGroupOrUserPickerItem {
+    return new OfferGroupOrUserPickerItem(i.type, i.name, i.userId, i.groupId);
+  }
+
+}
+
+export class OfferGroupOrUserPickerResult {
+  public constructor(public items: OfferGroupOrUserPickerItem[]) {
+
+  }
+
+  public static from(o: OfferGroupOrUserPickerResult): OfferGroupOrUserPickerResult {
+    return new OfferGroupOrUserPickerResult(o.items ? o.items.map(i => OfferGroupOrUserPickerItem.from(i)) : undefined);
+  }
+
+}
+
+export class OfferItemTargetRequest {
+  public constructor(
+    public type: OfferItemType,
+    public groupId: string,
+    public fromType: TargetType | undefined,
+    public fromId: string | undefined,
+    public toType: TargetType | undefined,
+    public toId: string | undefined) {
+  }
+}
+
+export class ConfirmServiceProvidedRequest {
+  public constructor(public offerItemId: string) {
+  }
+}
+
+export class ConfirmResourceTransferred {
+  public constructor(public offerItemId: string) {
+  }
+}
+
+export class ConfirmResourceBorrowed {
+  public constructor(public offerItemId: string) {
+  }
+}
+
+export class ConfirmBorrowedResourceReturned {
+  public constructor(public offerItemId: string) {
+  }
+}
+
+

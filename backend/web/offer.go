@@ -20,13 +20,23 @@ type Offer struct {
 }
 
 type OfferItem struct {
-	ID         string                 `json:"id"`
-	From       *OfferItemTarget       `json:"from"`
-	To         *OfferItemTarget       `json:"to"`
-	Type       trading.OfferItemType2 `json:"type"`
-	ResourceId *string                `json:"resourceId"`
-	Duration   *int64                 `json:"duration"`
-	Amount     *int64                 `json:"amount"`
+	ID                          string                `json:"id"`
+	From                        *OfferItemTarget      `json:"from"`
+	To                          *OfferItemTarget      `json:"to"`
+	Type                        trading.OfferItemType `json:"type"`
+	ResourceId                  *string               `json:"resourceId"`
+	Duration                    *int64                `json:"duration"`
+	Amount                      *int64                `json:"amount"`
+	ReceiverApproved            bool                  `json:"receiverApproved"`
+	GiverApproved               bool                  `json:"giverApproved"`
+	ReceivingApprovers          []string              `json:"receivingApprovers"`
+	GivingApprovers             []string              `json:"givingApprovers"`
+	ServiceGivenConfirmation    bool                  `json:"serviceGivenConfirmation"`
+	ServiceReceivedConfirmation bool                  `json:"serviceReceivedConfirmation"`
+	ItemTaken                   bool                  `json:"itemTaken"`
+	ItemGiven                   bool                  `json:"itemGiven"`
+	ItemReturnedBack            bool                  `json:"itemReturnedBack"`
+	ItemReceivedBack            bool                  `json:"itemReceivedBack"`
 }
 
 type GetOfferResponse struct {
@@ -47,9 +57,9 @@ type SendOfferPayload struct {
 }
 
 type OfferItemTarget struct {
-	UserID  *string                   `json:"userId"`
-	GroupID *string                   `json:"groupId" validatde:"uuid"`
-	Type    model.OfferItemTargetType `json:"type"`
+	UserID  *string          `json:"userId"`
+	GroupID *string          `json:"groupId" validatde:"uuid"`
+	Type    model.TargetType `json:"type"`
 }
 
 func MapWebOfferItemTarget(target OfferItemTarget) (*model.Target, error) {
@@ -92,7 +102,7 @@ func MapOfferItemTarget(target *model.Target) (*OfferItemTarget, error) {
 		return &OfferItemTarget{
 			UserID:  &userId,
 			GroupID: nil,
-			Type:    model.GroupTarget,
+			Type:    model.UserTarget,
 		}, nil
 	} else {
 		return nil, fmt.Errorf("unexpected offer item type")
@@ -160,12 +170,12 @@ func NewUserTarget(user string) *OfferItemTarget {
 }
 
 type SendOfferPayloadItem struct {
-	Type       trading.OfferItemType2 `json:"type"`
-	To         OfferItemTarget        `json:"to" validate:"required,uuid"`
-	From       *OfferItemTarget       `json:"from" validate:"required,uuid"`
-	ResourceId *string                `json:"resourceId" validate:"required,uuid"`
-	Duration   *int64                 `json:"duration"`
-	Amount     *int64                 `json:"amount"`
+	Type       trading.OfferItemType `json:"type"`
+	To         OfferItemTarget       `json:"to" validate:"required,uuid"`
+	From       *OfferItemTarget      `json:"from" validate:"required,uuid"`
+	ResourceId *string               `json:"resourceId" validate:"required,uuid"`
+	Duration   *string               `json:"duration"`
+	Amount     *string               `json:"amount"`
 }
 
 func NewResourceTransferItem(to *OfferItemTarget, resourceId string) *SendOfferPayloadItem {
@@ -177,7 +187,7 @@ func NewResourceTransferItem(to *OfferItemTarget, resourceId string) *SendOfferP
 }
 
 func NewCreditTransferItem(from *OfferItemTarget, to *OfferItemTarget, time time.Duration) *SendOfferPayloadItem {
-	seconds := int64(time.Seconds())
+	seconds := time.String()
 	return &SendOfferPayloadItem{
 		From:   from,
 		To:     *to,

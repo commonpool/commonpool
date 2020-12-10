@@ -48,7 +48,11 @@ import {
   SubmitInteractionRequest,
   Event,
   GetTradingHistoryRequest,
-  GetTradingHistoryResponse
+  GetTradingHistoryResponse,
+  OfferItemTargetRequest,
+  OfferGroupOrUserPickerResult,
+  ConfirmServiceProvidedRequest,
+  OfferItem, ConfirmBorrowedResourceReturned, ConfirmResourceBorrowed, ConfirmResourceTransferred
 } from './models';
 
 import {Observable, of, Subject, throwError} from 'rxjs';
@@ -218,6 +222,9 @@ export class BackendService {
     }
     if (request.type !== undefined) {
       params.type = request.type.toString();
+    }
+    if (request.subType !== undefined) {
+      params.sub_type = request.subType;
     }
     if (request.query !== undefined) {
       params.query = request.query;
@@ -398,7 +405,7 @@ export class BackendService {
     );
   }
 
-  acceptOffer(offer: AcceptOfferRequest): Observable<AcceptOfferResponse> {
+  acceptOffer(offer: AcceptOfferRequest): Observable<undefined> {
     return this.http.post(`${environment.apiUrl}/api/v1/offers/${offer.id}/accept`, undefined, {
       observe: 'response'
     }).pipe(
@@ -406,7 +413,7 @@ export class BackendService {
         if (res.status !== 200) {
           throwError(ErrorResponse.fromHttpResponse(res));
         }
-        return AcceptOfferResponse.from(res.body as AcceptOfferResponse);
+        return undefined;
       })
     );
   }
@@ -601,6 +608,91 @@ export class BackendService {
           throwError(ErrorResponse.fromHttpResponse(res));
         }
         return GetTradingHistoryResponse.from(res.body as GetTradingHistoryResponse);
+      })
+    );
+  }
+
+  getItemsForTargetPicker(request: OfferItemTargetRequest): Observable<OfferGroupOrUserPickerResult> {
+
+    const params: { [key: string]: string } = {};
+
+    if (request.groupId) {
+      params.group_id = request.groupId;
+    }
+    if (request.type) {
+      params.type = request.type;
+    }
+    if (request.fromId) {
+      params.from_id = request.fromId;
+    }
+    if (request.fromType) {
+      params.from_type = request.fromType;
+    }
+    if (request.toId) {
+      params.to_id = request.toId;
+    }
+    if (request.toType) {
+      params.to_type = request.toType;
+    }
+
+    return this.http.get(`${environment.apiUrl}/api/v1/offers/target-picker`, {observe: 'response', params}).pipe(
+      map((res: HttpResponse<object>) => {
+        if (res.status !== 200) {
+          throwError(ErrorResponse.fromHttpResponse(res));
+        }
+        return OfferGroupOrUserPickerResult.from(res.body as OfferGroupOrUserPickerResult);
+      })
+    );
+  }
+
+  confirmServiceProvided(request: ConfirmServiceProvidedRequest): Observable<OfferItem> {
+    return this.http.post(`${environment.apiUrl}/api/v1/offer-items/${request.offerItemId}/confirm/service-provided`, undefined, {
+      observe: 'response'
+    }).pipe(
+      map((res: HttpResponse<object>) => {
+        if (res.status !== 200) {
+          throwError(ErrorResponse.fromHttpResponse(res));
+        }
+        return OfferItem.from(res.body as OfferItem);
+      })
+    );
+  }
+
+  confirmResourceTransfer(request: ConfirmResourceTransferred): Observable<OfferItem> {
+    return this.http.post(`${environment.apiUrl}/api/v1/offer-items/${request.offerItemId}/confirm/resource-transferred`, undefined, {
+      observe: 'response'
+    }).pipe(
+      map((res: HttpResponse<object>) => {
+        if (res.status !== 200) {
+          throwError(ErrorResponse.fromHttpResponse(res));
+        }
+        return OfferItem.from(res.body as OfferItem);
+      })
+    );
+  }
+
+  confirmResourceBorrowed(request: ConfirmResourceBorrowed): Observable<OfferItem> {
+    return this.http.post(`${environment.apiUrl}/api/v1/offer-items/${request.offerItemId}/confirm/resource-borrowed`, undefined, {
+      observe: 'response'
+    }).pipe(
+      map((res: HttpResponse<object>) => {
+        if (res.status !== 200) {
+          throwError(ErrorResponse.fromHttpResponse(res));
+        }
+        return OfferItem.from(res.body as OfferItem);
+      })
+    );
+  }
+
+  confirmBorrowedResourceReturned(request: ConfirmBorrowedResourceReturned): Observable<OfferItem> {
+    return this.http.post(`${environment.apiUrl}/api/v1/offer-items/${request.offerItemId}/confirm/resource-borrowed-returned`, undefined, {
+      observe: 'response'
+    }).pipe(
+      map((res: HttpResponse<object>) => {
+        if (res.status !== 200) {
+          throwError(ErrorResponse.fromHttpResponse(res));
+        }
+        return OfferItem.from(res.body as OfferItem);
       })
     );
   }

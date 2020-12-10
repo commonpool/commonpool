@@ -56,14 +56,14 @@ func (t TradingService) AcceptOffer(ctx context.Context, request *trading.Accept
 	ctx, l := GetCtx(ctx, "TradingService", "AcceptOffer")
 	l = l.With(zap.Object("offer", request.OfferKey))
 
-	user, err := auth.GetUserSession(ctx)
+	loggedInUser, err := auth.GetUserSession(ctx)
 	if err != nil {
 		l.Error("could not get user session", zap.Error(err))
 		return nil, err
 	}
-	loggedInUserKey := user.GetUserKey()
+	loggedInUserKey := loggedInUser.GetUserKey()
 
-	_, err = t.tradingStore.GetOffer(request.OfferKey)
+	offer, err := t.tradingStore.GetOffer(request.OfferKey)
 	if err != nil {
 		l.Error("could not get offer", zap.Error(err))
 		return nil, err
@@ -200,6 +200,16 @@ func (t TradingService) AcceptOffer(ctx context.Context, request *trading.Accept
 			l.Error("could not update offer status", zap.Error(err))
 			return nil, err
 		}
+	}
+
+	usersInOffer, err := t.us.GetByKeys(ctx, approvers.AllUserKeys().Items)
+	if err != nil {
+		return nil, err
+	}
+
+	err = t.checkOfferCompleted(ctx, offer.GroupKey, request.OfferKey, offerItems, loggedInUser, usersInOffer)
+	if err != nil {
+		return nil, err
 	}
 
 	// if offerItems.AllPartiesAccepted() {

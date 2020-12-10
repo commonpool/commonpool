@@ -97,14 +97,11 @@ func NewRabbitMqClient(ctx context.Context, amqpUrl string) (Client, error) {
 
 	l := logging.WithContext(ctx)
 
-	l.Debug("creating RabbitMQ client")
 	conn, err := amqp.Dial(amqpUrl)
 	if err != nil {
 		l.Error("could not connect to RabbitMQ", zap.Error(err))
 		return nil, err
 	}
-
-	l.Debug("successfully connected to RabbitMQ")
 
 	ch, err := conn.Channel()
 	if err != nil {
@@ -123,22 +120,16 @@ func NewRabbitMqClient(ctx context.Context, amqpUrl string) (Client, error) {
 		return nil, err
 	}
 
-	l.Debug("creating messages exchange")
-
 	if err := channel.ExchangeDeclare(ctx, MessagesExchange, amqp.ExchangeHeaders, true, false, false, false, nil); err != nil {
 		l.Error("could not create messages exchange", zap.Error(err))
 		return nil, err
 	}
-
-	l.Debug("creating websocket exchange")
 
 	if err := channel.ExchangeDeclare(
 		ctx, WebsocketMessagesExchange, amqp.ExchangeHeaders, true, false, false, false, nil); err != nil {
 		l.Error("could not create messages websocket exchange", zap.Error(err))
 		return nil, err
 	}
-
-	l.Debug("binding messages and websocket exchanges")
 
 	headers := map[string]interface{}{EventTypeKey: EventTypeMessage}
 	if err = channel.ExchangeBind(ctx, WebsocketMessagesExchange, "", MessagesExchange, false, headers); err != nil {
@@ -162,8 +153,6 @@ func (r RabbitMqChannel) Consume(ctx context.Context, queue string, consumer str
 		zap.Bool("noLocal", noLocal),
 		zap.Bool("noWait", noWait),
 		zap.Object("args", args))
-
-	l.Debug("consuming")
 
 	ch, err := r.channel.Consume(queue, consumer, autoAck, exclusive, noLocal, noWait, map[string]interface{}(args))
 	if err != nil {

@@ -61,9 +61,9 @@ export class UserResourcesViewComponent implements OnInit {
     ]).pipe(
       switchMap(([accountId, resourceType, data]) => {
         if (data.accountType === AccountType.User) {
-          return this.backend.searchResources(new SearchResourceRequest(undefined, resourceType, accountId, undefined, 10, 0));
+          return this.backend.searchResources(new SearchResourceRequest(undefined, resourceType, undefined, accountId, undefined, 10, 0));
         } else {
-          return this.backend.searchResources(new SearchResourceRequest(undefined, resourceType, undefined, accountId, 10, 0));
+          return this.backend.searchResources(new SearchResourceRequest(undefined, resourceType,  undefined, undefined, accountId, 10, 0));
         }
       }),
       pluck('resources')

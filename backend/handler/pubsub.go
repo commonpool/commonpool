@@ -78,8 +78,6 @@ func (c *Client) eventPump(ctx context.Context) error {
 
 	ctx, l := GetCtx(ctx, "eventPump")
 
-	l.Debug("event pump")
-
 	ch, err := c.amqpChannel.Consume(ctx, *c.queueName, *c.consumerKey, false, false, false, false, nil)
 	if err != nil {
 		l.Error("could not consume amqp channel", zap.Error(err))
@@ -283,15 +281,11 @@ func (h *Handler) Websocket(c echo.Context) error {
 	}
 	defer ws.Close()
 
-	l.Debug("creating new hub")
-
 	hub := newHub()
 	go hub.run()
 
 	consumerKey := utils.ShortUuid(uuid.NewV4())
 	queueName := "chat.ws." + userKey.String() + "." + consumerKey
-
-	l.Info("registering hub client", zap.String("queue_name", queueName), zap.String("consumer_key", consumerKey))
 
 	amqpChannel, err := h.amqp.GetChannel()
 	if err != nil {
@@ -300,23 +294,17 @@ func (h *Handler) Websocket(c echo.Context) error {
 	}
 	defer amqpChannel.Close()
 
-	l.Debug("creating user exchange")
-
 	userExchangeName, err := h.chatService.CreateUserExchange(ctx, userKey)
 	if err != nil {
 		l.Error("could not create user exchange", zap.Error(err))
 		return err
 	}
 
-	l.Debug("declaring queue for websocket connection", zap.String("queue_name", queueName))
-
 	err = amqpChannel.QueueDeclare(ctx, queueName, false, true, false, false, nil)
 	if err != nil {
 		l.Error("could not declare websocket amqp queue", zap.Error(err))
 		return err
 	}
-
-	l.Debug("binding websocket consumer queue to user exchange")
 
 	err = amqpChannel.QueueBind(ctx, queueName, "", userExchangeName, false, nil)
 	if err != nil {
@@ -326,7 +314,6 @@ func (h *Handler) Websocket(c echo.Context) error {
 
 	client := NewClient(hub, ws, amqpChannel, &queueName, &consumerKey)
 
-	c.Logger().Info("registering hub")
 	client.hub.register <- client
 
 	// Allow collection of memory referenced by the caller by doing all work in

@@ -75,6 +75,11 @@ import {RouterLinkComponent} from './markdown/router-link/router-link.component'
 import {UserLinkComponent} from './shared/user-link/user-link.component';
 import {ResourceLink2Component} from './shared/resource-link2/resource-link2.component';
 import {TradingHistoryComponent} from './trading/history/trading-history.component';
+import {CommonModule} from '@angular/common';
+import { GroupOrUserPickerComponent } from './shared/group-or-user-picker/group-or-user-picker.component';
+import { MembershipPickerComponent } from './shared/membership-picker/membership-picker.component';
+import { OfferListItemComponent } from './offers/offer-list-item/offer-list-item.component';
+import { TargetComponent } from './shared/target/target.component';
 
 const rendererFactory = (domSanitizer: DomSanitizer): MarkedOptions => {
   return {
@@ -149,8 +154,13 @@ const rendererFactory = (domSanitizer: DomSanitizer): MarkedOptions => {
     UserLinkComponent,
     ResourceLink2Component,
     TradingHistoryComponent,
+    GroupOrUserPickerComponent,
+    MembershipPickerComponent,
+    OfferListItemComponent,
+    TargetComponent,
   ],
   imports: [
+    CommonModule,
     BrowserModule,
     AppRoutingModule,
     FormsModule,

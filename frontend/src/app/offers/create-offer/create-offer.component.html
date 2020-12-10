@@ -1,160 +1,391 @@
 <div class="container-fluid mt-3">
   <div class="row">
     <div class="col">
-      <h1>Create exchange proposal</h1>
+      <h1>New transaction proposal</h1>
     </div>
   </div>
 
-
-  <div class="row" [formGroup]="form">
+  <div class="row mt-4">
     <div class="col">
       <div class="card">
-        <ul class="list-group list-group-flush" formArrayName="items">
-          <li class="list-group-item" *ngFor="let formItem of form.items.controls; let i = index; ">
-            <ng-container *ngIf="form.getItem(i); let item">
-
-              <div>
-
-                <div class="btn btn-light mr-3" (click)="form.removeItem(i)">
-                  <app-trash></app-trash>
-                </div>
-
-                <b>
-                  <app-username [id]="item.fromControl.value"></app-username>
-                  <div *ngIf="item.fromControl.errors" class="invalid-feedback">
-                    {{item.fromControl.errors | json}}
-                  </div>
-                </b>
-
-                gives
-
-                <b>
-
-                <span class="badge badge-pill badge-primary">
-                     <app-resource-name
-                       *ngIf="item.typeControl.value === 0"
-                       [resourceId]="item.resourceIdControl.value">
-                     </app-resource-name>
-                </span>
-
-                  <span *ngIf="item.typeControl.value === 1">
-                  {{item.timeInSecondsControl.value / 60 / 60}}h
-                </span>
-
-                </b>
-                to
-
-                <b>
-                  <app-username [id]="item.toControl.value"></app-username>
-                </b>
-
-              </div>
-            </ng-container>
-          </li>
-        </ul>
+        <div class="card-body">
+          <div class="form-group" [formGroup]="form">
+            <label>Select in which group:</label>
+            <app-membership-picker formControlName="groupId"></app-membership-picker>
+          </div>
+          <button *ngIf="!groupSelected" class="btn btn-primary" (click)="markGroupSelected()">Select group</button>
+        </div>
       </div>
     </div>
   </div>
 
-
-  <div class="row mt-2" [formGroup]="itemForm">
+  <div class="row mt-4" *ngIf="form.getItems().length > 0 && groupSelected">
     <div class="col">
-      <div class="card shadow">
+      <div class="card">
+        <div class="card-header">
+          Items in that proposal:
+        </div>
+        <div class="list-group list-group-flush">
+
+          <div class="d-flex flex-row list-group-item" *ngFor="let item of form.getItems(); let i = index">
+            <div class="flex-grow-1 align-self-center">
+              <div>
+                <ng-container *ngIf="item.toControl.value; let to">
+                  <ng-container *ngIf="to.type === 'group'">
+                    group
+                  </ng-container>
+                  <ng-container *ngIf="to.type === 'user'">
+                    <app-user-link [id]="to.userId"></app-user-link>
+                  </ng-container>
+                </ng-container>
+
+                <ng-container *ngIf="item.typeControl.value === 'borrow_resource'">
+                  would borrow
+                  <app-resource-link2 [id]="item.resourceIdControl.value"></app-resource-link2>
+                  for {{item.durationControl.value}}
+                </ng-container>
+
+                <ng-container *ngIf="item.typeControl.value === 'provide_service'">
+                  would get {{item.durationControl.value}} worth of
+                  <app-resource-link2 [id]="item.resourceIdControl.value"></app-resource-link2>
+                </ng-container>
+
+                <ng-container *ngIf="item.typeControl.value === 'transfer_resource'">
+                  would get
+                  <app-resource-link2 [id]="item.resourceIdControl.value"></app-resource-link2>
+                </ng-container>
+
+                <ng-container *ngIf="item.typeControl.value === 'transfer_credits'">
+                  would get
+                  {{item.amountControl.value}}
+                  of timebank credits from
+                  <ng-container *ngIf="item.fromControl.value; let from">
+                    <ng-container *ngIf="from.type === 'group'">
+                      group
+                    </ng-container>
+                    <ng-container *ngIf="from.type === 'user'">
+                      <app-user-link [id]="from.userId"></app-user-link>
+                    </ng-container>
+                  </ng-container>
+
+
+                </ng-container>
+              </div>
+            </div>
+            <div>
+              <button class="btn btn-outline-secondary btn-sm" (click)="remove(i)">X</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-4" *ngIf="!itemFormToggled  && groupSelected">
+    <div class="col">
+      <div class="card">
         <div class="card-body">
-          <div class="d-flex flex-direction-row align-items-center" id="new-row">
-            <plus-icon></plus-icon>
+          <button class="btn btn-primary btn-block" (click)="itemFormToggled=!itemFormToggled">Add item</button>
+          <button class="btn btn-block btn-success" (click)="submit()">Submit proposal</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-            <app-user-picker formControlName="from"></app-user-picker>
+  <div class="row mt-4" *ngIf="itemFormToggled  && groupSelected">
+    <div class="col">
+      <div class="card">
+        <div class="card-body">
 
-            <span>sends to</span>
 
-            <app-user-picker formControlName="to" [predicate]="toPredicate"></app-user-picker>
+          <ng-container [formGroup]="itemForm">
 
-            <div class="btn-group" role="group">
+            <div class="form-group">
+              <label>What kind of transaction?</label>
+              <select class="custom-select" formControlName="type">
+                <option ngValue="borrow_resource">Borrow something</option>
+                <option ngValue="provide_service">Provide a service</option>
+                <option ngValue="transfer_resource">Take something</option>
+                <option ngValue="transfer_credits">Receive timebank credits</option>
+              </select>
+            </div>
 
-              <button
-                type="button"
-                class="btn btn-light active"
-                [ngClass]="{active: itemForm.typeControl.value === 1}"
-                (click)="itemForm.typeControl.setValue(1)">Time
-              </button>
 
-              <button
-                type="button"
-                class="btn btn-light"
-                [ngClass]="{active: itemForm.typeControl.value === 0}"
-                (click)="itemForm.typeControl.setValue(0)">A resource
-              </button>
+            <ng-container *ngIf="itemForm">
+
+              <ng-container *ngIf="itemForm.typeControl.value; let type">
+
+                <ng-container
+                  *ngIf="type === 'borrow_resource' || type === 'provide_service' || type ==='transfer_resource'">
+                  <ng-container *ngIf="type === 'provide_service'">
+                    Which service?
+                  </ng-container>
+                  <ng-container *ngIf="type === 'borrow_resource'">
+                    Borrow what?
+                  </ng-container>
+                  <ng-container *ngIf="type === 'transfer_resource'">
+                    Take what?
+                  </ng-container>
+                  <app-resource-picker formControlName="resourceId"
+                                       [subType]="type === 'provide_service' ? 'service' : 'object'"
+                                       [sharedWithGroup]="form.groupId.value"></app-resource-picker>
+                </ng-container>
+
+                <div class="form-group mt-4" *ngIf="itemForm.resourceIdControl.value || type === 'transfer_credits'">
+                  <ng-container *ngIf="type === 'borrow_resource'">
+                    Who would borrow?
+                  </ng-container>
+                  <ng-container *ngIf="type === 'provide_service'">
+                    Who would get the service?
+                  </ng-container>
+                  <ng-container *ngIf="type === 'transfer_credits'">
+                    Who would receive the credits?
+                  </ng-container>
+                  <ng-container *ngIf="type === 'transfer_resource'">
+                    Who would receive the item?
+                  </ng-container>
+                  <app-group-or-user-picker
+                    formControlName="to"
+                    [groupId]="form.value.groupId"
+                    [offerItemType]="itemForm.typeControl.value"
+                  ></app-group-or-user-picker>
+                </div>
+
+                <div class="form-group mt-4" *ngIf="type === 'transfer_credits' && itemForm.toControl.value">
+                  <label>From whom?</label>
+                  <app-group-or-user-picker
+                    formControlName="from"
+                    [groupId]="form.value.groupId"
+                    [offerItemType]="itemForm.typeControl.value"
+                    [to]="itemForm.toControl.value"
+                  ></app-group-or-user-picker>
+                </div>
+
+                <ng-container *ngIf="type==='transfer_credits' && itemForm.fromControl.value">
+                  <div class="form-group mt-2">
+                    <label for="commonpool-resource-amount">What amount?</label>
+                    <input id="commonpool-resource-amount" type="text" class="form-control" formControlName="amount"/>
+                  </div>
+                </ng-container>
+
+                <ng-container
+                  *ngIf="(type==='borrow_resource' || type==='provide_service') && itemForm.toControl.value">
+                  <div class="form-group mt-2">
+                    <label for="commonpool-resource-duration">For how long?</label>
+                    <input id="commonpool-resource-duration" type="text" class="form-control"
+                           formControlName="duration"/>
+                  </div>
+                </ng-container>
+
+                <div class="mt-4" *ngIf="type === 'borrow_resource' && itemForm.durationControl.value !== null">
+                  <button class="btn btn-primary" (click)="add()">Add proposal item</button>
+                </div>
+
+                <div class="mt-4" *ngIf="type === 'provide_service' && itemForm.durationControl.value !== null">
+                  <button class="btn btn-primary" (click)="add()">Add proposal item</button>
+                </div>
+
+                <div class="mt-4" *ngIf="type === 'transfer_resource' && itemForm.toControl.value !== null">
+                  <button class="btn btn-primary" (click)="add()">Add proposal item</button>
+                </div>
+
+                <div class="mt-4" *ngIf="type === 'transfer_credits' && itemForm.amountControl.value !== null">
+                  <button class="btn btn-primary" (click)="add()">Add proposal item</button>
+                </div>
+
+              </ng-container>
+            </ng-container>
+
+          </ng-container>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-5">
+    <div class="col">
+      <pre>{{itemForm.value | json}}</pre>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col">
+      <pre>{{form.value | json}}</pre>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col">
+      <pre>{{form.getErrors() | json}}</pre>
+    </div>
+  </div>
+
+  <!--
+    <div class="row" [formGroup]="form">
+      <div class="col">
+        <div class="card">
+          <ul class="list-group list-group-flush" formArrayName="items">
+            <li class="list-group-item" *ngFor="let formItem of form.items.controls; let i = index; ">
+              <ng-container *ngIf="form.getItem(i); let item">
+
+                <div>
+
+                  <div class="btn btn-light mr-3" (click)="form.removeItem(i)">
+                    <app-trash></app-trash>
+                  </div>
+
+                  <b>
+                    <app-username [id]="item.fromControl.value"></app-username>
+                    <div *ngIf="item.fromControl.errors" class="invalid-feedback">
+                      {{item.fromControl.errors | json}}
+                    </div>
+                  </b>
+
+                  gives
+
+                  <b>
+
+                  <span class="badge badge-pill badge-primary">
+                       <app-resource-name
+                         *ngIf="item.typeControl.value === 0"
+                         [resourceId]="item.resourceIdControl.value">
+                       </app-resource-name>
+                  </span>
+
+                    <span *ngIf="item.typeControl.value === 1">
+                    {{item.timeInSecondsControl.value / 60 / 60}}h
+                  </span>
+
+                  </b>
+                  to
+
+                  <b>
+                    <app-username [id]="item.toControl.value"></app-username>
+                  </b>
+
+                </div>
+              </ng-container>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="row mt-2" [formGroup]="itemForm">
+      <div class="col">
+        <div class="card shadow">
+          <div class="card-body">
+            <div class="d-flex flex-direction-row align-items-center" id="new-row">
+              <plus-icon></plus-icon>
+
+              <div class="form-group">
+                <select class="custom-select">
+                  <option>Borrow something</option>
+                  <option>Provide a service</option>
+                  <option>Take something</option>
+                  <option>Send timebank credits</option>
+                </select>
+              </div>
+
+              <ng-container *ngIf="itemForm.typeControl.value; let type">
+
+                {{type | json}}
+
+              </ng-container>
+
+              <app-user-picker formControlName="from"></app-user-picker>
+
+              <span>sends to</span>
+
+              <app-user-picker formControlName="to" [predicate]="toPredicate"></app-user-picker>
+
+              <div class="btn-group" role="group">
+
+                <button
+                  type="button"
+                  class="btn btn-light active"
+                  [ngClass]="{active: itemForm.typeControl.value === 1}"
+                  (click)="itemForm.typeControl.setValue(1)">Time
+                </button>
+
+                <button
+                  type="button"
+                  class="btn btn-light"
+                  [ngClass]="{active: itemForm.typeControl.value === 0}"
+                  (click)="itemForm.typeControl.setValue(0)">A resource
+                </button>
+
+              </div>
+
+              <ng-container *ngIf="itemForm.fromControl.value">
+
+                <span *ngIf="itemForm.typeControl.value === 0">Select resource:</span>
+
+                <app-resource-picker
+                  [createdBy]="itemForm.fromControl.value"
+                  formControlName="resourceId"
+                  *ngIf="itemForm.typeControl.value === 0">
+                </app-resource-picker>
+
+              </ng-container>
+
+              <input class="form-control"
+                     style="width: 7rem"
+                     type="number"
+                     step="0.25"
+                     min="0"
+                     *ngIf="itemForm.typeControl.value === 1"
+                     formControlName="timeInSeconds">
+
+              <span *ngIf="itemForm.typeControl.value === 1">Hours</span>
+
+              <button class="btn btn-secondary" [disabled]="itemForm.invalid" (click)="add()">Add</button>
 
             </div>
 
-            <ng-container *ngIf="itemForm.fromControl.value">
-
-              <span *ngIf="itemForm.typeControl.value === 0">Select resource:</span>
-
-              <app-resource-picker
-                [createdBy]="itemForm.fromControl.value"
-                formControlName="resourceId"
-                *ngIf="itemForm.typeControl.value === 0">
-              </app-resource-picker>
-
-            </ng-container>
-
-            <input class="form-control"
-                   style="width: 7rem"
-                   type="number"
-                   step="0.25"
-                   min="0"
-                   *ngIf="itemForm.typeControl.value === 1"
-                   formControlName="timeInSeconds">
-
-            <span *ngIf="itemForm.typeControl.value === 1">Hours</span>
-
-            <button class="btn btn-secondary" [disabled]="itemForm.invalid" (click)="add()">Add</button>
-
-          </div>
-
-        </div>
-      </div>
-    </div>
-  </div>
-
-
-  <div class="row mt-2">
-    <div class="col">
-      <div class="card">
-        <div class="card-body" [formGroup]="form">
-          <textarea
-            class="form-control"
-            placeholder="Send a message along with your offer..."
-            rows="6"
-            name="message"
-            [formControl]="form.message">
-          </textarea>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="row mt-2">
-    <div class="col">
-      <button (click)="submit()" [class.disabled]="!form.valid" class="btn btn-lg btn-primary shadow">Submit
-        proposal
-      </button>
-    </div>
-  </div>
-
-  <div class="row mt-2" *ngIf="submitted && form.items.errors">
-    <div class="col">
-      <div class="card">
-        <div class="card-body">
-          <div *ngIf="submitted && form.items.errors" class="invalid-feedback d-block">
-            <div *ngIf="form.items.errors.MinLengthArray">You must add at least one item</div>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
+
+    <div class="row mt-2">
+      <div class="col">
+        <div class="card">
+          <div class="card-body" [formGroup]="form">
+            <textarea
+              class="form-control"
+              placeholder="Send a message along with your offer..."
+              rows="6"
+              name="message"
+              [formControl]="form.message">
+            </textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row mt-2">
+      <div class="col">
+        <button (click)="submit()" [class.disabled]="!form.valid" class="btn btn-lg btn-primary shadow">Submit
+          proposal
+        </button>
+      </div>
+    </div>
+
+    <div class="row mt-2" *ngIf="submitted && form.items.errors">
+      <div class="col">
+        <div class="card">
+          <div class="card-body">
+            <div *ngIf="submitted && form.items.errors" class="invalid-feedback d-block">
+              <div *ngIf="form.items.errors.MinLengthArray">You must add at least one item</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  -->
 
 </div>

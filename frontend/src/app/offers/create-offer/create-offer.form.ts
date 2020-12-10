@@ -1,5 +1,13 @@
-import {AbstractControl, FormArray, FormControl, FormGroup, ValidationErrors, Validators} from '@angular/forms';
-import {Offer, OfferItemType} from '../../api/models';
+import {
+  AbstractControl,
+  AbstractControlOptions, AsyncValidatorFn,
+  FormArray,
+  FormControl,
+  FormGroup,
+  ValidatorFn,
+  Validators
+} from '@angular/forms';
+import {OfferItemType, Target} from '../../api/models';
 import {distinctUntilChanged, pluck} from 'rxjs/operators';
 
 export const minLengthArray = (min: number) => {
@@ -11,9 +19,12 @@ export const minLengthArray = (min: number) => {
   };
 };
 
-export const uuidValidator = () => {
+export const uuidValidator = (property?: string) => {
   return (c: AbstractControl): { [key: string]: any } => {
-    const value = c.value;
+    let value = c.value;
+    if (property) {
+      value = value[property];
+    }
     const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     if (!regex.test(value)) {
       return {
@@ -51,14 +62,17 @@ export class CreateOfferForm extends FormGroup {
 
   public items: FormArray;
   public message: FormControl;
+  public groupId: FormControl;
 
   public constructor() {
     super({
+      groupId: new FormControl('', [Validators.required]),
       items: new FormArray([], [minLengthArray(1)]),
       message: new FormControl('')
     });
     this.items = this.controls.items as FormArray;
     this.message = this.controls.message as FormControl;
+    this.groupId = this.controls.groupId as FormControl;
   }
 
   public removeItem(i: number) {
@@ -69,24 +83,49 @@ export class CreateOfferForm extends FormGroup {
     return this.items.controls[i] as CreateOfferItemForm;
   }
 
+  public getItems(): CreateOfferItemForm[] {
+    return this.items.controls as CreateOfferItemForm[];
+  }
+
   getErrors(): any {
     return getFormErrors(this);
   }
 }
 
+export class TargetForm extends FormControl {
+
+  constructor(
+    target: Target,
+    validatorOrOpts?: ValidatorFn | ValidatorFn[] | AbstractControlOptions | null,
+    asyncValidator?: AsyncValidatorFn | AsyncValidatorFn[] | null) {
+    super(undefined, validatorOrOpts, asyncValidator);
+  }
+
+}
+
 export class CreateOfferItemForm extends FormGroup {
 
-  public fromControl = new FormControl('', [Validators.required, uuidValidator()]);
-  public toControl = new FormControl('', [Validators.required, uuidValidator()]);
-  public typeControl = new FormControl(OfferItemType.ResourceItem, [Validators.required]);
+  public fromControl = new TargetForm(undefined, []);
+  public toControl = new TargetForm(undefined, [Validators.required, (c) => {
+
+    if (c.value && c.value.type === 'group') {
+      return uuidValidator('groupId');
+    } else if (c.value && c.value.type === 'user') {
+      return uuidValidator('userId');
+    }
+
+  }]);
+  public typeControl = new FormControl(undefined, [Validators.required]);
   public resourceIdControl = new FormControl('');
-  public timeInSecondsControl = new FormControl(0);
+  public amountControl = new FormControl('');
+  public durationControl = new FormControl('');
 
   private readonly fromKey = 'from';
   private readonly toKey = 'to';
   private readonly typeKey = 'type';
   private readonly resourceIdKey = 'resourceId';
-  private readonly timeInSecondsKey = 'timeInSeconds';
+  private readonly amountKey = 'amount';
+  private readonly durationKey = 'duration';
 
   private valueSub = this.valueChanges.pipe(
     pluck('type'),
@@ -100,19 +139,22 @@ export class CreateOfferItemForm extends FormGroup {
   }
 
   private updateValidators() {
-    if (this.getType() === OfferItemType.ResourceItem) {
-      this.timeInSecondsControl.setValidators([]);
+    const type = this.getType();
+    if (type === OfferItemType.BorrowResource
+      || type === OfferItemType.ProvideService
+      || type === OfferItemType.ResourceTransfer) {
+      this.amountControl.setValidators([]);
       this.resourceIdControl.setValidators([
         Validators.required
       ]);
     } else {
       this.resourceIdControl.setValidators([]);
-      this.timeInSecondsControl.setValidators([
+      this.amountControl.setValidators([
         Validators.required,
         Validators.min(0)
       ]);
     }
-    this.timeInSecondsControl.updateValueAndValidity();
+    this.amountControl.updateValueAndValidity();
     this.resourceIdControl.updateValueAndValidity();
   }
 
@@ -122,7 +164,8 @@ export class CreateOfferItemForm extends FormGroup {
     this.addControl(this.toKey, this.toControl);
     this.addControl(this.typeKey, this.typeControl);
     this.addControl(this.resourceIdKey, this.resourceIdControl);
-    this.addControl(this.timeInSecondsKey, this.timeInSecondsControl);
+    this.addControl(this.amountKey, this.amountControl);
+    this.addControl(this.durationKey, this.durationControl);
     this.updateValidators();
   }
 
@@ -132,7 +175,8 @@ export class CreateOfferItemForm extends FormGroup {
       to: {...this.toControl.errors},
       type: {...this.typeControl.errors},
       resourceId: {...this.resourceIdControl.errors},
-      timeInSeconds: {...this.timeInSecondsControl.errors}
+      amount: {...this.amountControl.errors},
+      duration: {...this.durationControl.errors},
     };
   }
 }

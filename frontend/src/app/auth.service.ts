@@ -1,5 +1,5 @@
 import {Injectable, OnDestroy} from '@angular/core';
-import {BehaviorSubject, interval, Observable, Subject} from 'rxjs';
+import {BehaviorSubject, interval, Observable, ReplaySubject, Subject} from 'rxjs';
 import {catchError, map, pluck, startWith, switchMap, tap} from 'rxjs/operators';
 import {BackendService} from './api/backend.service';
 import {ResourceType, SessionResponse, UserInfoResponse} from './api/models';
@@ -61,6 +61,10 @@ export class AuthService implements OnDestroy {
 
   public getUserAuthId(): Observable<string> {
     return this.authUserId$;
+  }
+
+  public getCurrentAuthId(): string {
+    return this.sessionSubject.getValue()?.id;
   }
 
   ngOnDestroy(): void {

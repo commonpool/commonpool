@@ -8,7 +8,7 @@ import (
 type Store interface {
 	GetByKey(ctx ctx.Context, getResourceByKeyQuery *GetResourceByKeyQuery) (*GetResourceByKeyResponse, error)
 	GetByKeys(ctx ctx.Context, resourceKeys *model.ResourceKeys) (*GetResourceByKeysResponse, error)
-	Search(searchResourcesQuery *SearchResourcesQuery) *SearchResourcesResponse
+	Search(context ctx.Context, searchResourcesQuery *SearchResourcesQuery) *SearchResourcesResponse
 	Delete(deleteResourceQuery *DeleteResourceQuery) *DeleteResourceResponse
 	Create(createResourceQuery *CreateResourceQuery) *CreateResourceResponse
 	Update(updateResourceQuery *UpdateResourceQuery) *UpdateResourceResponse
@@ -20,6 +20,7 @@ type GetResourceByKeysQuery struct {
 
 type SearchResourcesQuery struct {
 	Type            *Type
+	SubType         *SubType
 	Query           *string
 	Skip            int
 	Take            int
@@ -27,9 +28,10 @@ type SearchResourcesQuery struct {
 	SharedWithGroup *model.GroupKey
 }
 
-func NewSearchResourcesQuery(query *string, resourceType *Type, skip int, take int, createdBy string, sharedWithGroup *model.GroupKey) *SearchResourcesQuery {
+func NewSearchResourcesQuery(query *string, resourceType *Type, resourceSubType *SubType, skip int, take int, createdBy string, sharedWithGroup *model.GroupKey) *SearchResourcesQuery {
 	return &SearchResourcesQuery{
 		Type:            resourceType,
+		SubType:         resourceSubType,
 		Query:           query,
 		Skip:            skip,
 		Take:            take,

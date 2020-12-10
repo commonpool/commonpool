@@ -6,9 +6,9 @@ import (
 	"go.uber.org/zap"
 )
 
-func (g GroupService) GetGroupsMemberships(ctx context.Context, request *group.GetMembershipsForGroupRequest) (*group.GetMembershipsForGroupResponse, error) {
+func (g GroupService) GetGroupMemberships(ctx context.Context, request *group.GetMembershipsForGroupRequest) (*group.GetMembershipsForGroupResponse, error) {
 
-	ctx, l := GetCtx(ctx, "GroupService", "GetGroupsMemberships")
+	ctx, l := GetCtx(ctx, "GroupService", "GetGroupMemberships")
 
 	l = l.With(zap.Object("group", request.GroupKey))
 

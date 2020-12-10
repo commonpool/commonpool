@@ -33,6 +33,7 @@ func AutoMigrate(db *gorm.DB) {
 		&chat.ChannelSubscription{},
 		&Message{},
 		&auth.User{},
+		&TransactionEntry{},
 	)
 	if err != nil {
 		panic(err)

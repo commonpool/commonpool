@@ -2,26 +2,32 @@ package store
 
 import (
 	ctx "context"
+	"fmt"
 	errs "github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/graph"
 	"github.com/commonpool/backend/group"
+	"github.com/commonpool/backend/logging"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/resource"
+	"github.com/commonpool/backend/transaction"
 	"github.com/mitchellh/mapstructure"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
+	"go.uber.org/zap"
 	"strings"
 	"time"
 )
 
 type ResourceStore struct {
-	graphDriver graph.GraphDriver
+	graphDriver        graph.GraphDriver
+	transactionService transaction.Service
 }
 
 var _ resource.Store = &ResourceStore{}
 
-func NewResourceStore(graphDriver graph.GraphDriver) *ResourceStore {
+func NewResourceStore(graphDriver graph.GraphDriver, transactionService transaction.Service) *ResourceStore {
 	return &ResourceStore{
-		graphDriver: graphDriver,
+		graphDriver:        graphDriver,
+		transactionService: transactionService,
 	}
 }
 
@@ -83,23 +89,23 @@ func (rs *ResourceStore) getByKeys(ctx ctx.Context, session neo4j.Session, resou
 		}
 		sharings.AppendAll(sharingsForResource)
 
-		ownerTargets, err := MapOfferItemTargets(getResult.Record(), "owners")
+		ownerTargets, err := mapOfferItemTargets(getResult.Record(), "owners")
 		if err != nil {
 			return nil, err
 		}
-		claims.AppendAll(CreateClaimsForTargets(r.Key, resource.OwnershipClaim, ownerTargets))
+		claims.AppendAll(createClaimsForTargets(r.Key, resource.OwnershipClaim, ownerTargets))
 
-		managerTargets, err := MapOfferItemTargets(getResult.Record(), "managers")
+		managerTargets, err := mapOfferItemTargets(getResult.Record(), "managers")
 		if err != nil {
 			return nil, err
 		}
-		claims.AppendAll(CreateClaimsForTargets(r.Key, resource.ManagerClaim, managerTargets))
+		claims.AppendAll(createClaimsForTargets(r.Key, resource.ManagerClaim, managerTargets))
 
-		viewerTargets, err := MapOfferItemTargets(getResult.Record(), "viewers")
+		viewerTargets, err := mapOfferItemTargets(getResult.Record(), "viewers")
 		if err != nil {
 			return nil, err
 		}
-		claims.AppendAll(CreateClaimsForTargets(r.Key, resource.ViewerClaim, viewerTargets))
+		claims.AppendAll(createClaimsForTargets(r.Key, resource.ViewerClaim, viewerTargets))
 
 		resources = append(resources, r)
 	}
@@ -112,7 +118,7 @@ func (rs *ResourceStore) getByKeys(ctx ctx.Context, session neo4j.Session, resou
 
 }
 
-func CreateClaimsForTargets(resourceKey model.ResourceKey, claimType resource.ClaimType, targets *model.Targets) *resource.Claims {
+func createClaimsForTargets(resourceKey model.ResourceKey, claimType resource.ClaimType, targets *model.Targets) *resource.Claims {
 	var claims []*resource.Claim
 	for _, target := range targets.Items {
 		claims = append(claims, &resource.Claim{
@@ -124,7 +130,7 @@ func CreateClaimsForTargets(resourceKey model.ResourceKey, claimType resource.Cl
 	return resource.NewClaims(claims)
 }
 
-func MapOfferItemTargets(record neo4j.Record, targetsFieldName string) (*model.Targets, error) {
+func mapOfferItemTargets(record neo4j.Record, targetsFieldName string) (*model.Targets, error) {
 	field, _ := record.Get(targetsFieldName)
 
 	if field == nil {
@@ -271,19 +277,23 @@ func (rs *ResourceStore) Create(createResourceQuery *resource.CreateResourceQuer
 	if createResourceQuery.SharedWith != nil && len(createResourceQuery.SharedWith.Items) > 0 {
 		params["groupIds"] = createResourceQuery.SharedWith.Strings()
 		cypher = cypher + `
+
 			WITH u, r
-			OPTIONAL MATCH (g:Group)
-			WHERE g.id IN $groupIds
-			CALL apoc.do.when(
-				g IS NOT NULL,
-				'MERGE (r)-[s:SharedWith]->(g) return s, g',
-				'',
-				{r: r, g: g})
-			YIELD value
-			RETURN r, g`
+
+			CALL {
+				
+				WITH u, r
+				MATCH (g:Group)
+				WHERE g.id IN $groupIds
+				CREATE (r)-[s:SharedWith {createdAt:datetime({epochMillis:$createdAt})}]->(g) 
+				RETURN collect(distinct g.id) as groupIds
+			
+			}
+
+			RETURN r, groupIds`
 	} else {
 		cypher = cypher + `
-			RETURN r, null as g`
+			RETURN r`
 	}
 
 	createResult, err := graphSession.Run(cypher, params)
@@ -299,13 +309,29 @@ func (rs *ResourceStore) Create(createResourceQuery *resource.CreateResourceQuer
 		}
 	}
 
-	createResult.Next()
+	if !createResult.Next() {
+		return &resource.CreateResourceResponse{
+			Error: fmt.Errorf("unexpected result count"),
+		}
+	}
 
 	record := createResult.Record()
-	_, err = rs.mapGraphResourceRecord(record, "r")
-	if err != nil {
-		return &resource.CreateResourceResponse{
-			Error: err,
+
+	groupIdsField, ok := record.Get("groupIds")
+	if ok {
+		groupIdsIntfs := groupIdsField.([]interface{})
+		for _, groupIdIntf := range groupIdsIntfs {
+			groupId := groupIdIntf.(string)
+			groupKey, err := group.ParseGroupKey(groupId)
+			if err != nil {
+				return &resource.CreateResourceResponse{
+					Error: err,
+				}
+			}
+			_, err = rs.transactionService.UserSharedResourceWithGroup(groupKey, createResourceQuery.Resource.Key)
+			return &resource.CreateResourceResponse{
+				Error: err,
+			}
 		}
 	}
 
@@ -380,27 +406,56 @@ func (rs *ResourceStore) Update(request *resource.UpdateResourceQuery) *resource
 	now := time.Now().UTC().UnixNano() / 1e6
 	resourceKey := request.Resource.GetKey()
 	updateResult, err := session.Run(`
-			MATCH (r:Resource {id:$id})
-			OPTIONAL MATCH (r)-[notSharedWith:SharedWith]-(g1:Group)
-			WHERE NOT (g1.id IN $groupIds)			
-			OPTIONAL MATCH (g:Group)
-			WHERE g.id in $groupIds
-			SET r += {
+			MATCH (resource:Resource {id:$id})
+
+			WITH resource
+
+			OPTIONAL MATCH (resource)-[notSharedWithRel:SharedWith]->(notSharedWith:Group)
+			WHERE NOT (notSharedWith.id IN $groupIds)		
+			
+			WITH resource, notSharedWithRel, notSharedWith
+
+			OPTIONAL MATCH (sharedWithGroup:Group)
+			WHERE sharedWithGroup.id IN $groupIds and NOT (resource)-[:SharedWith]->(sharedWithGroup)
+
+			WITH resource, notSharedWithRel, notSharedWith, sharedWithGroup
+	
+			WITH 
+				resource,
+				notSharedWithRel,
+				notSharedWith,
+				sharedWithGroup,
+				collect(distinct notSharedWith.id) as deletedSharingGroupIds,
+				collect(distinct sharedWithGroup.id) as createdSharingGroupIds
+
+			SET resource += {
 				updatedAt:datetime({epochMillis:$updatedAt}),
 				summary:$summary,
 				description:$description,
 				valueInHoursFrom:$valueInHoursFrom,
 				valueInHoursTo:$valueInHoursTo
 			}
-			DELETE notSharedWith
-			WITH r, g
-			CALL apoc.do.when(
-				g IS NOT NULL,
-				'MERGE (r)-[s:SharedWith]->(g) return s, g',
+
+			WITH resource, sharedWithGroup, notSharedWithRel, createdSharingGroupIds, deletedSharingGroupIds
+
+			call apoc.do.when(
+				notSharedWithRel IS NOT NULL,
+				'DELETE notSharedWithRel RETURN "bla" as a',	
 				'',
-				{r: r, g: g})
-			YIELD value
-			RETURN r`,
+				{notSharedWithRel: notSharedWithRel}
+			)
+			YIELD value as a
+
+			WITH resource, sharedWithGroup, createdSharingGroupIds, deletedSharingGroupIds
+
+			call apoc.do.when(
+				sharedWithGroup IS NOT NULL, 
+				'CREATE (resource)-[sharedWith:SharedWith]->(sharedWithGroup) RETURN "bla" as b',
+				'',
+				{resource: resource, sharedWithGroup: sharedWithGroup})
+			YIELD value as b
+
+			RETURN resource, createdSharingGroupIds, deletedSharingGroupIds`,
 		map[string]interface{}{
 			"id":               resourceKey.String(),
 			"updatedAt":        now,
@@ -429,15 +484,54 @@ func (rs *ResourceStore) Update(request *resource.UpdateResourceQuery) *resource
 		}
 	}
 
+	deletedSharingField, _ := updateResult.Record().Get("deletedSharingGroupIds")
+	deletedSharingIntfs := deletedSharingField.([]interface{})
+	for _, deletedSharingIntf := range deletedSharingIntfs {
+		groupId := deletedSharingIntf.(string)
+		groupKey, err := group.ParseGroupKey(groupId)
+		if err != nil {
+			return &resource.UpdateResourceResponse{
+				Error: err,
+			}
+		}
+		_, err = rs.transactionService.UserRemovedResourceFromGroup(groupKey, request.Resource.Key)
+		if err != nil {
+			return &resource.UpdateResourceResponse{
+				Error: err,
+			}
+		}
+	}
+
+	createdSharingsField, _ := updateResult.Record().Get("createdSharingGroupIds")
+	createdSharingIntfs := createdSharingsField.([]interface{})
+	for _, createdSharingIntf := range createdSharingIntfs {
+		groupId := createdSharingIntf.(string)
+		groupKey, err := group.ParseGroupKey(groupId)
+		if err != nil {
+			return &resource.UpdateResourceResponse{
+				Error: err,
+			}
+		}
+		_, err = rs.transactionService.UserSharedResourceWithGroup(groupKey, request.Resource.Key)
+		if err != nil {
+			return &resource.UpdateResourceResponse{
+				Error: err,
+			}
+		}
+	}
+
 	return resource.NewUpdateResourceResponse(nil)
 
 }
 
 // Search search for resources
-func (rs *ResourceStore) Search(request *resource.SearchResourcesQuery) *resource.SearchResourcesResponse {
+func (rs *ResourceStore) Search(context ctx.Context, request *resource.SearchResourcesQuery) *resource.SearchResourcesResponse {
+
+	l := logging.WithContext(context)
 
 	session, err := rs.graphDriver.GetSession()
 	if err != nil {
+		l.Error("could not get graph session", zap.Error(err))
 		return &resource.SearchResourcesResponse{
 			Error: err,
 		}
@@ -449,10 +543,10 @@ func (rs *ResourceStore) Search(request *resource.SearchResourcesQuery) *resourc
 		"(r:Resource)",
 	}
 	var whereClauses []string
+	var optionalMatchClauses []string
 
 	if request.CreatedBy != "" {
-		matchClauses = append([]string{"(createdBy:User {id:$createdById})"}, matchClauses...)
-		whereClauses = append(whereClauses, "(r)<-[:CreatedBy]-(createdBy)")
+		matchClauses = append(matchClauses, "(r)-[:CreatedBy]->(createdBy:User {id:$createdById})")
 		propertyValues["createdById"] = request.CreatedBy
 	}
 
@@ -461,24 +555,35 @@ func (rs *ResourceStore) Search(request *resource.SearchResourcesQuery) *resourc
 		propertyValues["type"] = *request.Type
 	}
 
+	if request.SubType != nil {
+		whereClauses = append(whereClauses, "r.subType = $subType")
+		propertyValues["subType"] = *request.SubType
+	}
+
 	if request.Query != nil && *request.Query != "" {
 		whereClauses = append(whereClauses, "r.summary =~ $query")
 		propertyValues["query"] = ".*" + *request.Query + ".*"
 	}
 
+	if request.SharedWithGroup != nil {
+		matchClauses = append(matchClauses, "(r)-[:SharedWith]->(g:Group {id:$groupId})")
+		propertyValues["groupId"] = request.SharedWithGroup.String()
+	} else {
+		optionalMatchClauses = append(optionalMatchClauses, "(r)-[:SharedWith]->(g:Group)")
+	}
+
 	var cyper = "MATCH "
+
 	cyper = cyper + strings.Join(matchClauses, ",")
 
 	if len(whereClauses) > 0 {
-		cyper = cyper + "\n WHERE "
+		cyper = cyper + "\nWHERE "
 		cyper = cyper + strings.Join(whereClauses, " AND ")
 	}
 
-	if request.SharedWithGroup != nil {
-		propertyValues["groupId"] = request.SharedWithGroup.String()
-		cyper = cyper + "\nMATCH (r)-[s:SharedWith]->(g:Group {id:$groupId})"
-	} else {
-		cyper = cyper + "\nOPTIONAL MATCH (r)-[s:SharedWith]->(g:Group)"
+	if len(optionalMatchClauses) > 0 {
+		cyper = cyper + "\nOPTIONAL MATCH"
+		cyper = cyper + strings.Join(optionalMatchClauses, "\nOPTIONAL MATCH")
 	}
 
 	countCypher := cyper + `
@@ -487,12 +592,14 @@ RETURN count(r) as totalCount
 
 	countResult, err := session.Run(countCypher, propertyValues)
 	if err != nil {
+		l.Error("could not execute count query", zap.Error(err))
 		return &resource.SearchResourcesResponse{
 			Error: err,
 		}
 	}
 
 	if countResult.Err() != nil {
+		l.Error("could not execute count query", zap.Error(countResult.Err()))
 		return &resource.SearchResourcesResponse{
 			Error: countResult.Err(),
 		}
@@ -515,12 +622,14 @@ LIMIT $take
 	searchResult, err := session.Run(cyper, propertyValues)
 
 	if err != nil {
+		l.Error("could not execute search query", zap.Error(err))
 		return &resource.SearchResourcesResponse{
 			Error: err,
 		}
 	}
 
 	if searchResult.Err() != nil {
+		l.Error("could not execute search query", zap.Error(searchResult.Err()))
 		return &resource.SearchResourcesResponse{
 			Error: searchResult.Err(),
 		}
@@ -532,6 +641,7 @@ LIMIT $take
 
 		res, err := rs.mapGraphResourceRecord(searchResult.Record(), "r")
 		if err != nil {
+			l.Error("could not map resource record", zap.Error(err))
 			return &resource.SearchResourcesResponse{
 				Error: err,
 			}

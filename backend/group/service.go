@@ -12,7 +12,7 @@ type Service interface {
 	GetGroupsByKeys(ctx context.Context, groupKeys *model.GroupKeys) (*Groups, error)
 	GetMembership(ctx context.Context, request *GetMembershipRequest) (*GetMembershipResponse, error)
 	GetUserMemberships(ctx context.Context, request *GetMembershipsForUserRequest) (*GetMembershipsForUserResponse, error)
-	GetGroupsMemberships(ctx context.Context, request *GetMembershipsForGroupRequest) (*GetMembershipsForGroupResponse, error)
+	GetGroupMemberships(ctx context.Context, request *GetMembershipsForGroupRequest) (*GetMembershipsForGroupResponse, error)
 	CreateOrAcceptInvitation(ctx context.Context, request *CreateOrAcceptInvitationRequest) (*CreateOrAcceptInvitationResponse, error)
 	CancelOrDeclineInvitation(ctx context.Context, request *CancelOrDeclineInvitationRequest) error
 }

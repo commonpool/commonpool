@@ -277,12 +277,10 @@ func (a *OidcAuthenticator) getAccessToken(c echo.Context) (string, error) {
 	}
 
 	if accessTokenFromCookie != "" {
-		c.Logger().Info("Using access token from cookie")
 		rawAccessToken = accessTokenFromCookie
 	}
 
 	if accessTokenFromHeader != "" {
-		c.Logger().Info("Using access token from header")
 		parts := strings.Split(accessTokenFromHeader, " ")
 		if len(parts) != 2 {
 			err = fmt.Errorf("invalid raw access token: %s", accessTokenFromHeader)
@@ -294,7 +292,6 @@ func (a *OidcAuthenticator) getAccessToken(c echo.Context) (string, error) {
 	}
 
 	if len(accessTokenFromQuery) != 0 && accessTokenFromQuery[0] != "" {
-		c.Logger().Info("Using access token from query")
 		rawAccessToken = accessTokenFromQuery[0]
 	}
 

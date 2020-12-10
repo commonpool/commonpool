@@ -3,6 +3,7 @@ package web
 import (
 	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/group"
+	"github.com/commonpool/backend/model"
 	"time"
 )
 
@@ -137,4 +138,15 @@ type CancelOrDeclineInvitationResponse struct {
 type CancelOrDeclineInvitationRequest struct {
 	UserID  string `json:"userId"`
 	GroupID string `json:"groupId"`
+}
+
+type OfferGroupOrUserPickerItem struct {
+	Type    model.TargetType `json:"type"`
+	UserID  *string          `json:"userId"`
+	GroupID *string          `json:"groupId"`
+	Name    string           `json:"name"`
+}
+
+type OfferGroupOrUserPickerResult struct {
+	Items []OfferGroupOrUserPickerItem `json:"items"`
 }

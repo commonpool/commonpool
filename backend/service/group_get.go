@@ -11,8 +11,6 @@ func (g GroupService) GetGroup(ctx context.Context, request *group.GetGroupReque
 	ctx, l := GetCtx(ctx, "GroupService", "GetGroup")
 	l = l.With(zap.Object("group", request.Key))
 
-	l.Debug("getting group")
-
 	grp, err := g.groupStore.GetGroup(ctx, request.Key)
 	if err != nil {
 		l.Error("could not get group", zap.Error(err))

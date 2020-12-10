@@ -36,17 +36,11 @@ func (h *Handler) SearchResources(c echo.Context) error {
 
 	ctx, l := GetEchoContext(c, "SearchResources")
 
-	l.Debug("searching resources")
-
-	l.Debug("parsing 'skip' query param")
-
 	skip, err := utils.ParseSkip(c)
 	if err != nil {
 		l.Error("failed to parse skip query param", zap.Error(err))
 		return NewErrResponse(c, err)
 	}
-
-	l.Debug("parsing 'take' query param")
 
 	take, err := utils.ParseTake(c, 0, 100)
 	if err != nil {
@@ -54,11 +48,7 @@ func (h *Handler) SearchResources(c echo.Context) error {
 		return NewErrResponse(c, err)
 	}
 
-	l.Debug("parsing 'query' query param")
-
 	searchQuery := strings.TrimSpace(c.QueryParam("query"))
-
-	l.Debug("parsing 'type' query param")
 
 	resourceType, err := resource.ParseResourceType(c.QueryParam("type"))
 	if err != nil {
@@ -66,11 +56,13 @@ func (h *Handler) SearchResources(c echo.Context) error {
 		return NewErrResponse(c, err)
 	}
 
-	l.Debug("parsing 'created_by' query param")
+	resourceSubType, err := resource.ParseResourceSubType(c.QueryParam("sub_type"))
+	if err != nil {
+		l.Error("SearchResource: failed to parse type query param", zap.Error(err))
+		return NewErrResponse(c, err)
+	}
 
 	createdBy := c.QueryParam("created_by")
-
-	l.Debug("parsing 'group_id' query param")
 
 	// visible in group
 	var groupKey *model.GroupKey
@@ -85,16 +77,12 @@ func (h *Handler) SearchResources(c echo.Context) error {
 		groupKey = &groupKey2
 	}
 
-	l.Debug("searching resources")
-
-	searchResourcesQuery := resource.NewSearchResourcesQuery(&searchQuery, resourceType, skip, take, createdBy, groupKey)
-	searchResourcesResponse := h.resourceStore.Search(searchResourcesQuery)
+	searchResourcesQuery := resource.NewSearchResourcesQuery(&searchQuery, resourceType, resourceSubType, skip, take, createdBy, groupKey)
+	searchResourcesResponse := h.resourceStore.Search(ctx, searchResourcesQuery)
 	if searchResourcesResponse.Error != nil {
 		c.Logger().Error(err, "SearchResource: failed to search resources from store")
 		return NewErrResponse(c, searchResourcesResponse.Error)
 	}
-
-	l.Debug("fetching groups with which the resource is shared")
 
 	getGroupsResponse, err := h.groupService.GetGroupsByKeys(ctx, searchResourcesResponse.Sharings.GetAllGroupKeys())
 	if err != nil {
@@ -102,29 +90,21 @@ func (h *Handler) SearchResources(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	}
 
-	l.Debug("building groupKey -> group map")
-
 	groupMap := map[model.GroupKey]*group.Group{}
 	for _, g := range getGroupsResponse.Items {
 		groupMap[g.GetKey()] = g
 	}
-
-	l.Debug("creating list of resource owners")
 
 	var createdByKeys []model.UserKey
 	for _, item := range searchResourcesResponse.Resources.Items {
 		createdByKeys = append(createdByKeys, item.GetOwnerKey())
 	}
 
-	l.Debug("fetching resource owners")
-
 	createdByUsers, err := h.authStore.GetByKeys(ctx, createdByKeys)
 	if err != nil {
 		l.Error("failed to get users by keys", zap.Error(err))
 		return c.String(http.StatusInternalServerError, err.Error())
 	}
-
-	l.Debug("building response body")
 
 	// building response body
 	resources := searchResourcesResponse.Resources.Items
@@ -171,15 +151,11 @@ func (h *Handler) GetResource(c echo.Context) error {
 
 	ctx, l := GetEchoContext(c, "GetResource")
 
-	l.Debug("parsing resource key")
-
 	resourceKey, err := model.ParseResourceKey(c.Param("id"))
 	if err != nil {
 		l.Error("could not parse resource key", zap.Error(err))
 		return NewErrResponse(c, err)
 	}
-
-	l.Debug("getting resource")
 
 	getResourceByKeyResponse, err := h.resourceStore.GetByKey(ctx, resource.NewGetResourceByKeyQuery(resourceKey))
 	if err != nil {
@@ -187,8 +163,6 @@ func (h *Handler) GetResource(c echo.Context) error {
 		return NewErrResponse(c, err)
 	}
 	res := getResourceByKeyResponse.Resource
-
-	l.Debug("getting groups")
 
 	groups, err := h.groupService.GetGroupsByKeys(ctx, getResourceByKeyResponse.Sharings.GetAllGroupKeys())
 	if err != nil {
@@ -477,6 +451,7 @@ func NewResourceResponse(res *resource.Resource, creatorUsername string, creator
 	return web.Resource{
 		Id:               res.Key.String(),
 		Type:             res.Type,
+		SubType:          res.SubType,
 		Description:      res.Description,
 		Summary:          res.Summary,
 		CreatedBy:        creatorUsername,

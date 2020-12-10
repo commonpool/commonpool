@@ -132,7 +132,7 @@ func TestCreateGroupShouldCreateOwnerMembership(t *testing.T) {
 	assert.Equal(t, http.StatusCreated, createGroupHttp.StatusCode)
 
 	gk, _ := group.ParseGroupKey(createGroup.Group.ID)
-	grps, _ := GroupService.GetGroupsMemberships(ctx, group.NewGetMembershipsForGroupRequest(gk, nil))
+	grps, _ := GroupService.GetGroupMemberships(ctx, group.NewGetMembershipsForGroupRequest(gk, nil))
 	assert.Equal(t, 1, len(grps.Memberships.Items))
 	assert.Equal(t, true, grps.Memberships.Items[0].IsOwner)
 	assert.Equal(t, true, grps.Memberships.Items[0].UserConfirmed)

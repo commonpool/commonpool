@@ -8,8 +8,9 @@
     id="resourceType"
     [ngModel]="resourceType$ | async"
     (ngModelChange)="resourceTypeSubject.next($event)">
-    <option [value]="0">Offer</option>
-    <option [value]="1">Request</option>
+    <option [ngValue]="undefined">All posts</option>
+    <option [ngValue]="0">Offer</option>
+    <option [ngValue]="1">Request</option>
   </select>
 </div>
 
@@ -17,22 +18,47 @@
   <div *ngIf="resources$ | async as resources">
     <div *ngIf="!(pending$ | async); else pending">
       <h4>
-        Resources:
+        <ng-container *ngIf="(resourceType$ | async) == 0">
+          Offers
+        </ng-container>
+        <ng-container *ngIf="(resourceType$ | async) == 1">
+          Requests
+        </ng-container>
+        <ng-container *ngIf="(resourceType$ | async) == undefined">
+          All Posts
+        </ng-container>
       </h4>
+
       <div class="resource-shadow">
         <div class="resource" *ngFor="let resource of resources">
           <div class="resource-title">
-            <b>
-              <a *ngIf="resource.type === 0" [routerLink]="'/users/' + resource.createdById + '/offers/' + resource.id">{{resource.summary}}</a>
-              <a *ngIf="resource.type === 1" [routerLink]="'/users/' + resource.createdById + '/needs/' + resource.id">{{resource.summary}}</a>
-            </b>
+
+            <h2
+              class="mb-0"
+              style="display:inline-block"
+            >
+              <b>
+                <app-resource-link2 [id]="resource.id"></app-resource-link2>
+              </b>
+            </h2>
+
+            <small> / value {{resource.valueInHoursFrom}}h-{{resource.valueInHoursTo}}h</small>
+
           </div>
-          <div><span *ngIf="resource.type === 0">offering </span> by <b><a
+          <div>
+            ---
+          </div>
+          <div>
+            {{resource.description}}
+          </div>
+          <div>
+            ---
+          </div>
+          <div>
+            <span *ngIf="resource.type === 0">offer </span> by <b><a
             [routerLink]="'/users/' + resource.createdById">{{resource.createdBy}}</a></b>
-            for {{resource.valueInHoursFrom}}h-{{resource.valueInHoursTo}}h
+            / {{resource.createdAtDistanceAgo}}
           </div>
-          <div>{{resource.description}}</div>
-          <div>posted {{resource.createdAtDistanceAgo}}</div>
         </div>
       </div>
     </div>

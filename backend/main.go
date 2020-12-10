@@ -11,6 +11,7 @@ import (
 	"github.com/commonpool/backend/graph"
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/handler"
+	"github.com/commonpool/backend/logging"
 	"github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/router"
 	"github.com/commonpool/backend/service"
@@ -18,6 +19,7 @@ import (
 	"github.com/commonpool/backend/trading"
 	"github.com/labstack/echo/v4"
 	echoSwagger "github.com/swaggo/echo-swagger"
+	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"io/ioutil"
@@ -49,12 +51,14 @@ var (
 // @basePath /api/v1
 func main() {
 
+	ctx := context.Background()
+	l := logging.WithContext(ctx)
+
 	appConfig, err := config.GetAppConfig(os.LookupEnv, ioutil.ReadFile)
 	if err != nil {
+		l.Error("could not get app config", zap.Error(err))
 		panic(err)
 	}
-
-	ctx := context.Background()
 
 	amqpCli, err := amqp.NewRabbitMqClient(ctx, appConfig.AmqpUrl)
 	if err != nil {
@@ -63,11 +67,13 @@ func main() {
 
 	err = graph.InitGraphDatabase(ctx, appConfig)
 	if err != nil {
+		l.Error("could not initialize graph database", zap.Error(err))
 		panic(err)
 	}
 
 	driver, err := graph.NewNeo4jDriver(appConfig, appConfig.Neo4jDatabase)
 	if err != nil {
+		l.Error("could not create neo4j driver", zap.Error(err))
 		panic(err)
 	}
 
@@ -78,7 +84,9 @@ func main() {
 	db := getDb(appConfig)
 	store.AutoMigrate(db)
 
-	resourceStore = store.NewResourceStore(driver)
+	transactionStore := store.NewTransactionStore(db)
+	transactionService := service.NewTransactionService(transactionStore)
+	resourceStore = store.NewResourceStore(driver, transactionService)
 	authStore = store.NewAuthStore(db, driver)
 	chatStore := store.NewChatStore(db, authStore, amqpCli)
 	tradingStore := store.NewTradingStore(driver)
@@ -86,7 +94,7 @@ func main() {
 
 	chatService := service.NewChatService(authStore, groupStore, resourceStore, amqpCli, chatStore)
 	groupService := service.NewGroupService(groupStore, amqpCli, chatService, authStore)
-	tradingService := service.NewTradingService(tradingStore, resourceStore, authStore, chatService, groupService)
+	tradingService := service.NewTradingService(tradingStore, resourceStore, authStore, chatService, groupService, transactionService)
 
 	v1 := r.Group("/api/v1")
 	authorization := auth.NewAuth(v1, appConfig, "/api/v1", authStore)
@@ -106,12 +114,14 @@ func main() {
 	var users []auth.User
 	err = db.Model(auth.User{}).Find(&users).Error
 	if err != nil {
+		l.Error("could not find users", zap.Error(err))
 		panic(err)
 	}
 
 	for _, user := range users {
 		_, err = chatService.CreateUserExchange(ctx, user.GetUserKey())
 		if err != nil {
+			l.Error("could not create user exchange for user", zap.Object("user", user.GetUserKey()), zap.Error(err))
 			panic(err)
 		}
 	}
@@ -133,11 +143,13 @@ func main() {
 
 	r.Logger.Info("shutting down amqp client")
 	if err := amqpCli.Shutdown(); err != nil {
+		l.Error("could nots shutdown amqp client", zap.Error(err))
 		r.Logger.Fatal(err)
 	}
 
 	r.Logger.Info("shutting down router")
 	if err := r.Shutdown(ctx); err != nil {
+		l.Error("could not shut down router", zap.Error(err))
 		r.Logger.Fatal(err)
 	}
 

@@ -67,3 +67,14 @@ func (k GroupKeys) Contains(groupKey GroupKey) bool {
 	}
 	return false
 }
+
+func (i *GroupKeys) IsEmpty() bool {
+	return i.Items == nil || len(i.Items) == 0
+}
+
+func (i *GroupKeys) Count() int {
+	if i.Items == nil {
+		return 0
+	}
+	return len(i.Items)
+}

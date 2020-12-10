@@ -18,7 +18,7 @@ export class ResourceListViewComponent {
   pending$ = this.pendingSubject.asObservable().pipe(startWith(false));
 
   resourceTypeSubject = new ReplaySubject<ResourceType>();
-  resourceType$ = this.resourceTypeSubject.asObservable().pipe(startWith(ResourceType.Offer));
+  resourceType$ = this.resourceTypeSubject.asObservable().pipe(startWith(undefined));
 
   resources$ =
     combineLatest(
@@ -30,7 +30,14 @@ export class ResourceListViewComponent {
         this.resourceType$
       ]
     ).pipe(
-      map(([query, type]) => new SearchResourceRequest(query, type, undefined, undefined, 10, 0)),
+      map(([query, type]) => new SearchResourceRequest(
+        query,
+        type,
+        undefined,
+        undefined,
+        undefined,
+        10,
+        0)),
       tap(() => {
         this.pendingSubject.next(true);
       }),
@@ -49,6 +56,5 @@ export class ResourceListViewComponent {
   constructor(private backend: BackendService) {
 
   }
-
 
 }

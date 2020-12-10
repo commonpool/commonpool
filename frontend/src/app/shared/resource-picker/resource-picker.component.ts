@@ -2,7 +2,7 @@ import {Component, forwardRef, Input, OnDestroy, OnInit} from '@angular/core';
 import {BackendService} from '../../api/backend.service';
 import {combineLatest, of, ReplaySubject, Subject, Subscription} from 'rxjs';
 import {distinctUntilChanged, map, pluck, shareReplay, startWith, switchMap, tap} from 'rxjs/operators';
-import {Resource, ResourceType, SearchResourceRequest} from '../../api/models';
+import {Resource, ResourceSubType, ResourceType, SearchResourceRequest} from '../../api/models';
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
 
 @Component({
@@ -19,6 +19,20 @@ import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
 })
 export class ResourcePickerComponent implements OnInit, OnDestroy, ControlValueAccessor {
 
+  private sharedWithGroupSubject = new ReplaySubject<string>();
+  private sharedWithGroup$ = this.sharedWithGroupSubject.asObservable().pipe(
+    startWith(undefined as string | undefined),
+    distinctUntilChanged(),
+    shareReplay()
+  );
+
+  private subTypeSubject = new ReplaySubject<ResourceSubType>();
+  private subType$ = this.subTypeSubject.asObservable().pipe(
+    startWith(undefined as ResourceSubType | undefined),
+    distinctUntilChanged(),
+    shareReplay()
+  );
+
   private createdBySubject = new Subject<string>();
   private createdBy$ = this.createdBySubject.asObservable().pipe(
     startWith(undefined as string | undefined),
@@ -33,15 +47,27 @@ export class ResourcePickerComponent implements OnInit, OnDestroy, ControlValueA
 
   querySubject = new Subject<string>();
   query$ = this.querySubject.asObservable().pipe(startWith(''), shareReplay(1));
-  items$ = combineLatest([this.query$, this.createdBy$])
+  items$ = combineLatest([this.query$, this.createdBy$, this.sharedWithGroup$, this.subType$])
     .pipe(
-      switchMap(([q, c]) => this.backend.searchResources(new SearchResourceRequest(q, ResourceType.Offer, c, undefined, 10, 0))),
+      switchMap(([q, c, g, subType]) => {
+        return this.backend.searchResources(new SearchResourceRequest(q, ResourceType.Offer, subType, c, g, 10, 0));
+      }),
       pluck('resources')
     );
 
   @Input()
   set createdBy(value: string | undefined) {
     this.createdBySubject.next(value);
+  }
+
+  @Input()
+  set sharedWithGroup(value: string | undefined) {
+    this.sharedWithGroupSubject.next(value);
+  }
+
+  @Input()
+  set subType(value: string | undefined) {
+    this.subTypeSubject.next(value as ResourceSubType);
   }
 
   selectedIdSubject = new Subject<string>();

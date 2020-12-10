@@ -151,8 +151,6 @@ func (h *Handler) GetUserMemberships(c echo.Context) error {
 
 	ctx, l := GetEchoContext(c, "GetUserMemberships")
 
-	l.Debug("getting user memberships")
-
 	var membershipStatus = group.AnyMembershipStatus()
 	statusStr := c.QueryParam("status")
 	if statusStr != "" {
@@ -209,8 +207,6 @@ func (h *Handler) GetUserMemberships(c echo.Context) error {
 func (h *Handler) GetMembership(c echo.Context) error {
 
 	ctx, l := GetEchoContext(c, "GetMembership")
-
-	l.Debug("getting memberships")
 
 	userKey := model.NewUserKey(c.Param("userId"))
 
@@ -286,7 +282,7 @@ func (h *Handler) GetGroupMemberships(c echo.Context) error {
 		return NewErrResponse(c, err)
 	}
 
-	getGroupMemberships, err := h.groupService.GetGroupsMemberships(ctx, group.NewGetMembershipsForGroupRequest(groupKey, membershipStatus))
+	getGroupMemberships, err := h.groupService.GetGroupMemberships(ctx, group.NewGetMembershipsForGroupRequest(groupKey, membershipStatus))
 	if err != nil {
 		l.Error("could not get group memberships", zap.Error(err))
 		return NewErrResponse(c, err)
@@ -313,8 +309,6 @@ func (h *Handler) getUserNamesForMemberships(ctx context.Context, memberships *g
 
 	ctx, l := GetCtx(ctx, "getUserNamesForMemberships")
 
-	l.Debug("getting user names for memberships")
-
 	var userNames = auth.UserNames{}
 	for _, membership := range memberships.Items {
 		userKey := membership.GetUserKey()
@@ -334,8 +328,6 @@ func (h *Handler) getUserNamesForMemberships(ctx context.Context, memberships *g
 func (h *Handler) getGroupNamesForMemberships(ctx context.Context, memberships *group.Memberships) (group.Names, error) {
 
 	ctx, l := GetCtx(ctx, "getGroupNamesForMemberships")
-
-	l.Debug("getting group names for memberships")
 
 	var groupNames = group.Names{}
 	for _, membership := range memberships.Items {

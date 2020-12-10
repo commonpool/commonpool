@@ -31,6 +31,7 @@ func (h *Handler) Register(v1 *echo.Group) {
 	offers.POST("", h.HandleSendOffer)
 	offers.POST("/:id/accept", h.HandleAcceptOffer)
 	offers.POST("/:id/decline", h.HandleDeclineOffer)
+	offers.GET("/target-picker", h.HandleOfferItemTargetPicker)
 
 	tradingHistory := v1.Group("/trading-history", h.authorization.Authenticate(false))
 	tradingHistory.POST("", h.GetTradingHistory)

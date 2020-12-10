@@ -1,6 +1,7 @@
 package trading
 
 import (
+	"fmt"
 	"github.com/commonpool/backend/model"
 	"time"
 )
@@ -61,12 +62,12 @@ func (o *Offer) IsPending() bool {
 }
 
 type OfferItems struct {
-	Items []OfferItem2
+	Items []OfferItem
 }
 
 func (i *OfferItems) AllUserActionsCompleted() bool {
 	for _, item := range i.Items {
-		if !item.IsCompleted() {
+		if !item.IsCreditTransfer() && !item.IsCompleted() {
 			return false
 		}
 	}
@@ -82,15 +83,15 @@ func (i *OfferItems) AllPartiesAccepted() bool {
 	return true
 }
 
-func NewOfferItems(offerItems []OfferItem2) *OfferItems {
-	copied := make([]OfferItem2, len(offerItems))
+func NewOfferItems(offerItems []OfferItem) *OfferItems {
+	copied := make([]OfferItem, len(offerItems))
 	copy(copied, offerItems)
 	return &OfferItems{
 		Items: copied,
 	}
 }
 
-func (i *OfferItems) GetOfferItem(key model.OfferItemKey) OfferItem2 {
+func (i *OfferItems) GetOfferItem(key model.OfferItemKey) OfferItem {
 	for _, offerItem := range i.Items {
 		if offerItem.GetKey() == key {
 			return offerItem
@@ -100,7 +101,7 @@ func (i *OfferItems) GetOfferItem(key model.OfferItemKey) OfferItem2 {
 }
 
 func (i *OfferItems) GetOfferItemsReceivedByUser(userKey model.UserKey) *OfferItems {
-	var offerItems []OfferItem2
+	var offerItems []OfferItem
 	for _, offerItem := range i.Items {
 		if offerItem.GetReceiverKey().IsForUser() && offerItem.GetReceiverKey().GetUserKey() == userKey {
 			offerItems = append(offerItems, offerItem)
@@ -162,7 +163,19 @@ func (i *OfferItems) GetGroupKeys() *model.GroupKeys {
 	return model.NewGroupKeys(groupKeys)
 }
 
+func (i *OfferItems) IsEmpty() bool {
+	return i.Items == nil || len(i.Items) == 0
+}
+
+func (i *OfferItems) Count() int {
+	if i.Items == nil {
+		return 0
+	}
+	return len(i.Items)
+}
+
 type OfferApprovers struct {
+	OfferKey                  model.OfferKey
 	OfferItemsUsersCanGive    map[model.UserKey]*model.OfferItemKeys
 	OfferItemsUsersCanReceive map[model.UserKey]*model.OfferItemKeys
 	UsersAbleToGiveItem       map[model.OfferItemKey]*model.UserKeys
@@ -173,4 +186,40 @@ func (o OfferApprovers) IsUserAnApprover(userKey model.UserKey) bool {
 	_, canApproveGive := o.OfferItemsUsersCanGive[userKey]
 	_, canApproveReceive := o.OfferItemsUsersCanReceive[userKey]
 	return canApproveGive || canApproveReceive
+}
+
+func (o *OfferApprovers) AllUserKeys() *model.UserKeys {
+	userKeyMap := map[model.UserKey]bool{}
+	for userKey, _ := range o.OfferItemsUsersCanGive {
+		userKeyMap[userKey] = true
+	}
+	for userKey, _ := range o.OfferItemsUsersCanReceive {
+		userKeyMap[userKey] = true
+	}
+	var userKeys []model.UserKey
+	for userKey, _ := range userKeyMap {
+		userKeys = append(userKeys, userKey)
+	}
+	return model.NewUserKeys(userKeys)
+}
+
+type OffersApprovers struct {
+	Items []*OfferApprovers
+}
+
+func NewOffersApprovers(items []*OfferApprovers) *OffersApprovers {
+	copied := make([]*OfferApprovers, len(items))
+	copy(copied, items)
+	return &OffersApprovers{
+		Items: copied,
+	}
+}
+
+func (a *OffersApprovers) GetApproversForOffer(offerKey model.OfferKey) (*OfferApprovers, error) {
+	for _, offerApprovers := range a.Items {
+		if offerApprovers.OfferKey == offerKey {
+			return offerApprovers, nil
+		}
+	}
+	return nil, fmt.Errorf("could not find approvers for offer")
 }

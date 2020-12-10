@@ -73,7 +73,7 @@ func (t TradingStore) MarkOfferItemsAsAccepted(
 			MERGE (approver)-[:ApprovedReceiving]->(offerItem)
 			`,
 			map[string]interface{}{
-				"ids": approvedByReceiver.Strings(),
+				"ids":    approvedByReceiver.Strings(),
 				"userId": approvedBy.String(),
 			})
 		if err != nil {
@@ -96,7 +96,7 @@ func (t TradingStore) MarkOfferItemsAsAccepted(
 			MERGE (approver)-[:ApprovedGiving]->(offerItem)
 			`,
 			map[string]interface{}{
-				"ids": approvedByGiver.Strings(),
+				"ids":    approvedByGiver.Strings(),
 				"userId": approvedBy.String(),
 			})
 		if err != nil {
@@ -124,13 +124,19 @@ func (t TradingStore) FindReceivingApproversForOfferItem(offerItemKey model.Offe
 		MATCH (offerItem {id:$id})
 		WITH offerItem
 
-		MATCH (offerItem)-[:To]->(user:User)
-		RETURN user
-		
-		UNION
+		CALL {
 
-		MATCH (offerItem)-[:To]->(:Group)<-[membership:IsMemberOf]-(user:User)
-		WHERE (membership.isAdmin = true) OR (membership.isManager = true) 
+			WITH offerItem
+			MATCH (offerItem)-[:To]->(user:User)
+			RETURN user
+
+			UNION
+	
+			WITH offerItem
+			MATCH (offerItem)-[:To]->(:Group)<-[membership:IsMemberOf]-(user:User)
+			WHERE (membership.isAdmin = true) OR (membership.isManager = true) 
+			RETURN user
+		}
 
 		WITH user
 
@@ -170,30 +176,38 @@ func (t TradingStore) FindGivingApproversForOfferItem(offerItemKey model.OfferIt
 		MATCH (offerItem {id:$id})
 		WITH offerItem
 
-		MATCH (offerItem)<-[:From]-(:Resource)<-[:Manages]-(:Group)<-[membership:IsMemberOf]-(u:User)
-		WHERE (membership.isAdmin = true) OR (membership.isManager = true) 
-		RETURN user
+		CALL {
 		
-		UNION 
-
-		MATCH (offerItem)<-[:From]-(:Resource)<-[:Manages]-(user:User)
-		RETURN user
-		
-		UNION		
-
-		MATCH (offerItem)<-[:From]-(r:Resource)-[:CreatedBy]->(user:User)
-		RETURN user
-
-		UNION
-
-		MATCH (offerItem)<-[:From]-(user:User)
-		RETURN user
-		
-		UNION
-
-		MATCH (offerItem)<-[:From]-(:Group)<-[membership:IsMemberOf]-(user:User)
-		WHERE (membership.isAdmin = true) OR (membership.isManager = true) 
-		RETURN user
+			WITH offerItem
+			MATCH (offerItem)<-[:From]-(:Resource)<-[:Manages]-(:Group)<-[membership:IsMemberOf]-(user:User)
+			WHERE (membership.isAdmin = true) OR (membership.isManager = true) 
+			RETURN user
+			
+			UNION 
+	
+			WITH offerItem
+			MATCH (offerItem)<-[:From]-(:Resource)<-[:Manages]-(user:User)
+			RETURN user
+			
+			UNION		
+	
+			WITH offerItem
+			MATCH (offerItem)<-[:From]-(r:Resource)-[:CreatedBy]->(user:User)
+			RETURN user
+	
+			UNION
+	
+			WITH offerItem
+			MATCH (offerItem)<-[:From]-(user:User)
+			RETURN user
+			
+			UNION
+	
+			WITH offerItem
+			MATCH (offerItem)<-[:From]-(:Group)<-[membership:IsMemberOf]-(user:User)
+			WHERE (membership.isAdmin = true) OR (membership.isManager = true) 
+			RETURN user
+		}
 
 		WITH user
 
@@ -220,7 +234,7 @@ func (t TradingStore) FindGivingApproversForOfferItem(offerItemKey model.OfferIt
 	return model.NewUserKeys(userKeys), nil
 }
 
-func (t TradingStore) FindApproversForOffer(offerKey model.OfferKey) (*trading.OfferApprovers, error) {
+func (t TradingStore) FindApproversForCandidateOffer(offer *trading.Offer, offerItems *trading.OfferItems) (*model.UserKeys, error) {
 
 	session, err := t.graphDriver.GetSession()
 	if err != nil {
@@ -228,72 +242,35 @@ func (t TradingStore) FindApproversForOffer(offerKey model.OfferKey) (*trading.O
 	}
 	defer session.Close()
 
+	resourceKeys := offerItems.GetResourceKeys()
+	userKeys := offerItems.GetUserKeys()
+	groupKeys := offerItems.GetGroupKeys()
+
 	result, err := session.Run(`
-		
-		// Say hello to my little friend
+
+		CALL {
+			MATCH (group:Group)<-[membership:IsMemberOf]-(user:User)
+			WHERE membership.isAdmin and group.id in $groupIds
+			RETURN user
 	
-		MATCH (o:Offer {id:$offerId})<-[:IsPartOf]-(oi:OfferItem)
-		WITH o, oi
-
-		// Retrieving people who can approve giving something
+			UNION
+	
+			MATCH (user:User)
+			WHERE user.id in $userIds
+			RETURN user
+	
+			UNION
+	
+			MATCH (resource:Resource)<-[:CreatedBy]-(user:User)
+			WHERE resource.id in $resourceIds
+			RETURN user
+		}
 		
-		// Matching admins of groups that can manage this resource
-		// The admins of groups that can manage a resource are allowed to approve
-		// giving the resource.
-
-		OPTIONAL MATCH (oi)<-[:From]-(r:Resource)<-[:Manages]-(:Group)<-[m:IsMemberOf]-(u:User)
-		WHERE (m.isAdmin = true) OR (m.isManager) 
-		WITH o, oi, collect(u) as from_approvers, collect(r) as resources
-		
-		// Matching users that can manage this resource
-		// Users that are allowed to manage a resource are allowed
-		// to approve giving that resource
-
-		OPTIONAL MATCH (oi)<-[:From]-(r:Resource)<-[:Manages]-(u:User)
-		WITH o, oi, (from_approvers + collect(u)) as from_approvers, (collect(r) + resources) as resources
-		
-		// Matching users that created this resource
-		// Users that created the resource are allowed to 
-		// approve giving the resource
-
-		OPTIONAL MATCH (oi)<-[:From]-(r:Resource)-[:CreatedBy]->(u:User)
-		WITH o, oi, (collect(u) + from_approvers) as from_approvers, (collect(r) + resources) as resources
-		
-		// Matching all people who could approve receiving something
-		
-		// Matching users that would give time
-		// The users who would be receiving time in an offer
-		// are allowed to approve receiving time
-
-		OPTIONAL MATCH (oi)<-[:From]-(u:User)
-		WITH o, oi, (collect(u) + from_approvers) as from_approvers, resources
-		
-		// matching admins/managers of groups that would give time
-		// Administrators/Managers of groups that would receive time are
-		// allowed to approve the group receiving that time
-
-		OPTIONAL MATCH (oi)<-[:From]-(g:Group)<-[m:IsMemberOf]-(u:User)
-		WHERE m.isAdmin = true OR m.isManager = true
-		WITH o, oi, apoc.coll.toSet(from_approvers) as from_approvers, resources
-		
-		// Matching people who would receive something
-		// People who would receive something as part of an offer  
-		// are allowed to approve receiving that thing
-
-		OPTIONAL MATCH (oi)-[:To]->(u:User)
-		WITH o, oi, from_approvers, collect(u) as to_approvers, resources
-		
-		// Matching admins/managers of groups who would receice something
-		// Administrators of groups that would receive something 
-		// as part of an offer are allowed to approve the group receiving that thing
-
-		OPTIONAL MATCH (oi)-[:To]->(:Group)<-[m:IsMemberOf]-(u:User)
-		WHERE (m.isAdmin = true) or (m.isManager = true)
-		WITH o, oi, from_approvers, (collect(u) + to_approvers) as to_approvers, resources
-		
-		RETURN o, oi, from_approvers, to_approvers, apoc.coll.toSet(resources) as resources`,
+		RETURN DISTINCT user.id as userId`,
 		map[string]interface{}{
-			"offerId": offerKey.String(),
+			"groupIds":    groupKeys.Strings(),
+			"userIds":     userKeys.Strings(),
+			"resourceIds": resourceKeys.Strings(),
 		})
 
 	if err != nil {
@@ -303,69 +280,234 @@ func (t TradingStore) FindApproversForOffer(offerKey model.OfferKey) (*trading.O
 		return nil, result.Err()
 	}
 
-	fromUserApproversMap := map[model.UserKey][]model.OfferItemKey{}
-	toUserApproversMap := map[model.UserKey][]model.OfferItemKey{}
-	fromItemApproversMap := map[model.OfferItemKey][]model.UserKey{}
-	toItemApproversMap := map[model.OfferItemKey][]model.UserKey{}
+	var uks []model.UserKey
+	for result.Next() {
+
+		userIdField, _ := result.Record().Get("userId")
+		userIdStr := userIdField.(string)
+		userKey := model.NewUserKey(userIdStr)
+		uks = append(uks, userKey)
+	}
+
+	return model.NewUserKeys(uks), nil
+}
+
+func (t TradingStore) FindApproversForOffers(offerKeys *model.OfferKeys) (*trading.OffersApprovers, error) {
+
+	session, err := t.graphDriver.GetSession()
+	if err != nil {
+		return nil, err
+	}
+	defer session.Close()
+
+	result, err := session.Run(`
+
+			match (offer:Offer)
+			where offer.id in $offerIds
+			with offer
+			match (offerItem:OfferItem)-[:IsPartOf]->(offer)
+			with offer, offerItem
+			match (offerItem)-[toRel:To]->(to)
+			with offer, offerItem, to, toRel
+			match (from)-[fromRel:From]->(offerItem)
+			with offer, offerItem, to, toRel, from, fromRel
+			call {
+				with from, fromRel, offerItem
+				match (from)-[:CreatedBy]->(user)
+				where from:Resource and user:User
+				return user as fromApprover
+				
+				union
+				with from, fromRel, offerItem
+				match (from)-[fromRel]->(offerItem)
+				where from:User
+				return from as fromApprover
+				
+				union
+				with from, fromRel, offerItem
+				match (from)-[fromRel]->(offerItem),(user:User)-[membership:IsMemberOf]->(from)
+				where membership.isAdmin
+				return user as fromApprover
+				
+			}
+			
+			with offer, offerItem, to, toRel, from, fromRel, collect(distinct fromApprover) as fromApprovers
+			
+			call {
+			
+			  with to, toRel, offerItem
+			  match (to)<-[toRel]-(offerItem)
+			  where to:User
+			  return to as toApprover
+			  
+			  union
+			  
+			  with to, toRel, offerItem
+			  match (user:User)-[membership:IsMemberOf]->(to)<-[toRel]-(offerItem)
+			  where to:Group and membership.isAdmin
+			  return user as toApprover
+			
+			}
+
+			with offer, offerItem, from, to, fromApprovers, collect(distinct toApprover) as toApprovers
+			return offer, offer.id as offerId, collect({offerItem: offerItem, from: from, to: to, fromApprovers: fromApprovers, toApprovers: toApprovers}) as offerItems
+`,
+		map[string]interface{}{
+			"offerIds": offerKeys.Strings(),
+		})
+
+	if err != nil {
+		return nil, err
+	}
+	if result.Err() != nil {
+		return nil, result.Err()
+	}
+
+	approversForOffer := []*trading.OfferApprovers{}
 
 	for result.Next() {
 
+		fromUserApproversMap := map[model.UserKey][]model.OfferItemKey{}
+		toUserApproversMap := map[model.UserKey][]model.OfferItemKey{}
+		fromItemApproversMap := map[model.OfferItemKey][]model.UserKey{}
+		toItemApproversMap := map[model.OfferItemKey][]model.UserKey{}
+
 		record := result.Record()
-		offerItemField, _ := record.Get("oi")
-		offerItemNode := offerItemField.(neo4j.Node)
-		offerItemId := offerItemNode.Props()["id"].(string)
-		offerItemKey, err := model.ParseOfferItemKey(offerItemId)
+
+		offerIdField, _ := record.Get("offerId")
+		offerId := offerIdField.(string)
+		offerKey, err := model.ParseOfferKey(offerId)
 		if err != nil {
 			return nil, err
 		}
 
-		fromApproversField, _ := record.Get("from_approvers")
-		fromApproversSlice := fromApproversField.([]interface{})
+		structField, _ := record.Get("offerItems")
+		structIntfs := structField.([]interface{})
 
-		toApproversField, _ := record.Get("to_approvers")
-		toApproversSlice := toApproversField.([]interface{})
+		for _, structIntf := range structIntfs {
 
-		for _, fromApproverIntf := range fromApproversSlice {
-			fromApproverNode := fromApproverIntf.(neo4j.Node)
-			fromApproverId := fromApproverNode.Props()["id"].(string)
-			fromApproverKey := model.NewUserKey(fromApproverId)
-			fromUserApproversMap[fromApproverKey] = append(fromUserApproversMap[fromApproverKey], offerItemKey)
-			fromItemApproversMap[offerItemKey] = append(fromItemApproversMap[offerItemKey], fromApproverKey)
+			fieldMap := structIntf.(map[string]interface{})
+
+			offerItemField := fieldMap["offerItem"]
+			offerItemNode := offerItemField.(neo4j.Node)
+			offerItemId := offerItemNode.Props()["id"].(string)
+			offerItemKey, err := model.ParseOfferItemKey(offerItemId)
+			if err != nil {
+				return nil, err
+			}
+
+			fromApproversField, _ := fieldMap["fromApprovers"]
+			fromApproversSlice := fromApproversField.([]interface{})
+
+			toApproversField, _ := fieldMap["toApprovers"]
+			toApproversSlice := toApproversField.([]interface{})
+
+			for _, fromApproverIntf := range fromApproversSlice {
+				fromApproverNode := fromApproverIntf.(neo4j.Node)
+				fromApproverId := fromApproverNode.Props()["id"].(string)
+				fromApproverKey := model.NewUserKey(fromApproverId)
+				fromUserApproversMap[fromApproverKey] = append(fromUserApproversMap[fromApproverKey], offerItemKey)
+				fromItemApproversMap[offerItemKey] = append(fromItemApproversMap[offerItemKey], fromApproverKey)
+			}
+
+			for _, toApproverIntf := range toApproversSlice {
+				toApproverNode := toApproverIntf.(neo4j.Node)
+				toApproverId := toApproverNode.Props()["id"].(string)
+				toApproverKey := model.NewUserKey(toApproverId)
+				toUserApproversMap[toApproverKey] = append(toUserApproversMap[toApproverKey], offerItemKey)
+				toItemApproversMap[offerItemKey] = append(toItemApproversMap[offerItemKey], toApproverKey)
+			}
+
 		}
 
-		for _, toApproverIntf := range toApproversSlice {
-			toApproverNode := toApproverIntf.(neo4j.Node)
-			toApproverId := toApproverNode.Props()["id"].(string)
-			toApproverKey := model.NewUserKey(toApproverId)
-			toUserApproversMap[toApproverKey] = append(fromUserApproversMap[toApproverKey], offerItemKey)
-			toItemApproversMap[offerItemKey] = append(fromItemApproversMap[offerItemKey], toApproverKey)
+		userFromApprovers := map[model.UserKey][]model.OfferItemKey{}
+		for userKey, offerItemKeys := range fromUserApproversMap {
+			if _, ok := userFromApprovers[userKey]; !ok {
+				userFromApprovers[userKey] = []model.OfferItemKey{}
+			}
+			for _, offerItemKey := range offerItemKeys {
+				userFromApprovers[userKey] = append(userFromApprovers[userKey], offerItemKey)
+			}
+		}
+		userToApprovers := map[model.UserKey][]model.OfferItemKey{}
+		for userKey, offerItemKeys := range toUserApproversMap {
+			if _, ok := userToApprovers[userKey]; !ok {
+				userToApprovers[userKey] = []model.OfferItemKey{}
+			}
+			for _, offerItemKey := range offerItemKeys {
+				userToApprovers[userKey] = append(userToApprovers[userKey], offerItemKey)
+			}
+		}
+		itemFromApprovers := map[model.OfferItemKey][]model.UserKey{}
+		for offerItemKey, userKeys := range fromItemApproversMap {
+			if _, ok := itemFromApprovers[offerItemKey]; !ok {
+				itemFromApprovers[offerItemKey] = []model.UserKey{}
+			}
+			for _, userKey := range userKeys {
+				itemFromApprovers[offerItemKey] = append(itemFromApprovers[offerItemKey], userKey)
+			}
+		}
+		itemToApprovers := map[model.OfferItemKey][]model.UserKey{}
+		for offerItemKey, userKeys := range toItemApproversMap {
+			if _, ok := itemToApprovers[offerItemKey]; !ok {
+				itemToApprovers[offerItemKey] = []model.UserKey{}
+			}
+			for _, userKey := range userKeys {
+				itemToApprovers[offerItemKey] = append(itemToApprovers[offerItemKey], userKey)
+			}
 		}
 
+		userFromApproversMap := map[model.UserKey]*model.OfferItemKeys{}
+		for userKey, offerItemKeys := range userFromApprovers {
+			userFromApproversMap[userKey] = model.NewOfferItemKeys(offerItemKeys)
+		}
+
+		userToApproversMap := map[model.UserKey]*model.OfferItemKeys{}
+		for userKey, offerItemKeys := range userToApprovers {
+			userToApproversMap[userKey] = model.NewOfferItemKeys(offerItemKeys)
+		}
+
+		itemFromApproversMap := map[model.OfferItemKey]*model.UserKeys{}
+		for offerItemKey, userKeys := range itemFromApprovers {
+			itemFromApproversMap[offerItemKey] = model.NewUserKeys(userKeys)
+		}
+
+		itemToApproversMap := map[model.OfferItemKey]*model.UserKeys{}
+		for offerItemKey, userKeys := range itemToApprovers {
+			itemToApproversMap[offerItemKey] = model.NewUserKeys(userKeys)
+		}
+
+		offerApprovers := &trading.OfferApprovers{
+			OfferKey:                  offerKey,
+			OfferItemsUsersCanGive:    userFromApproversMap,
+			OfferItemsUsersCanReceive: userToApproversMap,
+			UsersAbleToGiveItem:       itemFromApproversMap,
+			UsersAbleToReceiveItem:    itemToApproversMap,
+		}
+
+		approversForOffer = append(approversForOffer, offerApprovers)
+
 	}
 
-	userFromApprovers := map[model.UserKey]*model.OfferItemKeys{}
-	for userKey, offerItemKeys := range fromUserApproversMap {
-		userFromApprovers[userKey] = model.NewOfferItemKeys(offerItemKeys)
-	}
-	userToApprovers := map[model.UserKey]*model.OfferItemKeys{}
-	for userKey, offerItemKeys := range toUserApproversMap {
-		userToApprovers[userKey] = model.NewOfferItemKeys(offerItemKeys)
-	}
-	itemFromApprovers := map[model.OfferItemKey]*model.UserKeys{}
-	for offerItemKey, userKeys := range fromItemApproversMap {
-		itemFromApprovers[offerItemKey] = model.NewUserKeys(userKeys)
-	}
-	itemToApprovers := map[model.OfferItemKey]*model.UserKeys{}
-	for offerItemKey, userKeys := range toItemApproversMap {
-		itemToApprovers[offerItemKey] = model.NewUserKeys(userKeys)
+	offersApprovers := trading.NewOffersApprovers(approversForOffer)
+
+	return offersApprovers, nil
+
+}
+
+func (t TradingStore) FindApproversForOffer(offerKey model.OfferKey) (*trading.OfferApprovers, error) {
+
+	approvers, err := t.FindApproversForOffers(model.NewOfferKeys([]model.OfferKey{offerKey}))
+	if err != nil {
+		return nil, err
 	}
 
-	return &trading.OfferApprovers{
-		OfferItemsUsersCanGive:    userFromApprovers,
-		OfferItemsUsersCanReceive: userToApprovers,
-		UsersAbleToGiveItem:       itemFromApprovers,
-		UsersAbleToReceiveItem:    itemToApprovers,
-	}, nil
+	approversForOffer, err := approvers.GetApproversForOffer(offerKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return approversForOffer, nil
 
 }
 
@@ -747,7 +889,7 @@ func (t TradingStore) UpdateOfferStatus(key model.OfferKey, status trading.Offer
 	return nil
 }
 
-func (t TradingStore) GetOfferItem(ctx context.Context, key model.OfferItemKey) (trading.OfferItem2, error) {
+func (t TradingStore) GetOfferItem(ctx context.Context, key model.OfferItemKey) (trading.OfferItem, error) {
 
 	session, err := t.graphDriver.GetSession()
 	if err != nil {
@@ -821,7 +963,7 @@ func MapOfferItemTarget(node neo4j.Node) (*model.Target, error) {
 	}, nil
 }
 
-func MapOfferItem(offerKey model.OfferKey, offerItemNode neo4j.Node, fromNode neo4j.Node, toNode neo4j.Node) (trading.OfferItem2, error) {
+func MapOfferItem(offerKey model.OfferKey, offerItemNode neo4j.Node, fromNode neo4j.Node, toNode neo4j.Node) (trading.OfferItem, error) {
 
 	offerItemType := offerItemNode.Props()["type"].(string)
 	var fromResource *resource.Resource
@@ -859,7 +1001,7 @@ func MapOfferItem(offerKey model.OfferKey, offerItemNode neo4j.Node, fromNode ne
 	}
 
 	offerItemBase := trading.OfferItemBase{
-		Type:             trading.OfferItemType2(offerItemType),
+		Type:             trading.OfferItemType(offerItemType),
 		Key:              offerItemKey,
 		OfferKey:         offerKey,
 		To:               toTarget,
@@ -962,7 +1104,7 @@ func MapOfferItem(offerKey model.OfferKey, offerItemNode neo4j.Node, fromNode ne
 
 }
 
-func (t TradingStore) UpdateOfferItem(ctx context.Context, offerItem trading.OfferItem2) error {
+func (t TradingStore) UpdateOfferItem(ctx context.Context, offerItem trading.OfferItem) error {
 	session, err := t.graphDriver.GetSession()
 	if err != nil {
 		return err
@@ -984,6 +1126,7 @@ func (t TradingStore) UpdateOfferItem(ctx context.Context, offerItem trading.Off
 		}
 		RETURN o`,
 			map[string]interface{}{
+				"id":            service.Key.String(),
 				FromApprovedKey: service.GiverAccepted,
 				ToApprovedKey:   service.ReceiverAccepted,
 				GivenKey:        service.ServiceGivenConfirmation,
@@ -993,7 +1136,7 @@ func (t TradingStore) UpdateOfferItem(ctx context.Context, offerItem trading.Off
 
 	} else if offerItem.IsCreditTransfer() {
 
-		creditTransfer := offerItem.(trading.CreditTransferItem)
+		creditTransfer := offerItem.(*trading.CreditTransferItem)
 		result, err = session.Run(`
 			MATCH (o:OfferItem {id:$id})
 			SET o += {
@@ -1004,6 +1147,7 @@ func (t TradingStore) UpdateOfferItem(ctx context.Context, offerItem trading.Off
 			}
 			RETURN o`,
 			map[string]interface{}{
+				"id":                  creditTransfer.Key.String(),
 				FromApprovedKey:       creditTransfer.GiverAccepted,
 				ToApprovedKey:         creditTransfer.ReceiverAccepted,
 				CreditsTransferredKey: creditTransfer.CreditsTransferred,
@@ -1011,7 +1155,7 @@ func (t TradingStore) UpdateOfferItem(ctx context.Context, offerItem trading.Off
 			})
 
 	} else if offerItem.IsBorrowingResource() {
-		resourceBorrow := offerItem.(trading.BorrowResourceItem)
+		resourceBorrow := offerItem.(*trading.BorrowResourceItem)
 		result, err = session.Run(`
 			MATCH (o:OfferItem {id:$id})
 			SET o += {
@@ -1025,6 +1169,7 @@ func (t TradingStore) UpdateOfferItem(ctx context.Context, offerItem trading.Off
 			}
 			RETURN o`,
 			map[string]interface{}{
+				"id":            resourceBorrow.Key.String(),
 				FromApprovedKey: resourceBorrow.GiverAccepted,
 				ToApprovedKey:   resourceBorrow.ReceiverAccepted,
 				GivenKey:        resourceBorrow.ItemGiven,
@@ -1036,7 +1181,7 @@ func (t TradingStore) UpdateOfferItem(ctx context.Context, offerItem trading.Off
 
 	} else if offerItem.IsResourceTransfer() {
 
-		service := offerItem.(trading.ResourceTransferItem)
+		service := offerItem.(*trading.ResourceTransferItem)
 		result, err = session.Run(`
 		MATCH (o:OfferItem {id:$id})
 		SET o += {
@@ -1047,6 +1192,7 @@ func (t TradingStore) UpdateOfferItem(ctx context.Context, offerItem trading.Off
 		}
 		RETURN o`,
 			map[string]interface{}{
+				"id":            service.Key.String(),
 				FromApprovedKey: service.GiverAccepted,
 				ToApprovedKey:   service.ReceiverAccepted,
 				GivenKey:        service.ItemGiven,
@@ -1174,7 +1320,7 @@ func (t TradingStore) GetOfferItemsForOffer(key model.OfferKey) (*trading.OfferI
 		return nil, result.Err()
 	}
 
-	var offerItems []trading.OfferItem2
+	var offerItems []trading.OfferItem
 	for result.Next() {
 
 		offerIdField, _ := result.Record().Get("offerId")
@@ -1208,12 +1354,6 @@ func (t TradingStore) GetOfferItemsForOffer(key model.OfferKey) (*trading.OfferI
 
 func (t TradingStore) GetOffersForUser(userKey model.UserKey) (*trading.GetOffersResult, error) {
 
-	/**
-	ResourceKey *model.ResourceKey
-	Status      *OfferStatus
-	UserKeys    []model.UserKey
-	*/
-
 	session, err := t.graphDriver.GetSession()
 	if err != nil {
 		return nil, err
@@ -1221,51 +1361,45 @@ func (t TradingStore) GetOffersForUser(userKey model.UserKey) (*trading.GetOffer
 	defer session.Close()
 
 	result, err := session.Run(`
-
-		MATCH (user:User {id:$userId})
-
-		CALL {
+		match 
+		(user:User {id:$userId})-[membership:IsMemberOf]->(group:Group),
+		(group)<-[inRel:In]-(offer:Offer)<-[partOfRel:IsPartOf]-(offerItem:OfferItem),
+		(from)-[fromRel:From]->(offerItem)
+		optional match (to)<-[toRel:To]-(offerItem)
 		
-			MATCH (offer:Offer)<-[:IsPartOf]-(:OfferItem)<-[:From]-(:Resource)<-[:Manages]-(:Group)<-[membership:IsMemberOf]-(user)
-			WHERE membership.isAdmin or membership.isManager
-			RETURN offer
-
-			UNION
-
-			MATCH (offer:Offer)<-[:IsPartOf]-(:OfferItem)<-[:From]-(:Resource)<-[:Manages|CreatedBy]-(user)
-			RETURN offer
-
-			UNION
-		
-			MATCH (offer:Offer)<-[:IsPartOf]-(:OfferItem)<-[:From]-(user)
-			RETURN offer
-
-			UNION
-
-			MATCH (offer:Offer)<-[:IsPartOf]-(:OfferItem)<-[:From]-(:Group)<-[membership:IsMemberOf]-(u:User)
-			WHERE membership.isAdmin or membership.isManager
-			RETURN offer
-
-			UNION
-
-			MATCH (offer:Offer)<-[:IsPartOf]-(:OfferItem)-[:To]->(user)
-			RETURN offer
-
-			UNION
-
-			MATCH (offer:Offer)<-[:IsPartOf]-(:OfferItem)-[:To]->(:Group)<-[membership:IsMemberOf]-(u:User)
-			WHERE membership.isAdmin or membership.isManager
-			RETURN offer
-
+		call {
+			with from, fromRel, offer, offerItem, user
+			match (from)-[fromRel]->(offerItem)-[partOfRel]->(offer)
+			where from = user
+			return offer as o
+			
+			union
+			
+			with from, fromRel, offer, offerItem, user, group, membership
+			match (from)-[fromRel]->(offerItem)-[partOfRel]->(offer),(user)-[membership]->(group)
+			where from = group and membership.isAdmin
+			return offer as o
+			
+			union
+			
+			with to, toRel, offerItem, offer, user
+			match (to)<-[toRel]-(offerItem)
+			where to = user
+			return offer as o
+			
+			union
+			
+			with to, toRel, offerItem, partOfRel, offer, inRel, group, membership, user
+			match (to)<-[toRel]-(offerItem)-[partOfRel]->(offer)-[inRel]->(group)<-[membership]-(user)
+			where to = group and  membership.isAdmin
+			return offer as o
 		}
 		
-		WITH user, offer
-		MATCH (createdBy:User)<-[:CreatedBy]-(offer)<-[:IsPartOf]-(offerItem:OfferItem)-[:To]->(to)
-
-		WITH user, offer, createdBy, to
-		OPTIONAL MATCH (from)-[:From]->(offerItem)
+		with collect(distinct o) as offers
+		UNWIND offers as offer
+		match (from)-[:From]->(offerItem)-[:IsPartOf]->(offer)-[:CreatedBy]->(creator),(to)<-[:To]-(offerItem)
 		
-		RETURN createdBy.id as createdById, offer, collect({offerItem: offerItem, from:from, to:to}) as offerItems`,
+		return offer, creator.id as createdById, collect({offerItem: offerItem, from: from, to: to}) as offerItems`,
 		map[string]interface{}{
 			"userId": userKey.String(),
 		})
@@ -1297,7 +1431,7 @@ func (t TradingStore) GetOffersForUser(userKey model.UserKey) (*trading.GetOffer
 		offerItemsContainerField, _ := record.Get("offerItems")
 		offerItemsContainerSlice := offerItemsContainerField.([]interface{})
 
-		var offerItems []trading.OfferItem2
+		var offerItems []trading.OfferItem
 		for _, offerItemContainerIntf := range offerItemsContainerSlice {
 
 			offerItemContainer := offerItemContainerIntf.(map[string]interface{})

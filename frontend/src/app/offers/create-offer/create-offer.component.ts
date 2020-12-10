@@ -3,6 +3,8 @@ import {OfferItemType, SendOfferRequest} from '../../api/models';
 import {BackendService} from '../../api/backend.service';
 import {CreateOfferForm, CreateOfferItemForm} from './create-offer.form';
 import {distinctUntilChanged, pluck} from 'rxjs/operators';
+import {Router} from '@angular/router';
+import {AuthService} from '../../auth.service';
 
 @Component({
   selector: 'app-create-offer',
@@ -11,7 +13,7 @@ import {distinctUntilChanged, pluck} from 'rxjs/operators';
 })
 export class CreateOfferComponent implements OnDestroy {
 
-  constructor(private backend: BackendService) {
+  constructor(private backend: BackendService, private router: Router, private auth: AuthService) {
   }
 
   public form = new CreateOfferForm();
@@ -20,7 +22,10 @@ export class CreateOfferComponent implements OnDestroy {
   submitted = false;
   pending = false;
   error = undefined;
-  offerItemType: OfferItemType = OfferItemType.ResourceItem;
+  offerItemType: OfferItemType = OfferItemType.BorrowResource;
+
+  itemFormToggled = true;
+  groupSelected = false;
 
   formValueSub = this.itemForm.valueChanges.pipe(
     pluck<any, string>('from'),
@@ -34,6 +39,19 @@ export class CreateOfferComponent implements OnDestroy {
     this.toPredicate = predicate;
   });
 
+  markGroupSelected() {
+    this.groupSelected = true;
+    this.form.groupId.disable();
+  }
+
+  disableGroupSub = this.form.valueChanges.subscribe(value => {
+    if (value.type && this.form.groupId.enabled) {
+      this.form.groupId.disable();
+    } else if (!value.type && this.form.groupId.disabled) {
+      this.form.groupId.enable();
+    }
+  });
+
   toPredicate = (val: string) => true;
 
   add() {
@@ -45,17 +63,25 @@ export class CreateOfferComponent implements OnDestroy {
     newItemForm.setValue({
       ...this.itemForm.value,
       resourceId,
-      timeInSeconds: this.itemForm.value.timeInSeconds * 60 * 60
     });
     this.form.items.push(newItemForm);
     this.itemForm.setParent(newItemForm);
     this.itemForm.setValue({
       from: '',
       to: '',
-      type: OfferItemType.ResourceItem,
+      type: OfferItemType.BorrowResource,
       resourceId: '',
-      timeInSeconds: 0
+      amount: '',
+      duration: ''
     });
+    this.itemFormToggled = false;
+  }
+
+  remove(i: number) {
+    this.form.removeItem(i);
+    if (this.form.items.controls.length === 0) {
+      this.itemFormToggled = true;
+    }
   }
 
   submit() {
@@ -68,9 +94,10 @@ export class CreateOfferComponent implements OnDestroy {
     this.pending = true;
     this.error = undefined;
     const request = {offer: this.form.value} as SendOfferRequest;
+
     this.backend.sendOffer(SendOfferRequest.from(request)).subscribe(res => {
       this.pending = false;
-      console.log(res);
+      this.router.navigateByUrl('/users/' + this.auth.getCurrentAuthId() + '/transactions');
     }, err => {
       this.pending = false;
       this.error = err;

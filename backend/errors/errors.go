@@ -33,7 +33,14 @@ var ErrCannotTransferResourceToItsOwner = NewWebServiceException("resource canno
 var ErrResourceTransferOfferItemsMustReferToObjectResources = NewWebServiceException("resource transfers can only be for object-typed resources", "ErrResourceTransferOfferItemsMustReferToObjectResources", http.StatusBadRequest)
 var ErrServiceProvisionOfferItemsMustPointToServiceResources = NewWebServiceException("service provision offer items must be for a service-type resource!", "ErrServiceProvisionOfferItemsMustPointToServiceResources", http.StatusBadRequest)
 var ErrBorrowOfferItemMustReferToObjectTypedResource = NewWebServiceException("borrow offer items must be for a service-type resource!", "ErrBorrowOfferItemMustReferToObjectTypedResource", http.StatusBadRequest)
+var ErrInvalidOfferItemType = NewWebServiceException("invalid offer item type", "ErrInvalidOfferItemType", http.StatusBadRequest)
+var ErrInvalidTargetType = NewWebServiceException("invalid target type", "ErrInvalidTargetType", http.StatusBadRequest)
+var ErrFromIdQueryParamRequired = NewWebServiceException("from_id query parameter is required", "ErrFromIdQueryParamRequired", http.StatusBadRequest)
+var ErrToIdQueryParamRequired = NewWebServiceException("to_id query parameter is required", "ErrToIdQueryParamRequired", http.StatusBadRequest)
 
+func ErrQueryParamRequired(queryParameter string) error {
+	return NewWebServiceException(fmt.Sprintf("query parameter '%s' is required", queryParameter), "ErrQueryParamRequired", http.StatusBadRequest)
+}
 
 func (e WebServiceException) Error() string {
 	return e.Message

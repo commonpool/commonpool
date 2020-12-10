@@ -4,7 +4,7 @@ import {
   CreateResourceRequest,
   GetMyMembershipsRequest,
   GetMyMembershipsResponse,
-  Membership,
+  Membership, ResourceSubType,
   ResourceType, SharedWithInput,
   UpdateResourceRequest
 } from '../../api/models';
@@ -24,6 +24,9 @@ export class CreateOrEditResourceComponent implements OnInit, OnDestroy {
 
   public resource = new FormGroup({
     type: new FormControl(ResourceType.Offer, [
+      Validators.required,
+    ]),
+    subType: new FormControl(ResourceSubType.Object, [
       Validators.required,
     ]),
     summary: new FormControl('', [
@@ -94,6 +97,7 @@ export class CreateOrEditResourceComponent implements OnInit, OnDestroy {
       id: res.resource.id,
       resource: {
         type: res.resource.type,
+        subType: res.resource.subType,
         summary: res.resource.summary,
         description: res.resource.description,
         valueInHoursFrom: res.resource.valueInHoursFrom,
@@ -103,6 +107,7 @@ export class CreateOrEditResourceComponent implements OnInit, OnDestroy {
     };
     this.form.setValue(value);
     this.resource.controls.type.disable();
+    this.resource.controls.subType.disable();
   });
 
   public error: any;

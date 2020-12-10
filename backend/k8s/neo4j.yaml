@@ -596,7 +596,7 @@ spec:
       serviceAccountName: "graphdb-neo4j-sa"
       containers:
         - name: neo4j
-          image: "neo4j:4.0.4-enterprise"
+          image: "neo4j:4.2.1-enterprise"
           imagePullPolicy: "IfNotPresent"
           # Most pod config is factored into a different configMap, which is user overrideable.
           envFrom:
@@ -699,7 +699,7 @@ spec:
       serviceAccountName: "graphdb-neo4j-sa"
       containers:
         - name: graphdb-neo4j
-          image: "neo4j:4.0.4-enterprise"
+          image: "neo4j:4.2.1-enterprise"
           imagePullPolicy: "IfNotPresent"
           # Most pod config is factored into a different configMap, which is user overrideable.
           envFrom:

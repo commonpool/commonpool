@@ -19,6 +19,7 @@ type Resource struct {
 	Summary          string                  `json:"summary"`
 	Description      string                  `json:"description"`
 	Type             resource.Type           `json:"type"`
+	SubType          resource.SubType        `json:"subType"`
 	CreatedAt        time.Time               `json:"createdAt"`
 	CreatedBy        string                  `json:"createdBy"`
 	CreatedById      string                  `json:"createdById"`

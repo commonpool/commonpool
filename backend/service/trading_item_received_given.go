@@ -10,10 +10,10 @@ import (
 )
 
 /**
-CreditTransfer   OfferItemType2 = "transfer_credits"
-ProvideService   OfferItemType2 = "provide_service"
-BorrowResource   OfferItemType2 = "borrow_resource"
-ResourceTransfer OfferItemType2 = "transfer_resource"
+CreditTransfer   OfferItemType = "transfer_credits"
+ProvideService   OfferItemType = "provide_service"
+BorrowResource   OfferItemType = "borrow_resource"
+ResourceTransfer OfferItemType = "transfer_resource"
 */
 
 func (t TradingService) ConfirmServiceProvided(ctx context.Context, confirmedItemKey model.OfferItemKey) error {
@@ -37,7 +37,7 @@ func (t TradingService) ConfirmServiceProvided(ctx context.Context, confirmedIte
 		return errs.ErrWrongOfferItemType
 	}
 
-	serviceProvided := offerItem.(trading.ProvideServiceItem)
+	serviceProvided := offerItem.(*trading.ProvideServiceItem)
 
 	receivingApprovers, err := t.tradingStore.FindReceivingApproversForOfferItem(offerItem.GetKey())
 	if err != nil {
@@ -86,7 +86,7 @@ func (t TradingService) ConfirmResourceTransferred(ctx context.Context, confirme
 		return errs.ErrWrongOfferItemType
 	}
 
-	resourceTransfer := offerItem.(trading.ResourceTransferItem)
+	resourceTransfer := offerItem.(*trading.ResourceTransferItem)
 
 	receivingApprovers, err := t.tradingStore.FindReceivingApproversForOfferItem(offerItem.GetKey())
 	if err != nil {
@@ -135,7 +135,7 @@ func (t TradingService) ConfirmResourceBorrowed(ctx context.Context, confirmedIt
 		return errs.ErrWrongOfferItemType
 	}
 
-	resourceTransfer := offerItem.(trading.BorrowResourceItem)
+	resourceTransfer := offerItem.(*trading.BorrowResourceItem)
 
 	if resourceTransfer.ItemGiven && resourceTransfer.ItemTaken {
 		return nil
@@ -188,7 +188,7 @@ func (t TradingService) ConfirmBorrowedResourceReturned(ctx context.Context, con
 		return errs.ErrWrongOfferItemType
 	}
 
-	resourceTransfer := offerItem.(trading.BorrowResourceItem)
+	resourceTransfer := offerItem.(*trading.BorrowResourceItem)
 
 	receivingApprovers, err := t.tradingStore.FindReceivingApproversForOfferItem(offerItem.GetKey())
 	if err != nil {
@@ -218,7 +218,7 @@ func (t TradingService) ConfirmBorrowedResourceReturned(ctx context.Context, con
 
 }
 
-func (t TradingService) checkIfAllItemsCompleted(err error, offerItem trading.OfferItem2) error {
+func (t TradingService) checkIfAllItemsCompleted(err error, offerItem trading.OfferItem) error {
 	offerItems, err := t.tradingStore.GetOfferItemsForOffer(offerItem.GetOfferKey())
 	if err != nil {
 		return err

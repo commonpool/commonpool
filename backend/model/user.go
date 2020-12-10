@@ -1,7 +1,11 @@
 package model
 
 import (
+	"fmt"
+	"github.com/commonpool/backend/utils"
 	"go.uber.org/zap/zapcore"
+	"sort"
+	"strings"
 )
 
 type UserKey struct {
@@ -48,6 +52,10 @@ func (k *UserKeys) Append(key UserKey) *UserKeys {
 	return NewUserKeys(newUserKeys)
 }
 
+func (k *UserKeys) IsEmpty() bool {
+	return k.Items == nil || len(k.Items) == 0
+}
+
 func NewUserKeys(userKeys []UserKey) *UserKeys {
 	if userKeys == nil {
 		userKeys = []UserKey{}
@@ -76,7 +84,36 @@ func (k *UserKeys) Strings() []string {
 	return strs
 }
 
+func (k *UserKeys) GetChannelKey() (ChannelKey, error) {
+
+	if k == nil || len(k.Items) == 0 {
+		err := fmt.Errorf("cannot get conversation channel for 0 participants")
+		return ChannelKey{}, err
+	}
+
+	var shortUids []string
+	for _, userKey := range k.Items {
+		sid, err := utils.ShortUuidFromStr(userKey.String())
+		if err != nil {
+			return ChannelKey{}, err
+		}
+		shortUids = append(shortUids, sid)
+	}
+	sort.Strings(shortUids)
+	channelId := strings.Join(shortUids, "-")
+	channelKey := NewConversationKey(channelId)
+
+	return channelKey, nil
+
+}
+
 type UserReference interface {
 	GetUserKey() UserKey
 	GetUsername() string
+}
+
+func NewEmptyUserKeys() *UserKeys {
+	return &UserKeys{
+		Items: []UserKey{},
+	}
 }

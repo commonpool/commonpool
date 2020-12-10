@@ -45,8 +45,6 @@ func NewAuth(e *echo.Group, appConfig *config.AppConfig, groupPrefix string, as 
 	// Setup the router for authentication
 	e.GET(oauthCallbackPath, func(c echo.Context) error {
 
-		l.Info("decoding state")
-
 		// decode the state
 		st, err := decodeState(ctx, c.Request().URL.Query().Get("state"))
 		if err != nil {
@@ -64,19 +62,13 @@ func NewAuth(e *echo.Group, appConfig *config.AppConfig, groupPrefix string, as 
 
 		if rawIdToken == "" {
 
-			l.Info("getting code")
-
 			code := c.Request().URL.Query().Get("code")
-
-			c.Logger().Info("code: ", code)
 
 			oauth2token, err := authz.oauth2Config.Exchange(ctx, code)
 			if err != nil {
 				l.Error("code exchange error", zap.Error(err))
 				return c.String(http.StatusInternalServerError, "Failed to exchange token: "+err.Error())
 			}
-
-			l.Debug("getting id token")
 
 			rawIdTokenFromCode, ok := oauth2token.Extra("id_token").(string)
 			if !ok {
@@ -88,8 +80,6 @@ func NewAuth(e *echo.Group, appConfig *config.AppConfig, groupPrefix string, as 
 			refreshToken = oauth2token.RefreshToken
 
 		}
-
-		l.Debug("verifying id token")
 
 		idToken, err := authz.verifier.Verify(ctx, rawIdToken)
 		if err != nil {

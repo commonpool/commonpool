@@ -31,7 +31,7 @@ func (h *Handler) HandleSendOffer(c echo.Context) error {
 		return c.JSON(400, errs.NewValidError(err.(validator.ValidationErrors)))
 	}
 
-	var tradingOfferItems []trading.OfferItem2
+	var tradingOfferItems []trading.OfferItem
 	for _, tradingOfferItem := range req.Offer.Items {
 		itemKey := NewOfferItemKey(uuid.NewV4())
 		tradingOfferItem, err := mapNewOfferItem(tradingOfferItem, itemKey)
@@ -51,7 +51,12 @@ func (h *Handler) HandleSendOffer(c echo.Context) error {
 		return errs.ReturnException(c, err)
 	}
 
-	webOffer, err := h.mapToWebOffer(offer, offerItems)
+	approvers, err := h.tradingStore.FindApproversForOffer(offer.Key)
+	if err != nil {
+		return errs.ReturnException(c, err)
+	}
+
+	webOffer, err := h.mapToWebOffer(offer, offerItems, approvers)
 	if err != nil {
 		return errs.ReturnException(c, err)
 	}
@@ -83,6 +88,108 @@ func (h *Handler) HandleAcceptOffer(c echo.Context) error {
 
 }
 
+func (h *Handler) HandleOfferItemTargetPicker(c echo.Context) error {
+
+	ctx, _ := GetEchoContext(c, "HandleOfferItemTargetPicker")
+
+	groupKey, err := group.ParseGroupKey(c.QueryParams().Get("group_id"))
+	if err != nil {
+		return errs.ReturnException(c, err)
+	}
+
+	offerItemType, err := trading.ParseOfferItemType(c.QueryParams().Get("type"))
+	if err != nil {
+		return errs.ReturnException(c, err)
+	}
+
+	from, err := parseTargetFromQueryParams(c, "from_type", "from_id")
+	if err != nil {
+		return errs.ReturnException(c, err)
+	}
+
+	to, err := parseTargetFromQueryParams(c, "to_type", "to_id")
+	if err != nil {
+		return errs.ReturnException(c, err)
+	}
+
+	targets, err := h.tradingService.FindTargetsForOfferItem(ctx, groupKey, offerItemType, from, to)
+	if err != nil {
+		return errs.ReturnException(c, err)
+	}
+
+	items := []web.OfferGroupOrUserPickerItem{}
+
+	userKeys := []UserKey{}
+	groupKeys := []GroupKey{}
+	for _, target := range targets.Items {
+		if target.IsForUser() {
+			userKeys = append(userKeys, target.GetUserKey())
+		} else if target.IsForGroup() {
+			groupKeys = append(groupKeys, target.GetGroupKey())
+		}
+	}
+
+	for _, grpKey := range groupKeys {
+		grp, err := h.groupService.GetGroup(ctx, &group.GetGroupRequest{
+			Key: grpKey,
+		})
+		if err != nil {
+			return errs.ReturnException(c, err)
+		}
+		groupId := grp.Group.GetKey().String()
+		items = append(items, web.OfferGroupOrUserPickerItem{
+			Type:    GroupTarget,
+			GroupID: &groupId,
+			Name:    grp.Group.Name,
+		})
+	}
+
+	users, err := h.authStore.GetByKeys(ctx, userKeys)
+	if err != nil {
+		return errs.ReturnException(c, err)
+	}
+	for _, item := range users.Items {
+		userKey := item.GetUserKey().String()
+		items = append(items, web.OfferGroupOrUserPickerItem{
+			Type:   UserTarget,
+			UserID: &userKey,
+			Name:   item.Username,
+		})
+	}
+
+	result := &web.OfferGroupOrUserPickerResult{
+		Items: items,
+	}
+
+	return c.JSON(http.StatusOK, result)
+}
+
+func parseTargetFromQueryParams(c echo.Context, typeQueryParam string, valueQueryParam string) (*Target, error) {
+	typeParam := c.QueryParams().Get(typeQueryParam)
+	if typeParam != "" {
+		typeValue, err := ParseOfferItemTargetType(typeParam)
+		if err != nil {
+			return nil, err
+		}
+		targetType := &typeValue
+		targetIdStr := c.QueryParams().Get(valueQueryParam)
+		if targetIdStr == "" {
+			return nil, errs.ErrQueryParamRequired(valueQueryParam)
+		}
+		if targetType.IsGroup() {
+			groupKey, err := group.ParseGroupKey(targetIdStr)
+			if err != nil {
+				return nil, err
+			}
+			return NewGroupTarget(groupKey), nil
+		} else if targetType.IsUser() {
+			userKey := NewUserKey(targetIdStr)
+			return NewUserTarget(userKey), nil
+		}
+	}
+	return nil, nil
+}
+
 func (h *Handler) HandleDeclineOffer(c echo.Context) error {
 
 	ctx, _ := GetEchoContext(c, "HandleDeclineOffer")
@@ -97,12 +204,7 @@ func (h *Handler) HandleDeclineOffer(c echo.Context) error {
 		return err
 	}
 
-	webOffer, err := h.getWebOffer(offerKey)
-	if err != nil {
-		return err
-	}
-
-	return c.JSON(http.StatusOK, webOffer)
+	return c.NoContent(http.StatusNoContent)
 
 }
 
@@ -116,16 +218,21 @@ func (h *Handler) HandleGetOffers(c echo.Context) error {
 		return NewErrResponse(c, err)
 	}
 
+	approvers, err := h.tradingStore.FindApproversForOffers(result.GetOfferKeys())
+	if err != nil {
+		return errs.ReturnException(c, err)
+	}
+
 	var webOffers []web.Offer
 	resultItems := result.Items
 	for _, item := range resultItems {
 
-		items, err := h.tradingStore.GetOfferItemsForOffer(item.Offer.GetKey())
+		approversForOffer, err := approvers.GetApproversForOffer(item.Offer.Key)
 		if err != nil {
-			return NewErrResponse(c, err)
+			return errs.ReturnException(c, err)
 		}
 
-		webOffer, err := h.mapToWebOffer(item.Offer, items)
+		webOffer, err := h.mapToWebOffer(item.Offer, item.OfferItems, approversForOffer)
 		if err != nil {
 			return NewErrResponse(c, err)
 		}
@@ -179,7 +286,12 @@ func (h *Handler) HandleConfirmServiceProvided(c echo.Context) error {
 		return errs.ReturnException(c, err)
 	}
 
-	webResponse, err := mapWebOfferItem(offerItem)
+	approvers, err := h.tradingStore.FindApproversForOffer(offerItem.GetOfferKey())
+	if err != nil {
+		return errs.ReturnException(c, err)
+	}
+
+	webResponse, err := mapWebOfferItem(offerItem, approvers)
 	if err != nil {
 		return errs.ReturnException(c, err)
 	}
@@ -207,7 +319,12 @@ func (h *Handler) HandleConfirmResourceTransferred(c echo.Context) error {
 		return errs.ReturnException(c, err)
 	}
 
-	webResponse, err := mapWebOfferItem(offerItem)
+	approvers, err := h.tradingStore.FindApproversForOffer(offerItem.GetOfferKey())
+	if err != nil {
+		return errs.ReturnException(c, err)
+	}
+
+	webResponse, err := mapWebOfferItem(offerItem, approvers)
 	if err != nil {
 		return errs.ReturnException(c, err)
 	}
@@ -235,7 +352,12 @@ func (h *Handler) HandleConfirmResourceBorrowed(c echo.Context) error {
 		return errs.ReturnException(c, err)
 	}
 
-	webResponse, err := mapWebOfferItem(offerItem)
+	approvers, err := h.tradingStore.FindApproversForOffer(offerItem.GetOfferKey())
+	if err != nil {
+		return errs.ReturnException(c, err)
+	}
+
+	webResponse, err := mapWebOfferItem(offerItem, approvers)
 	if err != nil {
 		return errs.ReturnException(c, err)
 	}
@@ -263,7 +385,12 @@ func (h *Handler) HandleConfirmBorrowedResourceReturned(c echo.Context) error {
 		return errs.ReturnException(c, err)
 	}
 
-	webResponse, err := mapWebOfferItem(offerItem)
+	approvers, err := h.tradingStore.FindApproversForOffer(offerItem.GetOfferKey())
+	if err != nil {
+		return errs.ReturnException(c, err)
+	}
+
+	webResponse, err := mapWebOfferItem(offerItem, approvers)
 	if err != nil {
 		return errs.ReturnException(c, err)
 	}
@@ -335,7 +462,17 @@ func (h *Handler) GetTradingHistory(c echo.Context) error {
 	})
 }
 
-func mapWebOfferItem(offerItem trading.OfferItem2) (*web.OfferItem, error) {
+func mapWebOfferItem(offerItem trading.OfferItem, approvers *trading.OfferApprovers) (*web.OfferItem, error) {
+
+	fromApprovers, hasFromApprovers := approvers.UsersAbleToGiveItem[offerItem.GetKey()]
+	toApprovers, hasToApprovers := approvers.UsersAbleToReceiveItem[offerItem.GetKey()]
+
+	if !hasFromApprovers {
+		fromApprovers = NewEmptyUserKeys()
+	}
+	if !hasToApprovers {
+		toApprovers = NewEmptyUserKeys()
+	}
 
 	if offerItem.IsCreditTransfer() {
 
@@ -350,11 +487,17 @@ func mapWebOfferItem(offerItem trading.OfferItem2) (*web.OfferItem, error) {
 			return nil, err
 		}
 
+		amount := int64(creditTransfer.Amount.Seconds())
 		return &web.OfferItem{
-			ID:   creditTransfer.Key.String(),
-			From: from,
-			To:   to,
-			Type: trading.CreditTransfer,
+			ID:                 creditTransfer.Key.String(),
+			From:               from,
+			To:                 to,
+			Type:               trading.CreditTransfer,
+			ReceivingApprovers: toApprovers.Strings(),
+			GivingApprovers:    fromApprovers.Strings(),
+			GiverApproved:      creditTransfer.GiverAccepted,
+			ReceiverApproved:   creditTransfer.ReceiverAccepted,
+			Amount:             &amount,
 		}, nil
 
 	} else if offerItem.IsBorrowingResource() {
@@ -369,11 +512,19 @@ func mapWebOfferItem(offerItem trading.OfferItem2) (*web.OfferItem, error) {
 		resourceId := borrowResource.ResourceKey.String()
 		duration := int64(borrowResource.Duration.Seconds())
 		return &web.OfferItem{
-			ID:         borrowResource.Key.String(),
-			To:         to,
-			ResourceId: &resourceId,
-			Duration:   &duration,
-			Type:       trading.BorrowResource,
+			ID:                 borrowResource.Key.String(),
+			To:                 to,
+			ResourceId:         &resourceId,
+			Duration:           &duration,
+			Type:               trading.BorrowResource,
+			ReceivingApprovers: toApprovers.Strings(),
+			GivingApprovers:    fromApprovers.Strings(),
+			GiverApproved:      borrowResource.GiverAccepted,
+			ReceiverApproved:   borrowResource.ReceiverAccepted,
+			ItemGiven:          borrowResource.ItemGiven,
+			ItemTaken:          borrowResource.ItemTaken,
+			ItemReceivedBack:   borrowResource.ItemReceivedBack,
+			ItemReturnedBack:   borrowResource.ItemReturnedBack,
 		}, nil
 
 	} else if offerItem.IsResourceTransfer() {
@@ -387,10 +538,16 @@ func mapWebOfferItem(offerItem trading.OfferItem2) (*web.OfferItem, error) {
 
 		resourceId := resourceTransfer.ResourceKey.String()
 		return &web.OfferItem{
-			ID:         resourceTransfer.Key.String(),
-			To:         to,
-			ResourceId: &resourceId,
-			Type:       trading.ResourceTransfer,
+			ID:                 resourceTransfer.Key.String(),
+			To:                 to,
+			ResourceId:         &resourceId,
+			Type:               trading.ResourceTransfer,
+			ReceivingApprovers: toApprovers.Strings(),
+			GivingApprovers:    fromApprovers.Strings(),
+			GiverApproved:      resourceTransfer.GiverAccepted,
+			ReceiverApproved:   resourceTransfer.ReceiverAccepted,
+			ItemGiven:          resourceTransfer.ItemGiven,
+			ItemTaken:          resourceTransfer.ItemReceived,
 		}, nil
 
 	} else if offerItem.IsServiceProviding() {
@@ -405,11 +562,17 @@ func mapWebOfferItem(offerItem trading.OfferItem2) (*web.OfferItem, error) {
 		resourceId := serviceProvision.ResourceKey.String()
 		duration := int64(serviceProvision.Duration.Seconds())
 		return &web.OfferItem{
-			ID:         serviceProvision.Key.String(),
-			To:         to,
-			ResourceId: &resourceId,
-			Duration:   &duration,
-			Type:       trading.ProvideService,
+			ID:                          serviceProvision.Key.String(),
+			To:                          to,
+			ResourceId:                  &resourceId,
+			Duration:                    &duration,
+			Type:                        trading.ProvideService,
+			ReceivingApprovers:          toApprovers.Strings(),
+			GivingApprovers:             fromApprovers.Strings(),
+			GiverApproved:               serviceProvision.GiverAccepted,
+			ReceiverApproved:            serviceProvision.ReceiverAccepted,
+			ServiceGivenConfirmation:    serviceProvision.ServiceGivenConfirmation,
+			ServiceReceivedConfirmation: serviceProvision.ServiceReceivedConfirmation,
 		}, nil
 	} else {
 		return nil, fmt.Errorf("unexpected offer item type")
@@ -429,7 +592,12 @@ func (h *Handler) getWebOffer(offerKey OfferKey) (*web.GetOfferResponse, error) 
 		return nil, err
 	}
 
-	webOffer, err := h.mapToWebOffer(offer, items)
+	approvers, err := h.tradingStore.FindApproversForOffer(offer.Key)
+	if err != nil {
+		return nil, err
+	}
+
+	webOffer, err := h.mapToWebOffer(offer, items, approvers)
 	if err != nil {
 		return nil, err
 	}
@@ -441,11 +609,23 @@ func (h *Handler) getWebOffer(offerKey OfferKey) (*web.GetOfferResponse, error) 
 	return &response, nil
 }
 
-func (h *Handler) mapToWebOffer(offer *trading.Offer, items *trading.OfferItems) (*web.Offer, error) {
+func (h *Handler) mapToWebOffer(offer *trading.Offer, items *trading.OfferItems, approvers *trading.OfferApprovers) (*web.Offer, error) {
 
 	authorUsername, err := h.authStore.GetUsername(offer.GetAuthorKey())
 	if err != nil {
 		return nil, err
+	}
+
+	var responseItems []*web.OfferItem
+	for _, offerItem := range items.Items {
+		if offerItem.GetOfferKey() != offer.GetKey() {
+			continue
+		}
+		webOfferItem, err := mapWebOfferItem(offerItem, approvers)
+		if err != nil {
+			return nil, err
+		}
+		responseItems = append(responseItems, webOfferItem)
 	}
 
 	webOffer := web.Offer{
@@ -453,27 +633,15 @@ func (h *Handler) mapToWebOffer(offer *trading.Offer, items *trading.OfferItems)
 		CreatedAt:      offer.CreatedAt,
 		CompletedAt:    offer.CompletedAt,
 		Status:         offer.Status,
-		Items:          nil,
+		Items:          responseItems,
 		AuthorID:       offer.CreatedByKey.String(),
 		AuthorUsername: authorUsername,
 	}
 
-	var responseItems []*web.OfferItem
-
-	for _, offerItem := range items.Items {
-		webOfferItem, err := mapWebOfferItem(offerItem)
-		if err != nil {
-			return nil, err
-		}
-		responseItems = append(responseItems, webOfferItem)
-	}
-
-	webOffer.Items = responseItems
-
 	return &webOffer, nil
 }
 
-func mapNewOfferItem(tradingOfferItem web.SendOfferPayloadItem, itemKey OfferItemKey) (trading.OfferItem2, error) {
+func mapNewOfferItem(tradingOfferItem web.SendOfferPayloadItem, itemKey OfferItemKey) (trading.OfferItem, error) {
 
 	itemType := tradingOfferItem.Type
 
@@ -511,7 +679,10 @@ func mapCreateBorrowItem(tradingOfferItem web.SendOfferPayloadItem, itemKey Offe
 		return nil, err
 	}
 
-	duration := time.Duration(int64(time.Second) * *tradingOfferItem.Duration)
+	duration, err := time.ParseDuration(*tradingOfferItem.Duration)
+	if err != nil {
+		return nil, err
+	}
 
 	return &trading.BorrowResourceItem{
 		OfferItemBase: trading.OfferItemBase{
@@ -535,7 +706,10 @@ func mapCreateProvideServiceItem(tradingOfferItem web.SendOfferPayloadItem, item
 		return nil, err
 	}
 
-	duration := time.Duration(int64(time.Second) * *tradingOfferItem.Duration)
+	duration, err := time.ParseDuration(*tradingOfferItem.Duration)
+	if err != nil {
+		return nil, err
+	}
 
 	return &trading.ProvideServiceItem{
 		OfferItemBase: trading.OfferItemBase{
@@ -581,7 +755,10 @@ func mapCreateCreditTransferItem(tradingOfferItem web.SendOfferPayloadItem, item
 		return nil, err
 	}
 
-	amount := time.Duration(int64(time.Second) * *tradingOfferItem.Amount)
+	amount, err := time.ParseDuration(*tradingOfferItem.Amount)
+	if err != nil {
+		return nil, err
+	}
 
 	return &trading.CreditTransferItem{
 		OfferItemBase: trading.OfferItemBase{

@@ -91,6 +91,17 @@ func (t TradingService) SendOffer(ctx ctx.Context, groupKey model.GroupKey, offe
 	return offer, offerItems, nil
 }
 
+func (t TradingService) findAppropriateChannelForOffer(offer *trading.Offer, offerItems *trading.OfferItems, approvers *model.UserKeys) (model.ChannelKey, chat.ChannelType, error) {
+	if !offerItems.GetGroupKeys().IsEmpty() {
+		return offer.GroupKey.GetChannelKey(), chat.GroupChannel, nil
+	}
+	channelKey, err := approvers.GetChannelKey()
+	if err != nil {
+		return model.ChannelKey{}, 0, err
+	}
+	return channelKey, chat.ConversationChannel, nil
+}
+
 func (t TradingService) assertResourcesAreViewableByGroup(resources *resource.GetResourceByKeysResponse, groupKey model.GroupKey) error {
 	for _, item := range resources.Resources.Items {
 		if !resources.Claims.GroupHasClaim(groupKey, item.Key, resource.ViewerClaim) {
@@ -164,7 +175,6 @@ func (t TradingService) assertBorrowOfferItemPointToObjectTypedResource(resource
 	return nil
 }
 
-
 func (t TradingService) sendCustomOfferMessage(ctx context.Context, fromUser *auth.UserSession, userKeys *model.UserKeys, message string) error {
 
 	if strings.TrimSpace(message) == "" {
@@ -189,13 +199,18 @@ func (t TradingService) sendCustomOfferMessage(ctx context.Context, fromUser *au
 }
 
 func (t TradingService) sendAcceptOrDeclineMessages(ctx context.Context, offerItems *trading.OfferItems, offer *trading.Offer, userSession *auth.UserSession) error {
-	userKeys := offerItems.GetUserKeys()
-	for _, userKey := range userKeys.Items {
+
+	approvers, err := t.tradingStore.FindApproversForCandidateOffer(offer, offerItems)
+	if err != nil {
+		return err
+	}
+
+	for _, userKey := range approvers.Items {
 		chatMessage := t.buildAcceptOrDeclineChatMessage(userKey, offer, offerItems)
 		sendMsgRequest := chat.NewSendConversationMessage(
 			userSession.GetUserKey(),
 			userSession.GetUsername(),
-			userKeys,
+			approvers,
 			"New offer",
 			chatMessage,
 			[]chat.Attachment{},
@@ -206,6 +221,7 @@ func (t TradingService) sendAcceptOrDeclineMessages(ctx context.Context, offerIt
 			return err
 		}
 	}
+
 	return nil
 }
 

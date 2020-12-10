@@ -21,7 +21,7 @@ type Resource struct {
 	SubType          SubType
 }
 
-func NewResource(key model.ResourceKey, resourceType Type, subType SubType, createdBy string, summary string, description string, valueInHoursFrom int, valueInHoursTo int, ) Resource {
+func NewResource(key model.ResourceKey, resourceType Type, subType SubType, createdBy string, summary string, description string, valueInHoursFrom int, valueInHoursTo int) Resource {
 	return Resource{
 		Key:              key,
 		Summary:          summary,
@@ -288,6 +288,24 @@ func ParseResourceType(s string) (*Type, error) {
 	}
 	if s == "1" {
 		res = Request
+		return &res, nil
+	}
+
+	err := errors.ErrParseResourceType(s)
+	return nil, &err
+}
+
+func ParseResourceSubType(s string) (*SubType, error) {
+	var res SubType
+	if s == "" {
+		return nil, nil
+	}
+	if s == "object" {
+		res = ObjectResource
+		return &res, nil
+	}
+	if s == "service" {
+		res = ServiceResource
 		return &res, nil
 	}
 
