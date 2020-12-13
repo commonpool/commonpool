@@ -1,0 +1,5 @@
+<div class="membership-picker">
+  <ng-select [disabled]="disabled" name="resource" (ngModelChange)="selectedMembership.next($event)" [ngModel]="selectedMembership$ | async" placeholder="Select group">
+    <ng-option *ngFor="let membership of (memberships | async)?.memberships" [value]="membership.groupId">{{membership.groupName}}</ng-option>
+  </ng-select>
+</div>

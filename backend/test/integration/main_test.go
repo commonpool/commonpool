@@ -6,15 +6,19 @@ import (
 	"github.com/commonpool/backend/amqp"
 	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/chat"
+	chatservice "github.com/commonpool/backend/chat/service"
+	chatstore "github.com/commonpool/backend/chat/store"
 	"github.com/commonpool/backend/config"
 	"github.com/commonpool/backend/graph"
 	"github.com/commonpool/backend/handler"
 	"github.com/commonpool/backend/mock"
 	"github.com/commonpool/backend/service"
-	"github.com/commonpool/backend/store"
+	store "github.com/commonpool/backend/store"
 	uuid "github.com/satori/go.uuid"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"io/ioutil"
+	_ "net/http/pprof"
 	"os"
 	"sync"
 	"testing"
@@ -27,14 +31,16 @@ var Db *gorm.DB
 var AmqpClient amqp.Client
 var ResourceStore store.ResourceStore
 var AuthStore store.AuthStore
-var ChatStore store.ChatStore
+var ChatStore chatstore.ChatStore
 var TradingStore store.TradingStore
 var GroupStore store.GroupStore
-var ChatService service.ChatService
+var ChatService chatservice.ChatService
 var TradingService service.TradingService
 var GroupService service.GroupService
 var Authorizer *mock.Authorizer
 var Driver *graph.Neo4jGraphDriver
+var TransactionStore *store.TransactionStore
+var TransactionService *service.TransactionService
 
 func TestMain(m *testing.M) {
 
@@ -71,15 +77,18 @@ func TestMain(m *testing.M) {
 		panic(err)
 	}
 
-	Db = store.NewTestDb()
-	ResourceStore = *store.NewResourceStore(Driver)
+	Db = getDb(appConfig)
+
+	TransactionStore = store.NewTransactionStore(Db)
+	TransactionService = service.NewTransactionService(TransactionStore)
+	ResourceStore = *store.NewResourceStore(Driver, TransactionService)
 	AuthStore = *store.NewAuthStore(Db, Driver)
-	ChatStore = *store.NewChatStore(Db, &AuthStore, AmqpClient)
+	ChatStore = *chatstore.NewChatStore(Db, &AuthStore, AmqpClient)
 	TradingStore = *store.NewTradingStore(Driver)
 	GroupStore = *store.NewGroupStore(Driver)
-	ChatService = *service.NewChatService(&AuthStore, &GroupStore, &ResourceStore, AmqpClient, &ChatStore)
+	ChatService = *chatservice.NewChatService(&AuthStore, &GroupStore, &ResourceStore, AmqpClient, &ChatStore)
 	GroupService = *service.NewGroupService(&GroupStore, AmqpClient, ChatService, &AuthStore)
-	TradingService = *service.NewTradingService(TradingStore, &ResourceStore, &AuthStore, ChatService, GroupService)
+	TradingService = *service.NewTradingService(TradingStore, &ResourceStore, &AuthStore, ChatService, GroupService, TransactionService)
 
 	store.AutoMigrate(Db)
 
@@ -139,4 +148,13 @@ func cleanDb() {
 	Db.Delete(chat.Channel{}, "1 = 1")
 	Db.Delete(chat.ChannelSubscription{}, "1 = 1")
 	Db.Delete(store.Message{}, "1 = 1")
+}
+
+func getDb(appConfig *config.AppConfig) *gorm.DB {
+	cs := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable", appConfig.DbHost, appConfig.DbUsername, appConfig.DbPassword, appConfig.DbName, appConfig.DbPort)
+	db, err := gorm.Open(postgres.Open(cs), &gorm.Config{})
+	if err != nil {
+		panic(err)
+	}
+	return db
 }

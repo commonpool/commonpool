@@ -20,11 +20,11 @@ func (t TradingService) ConfirmServiceProvided(ctx context.Context, confirmedIte
 
 	ctx, l := GetCtx(ctx, "TradingService", "ConfirmServiceProvided")
 
-	userSession, err := auth.GetUserSession(ctx)
+	loggedInUser, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
 		return err
 	}
-	loggedInUserKey := userSession.GetUserKey()
+	loggedInUserKey := loggedInUser.GetUserKey()
 
 	// retrieving item
 	offerItem, err := t.tradingStore.GetOfferItem(nil, confirmedItemKey)
@@ -61,7 +61,7 @@ func (t TradingService) ConfirmServiceProvided(ctx context.Context, confirmedIte
 		return err
 	}
 
-	return t.checkIfAllItemsCompleted(err, offerItem)
+	return t.checkIfAllItemsCompleted(ctx, loggedInUser, offerItem)
 
 }
 
@@ -69,11 +69,11 @@ func (t TradingService) ConfirmResourceTransferred(ctx context.Context, confirme
 
 	ctx, l := GetCtx(ctx, "TradingService", "ConfirmResourceTransferred")
 
-	userSession, err := auth.GetUserSession(ctx)
+	loggedInUser, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
 		return err
 	}
-	loggedInUserKey := userSession.GetUserKey()
+	loggedInUserKey := loggedInUser.GetUserKey()
 
 	// retrieving item
 	offerItem, err := t.tradingStore.GetOfferItem(nil, confirmedItemKey)
@@ -110,7 +110,7 @@ func (t TradingService) ConfirmResourceTransferred(ctx context.Context, confirme
 		return err
 	}
 
-	return t.checkIfAllItemsCompleted(err, offerItem)
+	return t.checkIfAllItemsCompleted(ctx, loggedInUser, offerItem)
 
 }
 
@@ -118,11 +118,11 @@ func (t TradingService) ConfirmResourceBorrowed(ctx context.Context, confirmedIt
 
 	ctx, l := GetCtx(ctx, "TradingService", "ConfirmResourceBorrowed")
 
-	userSession, err := auth.GetUserSession(ctx)
+	loggedInUser, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
 		return err
 	}
-	loggedInUserKey := userSession.GetUserKey()
+	loggedInUserKey := loggedInUser.GetUserKey()
 
 	// retrieving item
 	offerItem, err := t.tradingStore.GetOfferItem(nil, confirmedItemKey)
@@ -163,7 +163,7 @@ func (t TradingService) ConfirmResourceBorrowed(ctx context.Context, confirmedIt
 		return err
 	}
 
-	return t.checkIfAllItemsCompleted(err, offerItem)
+	return t.checkIfAllItemsCompleted(ctx, loggedInUser, offerItem)
 
 }
 
@@ -171,11 +171,11 @@ func (t TradingService) ConfirmBorrowedResourceReturned(ctx context.Context, con
 
 	ctx, l := GetCtx(ctx, "TradingService", "ConfirmResourceBorrowed")
 
-	userSession, err := auth.GetUserSession(ctx)
+	loggedInUser, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
 		return err
 	}
-	loggedInUserKey := userSession.GetUserKey()
+	loggedInUserKey := loggedInUser.GetUserKey()
 
 	// retrieving item
 	offerItem, err := t.tradingStore.GetOfferItem(nil, confirmedItemKey)
@@ -214,18 +214,32 @@ func (t TradingService) ConfirmBorrowedResourceReturned(ctx context.Context, con
 		return err
 	}
 
-	return t.checkIfAllItemsCompleted(err, offerItem)
+	return t.checkIfAllItemsCompleted(ctx, loggedInUser, offerItem)
 
 }
 
-func (t TradingService) checkIfAllItemsCompleted(err error, offerItem trading.OfferItem) error {
-	offerItems, err := t.tradingStore.GetOfferItemsForOffer(offerItem.GetOfferKey())
+func (t TradingService) checkIfAllItemsCompleted(ctx context.Context, loggerInUser model.UserReference, offerItem trading.OfferItem) error {
+
+	offer, err := t.tradingStore.GetOffer(offerItem.GetOfferKey())
 	if err != nil {
 		return err
 	}
 
-	if offerItems.AllUserActionsCompleted() {
-		return t.tradingStore.UpdateOfferStatus(offerItem.GetOfferKey(), trading.CompletedOffer)
+	offerItems, err := t.tradingStore.GetOfferItemsForOffer(offer.Key)
+	if err != nil {
+		return err
 	}
-	return nil
+
+	approvers, err := t.tradingStore.FindApproversForOffer(offer.Key)
+	if err != nil {
+		return err
+	}
+
+	allUsersInOffer, err := t.us.GetByKeys(ctx, approvers.AllUserKeys().Items)
+	if err != nil {
+		return err
+	}
+
+	return t.checkOfferCompleted(ctx, offer.GroupKey, offer.Key, offerItems, loggerInUser, allUsersInOffer)
+
 }

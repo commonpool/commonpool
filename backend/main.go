@@ -6,8 +6,12 @@ import (
 	"github.com/commonpool/backend/amqp"
 	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/chat"
+	chathandler "github.com/commonpool/backend/chat/delivery/http/chat"
+	chatservice "github.com/commonpool/backend/chat/service"
+	chatstore "github.com/commonpool/backend/chat/store"
 	"github.com/commonpool/backend/config"
 	_ "github.com/commonpool/backend/docs"
+	"github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/graph"
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/handler"
@@ -17,6 +21,7 @@ import (
 	"github.com/commonpool/backend/service"
 	"github.com/commonpool/backend/store"
 	"github.com/commonpool/backend/trading"
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	echoSwagger "github.com/swaggo/echo-swagger"
 	"go.uber.org/zap"
@@ -24,6 +29,7 @@ import (
 	"gorm.io/gorm"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"time"
@@ -88,16 +94,45 @@ func main() {
 	transactionService := service.NewTransactionService(transactionStore)
 	resourceStore = store.NewResourceStore(driver, transactionService)
 	authStore = store.NewAuthStore(db, driver)
-	chatStore := store.NewChatStore(db, authStore, amqpCli)
+	chatStore := chatstore.NewChatStore(db, authStore, amqpCli)
 	tradingStore := store.NewTradingStore(driver)
 	groupStore := store.NewGroupStore(driver)
 
-	chatService := service.NewChatService(authStore, groupStore, resourceStore, amqpCli, chatStore)
+	chatService := chatservice.NewChatService(authStore, groupStore, resourceStore, amqpCli, chatStore)
 	groupService := service.NewGroupService(groupStore, amqpCli, chatService, authStore)
 	tradingService := service.NewTradingService(tradingStore, resourceStore, authStore, chatService, groupService, transactionService)
 
 	v1 := r.Group("/api/v1")
 	authorization := auth.NewAuth(v1, appConfig, "/api/v1", authStore)
+
+	r.HTTPErrorHandler = func(err error, c echo.Context) {
+		_, l := handler.GetEchoContext(c, "")
+		l.Error(err.Error(), zap.Error(err))
+
+		if ws, ok := err.(*errors.WebServiceException); ok {
+			c.JSON(ws.Status, &errors.ErrorResponse{
+				Message:    ws.Message,
+				Code:       ws.Code,
+				StatusCode: ws.Status,
+			})
+			return
+		}
+
+		if ve, ok := err.(*validator.ValidationErrors); ok {
+			c.JSON(http.StatusBadRequest, ve)
+			return
+		}
+
+		c.JSON(http.StatusInternalServerError, &errors.ErrorResponse{
+			Message:    "Internal server error",
+			Code:       "ErrInternalServerError",
+			StatusCode: http.StatusInternalServerError,
+		})
+
+	}
+
+	chatHandler := chathandler.NewChatHandler(chatService, appConfig, authorization)
+	chatHandler.Register(v1)
 
 	h := handler.NewHandler(
 		resourceStore,
@@ -110,6 +145,8 @@ func main() {
 		chatService,
 		tradingService,
 		groupService)
+
+	h.Register(v1)
 
 	var users []auth.User
 	err = db.Model(auth.User{}).Find(&users).Error
@@ -125,8 +162,6 @@ func main() {
 			panic(err)
 		}
 	}
-
-	h.Register(v1)
 
 	// Start server
 	go func() {

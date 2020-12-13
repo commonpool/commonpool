@@ -216,22 +216,15 @@ func TestUserCanSearchResourcesSharedWithGroup(t *testing.T) {
 
 	ctx := context.Background()
 
-	createGroup1, createGroup1Http := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
-		Name:        "group1",
-		Description: "Group 1",
-	})
-	assert.Equal(t, http.StatusCreated, createGroup1Http.StatusCode)
-	createGroup2, createGroup2Http := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
-		Name:        "group2",
-		Description: "Group 2",
-	})
-	assert.Equal(t, http.StatusCreated, createGroup2Http.StatusCode)
+	group1 := testGroup(t, user1)
+	group2 := testGroup(t, user1)
+
 	CreateResource(t, ctx, user1, &web.CreateResourceRequest{
 		Resource: web.CreateResourcePayload{
 			Summary: "SharedWithGroup",
 			SharedWith: []web.InputResourceSharing{
 				{
-					GroupID: createGroup1.Group.ID,
+					GroupID: group1.ID,
 				},
 			},
 		},
@@ -241,13 +234,13 @@ func TestUserCanSearchResourcesSharedWithGroup(t *testing.T) {
 			Summary: "SharedWithGroup",
 			SharedWith: []web.InputResourceSharing{
 				{
-					GroupID: createGroup2.Group.ID,
+					GroupID: group2.ID,
 				},
 			},
 		},
 	})
 
-	res, httpRes := SearchResources(t, ctx, user1, 10, 0, "SharedWithGroup", resource.Offer, &createGroup1.Group.ID)
+	res, httpRes := SearchResources(t, ctx, user1, 10, 0, "SharedWithGroup", resource.Offer, &group1.ID)
 	assert.Equal(t, http.StatusOK, httpRes.StatusCode)
 
 	assert.Equal(t, 10, res.Take)
@@ -266,24 +259,17 @@ func TestUserCanSearchResourcesSharedWithMultipleGroups(t *testing.T) {
 
 	ctx := context.Background()
 
-	createGroup1, createGroup1Http := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
-		Name:        "group1",
-		Description: "Group 1",
-	})
-	assert.Equal(t, http.StatusCreated, createGroup1Http.StatusCode)
-	createGroup2, createGroup2Http := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
-		Name:        "group2",
-		Description: "Group 2",
-	})
-	assert.Equal(t, http.StatusCreated, createGroup2Http.StatusCode)
+	group1 := testGroup(t, user1)
+	group2 := testGroup(t, user1)
+
 	createResource1, createResource1Http := CreateResource(t, ctx, user1, &web.CreateResourceRequest{
 		Resource: web.CreateResourcePayload{
 			Summary: "A-4ccf1c0f-d791-437b-becd-8c4592d3bc1d",
 			SharedWith: []web.InputResourceSharing{
 				{
-					GroupID: createGroup1.Group.ID,
+					GroupID: group1.ID,
 				}, {
-					GroupID: createGroup2.Group.ID,
+					group2.ID,
 				},
 			},
 		},
@@ -296,14 +282,14 @@ func TestUserCanSearchResourcesSharedWithMultipleGroups(t *testing.T) {
 			SubType: resource.ObjectResource,
 			SharedWith: []web.InputResourceSharing{
 				{
-					GroupID: createGroup2.Group.ID,
+					GroupID: group2.ID,
 				},
 			},
 		},
 	})
 	assert.Equal(t, http.StatusCreated, createResource2Http.StatusCode)
 
-	searchResource1, searchResources1Http := SearchResources(t, ctx, user1, 10, 0, "4ccf1c0f-d791-437b-becd-8c4592d3bc1d", resource.Offer, &createGroup1.Group.ID)
+	searchResource1, searchResources1Http := SearchResources(t, ctx, user1, 10, 0, "4ccf1c0f-d791-437b-becd-8c4592d3bc1d", resource.Offer, &group1.ID)
 	assert.Equal(t, http.StatusOK, searchResources1Http.StatusCode)
 	assert.Equal(t, 10, searchResource1.Take)
 	assert.Equal(t, 0, searchResource1.Skip)
@@ -311,7 +297,7 @@ func TestUserCanSearchResourcesSharedWithMultipleGroups(t *testing.T) {
 	assert.Equal(t, 1, searchResource1.TotalCount)
 	assert.Equal(t, createResource1.Resource.Id, searchResource1.Resources[0].Id)
 
-	searchResource2, searchResources2Http := SearchResources(t, ctx, user1, 10, 0, "4ccf1c0f-d791-437b-becd-8c4592d3bc1d", resource.Offer, &createGroup2.Group.ID)
+	searchResource2, searchResources2Http := SearchResources(t, ctx, user1, 10, 0, "4ccf1c0f-d791-437b-becd-8c4592d3bc1d", resource.Offer, &group2.ID)
 	assert.Equal(t, http.StatusOK, searchResources2Http.StatusCode)
 	assert.Equal(t, 10, searchResource2.Take)
 	assert.Equal(t, 0, searchResource2.Skip)
@@ -381,17 +367,8 @@ func TestUserCanUpdateResourceSharings(t *testing.T) {
 
 	ctx := context.Background()
 
-	createGroup1, createGroup1Http := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
-		Name:        "My Group 1",
-		Description: "Nice Group 1",
-	})
-	assert.Equal(t, http.StatusCreated, createGroup1Http.StatusCode)
-
-	createGroup2, createGroup2Http := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
-		Name:        "My Group 3",
-		Description: "Nice Group 3",
-	})
-	assert.Equal(t, http.StatusCreated, createGroup2Http.StatusCode)
+	group1 := testGroup(t, user1)
+	group2 := testGroup(t, user1)
 
 	createResource, createResourceHttp := CreateResource(t, ctx, user1, &web.CreateResourceRequest{
 		Resource: web.CreateResourcePayload{
@@ -402,8 +379,8 @@ func TestUserCanUpdateResourceSharings(t *testing.T) {
 			ValueInHoursFrom: 1,
 			ValueInHoursTo:   3,
 			SharedWith: []web.InputResourceSharing{
-				{GroupID: createGroup1.Group.ID},
-				{GroupID: createGroup2.Group.ID},
+				{GroupID: group1.ID},
+				{GroupID: group2.ID},
 			},
 		},
 	})
@@ -416,7 +393,7 @@ func TestUserCanUpdateResourceSharings(t *testing.T) {
 			ValueInHoursFrom: 5,
 			ValueInHoursTo:   10,
 			SharedWith: []web.InputResourceSharing{
-				{GroupID: createGroup1.Group.ID},
+				{GroupID: group1.ID},
 			},
 		},
 	})
@@ -430,8 +407,8 @@ func TestUserCanUpdateResourceSharings(t *testing.T) {
 			ValueInHoursFrom: 5,
 			ValueInHoursTo:   10,
 			SharedWith: []web.InputResourceSharing{
-				{GroupID: createGroup1.Group.ID},
-				{GroupID: createGroup2.Group.ID},
+				{GroupID: group1.ID},
+				{GroupID: group2.ID},
 			},
 		},
 	})
@@ -448,22 +425,18 @@ func TestUserCanShareResourceWithGroup(t *testing.T) {
 
 	ctx := context.Background()
 
-	createGroup1, createGroup1Http := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
-		Name:        "My Group",
-		Description: "Nice Group",
-	})
-	assert.Equal(t, http.StatusCreated, createGroup1Http.StatusCode)
+	group1 := testGroup(t, user1)
 
 	res, httpRes := CreateResource(t, ctx, user1, &web.CreateResourceRequest{
 		Resource: web.CreateResourcePayload{
-			SharedWith: []web.InputResourceSharing{{GroupID: createGroup1.Group.ID}},
+			SharedWith: []web.InputResourceSharing{{GroupID: group1.ID}},
 		},
 	})
 
 	assert.Equal(t, http.StatusCreated, httpRes.StatusCode)
 	assert.Equal(t, 1, len(res.Resource.SharedWith))
-	assert.Equal(t, createGroup1.Group.ID, res.Resource.SharedWith[0].GroupID)
-	assert.Equal(t, "My Group", res.Resource.SharedWith[0].GroupName)
+	assert.Equal(t, group1.ID, res.Resource.SharedWith[0].GroupID)
+	assert.Equal(t, group1.Name, res.Resource.SharedWith[0].GroupName)
 
 }
 
@@ -475,30 +448,16 @@ func TestUserCanShareResourceWithMultipleGroups(t *testing.T) {
 
 	ctx := context.Background()
 
-	createGroup1, createGroup1Http := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
-		Name:        "My Group 1",
-		Description: "Nice Group 1",
-	})
-	assert.Equal(t, http.StatusCreated, createGroup1Http.StatusCode)
-
-	createGroup2, createGroup2Http := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
-		Name:        "My Group 3",
-		Description: "Nice Group 3",
-	})
-	assert.Equal(t, http.StatusCreated, createGroup2Http.StatusCode)
-
-	createGroup3, createGroup3Http := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
-		Name:        "My Group 3",
-		Description: "Nice Group 3",
-	})
-	assert.Equal(t, http.StatusCreated, createGroup3Http.StatusCode)
+	group1 := testGroup(t, user1)
+	group2 := testGroup(t, user1)
+	group3 := testGroup(t, user1)
 
 	res, httpRes := CreateResource(t, ctx, user1, &web.CreateResourceRequest{
 		Resource: web.CreateResourcePayload{
 			SharedWith: []web.InputResourceSharing{
-				{GroupID: createGroup1.Group.ID},
-				{GroupID: createGroup2.Group.ID},
-				{GroupID: createGroup3.Group.ID},
+				{GroupID: group1.ID},
+				{GroupID: group2.ID},
+				{GroupID: group3.ID},
 			},
 		},
 	})
@@ -506,7 +465,7 @@ func TestUserCanShareResourceWithMultipleGroups(t *testing.T) {
 	assert.Equal(t, http.StatusCreated, httpRes.StatusCode)
 	assert.Equal(t, 3, len(res.Resource.SharedWith))
 
-	for _, groupId := range []string{createGroup1.Group.ID, createGroup2.Group.ID, createGroup3.Group.ID} {
+	for _, groupId := range []string{group1.ID, group2.ID, group3.ID} {
 		found := false
 		for _, sharing := range res.Resource.SharedWith {
 			if sharing.GroupID == groupId {

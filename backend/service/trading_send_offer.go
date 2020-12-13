@@ -17,7 +17,7 @@ import (
 
 func (t TradingService) SendOffer(ctx ctx.Context, groupKey model.GroupKey, offerItems *trading.OfferItems, message string) (*trading.Offer, *trading.OfferItems, error) {
 
-	userSession, err := auth.GetUserSession(ctx)
+	userSession, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
 		return nil, nil, errors.ErrUnauthorized
 	}

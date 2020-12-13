@@ -15,7 +15,7 @@ func (t TradingService) DeclineOffer(ctx context.Context, offerKey model.OfferKe
 	ctx, l := GetCtx(ctx, "TradingService", "AcceptOffer")
 	l = l.With(zap.Object("offer", offerKey))
 
-	user, err := auth.GetUserSession(ctx)
+	user, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
 		l.Error("could not get user session", zap.Error(err))
 		return err
@@ -56,7 +56,7 @@ func (t TradingService) AcceptOffer(ctx context.Context, request *trading.Accept
 	ctx, l := GetCtx(ctx, "TradingService", "AcceptOffer")
 	l = l.With(zap.Object("offer", request.OfferKey))
 
-	loggedInUser, err := auth.GetUserSession(ctx)
+	loggedInUser, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
 		l.Error("could not get user session", zap.Error(err))
 		return nil, err

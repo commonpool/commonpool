@@ -26,69 +26,109 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b50bce1a-5445-4a69-8265-74993e439f0e" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/model/transaction.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/service/transaction.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/store/transaction.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/transaction/store.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chat/delivery/http/chat/chat_handler.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chat/delivery/http/chat/get_chat_messages.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chat/delivery/http/chat/get_chat_subscriptions.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chat/delivery/http/chat/post_chat_interaction.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chat/delivery/http/chat/post_chat_message.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chat/service/delete_group_channel.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chat/service/get_channel.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chat/service/get_conversation_channel_key.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chat/service/get_group_link.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chat/service/get_message.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chat/service/get_messages.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chat/service/get_resource_link.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chat/service/get_user_exchange_name.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chat/service/get_user_link.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chat/service/get_user_subscriptions.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chat/service/notify_user_interested_about_resource.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chat/store/create_channel.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chat/store/create_subscription.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chat/store/delete_subscription.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chat/store/get_channel.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chat/store/get_channel_subscriptions.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chat/store/get_message.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chat/store/get_messages.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chat/store/get_subscription.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chat/store/get_user_subscriptions.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/chat/store/save_message.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/graph/driver.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/handler/delete_membership.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/handler/get_group.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/handler/get_group_invite_picker.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/handler/get_group_memberships.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/handler/get_logged_user_memberships.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/handler/get_membership.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/handler/get_offer.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/handler/get_offer_target_picker.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/handler/get_offers.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/handler/get_resource.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/handler/get_resources.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/handler/get_transaction_history.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/handler/get_user.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/handler/get_user_memberships.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/handler/post_group.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/handler/post_membership.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/handler/post_offer.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/handler/post_offer_acceptance.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/handler/post_offer_confirm_borrowed_resource_returned.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/handler/post_offer_confirm_resource_borrowed.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/handler/post_offer_confirm_resource_transfer.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/handler/post_offer_confirm_service_provided.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/handler/post_offer_decline.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/handler/post_resource.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/handler/post_resource_inquiry.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/handler/put_resource.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/amqp/client.go" beforeDir="false" afterPath="$PROJECT_DIR$/amqp/client.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auth/middleware.go" beforeDir="false" afterPath="$PROJECT_DIR$/auth/middleware.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auth/oidc_authenticator.go" beforeDir="false" afterPath="$PROJECT_DIR$/auth/oidc_authenticator.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth/user_session.go" beforeDir="false" afterPath="$PROJECT_DIR$/auth/user_session.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/chat/service.go" beforeDir="false" afterPath="$PROJECT_DIR$/chat/service.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/chat/store.go" beforeDir="false" afterPath="$PROJECT_DIR$/chat/store.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/errors/errors.go" beforeDir="false" afterPath="$PROJECT_DIR$/errors/errors.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/group/service.go" beforeDir="false" afterPath="$PROJECT_DIR$/group/service.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/graph/graph_init.go" beforeDir="false" afterPath="$PROJECT_DIR$/graph/graph_init.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handler/chat.go" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/handler/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/group.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/handler/pubsub.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/pubsub.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/handler/resource.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/resource.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handler/resource_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/resource_test.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/handler/routes.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/routes.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/handler/trading.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/trading.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handler/trading_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/handler/users.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/get_users.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/k8s/neo4j.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/k8s/neo4j.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logging/constants.go" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/model/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/model/group.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/model/offer.go" beforeDir="false" afterPath="$PROJECT_DIR$/model/offer.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/model/target.go" beforeDir="false" afterPath="$PROJECT_DIR$/model/target.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/model/user.go" beforeDir="false" afterPath="$PROJECT_DIR$/model/user.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resource/models.go" beforeDir="false" afterPath="$PROJECT_DIR$/resource/models.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resource/store.go" beforeDir="false" afterPath="$PROJECT_DIR$/resource/store.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/group_get.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/group_get.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/group_memberships_get.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/group_memberships_get.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/trading.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/trading.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/trading_item_get.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/trading_item_get.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/user_names.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/router/validator.go" beforeDir="false" afterPath="$PROJECT_DIR$/router/validator.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/service/chat.go" beforeDir="false" afterPath="$PROJECT_DIR$/chat/service/chat.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/service/chat_channel_create.go" beforeDir="false" afterPath="$PROJECT_DIR$/chat/service/create_channel.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/service/chat_channel_message_send.go" beforeDir="false" afterPath="$PROJECT_DIR$/chat/service/send_channel_message.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/service/chat_channel_subscribe.go" beforeDir="false" afterPath="$PROJECT_DIR$/chat/service/subscribe_channel.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/service/chat_channel_unsubscribe.go" beforeDir="false" afterPath="$PROJECT_DIR$/chat/service/unsubscript_channel.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/service/chat_convo_channel_bind.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/service/chat_convo_channel_get_create.go" beforeDir="false" afterPath="$PROJECT_DIR$/chat/service/chat_convo_channel_get_create.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/service/chat_convo_message_send.go" beforeDir="false" afterPath="$PROJECT_DIR$/chat/service/send_conversation_message.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/service/chat_group_message_send.go" beforeDir="false" afterPath="$PROJECT_DIR$/chat/service/send_group_message.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/service/chat_user_exchange_create.go" beforeDir="false" afterPath="$PROJECT_DIR$/chat/service/create_user_exchange.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/service/group_create.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/group_create.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/service/group_invitation_create_accept.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/group_invitation_create_accept.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/service/group_invitation_decline_cancel.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/group_invitation_decline_cancel.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/service/trading_item_received_given.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/trading_item_received_given.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/service/trading_offer_accept.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/trading_offer_accept.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/service/trading_send_offer.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/trading_send_offer.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/store/db.go" beforeDir="false" afterPath="$PROJECT_DIR$/store/db.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/store/resource.go" beforeDir="false" afterPath="$PROJECT_DIR$/store/resource.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/store/trading.go" beforeDir="false" afterPath="$PROJECT_DIR$/store/trading.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/store/chat.go" beforeDir="false" afterPath="$PROJECT_DIR$/chat/store/chat.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/test/integration/group_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/test/integration/group_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/trading/items.go" beforeDir="false" afterPath="$PROJECT_DIR$/trading/items.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/trading/models.go" beforeDir="false" afterPath="$PROJECT_DIR$/trading/models.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/trading/service.go" beforeDir="false" afterPath="$PROJECT_DIR$/trading/service.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/trading/store.go" beforeDir="false" afterPath="$PROJECT_DIR$/trading/store.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/web/group.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/offer.go" beforeDir="false" afterPath="$PROJECT_DIR$/web/offer.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/resource.go" beforeDir="false" afterPath="$PROJECT_DIR$/web/resource.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/api/backend.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/api/backend.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/api/models.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/api/models.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/app.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/app.module.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/auth.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/auth.service.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/offers/create-offer/create-offer.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/offers/create-offer/create-offer.component.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/offers/create-offer/create-offer.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/offers/create-offer/create-offer.component.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/offers/create-offer/create-offer.form.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/offers/create-offer/create-offer.form.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/offers/offer-list/offer-list.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/offers/offer-list/offer-list.component.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/offers/offer-list/offer-list.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/offers/offer-list/offer-list.component.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/resources/create-or-edit-resource/create-or-edit-resource.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/resources/create-or-edit-resource/create-or-edit-resource.component.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/resources/create-or-edit-resource/create-or-edit-resource.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/resources/create-or-edit-resource/create-or-edit-resource.component.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/resources/resource-details/resource-details.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/resources/resource-details/resource-details.component.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/resources/resource-list-view/resource-list-view.component.css" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/resources/resource-list-view/resource-list-view.component.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/resources/resource-list-view/resource-list-view.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/resources/resource-list-view/resource-list-view.component.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/resources/resource-list-view/resource-list-view.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/resources/resource-list-view/resource-list-view.component.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/shared/resource-link2/resource-link2.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/shared/resource-link2/resource-link2.component.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/shared/resource-link2/resource-link2.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/shared/resource-link2/resource-link2.component.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/shared/resource-picker/resource-picker.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/shared/resource-picker/resource-picker.component.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/top-nav/top-nav.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/top-nav/top-nav.component.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/users/user-groups-view/user-groups-view.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/users/user-groups-view/user-groups-view.component.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/app/users/user-resources-view/user-resources-view.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/app/users/user-resources-view/user-resources-view.component.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/integration/helpers_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/test/integration/helpers_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/integration/main_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/test/integration/main_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/integration/resource_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/test/integration/resource_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/integration/trading_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/test/integration/trading_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/integration/utils_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/test/integration/utils_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/chat.go" beforeDir="false" afterPath="$PROJECT_DIR$/web/chat.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/trading.go" beforeDir="false" afterPath="$PROJECT_DIR$/web/trading.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../operator/api/v1/commonpoolinstallation_types.go" beforeDir="false" afterPath="$PROJECT_DIR$/../operator/api/v1/commonpoolinstallation_types.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../operator/config/crd/bases/apps.commonpool.net_commonpoolinstallations.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../operator/config/crd/bases/apps.commonpool.net_commonpoolinstallations.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../operator/controllers/commonpoolinstallation_controller.go" beforeDir="false" afterPath="$PROJECT_DIR$/../operator/controllers/commonpoolinstallation_controller.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -127,31 +167,32 @@
     <property name="go.import.settings.migrated" value="true" />
     <property name="go.sdk.automatically.set" value="true" />
     <property name="go.tried.to.enable.integration.vgo.integrator" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/model" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../operator" />
     <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
     <property name="settings.editor.selected.configurable" value="reference.settingsdialog.IDE.editor.colors" />
     <property name="ts.external.directory.path" value="$APPLICATION_HOME_DIR$/plugins/JavaScriptLanguage/jsLanguageServicesImpl/external" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/chat/repository" />
+      <recent name="$PROJECT_DIR$/chat/delivery/http/chat" />
+      <recent name="$PROJECT_DIR$/chat/service" />
+      <recent name="$PROJECT_DIR$/chat" />
       <recent name="$PROJECT_DIR$/tmp" />
-      <recent name="$PROJECT_DIR$/mock" />
-      <recent name="$PROJECT_DIR$/auth" />
-      <recent name="$PROJECT_DIR$/trading" />
-      <recent name="$PROJECT_DIR$/handler" />
     </key>
     <key name="GoMoveDeclarationDialog.RECENT_KEY">
+      <recent name="$PROJECT_DIR$/chat/store" />
+      <recent name="$PROJECT_DIR$/chat/service" />
+      <recent name="$PROJECT_DIR$/handler" />
+      <recent name="$PROJECT_DIR$/handler/chat" />
       <recent name="$PROJECT_DIR$/model" />
-      <recent name="$PROJECT_DIR$/models" />
-      <recent name="$PROJECT_DIR$/service" />
-      <recent name="$PROJECT_DIR$/group" />
-      <recent name="$PROJECT_DIR$/utils" />
     </key>
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/chat/service" />
       <recent name="$PROJECT_DIR$/k8s" />
     </key>
   </component>
-  <component name="RunManager" selected="Go Build.go build backend main.go">
+  <component name="RunManager" selected="Go Test.go test integration">
     <configuration name="go build backend main.go" type="GoApplicationRunConfiguration" factoryName="Go Application" nameIsGenerated="true">
       <module name="backend" />
       <working_directory value="$PROJECT_DIR$" />
@@ -171,28 +212,6 @@
       <filePath value="$PROJECT_DIR$/../backend|$PROJECT_DIR$/main.go" />
       <package value="github.com/commonpool/backend" />
       <directory value="$PROJECT_DIR$" />
-      <method v="2" />
-    </configuration>
-    <configuration name="TestCannotCreateResourceTransferItemForResourceAlreadyOwned in github.com/commonpool/backend/test/integration" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
-      <module name="backend" />
-      <working_directory value="$PROJECT_DIR$/test/integration" />
-      <EXTENSION ID="net.ashald.envfile">
-        <option name="IS_ENABLED" value="true" />
-        <option name="IS_SUBST" value="false" />
-        <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
-        <option name="IS_IGNORE_MISSING_FILES" value="false" />
-        <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
-        <ENTRIES>
-          <ENTRY IS_ENABLED="true" PARSER="runconfig" />
-          <ENTRY IS_ENABLED="true" PARSER="env" PATH=".env" />
-        </ENTRIES>
-      </EXTENSION>
-      <framework value="gotest" />
-      <kind value="PACKAGE" />
-      <package value="github.com/commonpool/backend/test/integration" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$" />
-      <pattern value="^\QTestCannotCreateResourceTransferItemForResourceAlreadyOwned\E$" />
       <method v="2" />
     </configuration>
     <configuration name="TestUserCanSubmitOfferBetweenGroupAndMultipleUsers in github.com/commonpool/backend/test/integration" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
@@ -217,6 +236,28 @@
       <pattern value="^\QTestUserCanSubmitOfferBetweenGroupAndMultipleUsers\E$" />
       <method v="2" />
     </configuration>
+    <configuration name="TestUserCanSubmitOfferBetweenUsers in github.com/commonpool/backend/test/integration" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="backend" />
+      <working_directory value="$PROJECT_DIR$/test/integration" />
+      <EXTENSION ID="net.ashald.envfile">
+        <option name="IS_ENABLED" value="true" />
+        <option name="IS_SUBST" value="false" />
+        <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
+        <option name="IS_IGNORE_MISSING_FILES" value="false" />
+        <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
+        <ENTRIES>
+          <ENTRY IS_ENABLED="true" PARSER="runconfig" />
+          <ENTRY IS_ENABLED="true" PARSER="env" PATH=".env" />
+        </ENTRIES>
+      </EXTENSION>
+      <framework value="gotest" />
+      <kind value="PACKAGE" />
+      <package value="github.com/commonpool/backend/test/integration" />
+      <directory value="$PROJECT_DIR$/test/integration" />
+      <filePath value="$PROJECT_DIR$" />
+      <pattern value="^\QTestUserCanSubmitOfferBetweenUsers\E$" />
+      <method v="2" />
+    </configuration>
     <configuration name="TestUserCanSubmitOfferBetweenUsersAndGroup in github.com/commonpool/backend/test/integration" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="backend" />
       <working_directory value="$PROJECT_DIR$/test/integration" />
@@ -237,28 +278,6 @@
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
       <pattern value="^\QTestUserCanSubmitOfferBetweenUsersAndGroup\E$" />
-      <method v="2" />
-    </configuration>
-    <configuration name="TestUserCannotCreateOfferForResourceNotSharedWithGroup in github.com/commonpool/backend/test/integration" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
-      <module name="backend" />
-      <working_directory value="$PROJECT_DIR$/test/integration" />
-      <EXTENSION ID="net.ashald.envfile">
-        <option name="IS_ENABLED" value="true" />
-        <option name="IS_SUBST" value="false" />
-        <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
-        <option name="IS_IGNORE_MISSING_FILES" value="false" />
-        <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
-        <ENTRIES>
-          <ENTRY IS_ENABLED="true" PARSER="runconfig" />
-          <ENTRY IS_ENABLED="true" PARSER="env" PATH=".env" />
-        </ENTRIES>
-      </EXTENSION>
-      <framework value="gotest" />
-      <kind value="PACKAGE" />
-      <package value="github.com/commonpool/backend/test/integration" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$" />
-      <pattern value="^\QTestUserCannotCreateOfferForResourceNotSharedWithGroup\E$" />
       <method v="2" />
     </configuration>
     <configuration name="TestUsersCanAcceptOffer in github.com/commonpool/backend/test/integration" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
@@ -283,21 +302,42 @@
       <pattern value="^\QTestUsersCanAcceptOffer\E$" />
       <method v="2" />
     </configuration>
+    <configuration name="go test integration" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="backend" />
+      <working_directory value="$PROJECT_DIR$/test/integration" />
+      <EXTENSION ID="net.ashald.envfile">
+        <option name="IS_ENABLED" value="true" />
+        <option name="IS_SUBST" value="false" />
+        <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
+        <option name="IS_IGNORE_MISSING_FILES" value="false" />
+        <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
+        <ENTRIES>
+          <ENTRY IS_ENABLED="true" PARSER="runconfig" />
+          <ENTRY IS_ENABLED="true" PARSER="env" PATH=".env" />
+        </ENTRIES>
+      </EXTENSION>
+      <framework value="gotest" />
+      <kind value="DIRECTORY" />
+      <package value="github.com/commonpool/backend" />
+      <directory value="$PROJECT_DIR$/test/integration" />
+      <filePath value="$PROJECT_DIR$" />
+      <method v="2" />
+    </configuration>
     <list>
       <item itemvalue="Go Build.go build backend main.go" />
       <item itemvalue="Go Test.TestUsersCanAcceptOffer in github.com/commonpool/backend/test/integration" />
-      <item itemvalue="Go Test.TestUserCannotCreateOfferForResourceNotSharedWithGroup in github.com/commonpool/backend/test/integration" />
-      <item itemvalue="Go Test.TestCannotCreateResourceTransferItemForResourceAlreadyOwned in github.com/commonpool/backend/test/integration" />
       <item itemvalue="Go Test.TestUserCanSubmitOfferBetweenUsersAndGroup in github.com/commonpool/backend/test/integration" />
       <item itemvalue="Go Test.TestUserCanSubmitOfferBetweenGroupAndMultipleUsers in github.com/commonpool/backend/test/integration" />
+      <item itemvalue="Go Test.go test integration" />
+      <item itemvalue="Go Test.TestUserCanSubmitOfferBetweenUsers in github.com/commonpool/backend/test/integration" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Go Test.go test integration" />
+        <item itemvalue="Go Test.TestUserCanSubmitOfferBetweenUsers in github.com/commonpool/backend/test/integration" />
         <item itemvalue="Go Test.TestUserCanSubmitOfferBetweenGroupAndMultipleUsers in github.com/commonpool/backend/test/integration" />
         <item itemvalue="Go Test.TestUserCanSubmitOfferBetweenUsersAndGroup in github.com/commonpool/backend/test/integration" />
         <item itemvalue="Go Test.TestUsersCanAcceptOffer in github.com/commonpool/backend/test/integration" />
-        <item itemvalue="Go Test.TestCannotCreateResourceTransferItemForResourceAlreadyOwned in github.com/commonpool/backend/test/integration" />
-        <item itemvalue="Go Test.TestUserCannotCreateOfferForResourceNotSharedWithGroup in github.com/commonpool/backend/test/integration" />
       </list>
     </recent_temporary>
   </component>
@@ -380,7 +420,14 @@
       <option name="project" value="LOCAL" />
       <updated>1607321180765</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="work">
+      <created>1607625708582</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1607625708582</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -414,18 +461,18 @@
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
     <state x="898" y="1108" width="570" height="141" key="#GOROOT/0.27.3840.2133@0.27.3840.2133" timestamp="1606885054785" />
-    <state x="1023" y="829" width="1205" height="1239" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1607406578339">
+    <state x="1023" y="829" width="1205" height="1263" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1607701075093">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
-    <state x="1023" y="829" width="1205" height="1239" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.27.3840.2133@0.27.3840.2133" timestamp="1607406578339" />
-    <state x="100" y="127" width="3640" height="1933" key="#com.intellij.execution.junit2.states.ComparisonFailureState$DiffDialog" timestamp="1606141803613">
+    <state x="1023" y="829" width="1205" height="1263" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.27.3840.2133@0.27.3840.2133" timestamp="1607701075093" />
+    <state x="100" y="127" width="3640" height="1933" key="#com.intellij.execution.junit2.states.ComparisonFailureState$DiffDialog" timestamp="1607700211573">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
-    <state x="100" y="127" width="3640" height="1933" key="#com.intellij.execution.junit2.states.ComparisonFailureState$DiffDialog/0.27.3840.2133@0.27.3840.2133" timestamp="1606141803613" />
-    <state x="902" y="976" width="696" height="406" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1607244690028">
+    <state x="100" y="127" width="3640" height="1933" key="#com.intellij.execution.junit2.states.ComparisonFailureState$DiffDialog/0.27.3840.2133@0.27.3840.2133" timestamp="1607700211573" />
+    <state x="902" y="976" width="696" height="406" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1607701043723">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
-    <state x="902" y="976" width="696" height="406" key="#com.intellij.fileTypes.FileTypeChooser/0.27.3840.2133@0.27.3840.2133" timestamp="1607244690028" />
+    <state x="902" y="976" width="696" height="406" key="#com.intellij.fileTypes.FileTypeChooser/0.27.3840.2133@0.27.3840.2133" timestamp="1607701043723" />
     <state x="1360" y="819" width="817" height="555" key="#xdebugger.XInspectDialog" timestamp="1607415084597">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
@@ -450,10 +497,10 @@
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
     <state x="1408" y="937" width="664" height="501" key="EnvironmentVariablesDialog/0.27.3840.2133@0.27.3840.2133" timestamp="1607021152163" />
-    <state x="778" y="821" width="424" height="491" key="FileChooserDialogImpl" timestamp="1607581436720">
+    <state x="778" y="821" width="424" height="491" key="FileChooserDialogImpl" timestamp="1607702416503">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
-    <state x="778" y="821" width="424" height="491" key="FileChooserDialogImpl/0.27.3840.2133@0.27.3840.2133" timestamp="1607581436720" />
+    <state x="778" y="821" width="424" height="491" key="FileChooserDialogImpl/0.27.3840.2133@0.27.3840.2133" timestamp="1607702416503" />
     <state width="1791" height="772" key="GridCell.Tab.-1.bottom" timestamp="1607060386371">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
@@ -470,22 +517,22 @@
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
     <state width="1791" height="772" key="GridCell.Tab.-1.right/0.27.3840.2133@0.27.3840.2133" timestamp="1607060386370" />
-    <state width="2019" height="771" key="GridCell.Tab.0.bottom" timestamp="1607596705744">
+    <state width="1534" height="528" key="GridCell.Tab.0.bottom" timestamp="1607701029415">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
-    <state width="2019" height="771" key="GridCell.Tab.0.bottom/0.27.3840.2133@0.27.3840.2133" timestamp="1607596705744" />
-    <state width="2019" height="771" key="GridCell.Tab.0.center" timestamp="1607596705743">
+    <state width="1534" height="528" key="GridCell.Tab.0.bottom/0.27.3840.2133@0.27.3840.2133" timestamp="1607701029415" />
+    <state width="1534" height="528" key="GridCell.Tab.0.center" timestamp="1607701029414">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
-    <state width="2019" height="771" key="GridCell.Tab.0.center/0.27.3840.2133@0.27.3840.2133" timestamp="1607596705743" />
-    <state width="2019" height="771" key="GridCell.Tab.0.left" timestamp="1607596705743">
+    <state width="1534" height="528" key="GridCell.Tab.0.center/0.27.3840.2133@0.27.3840.2133" timestamp="1607701029414" />
+    <state width="1534" height="528" key="GridCell.Tab.0.left" timestamp="1607701029414">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
-    <state width="2019" height="771" key="GridCell.Tab.0.left/0.27.3840.2133@0.27.3840.2133" timestamp="1607596705743" />
-    <state width="2019" height="771" key="GridCell.Tab.0.right" timestamp="1607596705744">
+    <state width="1534" height="528" key="GridCell.Tab.0.left/0.27.3840.2133@0.27.3840.2133" timestamp="1607701029414" />
+    <state width="1534" height="528" key="GridCell.Tab.0.right" timestamp="1607701029415">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
-    <state width="2019" height="771" key="GridCell.Tab.0.right/0.27.3840.2133@0.27.3840.2133" timestamp="1607596705744" />
+    <state width="1534" height="528" key="GridCell.Tab.0.right/0.27.3840.2133@0.27.3840.2133" timestamp="1607701029415" />
     <state width="1791" height="772" key="GridCell.Tab.1.bottom" timestamp="1607060385260">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
@@ -510,18 +557,18 @@
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
     <state x="1196" y="581" width="1140" height="737" key="SettingsEditor/0.27.3840.2133@0.27.3840.2133" timestamp="1607319595409" />
-    <state x="1102" y="829" width="800" height="535" key="Vcs.Push.Dialog.v2" timestamp="1607321182551">
+    <state x="1102" y="829" width="800" height="535" key="Vcs.Push.Dialog.v2" timestamp="1607625710464">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
-    <state x="1102" y="829" width="800" height="535" key="Vcs.Push.Dialog.v2/0.27.3840.2133@0.27.3840.2133" timestamp="1607321182551" />
+    <state x="1102" y="829" width="800" height="535" key="Vcs.Push.Dialog.v2/0.27.3840.2133@0.27.3840.2133" timestamp="1607625710464" />
     <state width="1630" height="1062" key="XDebugger.FullValuePopup" timestamp="1607587638612">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
     <state width="1630" height="1062" key="XDebugger.FullValuePopup/0.27.3840.2133@0.27.3840.2133" timestamp="1607587638612" />
-    <state x="1472" y="668" width="473" height="585" key="com.goide.refactor.move.GoMoveDeclarationDialog" timestamp="1607581444025">
+    <state x="1472" y="668" width="473" height="585" key="com.goide.refactor.move.GoMoveDeclarationDialog" timestamp="1607698618291">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
-    <state x="1472" y="668" width="473" height="585" key="com.goide.refactor.move.GoMoveDeclarationDialog/0.27.3840.2133@0.27.3840.2133" timestamp="1607581444025" />
+    <state x="1472" y="668" width="473" height="585" key="com.goide.refactor.move.GoMoveDeclarationDialog/0.27.3840.2133@0.27.3840.2133" timestamp="1607698618291" />
     <state x="100" y="127" width="1848" height="1933" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1607277841136">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
@@ -534,10 +581,10 @@
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
     <state x="1414" y="1007" width="432" height="179" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.27.3840.2133@0.27.3840.2133" timestamp="1606812190864" />
-    <state x="1421" y="479" width="754" height="672" key="find.popup" timestamp="1607587360761">
+    <state x="1421" y="479" width="754" height="672" key="find.popup" timestamp="1607706917510">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>
-    <state x="1421" y="479" width="754" height="672" key="find.popup/0.27.3840.2133@0.27.3840.2133" timestamp="1607587360761" />
+    <state x="1421" y="479" width="754" height="672" key="find.popup/0.27.3840.2133@0.27.3840.2133" timestamp="1607706917510" />
     <state x="1753" y="850" width="980" height="508" key="refactoring.ChangeSignatureDialog" timestamp="1607591154308">
       <screen x="0" y="27" width="3840" height="2133" />
     </state>

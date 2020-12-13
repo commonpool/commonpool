@@ -19,7 +19,7 @@ func (g GroupService) CreateOrAcceptInvitation(ctx context.Context, request *gro
 
 	l = l.With(zap.Object("membership", request.MembershipKey))
 
-	userSession, err := auth.GetUserSession(ctx)
+	userSession, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
 		l.Error("could not get user session")
 		return nil, err

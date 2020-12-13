@@ -26,7 +26,7 @@ func TestSearchBySummaryAndType(t *testing.T) {
 	// Creating the resource
 	key := model.NewResourceKey(uuid.NewV4())
 	r := resource.NewResource(key, resource.Offer, "", "author", "a superb summary", "Description", 1, 2)
-	rq := resource.NewCreateResourceQuery(&r)
+	rq := resource.NewCreateResourceQuery(&r, model.NewEmptyGroupKeys())
 
 	assert.NoError(t, rs.Create(rq).Error)
 
@@ -162,7 +162,7 @@ func TestGetResource(t *testing.T) {
 	// Creating the resource
 	key := model.NewResourceKey(uuid.NewV4())
 	r := resource.NewResource(key, resource.Offer, "", user1.Subject, "Summary", "Description", 1, 2)
-	rq := resource.NewCreateResourceQuery(&r)
+	rq := resource.NewCreateResourceQuery(&r, model.NewEmptyGroupKeys())
 	assert.NoError(t, rs.Create(rq).Error)
 
 	// Getting the resource
@@ -235,7 +235,7 @@ func TestUpdateResource(t *testing.T) {
 	// Creating the resource
 	key := model.NewResourceKey(uuid.NewV4())
 	r := resource.NewResource(key, resource.Offer, "", user1.Subject, "Summary", "Description", 1, 2)
-	rq := resource.NewCreateResourceQuery(&r)
+	rq := resource.NewCreateResourceQuery(&r, model.NewEmptyGroupKeys())
 	assert.NoError(t, rs.Create(rq).Error)
 
 	// Setting up the request

@@ -8,25 +8,21 @@ import (
 	"github.com/commonpool/backend/chat"
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
-	"go.uber.org/zap"
 )
 
 func (g GroupService) CancelOrDeclineInvitation(ctx context.Context, request *group.CancelOrDeclineInvitationRequest) error {
 
-	ctx, l := GetCtx(ctx, "GroupService", "CancelOrDeclineInvitation")
+	ctx, _ = GetCtx(ctx, "GroupService", "CancelOrDeclineInvitation")
 
 	membershipKey := request.MembershipKey
-	l = l.With(zap.Object("membership", membershipKey))
 
-	userSession, err := auth.GetUserSession(ctx)
+	userSession, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
-		l.Error("could not get user session")
 		return err
 	}
 
 	membership, err := g.groupStore.GetMembership(ctx, membershipKey)
 	if err != nil {
-		l.Error("could not get membership", zap.Error(err))
 		return err
 	}
 
@@ -39,7 +35,6 @@ func (g GroupService) CancelOrDeclineInvitation(ctx context.Context, request *gr
 
 		err = g.groupStore.DeleteMembership(ctx, membershipKey)
 		if err != nil {
-			l.Error("could not delete membership", zap.Error(err))
 			return err
 		}
 
@@ -49,19 +44,16 @@ func (g GroupService) CancelOrDeclineInvitation(ctx context.Context, request *gr
 		adminMembershipKey := model.NewMembershipKey(membershipKey.GroupKey, userSession.GetUserKey())
 		adminMembership, err := g.groupStore.GetMembership(ctx, adminMembershipKey)
 		if err != nil {
-			l.Error("could not get admin membership", zap.Error(err))
 			return err
 		}
 
 		if !adminMembership.IsAdmin {
 			err := fmt.Errorf("cannot decline invitation if not admin")
-			l.Error(err.Error())
 			return err
 		}
 
 		err = g.groupStore.DeleteMembership(ctx, membershipKey)
 		if err != nil {
-			l.Error("could not delete membership", zap.Error(err))
 			return err
 		}
 	}
@@ -69,20 +61,17 @@ func (g GroupService) CancelOrDeclineInvitation(ctx context.Context, request *gr
 	if wasMember {
 		usernameLeavingGroup, err := g.authStore.GetUsername(membershipKey.UserKey)
 		if err != nil {
-			l.Error("could not get username of user leaving group", zap.Error(err))
 			return err
 		}
 
 		amqpChannel, err := g.amqpClient.GetChannel()
 		if err != nil {
-			l.Error("could not gat amqp client", zap.Error(err))
 			return err
 		}
 
 		channelSubscriptionKey := model.NewChannelSubscriptionKey(membershipKey.GroupKey.GetChannelKey(), membershipKey.UserKey)
 		err = g.chatService.UnsubscribeFromChannel(ctx, channelSubscriptionKey)
 		if err != nil {
-			l.Error("could not unsubscribe to channel", zap.Error(err))
 			return err
 		}
 
@@ -93,13 +82,11 @@ func (g GroupService) CancelOrDeclineInvitation(ctx context.Context, request *gr
 			"x-match":    "all",
 		})
 		if err != nil {
-			l.Error("could not unbind exchanges", zap.Error(err))
 			return err
 		}
 
 		grp, err := g.groupStore.GetGroup(ctx, request.MembershipKey.GroupKey)
 		if err != nil {
-			l.Error("could not get group", zap.Error(err))
 			return err
 		}
 
@@ -111,7 +98,6 @@ func (g GroupService) CancelOrDeclineInvitation(ctx context.Context, request *gr
 
 		_, err = g.chatService.SendGroupMessage(ctx, chat.NewSendGroupMessage(request.MembershipKey.GroupKey, membershipKey.UserKey, usernameLeavingGroup, text, []chat.Block{*message}, []chat.Attachment{}, nil))
 		if err != nil {
-			l.Error("could not send user leaving message", zap.Error(err))
 			return err
 		}
 	}

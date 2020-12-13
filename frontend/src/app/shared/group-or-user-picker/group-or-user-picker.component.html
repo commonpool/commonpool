@@ -1,0 +1,5 @@
+<div class="target-picker">
+  <ng-select name="resource" (ngModelChange)="selectedTargetSubject.next($event)" [ngModel]="selectedTarget$ | async" placeholder="Select group">
+    <ng-option *ngFor="let target of (targets$ | async)?.items" [value]="{'type': target.type, 'userId': target.userId, groupId: target.groupId}">{{target.name}}</ng-option>
+  </ng-select>
+</div>

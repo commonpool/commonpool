@@ -54,8 +54,8 @@ func SetIsAuthenticated(e echo.Context, isAuthenticated bool) {
 	e.Set(IsAuthenticatedKey, isAuthenticated)
 }
 
-// GetUserSession gets the user session from the context
-func GetUserSession(ctx context.Context) (*UserSession, error) {
+// GetLoggedInUser gets the user session from the context
+func GetLoggedInUser(ctx context.Context) (*UserSession, error) {
 
 	valIntf := ctx.Value(IsAuthenticatedKey)
 

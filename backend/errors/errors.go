@@ -2,9 +2,6 @@ package errors
 
 import (
 	"fmt"
-	route "github.com/commonpool/backend/router"
-	"github.com/go-playground/validator/v10"
-	"github.com/labstack/echo/v4"
 	"net/http"
 )
 
@@ -81,72 +78,7 @@ type ValidErrors struct {
 	Trans   map[string]string `json:"trans"`
 }
 
-func NewValidError(validerr validator.ValidationErrors) ValidErrors {
-
-	var validErrors []ValidError
-
-	for _, err := range validerr {
-		validErrors = append(validErrors, ValidError{
-			Tag:             err.Tag(),
-			ActualTag:       err.ActualTag(),
-			Namespace:       err.Namespace(),
-			StructNamespace: err.StructNamespace(),
-			Field:           err.Field(),
-			StructField:     err.StructField(),
-			Param:           err.Param(),
-			Kind:            err.Kind().String(),
-			Type:            err.Type().String(),
-		})
-	}
-
-	translation := validerr.Translate(route.Trans)
-
-	if validErrors == nil {
-		validErrors = []ValidError{}
-	}
-
-	return ValidErrors{
-		Message: validerr.Error(),
-		Errors:  validErrors,
-		Trans:   translation,
-	}
-
-}
-
-func ReturnException(c echo.Context, err error) error {
-	if ws, ok := err.(*WebServiceException); ok {
-		return c.JSON(ws.Status, &ErrorResponse{
-			Message:    ws.Message,
-			Code:       ws.Code,
-			StatusCode: ws.Status,
-		})
-	}
-
-	if ve, ok := err.(*validator.ValidationErrors); ok {
-		return c.JSON(http.StatusBadRequest, ve)
-	}
-
-	return c.JSON(http.StatusInternalServerError, &ErrorResponse{
-		Message:    "Internal server error",
-		Code:       "ErrInternalServerError",
-		StatusCode: http.StatusInternalServerError,
-	})
-
-}
-
 var (
-	ErrCreateResourceBadRequest = func(err error) ErrorResponse {
-		return NewError("could not process create resource request: "+err.Error(), "ErrCreateResourceBadRequest", http.StatusBadRequest)
-	}
-	ErrUpdateResourceBadRequest = func(err error) ErrorResponse {
-		return NewError("could not process update resource request: "+err.Error(), "ErrUpdateResourceBadRequest", http.StatusBadRequest)
-	}
-	ErrSendResourceMsgBadRequest = func(err error) ErrorResponse {
-		return NewError("could not process send message request: "+err.Error(), "ErrSendResourceMsgBadRequest", http.StatusBadRequest)
-	}
-	ErrSendOfferBadRequest = func(err error) ErrorResponse {
-		return NewError("could not process send offer request: "+err.Error(), "ErrSendOfferBadRequest", http.StatusBadRequest)
-	}
 	ErrValidation = func(msg string) *ErrorResponse {
 		err := NewError("validation error: "+msg, "ErrValidation", http.StatusBadRequest)
 		return &err

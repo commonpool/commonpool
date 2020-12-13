@@ -46,10 +46,13 @@ var groupCounter = 0
 func testGroup(t *testing.T, owner *auth.UserSession, members ...*auth.UserSession) *web.Group {
 	ctx := context.Background()
 	groupCounter++
-	response, httpResponse := CreateGroup(t, ctx, owner, &web.CreateGroupRequest{
+	response, httpResponse, err := CreateGroup(t, ctx, owner, &web.CreateGroupRequest{
 		Name:        "group-" + strconv.Itoa(groupCounter),
 		Description: "group-" + strconv.Itoa(groupCounter),
 	})
+	if err != nil {
+		t.Fatal(err)
+	}
 	if httpResponse.StatusCode != http.StatusCreated {
 		t.Fatalf("could not create group")
 	}

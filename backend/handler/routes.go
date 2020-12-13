@@ -56,12 +56,6 @@ func (h *Handler) Register(v1 *echo.Group) {
 	memberships.POST("", h.CreateOrAcceptMembership)
 	memberships.DELETE("", h.CancelOrDeclineInvitation)
 
-	chat := v1.Group("/chat", h.authorization.Authenticate(true))
-	chat.GET("/messages", h.GetMessages)
-	chat.GET("/subscriptions", h.GetRecentlyActiveSubscriptions)
-	chat.POST("/:id", h.SendMessage)
-	chat.POST("/interaction", h.SubmitInteraction)
-
 	v1.POST("/chatback", h.Chatback, h.authorization.Authenticate(true))
 	v1.GET("/ws", h.Websocket, h.authorization.Authenticate(false))
 

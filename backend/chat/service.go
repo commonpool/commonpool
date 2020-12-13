@@ -4,9 +4,14 @@ import (
 	ctx "context"
 	"github.com/commonpool/backend/model"
 	"golang.org/x/net/context"
+	"time"
 )
 
 type Service interface {
+	GetMessages(ctx context.Context, userKey model.UserKey, channel model.ChannelKey, before time.Time, take int) (*GetMessagesResponse, error)
+	GetUserSubscriptions(ctx context.Context, userKey model.UserKey, take int, skip int) (*ChannelSubscriptions, error)
+	GetChannel(ctx context.Context, channelKey model.ChannelKey) (*Channel, error)
+	GetMessage(ctx context.Context, messageKey model.MessageKey) (*Message, error)
 	NotifyUserInterestedAboutResource(ctx ctx.Context, request *NotifyUserInterestedAboutResource) (*NotifyUserInterestedAboutResourceResponse, error)
 	CreateChannel(ctx ctx.Context, channelKey model.ChannelKey, channelType ChannelType) (*Channel, error)
 	SubscribeToChannel(ctx ctx.Context, channelSubscriptionKey model.ChannelSubscriptionKey, name string) (*ChannelSubscription, error)

@@ -80,6 +80,17 @@ const (
 	callbackTokenEnv                = "CALLBACK_TOKEN_FILE"
 	callbackTokenVolumeName         = "callback-token"
 	callbackTokenSecretKey          = "callback-token"
+	boltUrlVolumeName               = "bolt-url"
+	boltUrlEnv                      = "BOLT_URL"
+	boltUsernameVolumeName          = "bolt-username"
+	boltUsernameFileEnv             = "BOLT_USERNAME_FILE"
+	boltUsernameSubPath             = "bolt-username"
+	boltUsernamePath                = "/secrets/bolt-username"
+	boltPasswordVolumeName          = "bolt-password"
+	boltPasswordFileEnv             = "BOLT_PASSWORD_FILE"
+	boltPasswordSubPath             = "bolt-password"
+	boltPasswordPath                = "/secrets/bolt-password"
+	neo4jDatabaseName               = "NEO4J_DATABASE_NAME"
 )
 
 // CommonpoolInstallationReconciler reconciles a CommonpoolInstallation object
@@ -550,6 +561,18 @@ func (r *CommonpoolInstallationReconciler) newBackendDeployment(installation *ap
 									MountPath: callbackTokenSecretPath,
 									SubPath:   callbackTokenSecretKey,
 								},
+								{
+									Name:      boltUsernameVolumeName,
+									ReadOnly:  true,
+									MountPath: boltUsernamePath,
+									SubPath:   boltUsernameSubPath,
+								},
+								{
+									Name:      boltPasswordVolumeName,
+									ReadOnly:  true,
+									MountPath: boltPasswordPath,
+									SubPath:   boltPasswordSubPath,
+								},
 							},
 							Env: []k8scorev1.EnvVar{
 								{
@@ -595,6 +618,26 @@ func (r *CommonpoolInstallationReconciler) newBackendDeployment(installation *ap
 								{
 									Name:  callbackTokenEnv,
 									Value: callbackTokenSecretPath,
+								},
+								{
+									Name:  boltUsernameFileEnv,
+									Value: boltUsernamePath,
+								},
+								{
+									Name:  boltPasswordFileEnv,
+									Value: boltPasswordPath,
+								},
+								{
+									Name:  boltUrlEnv,
+									Value: installation.Spec.BoltUrl,
+								},
+								{
+									Name:  neo4jDatabaseName,
+									Value: installation.Spec.Neo4jDatabaseName,
+								},
+								{
+									Name:  "SECURE_COOKIES",
+									Value: "true",
 								},
 							},
 						},
@@ -679,6 +722,34 @@ func (r *CommonpoolInstallationReconciler) newBackendDeployment(installation *ap
 										{
 											Key:  installation.Spec.CallbackTokenSecretKey,
 											Path: callbackTokenSecretKey,
+											Mode: &readOnlyMode,
+										},
+									},
+								},
+							},
+						}, {
+							Name: boltUsernameVolumeName,
+							VolumeSource: k8scorev1.VolumeSource{
+								Secret: &k8scorev1.SecretVolumeSource{
+									SecretName: installation.Spec.BoltUsernameSecret,
+									Items: []k8scorev1.KeyToPath{
+										{
+											Key:  installation.Spec.BoltUsernameSecretKey,
+											Path: boltUsernameSubPath,
+											Mode: &readOnlyMode,
+										},
+									},
+								},
+							},
+						}, {
+							Name: boltPasswordVolumeName,
+							VolumeSource: k8scorev1.VolumeSource{
+								Secret: &k8scorev1.SecretVolumeSource{
+									SecretName: installation.Spec.BoltPasswordSecret,
+									Items: []k8scorev1.KeyToPath{
+										{
+											Key:  installation.Spec.BoltPasswordSecretKey,
+											Path: boltPasswordSubPath,
 											Mode: &readOnlyMode,
 										},
 									},

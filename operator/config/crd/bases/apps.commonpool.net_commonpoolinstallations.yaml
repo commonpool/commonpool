@@ -41,6 +41,16 @@ spec:
               description: BackendImage Overrides the docker image used for the backend
                 service
               type: string
+            boltPasswordSecret:
+              type: string
+            boltPasswordSecretKey:
+              type: string
+            boltUrl:
+              type: string
+            boltUsernameSecret:
+              type: string
+            boltUsernameSecretKey:
+              type: string
             callbackTokenSecret:
               type: string
             callbackTokenSecretKey:
@@ -66,6 +76,8 @@ spec:
             ingressHost:
               description: IngressHost Specifies the host for the kubernetes ingress
               type: string
+            neo4jDatabaseName:
+              type: string
             oidcClientIdSecret:
               type: string
             oidcClientIdSecretKey:
@@ -83,6 +95,11 @@ spec:
             websocketHost:
               type: string
           required:
+          - boltPasswordSecret
+          - boltPasswordSecretKey
+          - boltUrl
+          - boltUsernameSecret
+          - boltUsernameSecretKey
           - callbackTokenSecret
           - callbackTokenSecretKey
           - databaseHost
@@ -92,6 +109,7 @@ spec:
           - databasePort
           - databaseUserSecret
           - databaseUserSecretKey
+          - neo4jDatabaseName
           - oidcClientIdSecret
           - oidcClientIdSecretKey
           - oidcClientSecretSecret

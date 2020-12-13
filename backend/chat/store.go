@@ -79,15 +79,6 @@ type GetMessages struct {
 	UserKey model.UserKey
 }
 
-func NewGetMessages(userKey model.UserKey, channel model.ChannelKey, before time.Time, take int) *GetMessages {
-	return &GetMessages{
-		Take:    take,
-		Before:  before,
-		Channel: channel,
-		UserKey: userKey,
-	}
-}
-
 type GetMessagesResponse struct {
 	Messages Messages
 	HasMore  bool

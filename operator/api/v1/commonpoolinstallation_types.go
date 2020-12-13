@@ -45,6 +45,12 @@ type CommonpoolInstallationSpec struct {
 	RabbitMqUrlSecretKey      string `json:"rabbitMqUrlSecretKey"`
 	CallbackTokenSecret       string `json:"callbackTokenSecret"`
 	CallbackTokenSecretKey    string `json:"callbackTokenSecretKey"`
+	BoltUrl                   string `json:"boltUrl"`
+	BoltUsernameSecret        string `json:"boltUsernameSecret"`
+	BoltUsernameSecretKey     string `json:"boltUsernameSecretKey"`
+	BoltPasswordSecret        string `json:"boltPasswordSecret"`
+	BoltPasswordSecretKey     string `json:"boltPasswordSecretKey"`
+	Neo4jDatabaseName         string `json:"neo4jDatabaseName"`
 }
 
 // CommonpoolInstallationStatus defines the observed state of CommonpoolInstallation

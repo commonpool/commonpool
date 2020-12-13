@@ -7,8 +7,6 @@ import (
 	enTranslations "github.com/go-playground/validator/v10/translations/en"
 )
 
-var Trans ut.Translator
-
 var DefaultValidator = NewValidator()
 
 func NewValidator() *Validator {
@@ -19,8 +17,6 @@ func NewValidator() *Validator {
 		uni      = ut.New(enLocale, enLocale)
 		trans, _ = uni.GetTranslator("en")
 	)
-
-	Trans = trans
 
 	_ = enTranslations.RegisterDefaultTranslations(validate, trans)
 

@@ -268,7 +268,7 @@ func (h *Handler) Websocket(c echo.Context) error {
 		return true
 	}
 
-	userSession, err := auth.GetUserSession(ctx)
+	userSession, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
 		return h.websocketAnonymous(ctx, c.Response(), c.Request())
 	}

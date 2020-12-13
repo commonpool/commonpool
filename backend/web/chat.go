@@ -20,6 +20,23 @@ type Subscription struct {
 	Type                chat.ChannelType `json:"type"`
 }
 
+func MapSubscription(channel *chat.Channel, subscription *chat.ChannelSubscription) *Subscription {
+	return &Subscription{
+		ChannelID:           channel.ID,
+		UserID:              subscription.UserID,
+		HasUnreadMessages:   subscription.LastMessageAt.After(subscription.LastTimeRead),
+		CreatedAt:           subscription.CreatedAt,
+		UpdatedAt:           subscription.UpdatedAt,
+		LastMessageAt:       subscription.LastMessageAt,
+		LastTimeRead:        subscription.LastTimeRead,
+		LastMessageChars:    subscription.LastMessageChars,
+		LastMessageUserId:   subscription.LastMessageUserId,
+		LastMessageUserName: subscription.LastMessageUserName,
+		Name:                subscription.Name,
+		Type:                channel.Type,
+	}
+}
+
 type Message struct {
 	ID             string              `json:"id"`
 	ChannelID      string              `json:"channelId"`
@@ -32,6 +49,27 @@ type Message struct {
 	Blocks         []chat.Block        `json:"blocks"`
 	Attachments    []chat.Attachment   `json:"attachments"`
 	VisibleToUser  *string             `json:"visibleToUser"`
+}
+
+func MapMessage(message *chat.Message) *Message {
+	var visibleToUser *string = nil
+	if message.VisibleToUser != nil {
+		visibleToUserStr := message.VisibleToUser.String()
+		visibleToUser = &visibleToUserStr
+	}
+	return &Message{
+		ID:             message.Key.String(),
+		ChannelID:      message.ChannelKey.String(),
+		MessageType:    message.MessageType,
+		MessageSubType: message.MessageSubType,
+		SentById:       message.SentBy.UserKey.String(),
+		SentByUsername: message.SentBy.USername,
+		SentAt:         message.SentAt,
+		Text:           message.Text,
+		Blocks:         message.Blocks,
+		Attachments:    message.Attachments,
+		VisibleToUser:  visibleToUser,
+	}
 }
 
 type GetLatestSubscriptionsResponse struct {

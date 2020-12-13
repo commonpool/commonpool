@@ -48,6 +48,10 @@ func NewGroupKeys(groupKeys []GroupKey) *GroupKeys {
 	}
 }
 
+func NewEmptyGroupKeys() *GroupKeys {
+	return NewGroupKeys([]GroupKey{})
+}
+
 func (k GroupKeys) Strings() []string {
 	var groupKeys []string
 	for _, groupKey := range k.Items {
