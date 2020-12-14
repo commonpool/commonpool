@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -22,7 +23,7 @@ import (
 // @Router /users/:id/memberships [get]
 func (h *Handler) GetUserMemberships(c echo.Context) error {
 
-	ctx, _ := GetEchoContext(c, "GetUserMemberships")
+	ctx, _ := handler.GetEchoContext(c, "GetUserMemberships")
 
 	var membershipStatus = group.AnyMembershipStatus()
 	statusStr := c.QueryParam("status")

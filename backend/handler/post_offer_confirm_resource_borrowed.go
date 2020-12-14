@@ -2,13 +2,14 @@ package handler
 
 import (
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/handler"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
 
 func (h *Handler) HandleConfirmResourceBorrowed(c echo.Context) error {
 
-	ctx, _ := GetEchoContext(c, "HandleConfirmResourceBorrowed")
+	ctx, _ := handler.GetEchoContext(c, "HandleConfirmResourceBorrowed")
 
 	offerItemKey, err := model.ParseOfferItemKey(c.Param("id"))
 	if err != nil {

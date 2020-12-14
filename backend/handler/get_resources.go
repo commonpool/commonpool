@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/utils"
 	"github.com/commonpool/backend/web"
@@ -29,7 +30,7 @@ import (
 // @Router /resources [get]
 func (h *Handler) SearchResources(c echo.Context) error {
 
-	ctx, _ := GetEchoContext(c, "SearchResources")
+	ctx, _ := handler.GetEchoContext(c, "SearchResources")
 
 	skip, err := utils.ParseSkip(c)
 	if err != nil {

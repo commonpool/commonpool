@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"github.com/commonpool/backend/amqp"
 	"github.com/commonpool/backend/auth"
-	"github.com/commonpool/backend/chat"
 	errs "github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/chat"
 	"go.uber.org/zap"
 )
 

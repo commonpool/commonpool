@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
@@ -21,7 +22,7 @@ import (
 // @Router /memberships [delete]
 func (h *Handler) CancelOrDeclineInvitation(c echo.Context) error {
 
-	ctx, l := GetEchoContext(c, "CancelOrDeclineInvitation")
+	ctx, l := handler.GetEchoContext(c, "CancelOrDeclineInvitation")
 
 	req := web.CancelOrDeclineInvitationRequest{}
 	if err := c.Bind(&req); err != nil {

@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
@@ -23,7 +25,7 @@ import (
 // @Router /resources [post]
 func (h *Handler) CreateResource(c echo.Context) error {
 
-	ctx, _ := GetEchoContext(c, "CreateResource")
+	ctx, _ := handler.GetEchoContext(c, "CreateResource")
 
 	var err error
 
@@ -42,15 +44,17 @@ func (h *Handler) CreateResource(c echo.Context) error {
 	req.Resource.Description = strings.TrimSpace(req.Resource.Description)
 
 	// get logged in user
-	loggedInUserSession := h.authorization.GetAuthUserSession(c)
-
+	loggedInUser, err := auth.GetLoggedInUser(ctx)
+	if err != nil {
+		return err
+	}
 	// getting group keys that resource is shared with
 	sharedWithGroupKeys, err, done := h.parseGroupKeys(c, req.Resource.SharedWith)
 	if done {
 		return err
 	}
 
-	err, done = h.ensureResourceIsSharedWithGroupsTheUserIsActiveMemberOf(c, loggedInUserSession.GetUserKey(), sharedWithGroupKeys)
+	err, done = h.ensureResourceIsSharedWithGroupsTheUserIsActiveMemberOf(c, loggedInUser.GetUserKey(), sharedWithGroupKeys)
 	if done {
 		return err
 	}
@@ -60,7 +64,7 @@ func (h *Handler) CreateResource(c echo.Context) error {
 		model.NewResourceKey(uuid.NewV4()),
 		newResource.Type,
 		newResource.SubType,
-		loggedInUserSession.Subject,
+		loggedInUser.Subject,
 		newResource.Summary,
 		newResource.Description,
 		newResource.ValueInHoursFrom,
@@ -84,6 +88,6 @@ func (h *Handler) CreateResource(c echo.Context) error {
 
 	// send response
 	return c.JSON(http.StatusCreated, web.CreateResourceResponse{
-		Resource: NewResourceResponse(&res, loggedInUserSession.Username, loggedInUserSession.Subject, groups),
+		Resource: NewResourceResponse(&res, loggedInUser.Username, loggedInUser.Subject, groups),
 	})
 }

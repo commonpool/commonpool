@@ -26,7 +26,7 @@ type Channel interface {
 	QueueUnbind(ctx context.Context, name string, key string, exchange string, args Args) error
 	QueueDelete(ctx context.Context, name string, ifUnused bool, ifEmpty bool, noWait bool) error
 	Consume(ctx context.Context, queue string, consumer string, autoAck bool, exclusive bool, noLocal bool, noWait bool, args Args) (<-chan Delivery, error)
-	Publish(ctx context.Context, exchange string, key string, mandatory bool, immediate bool, publishing Publishing) error
+	Publish(ctx context.Context, exchange string, key string, mandatory bool, immediate bool, publishing Message) error
 }
 
 type Ack interface {
@@ -74,7 +74,7 @@ func (r RabbitMqClient) Shutdown() error {
 	return nil
 }
 
-func (r RabbitMqChannel) Publish(ctx context.Context, exchange string, key string, mandatory bool, immediate bool, publishing Publishing) error {
+func (r RabbitMqChannel) Publish(ctx context.Context, exchange string, key string, mandatory bool, immediate bool, publishing Message) error {
 	return r.channel.Publish(exchange, key, mandatory, immediate, amqp.Publishing{
 		Headers:         map[string]interface{}(publishing.Headers),
 		ContentType:     publishing.ContentType,

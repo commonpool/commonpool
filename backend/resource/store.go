@@ -1,14 +1,14 @@
 package resource
 
 import (
-	ctx "context"
+	"context"
 	"github.com/commonpool/backend/model"
 )
 
 type Store interface {
-	GetByKey(ctx ctx.Context, getResourceByKeyQuery *GetResourceByKeyQuery) (*GetResourceByKeyResponse, error)
-	GetByKeys(ctx ctx.Context, resourceKeys *model.ResourceKeys) (*GetResourceByKeysResponse, error)
-	Search(context ctx.Context, searchResourcesQuery *SearchResourcesQuery) *SearchResourcesResponse
+	GetByKey(ctx context.Context, getResourceByKeyQuery *GetResourceByKeyQuery) (*GetResourceByKeyResponse, error)
+	GetByKeys(ctx context.Context, resourceKeys *model.ResourceKeys) (*GetResourceByKeysResponse, error)
+	Search(ctx context.Context, searchResourcesQuery *SearchResourcesQuery) *SearchResourcesResponse
 	Delete(deleteResourceQuery *DeleteResourceQuery) *DeleteResourceResponse
 	Create(createResourceQuery *CreateResourceQuery) *CreateResourceResponse
 	Update(updateResourceQuery *UpdateResourceQuery) *UpdateResourceResponse

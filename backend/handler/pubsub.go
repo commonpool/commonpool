@@ -8,6 +8,7 @@ import (
 	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/logging"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/utils"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
@@ -76,7 +77,7 @@ func (c *Client) readPump() {
 
 func (c *Client) eventPump(ctx context.Context) error {
 
-	ctx, l := GetCtx(ctx, "eventPump")
+	ctx, l := handler.GetCtx(ctx, "eventPump")
 
 	ch, err := c.amqpChannel.Consume(ctx, *c.queueName, *c.consumerKey, false, false, false, false, nil)
 	if err != nil {
@@ -262,7 +263,7 @@ func (h *Handler) websocketAnonymous(ctx context.Context, response *echo.Respons
 
 func (h *Handler) Websocket(c echo.Context) error {
 
-	ctx, l := GetEchoContext(c, "Websocket")
+	ctx, l := handler.GetEchoContext(c, "Websocket")
 
 	upgrader.CheckOrigin = func(r *http.Request) bool {
 		return true

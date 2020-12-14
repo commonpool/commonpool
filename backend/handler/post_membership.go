@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -20,7 +21,7 @@ import (
 // @Router /groups/memberships [post]
 func (h *Handler) CreateOrAcceptMembership(c echo.Context) error {
 
-	ctx, _ := GetEchoContext(c, "CreateOrAcceptInvitation")
+	ctx, _ := handler.GetEchoContext(c, "CreateOrAcceptInvitation")
 
 	req := web.CreateOrAcceptInvitationRequest{}
 	if err := c.Bind(&req); err != nil {

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -9,7 +10,7 @@ import (
 
 func (h *Handler) GetTradingHistory(c echo.Context) error {
 
-	ctx, _ := GetEchoContext(c, "GetTradingHistory")
+	ctx, _ := handler.GetEchoContext(c, "GetTradingHistory")
 
 	req := web.GetTradingHistoryRequest{}
 	if err := c.Bind(&req); err != nil {

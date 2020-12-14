@@ -4,6 +4,7 @@ import (
 	. "github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
@@ -13,7 +14,7 @@ import (
 
 func (h *Handler) ensureResourceIsSharedWithGroupsTheUserIsActiveMemberOf(c echo.Context, loggedInUserKey model.UserKey, sharedWithGroups *model.GroupKeys) (error, bool) {
 
-	ctx, l := GetEchoContext(c, "ensureResourceIsSharedWithGroupsTheUserIsActiveMemberOf")
+	ctx, l := handler.GetEchoContext(c, "ensureResourceIsSharedWithGroupsTheUserIsActiveMemberOf")
 
 	var membershipStatus = group.ApprovedMembershipStatus
 

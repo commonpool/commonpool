@@ -18,7 +18,7 @@ import (
 	"strings"
 )
 
-// IAuth OIDC Implementation
+// Authenticator OIDC Implementation
 type OidcAuthenticator struct {
 	appConfig    *config.AppConfig
 	oauth2Config oauth2.Config
@@ -26,6 +26,10 @@ type OidcAuthenticator struct {
 	oidcProvider *oidc.Provider
 	verifier     *oidc.IDTokenVerifier
 	authStore    Store
+}
+
+func (a *OidcAuthenticator) GetLoggedInUser(ctx context.Context) (model.UserReference, error) {
+	return GetLoggedInUser(ctx)
 }
 
 func (a *OidcAuthenticator) GetRedirectResponse(request *http.Request) (*RedirectResponse, error) {
@@ -40,51 +44,6 @@ func (a *OidcAuthenticator) GetRedirectResponse(request *http.Request) (*Redirec
 		},
 	}
 	return response, nil
-}
-
-// GetAuthenticatedUser gets the current authenticated user
-func (a *OidcAuthenticator) GetAuthUserSession(c echo.Context) UserSession {
-	var isAuthenticated = c.Get(IsAuthenticatedKey).(bool)
-	if !isAuthenticated {
-		return UserSession{
-			Username:        "",
-			Subject:         "",
-			Email:           "",
-			IsAuthenticated: false,
-		}
-	}
-	return UserSession{
-		Username:        c.Get(SubjectUsernameKey).(string),
-		Subject:         c.Get(SubjectKey).(string),
-		Email:           c.Get(SubjectEmailKey).(string),
-		IsAuthenticated: isAuthenticated,
-	}
-}
-
-// GetAuthenticatedUser gets the current authenticated user
-func (a *OidcAuthenticator) GetAuthUserSession2(c context.Context) UserSession {
-
-	var isAuthenticatedIntf = c.Value(IsAuthenticatedKey)
-
-	if isAuthenticated, ok := isAuthenticatedIntf.(bool); !ok || !isAuthenticated {
-		return UserSession{
-			Username:        "",
-			Subject:         "",
-			Email:           "",
-			IsAuthenticated: false,
-		}
-	}
-
-	return UserSession{
-		Username:        c.Value(SubjectUsernameKey).(string),
-		Subject:         c.Value(SubjectKey).(string),
-		Email:           c.Value(SubjectEmailKey).(string),
-		IsAuthenticated: true,
-	}
-}
-
-func (a *OidcAuthenticator) GetAuthUserKey(c echo.Context) model.UserKey {
-	return model.NewUserKey(c.Get(SubjectKey).(string))
 }
 
 func (a *OidcAuthenticator) Login() echo.HandlerFunc {

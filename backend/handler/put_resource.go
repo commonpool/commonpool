@@ -6,6 +6,7 @@ import (
 	"github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
@@ -28,7 +29,7 @@ import (
 // @Router /resources [put]
 func (h *Handler) UpdateResource(c echo.Context) error {
 
-	ctx, l := GetEchoContext(c, "UpdateResource")
+	ctx, l := handler.GetEchoContext(c, "UpdateResource")
 
 	c.Logger().Debug("UpdateResource: updating resource")
 	req := web.UpdateResourceRequest{}

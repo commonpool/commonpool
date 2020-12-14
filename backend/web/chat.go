@@ -1,7 +1,7 @@
 package web
 
 import (
-	"github.com/commonpool/backend/chat"
+	"github.com/commonpool/backend/pkg/chat"
 	"time"
 )
 
@@ -22,15 +22,15 @@ type Subscription struct {
 
 func MapSubscription(channel *chat.Channel, subscription *chat.ChannelSubscription) *Subscription {
 	return &Subscription{
-		ChannelID:           channel.ID,
-		UserID:              subscription.UserID,
+		ChannelID:           channel.Key.String(),
+		UserID:              subscription.UserKey.String(),
 		HasUnreadMessages:   subscription.LastMessageAt.After(subscription.LastTimeRead),
 		CreatedAt:           subscription.CreatedAt,
 		UpdatedAt:           subscription.UpdatedAt,
 		LastMessageAt:       subscription.LastMessageAt,
 		LastTimeRead:        subscription.LastTimeRead,
 		LastMessageChars:    subscription.LastMessageChars,
-		LastMessageUserId:   subscription.LastMessageUserId,
+		LastMessageUserId:   subscription.LastMessageUserKey.String(),
 		LastMessageUserName: subscription.LastMessageUserName,
 		Name:                subscription.Name,
 		Type:                channel.Type,
@@ -63,7 +63,7 @@ func MapMessage(message *chat.Message) *Message {
 		MessageType:    message.MessageType,
 		MessageSubType: message.MessageSubType,
 		SentById:       message.SentBy.UserKey.String(),
-		SentByUsername: message.SentBy.USername,
+		SentByUsername: message.SentBy.Username,
 		SentAt:         message.SentAt,
 		Text:           message.Text,
 		Blocks:         message.Blocks,
@@ -81,7 +81,7 @@ type InquireAboutResourceRequest struct {
 }
 
 type SendMessageRequest struct {
-	Message string `json:"message"`
+	Message string `json:"message,omitempty" validate:"notblank,required,min=1,max=2000"`
 }
 
 type GetLatestMessageThreadsResponse struct {

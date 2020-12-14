@@ -11,8 +11,7 @@ import (
 func ParseSkip(c echo.Context) (int, error) {
 	skip, err := ParseQueryParamInt(c, "skip", 0)
 	if err != nil {
-		response := errors.ErrParseSkip(err.Error())
-		return 0, &response
+		return 0, errors.ErrInvalidSkipQueryParam
 	}
 	if skip < 0 {
 		skip = 0
@@ -23,8 +22,7 @@ func ParseSkip(c echo.Context) (int, error) {
 func ParseBefore(c echo.Context) (*time.Time, error) {
 	before, err := ParseQueryParamTimestamp(c, "before")
 	if err != nil {
-		response := errors.ErrParseBefore(err.Error())
-		return nil, &response
+		return nil, errors.ErrInvalidBeforeQueryParam
 	}
 	return before, nil
 }
@@ -32,8 +30,7 @@ func ParseBefore(c echo.Context) (*time.Time, error) {
 func ParseTake(c echo.Context, defaultTake int, maxTake int) (int, error) {
 	take, err := ParseQueryParamInt(c, "take", defaultTake)
 	if err != nil {
-		response := errors.ErrParseTake(err.Error())
-		return 0, &response
+		return 0, errors.ErrInvalidTakeQueryParam
 	}
 	if take < 0 {
 		take = 0

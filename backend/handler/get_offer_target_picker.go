@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/trading"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
@@ -11,7 +12,7 @@ import (
 
 func (h *Handler) HandleOfferItemTargetPicker(c echo.Context) error {
 
-	ctx, _ := GetEchoContext(c, "HandleOfferItemTargetPicker")
+	ctx, _ := handler.GetEchoContext(c, "HandleOfferItemTargetPicker")
 
 	groupKey, err := group.ParseGroupKey(c.QueryParams().Get("group_id"))
 	if err != nil {

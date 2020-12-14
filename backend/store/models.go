@@ -2,29 +2,13 @@ package store
 
 import (
 	"fmt"
-	"github.com/commonpool/backend/chat"
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/resource"
 	"github.com/mitchellh/mapstructure"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
-	uuid "github.com/satori/go.uuid"
 	"time"
 )
-
-type Message struct {
-	ID             uuid.UUID `gorm:"type:uuid;primary_key"`
-	ChannelID      string
-	MessageType    chat.MessageType
-	MessageSubType chat.MessageSubType
-	SentById       string
-	SentByUsername string
-	SentAt         time.Time
-	Text           string
-	Blocks         string `gorm:"type:jsonb"`
-	Attachments    string `gorm:"type:jsonb"`
-	VisibleToUser  *string
-}
 
 type GraphGroup struct {
 	ID          string    `mapstructure:"id"`

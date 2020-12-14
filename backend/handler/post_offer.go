@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/trading"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
@@ -12,7 +13,7 @@ import (
 
 func (h *Handler) HandleSendOffer(c echo.Context) error {
 
-	ctx, _ := GetEchoContext(c, "HandleSendOffer")
+	ctx, _ := handler.GetEchoContext(c, "HandleSendOffer")
 
 	var err error
 

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/commonpool/backend/auth"
+	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -9,7 +10,7 @@ import (
 
 func (h *Handler) HandleGetOffers(c echo.Context) error {
 
-	ctx, _ := GetEchoContext(c, "HandleGetOffers")
+	ctx, _ := handler.GetEchoContext(c, "HandleGetOffers")
 
 	loggedInUser, err := auth.GetLoggedInUser(ctx)
 	if err != nil {

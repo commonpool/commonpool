@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/trading"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
@@ -41,7 +42,7 @@ func (h *Handler) Chatback(c echo.Context) error {
 
 func (h *Handler) HandleChatbackConfirmServiceProvided(c echo.Context, req web.InteractionCallback) error {
 
-	ctx, l := GetEchoContext(c, "HandleChatbackConfirmServiceProvided")
+	ctx, l := handler.GetEchoContext(c, "HandleChatbackConfirmServiceProvided")
 
 	// retrieving item id from payload
 	offerItemId := req.Payload.Actions[0].Value
@@ -63,7 +64,7 @@ func (h *Handler) HandleChatbackConfirmServiceProvided(c echo.Context, req web.I
 
 func (h *Handler) HandleChatbackConfirmResourceTransferred(c echo.Context, req web.InteractionCallback) error {
 
-	ctx, l := GetEchoContext(c, "HandleChatbackConfirmResourceTransferred")
+	ctx, l := handler.GetEchoContext(c, "HandleChatbackConfirmResourceTransferred")
 
 	// retrieving item id from payload
 	offerItemId := req.Payload.Actions[0].Value
@@ -85,7 +86,7 @@ func (h *Handler) HandleChatbackConfirmResourceTransferred(c echo.Context, req w
 
 func (h *Handler) HandleChatbackConfirmResourceBorrowed(c echo.Context, req web.InteractionCallback) error {
 
-	ctx, l := GetEchoContext(c, "HandleChatbackConfirmResourceBorrowed")
+	ctx, l := handler.GetEchoContext(c, "HandleChatbackConfirmResourceBorrowed")
 
 	// retrieving item id from payload
 	offerItemId := req.Payload.Actions[0].Value
@@ -107,7 +108,7 @@ func (h *Handler) HandleChatbackConfirmResourceBorrowed(c echo.Context, req web.
 
 func (h *Handler) HandleChatbackConfirmResourceBorrowedReturned(c echo.Context, req web.InteractionCallback) error {
 
-	ctx, l := GetEchoContext(c, "HandleChatbackConfirmResourceBorrowed")
+	ctx, l := handler.GetEchoContext(c, "HandleChatbackConfirmResourceBorrowed")
 
 	// retrieving item id from payload
 	offerItemId := req.Payload.Actions[0].Value
@@ -129,7 +130,7 @@ func (h *Handler) HandleChatbackConfirmResourceBorrowedReturned(c echo.Context, 
 
 func (h *Handler) HandleChatbackOfferAccepted(c echo.Context, req web.InteractionCallback) error {
 
-	ctx, l := GetEchoContext(c, "HandleChatbackOfferAccepted")
+	ctx, l := handler.GetEchoContext(c, "HandleChatbackOfferAccepted")
 
 	offerId := req.Payload.Actions[0].Value
 	if offerId == nil {

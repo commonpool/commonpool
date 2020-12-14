@@ -4,6 +4,7 @@ import (
 	"github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"github.com/satori/go.uuid"
@@ -24,7 +25,7 @@ import (
 // @Router /groups [post]
 func (h *Handler) CreateGroup(c echo.Context) error {
 
-	ctx, _ := GetEchoContext(c, "CreateGroup")
+	ctx, _ := handler.GetEchoContext(c, "CreateGroup")
 
 	req := web.CreateGroupRequest{}
 	if err := c.Bind(&req); err != nil {

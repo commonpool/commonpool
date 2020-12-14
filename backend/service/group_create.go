@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 	"github.com/commonpool/backend/auth"
-	"github.com/commonpool/backend/chat"
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/chat"
 )
 
 func (g GroupService) CreateGroup(ctx context.Context, request *group.CreateGroupRequest) (*group.CreateGroupResponse, error) {

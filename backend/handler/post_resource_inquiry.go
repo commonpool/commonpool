@@ -2,8 +2,9 @@ package handler
 
 import (
 	"github.com/commonpool/backend/auth"
-	"github.com/commonpool/backend/chat"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -23,7 +24,7 @@ import (
 func (h *Handler) InquireAboutResource(c echo.Context) error {
 	var err error
 
-	ctx, _ := GetEchoContext(c, "InquireAboutResource")
+	ctx, _ := handler.GetEchoContext(c, "InquireAboutResource")
 
 	// Get current user
 	loggedInUser, err := auth.GetLoggedInUser(ctx)

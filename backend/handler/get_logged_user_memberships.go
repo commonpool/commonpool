@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/group"
+	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -20,7 +21,7 @@ import (
 // @Router /my/memberships [get]
 func (h *Handler) GetLoggedInUserMemberships(c echo.Context) error {
 
-	ctx, _ := GetEchoContext(c, "GetLoggedInUserMemberships")
+	ctx, _ := handler.GetEchoContext(c, "GetLoggedInUserMemberships")
 
 	authUser, err := auth.GetLoggedInUser(ctx)
 	if err != nil {

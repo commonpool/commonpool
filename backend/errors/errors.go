@@ -2,7 +2,9 @@ package errors
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"net/http"
+	"testing"
 )
 
 type WebServiceException struct {
@@ -34,6 +36,9 @@ var ErrInvalidOfferItemType = NewWebServiceException("invalid offer item type", 
 var ErrInvalidTargetType = NewWebServiceException("invalid target type", "ErrInvalidTargetType", http.StatusBadRequest)
 var ErrFromIdQueryParamRequired = NewWebServiceException("from_id query parameter is required", "ErrFromIdQueryParamRequired", http.StatusBadRequest)
 var ErrToIdQueryParamRequired = NewWebServiceException("to_id query parameter is required", "ErrToIdQueryParamRequired", http.StatusBadRequest)
+var ErrInvalidTakeQueryParam = NewWebServiceException("query parameter 'take' is invalid", "ErrInvalidTakeQueryParam", http.StatusBadRequest)
+var ErrInvalidSkipQueryParam = NewWebServiceException("query parameter 'skip' is invalid", "ErrInvalidSkipQueryParam", http.StatusBadRequest)
+var ErrInvalidBeforeQueryParam = NewWebServiceException("query parameter 'before' is invalid", "ErrInvalidBeforeQueryParam", http.StatusBadRequest)
 
 func ErrQueryParamRequired(queryParameter string) error {
 	return NewWebServiceException(fmt.Sprintf("query parameter '%s' is required", queryParameter), "ErrQueryParamRequired", http.StatusBadRequest)
@@ -86,12 +91,6 @@ var (
 	ErrInvalidResourceKey = func(key string) ErrorResponse {
 		return NewError(fmt.Sprintf("invalid resource key: '%s'", key), "ErrInvalidResourceKey", http.StatusBadRequest)
 	}
-	ErrParseSkip = func(err string) ErrorResponse {
-		return NewError(fmt.Sprintf("cannot parse skip: '%s'", err), "ErrParseSkip", http.StatusBadRequest)
-	}
-	ErrParseTake = func(err string) ErrorResponse {
-		return NewError(fmt.Sprintf("cannot parse take: '%s'", err), "ErrParseTake", http.StatusBadRequest)
-	}
 	ErrParseBefore = func(err string) ErrorResponse {
 		return NewError(fmt.Sprintf("cannot parse before: '%s'", err), "ErrParseBefore", http.StatusBadRequest)
 	}
@@ -125,6 +124,8 @@ type ErrorResponse struct {
 	Message    string
 	Code       string
 	StatusCode int
+	Validation map[string]string
+	Errors     []ValidError
 }
 
 func (r *ErrorResponse) Error() string {
@@ -140,4 +141,16 @@ func IsNotFoundError(err error) bool {
 		return false
 	}
 	return res.StatusCode == http.StatusNotFound
+}
+
+func ExpectWebServiceException(t *testing.T, err error, do func(exception *WebServiceException)) {
+	if !assert.NotNil(t, t, err) {
+		return
+	}
+
+	if !assert.IsType(t, &WebServiceException{}, err) {
+		return
+	}
+	wse, _ := err.(*WebServiceException)
+	do(wse)
 }

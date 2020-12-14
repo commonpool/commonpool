@@ -8,15 +8,13 @@ import (
 )
 
 // Interface for authorization module
-type IAuth interface {
+type Authenticator interface {
 	Login() echo.HandlerFunc
 	Logout() echo.HandlerFunc
 	Authenticate(redirectOnError bool) echo.MiddlewareFunc
-	GetAuthUserSession(c echo.Context) UserSession
-	GetAuthUserSession2(ctx context.Context) UserSession
-	GetAuthUserKey(c echo.Context) model.UserKey
 	GetRedirectResponse(request *http.Request) (*RedirectResponse, error)
+	GetLoggedInUser(ctx context.Context) (model.UserReference, error)
 }
 
-// Ascertain that OidcAuthenticator implements IAuth
-var _ IAuth = &OidcAuthenticator{}
+// Ascertain that OidcAuthenticator implements Authenticator
+var _ Authenticator = &OidcAuthenticator{}

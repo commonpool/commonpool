@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"github.com/commonpool/backend/auth"
+	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -17,11 +19,20 @@ import (
 // @Failure 400 {object} utils.Error
 // @Router /meta/who-am-i [get]
 func (h *Handler) WhoAmI(c echo.Context) error {
-	userAuth := h.authorization.GetAuthUserSession(c)
-	response := web.UserAuthResponse{
-		IsAuthenticated: userAuth.IsAuthenticated,
-		Username:        userAuth.Username,
-		Id:              userAuth.Subject,
+
+	ctx, _ := handler.GetEchoContext(c, "WhoAmI")
+
+	loggedInUser, err := auth.GetLoggedInUser(ctx)
+
+	if err != nil {
+		return c.JSON(http.StatusOK, &web.UserAuthResponse{
+			IsAuthenticated: false,
+		})
 	}
-	return c.JSON(http.StatusOK, response)
+
+	return c.JSON(http.StatusOK, web.UserAuthResponse{
+		IsAuthenticated: true,
+		Username:        loggedInUser.Username,
+		Id:              loggedInUser.Subject,
+	})
 }

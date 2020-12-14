@@ -3,7 +3,7 @@ package store
 import (
 	"fmt"
 	"github.com/commonpool/backend/auth"
-	"github.com/commonpool/backend/chat"
+	chatstore "github.com/commonpool/backend/pkg/chat/store"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"os"
@@ -29,9 +29,9 @@ func NewTestDb() *gorm.DB {
 
 func AutoMigrate(db *gorm.DB) {
 	err := db.AutoMigrate(
-		&chat.Channel{},
-		&chat.ChannelSubscription{},
-		&Message{},
+		&chatstore.Channel{},
+		&chatstore.ChannelSubscription{},
+		&chatstore.Message{},
 		&auth.User{},
 		&TransactionEntry{},
 	)

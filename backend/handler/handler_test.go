@@ -2,8 +2,8 @@ package handler
 
 import (
 	"github.com/commonpool/backend/auth"
-	"github.com/commonpool/backend/chat"
 	"github.com/commonpool/backend/group"
+	"github.com/commonpool/backend/pkg/chat"
 	"github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/store"
 	"github.com/commonpool/backend/trading"
@@ -56,7 +56,7 @@ type TestBench struct {
 	amqp           amqp.AmqpClient
 	resourceStore  resource.Store
 	authStore      auth.Store
-	authorization  auth.IAuth
+	authorization  auth.Authenticator
 	chatStore      chat.Store
 	tradingStore   trading.Store
 	groupService   group.Service

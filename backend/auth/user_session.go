@@ -34,6 +34,21 @@ func (s *UserSession) GetUsername() string {
 	return s.Username
 }
 
+func SetAuthenticatedUser(c echo.Context, username, subject, email string) {
+	c.Set(IsAuthenticatedKey, true)
+	c.Set(SubjectUsernameKey, username)
+	c.Set(SubjectEmailKey, email)
+	c.Set(SubjectKey, subject)
+}
+
+func SetContextAuthenticatedUser(c context.Context, username, subject, email string) context.Context {
+	c = context.WithValue(c, IsAuthenticatedKey, true)
+	c = context.WithValue(c, SubjectUsernameKey, username)
+	c = context.WithValue(c, SubjectEmailKey, email)
+	c = context.WithValue(c, SubjectKey, subject)
+	return c
+}
+
 // saveAuthenticatedUser when user logs in, update the context with the user info,
 // and also saves the newly gotten user info in the db
 func saveAuthenticatedUser(c echo.Context, store Store, sub string, username string, email string) error {

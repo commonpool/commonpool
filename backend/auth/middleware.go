@@ -14,7 +14,7 @@ import (
 const oauthCallbackPath = "/oauth2/callback"
 
 // NewAuth Setup auth middleware
-func NewAuth(e *echo.Group, appConfig *config.AppConfig, groupPrefix string, as Store) IAuth {
+func NewAuth(e *echo.Group, appConfig *config.AppConfig, groupPrefix string, as Store) Authenticator {
 
 	ctx := context.Background()
 	l := logging.WithContext(ctx)

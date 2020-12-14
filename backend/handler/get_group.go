@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/commonpool/backend/group"
+	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
@@ -21,7 +22,7 @@ import (
 // @Router /groups/:id [get]
 func (h *Handler) GetGroup(c echo.Context) error {
 
-	ctx, l := GetEchoContext(c, "GetGroup")
+	ctx, l := handler.GetEchoContext(c, "GetGroup")
 
 	l.Debug("getting group")
 

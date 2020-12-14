@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"github.com/commonpool/backend/amqp"
 	"github.com/commonpool/backend/auth"
-	"github.com/commonpool/backend/chat"
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/chat"
 )
 
 func (g GroupService) CancelOrDeclineInvitation(ctx context.Context, request *group.CancelOrDeclineInvitationRequest) error {

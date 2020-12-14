@@ -1,11 +1,12 @@
 package amqp
 
 import (
+	"github.com/commonpool/backend/model"
 	"go.uber.org/zap/zapcore"
 	"time"
 )
 
-type Publishing struct {
+type Message struct {
 	// Application or exchange specific fields,
 	// the headers exchange will inspect this field.
 	Headers Args
@@ -28,22 +29,68 @@ type Publishing struct {
 	Body []byte
 }
 
+func NewMessage() *Message {
+	return &Message{}
+}
+
+func (p *Message) WithContentType(contentType string) *Message {
+	p.ContentType = contentType
+	return p
+}
+
+func (p *Message) WithType(publishingType string) *Message {
+	p.Type = publishingType
+	return p
+}
+
+func (p *Message) WithJsonContentType() *Message {
+	return p.WithContentType("application/json")
+}
+
+func (p *Message) WithHeaders(headers Args) *Message {
+	p.Headers = headers
+	return p
+}
+
+func (p *Message) WithTimestamp(timestamp time.Time) *Message {
+	p.Timestamp = timestamp
+	return p
+}
+
+func (p *Message) WithMessageId(id string) *Message {
+	p.MessageId = id
+	return p
+}
+
+func (p *Message) WithBody(body []byte) *Message {
+	p.Body = body
+	return p
+}
+
+func (p *Message) WithJsonBody(json string) *Message {
+	return p.WithJsonContentType().WithBody([]byte(json))
+}
+
 type EventType string
 
 const (
-	MessageEvent = "message"
+	NewChatMessage EventType = "chat.message"
 )
 
 type EventSubType string
 
+const (
+	UserMessage EventSubType = "user"
+)
+
 type Event struct {
-	Type      EventType    `json:"type"`
-	SubType   EventSubType `json:"subType"`
 	Channel   string       `json:"channel"`
-	User      string       `json:"user"`
 	ID        string       `json:"id"`
-	Timestamp string       `json:"timestamp"`
+	SubType   EventSubType `json:"subType"`
 	Text      string       `json:"text"`
+	Timestamp string       `json:"timestamp"`
+	Type      EventType    `json:"type"`
+	User      string       `json:"user"`
 }
 
 type EventContainer struct {
@@ -82,6 +129,20 @@ type Delivery struct {
 }
 
 type Args map[string]interface{}
+
+func NewArgs() Args {
+	return Args{}
+}
+
+func (a Args) WithChannelKey(channel model.ChannelKey) Args {
+	a["channel_id"] = channel.String()
+	return a
+}
+
+func (a Args) WithEventType(eventType EventType) Args {
+	a["event_type"] = eventType
+	return a
+}
 
 func (a Args) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
 	if a == nil {
