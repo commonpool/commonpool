@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/auth"
+	"github.com/commonpool/backend/pkg/user"
 	"github.com/commonpool/backend/utils"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
@@ -34,7 +34,7 @@ func (h *Handler) SearchUsers(c echo.Context) error {
 
 	qry := c.QueryParam("query")
 
-	userQuery := auth.UserQuery{
+	userQuery := user.UserQuery{
 		Query: qry,
 		Skip:  skip,
 		Take:  take,

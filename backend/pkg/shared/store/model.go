@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/commonpool/backend/model"
 	store2 "github.com/commonpool/backend/pkg/group/store"
-	store3 "github.com/commonpool/backend/store"
+	"github.com/commonpool/backend/pkg/user/store"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
 )
 
@@ -33,7 +33,7 @@ func MapOfferItemTarget(node neo4j.Node) (*model.Target, error) {
 		return nil, fmt.Errorf("node is nil")
 	}
 	isGroup := store2.IsGroupNode(node)
-	isUser := !isGroup && store3.IsUserNode(node)
+	isUser := !isGroup && store.IsUserNode(node)
 	if !isGroup && !isUser {
 		return nil, fmt.Errorf("target is neither user nor group")
 	}

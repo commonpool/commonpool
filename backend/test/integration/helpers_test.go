@@ -3,6 +3,7 @@ package integration
 import (
 	"context"
 	"github.com/commonpool/backend/auth"
+	"github.com/commonpool/backend/pkg/user"
 	"github.com/commonpool/backend/web"
 	"net/http"
 	"strconv"
@@ -35,7 +36,7 @@ func testUser(t *testing.T) (*auth.UserSession, func()) {
 	return user, func(user *auth.UserSession) func() {
 		return func() {
 			createUserLock.Lock()
-			_ = Db.Delete(auth.User{}, "id = ?", user.Subject).Error
+			_ = Db.Delete(exceptions.User{}, "id = ?", user.Subject).Error
 			createUserLock.Unlock()
 		}
 	}(user)

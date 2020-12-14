@@ -3,11 +3,9 @@ package service
 import (
 	"context"
 	"github.com/commonpool/backend/auth"
-	errs "github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/exceptions"
 	trading2 "github.com/commonpool/backend/pkg/trading"
-	"github.com/commonpool/backend/service"
-	"go.uber.org/zap"
 )
 
 /**
@@ -19,8 +17,6 @@ ResourceTransfer OfferItemType = "transfer_resource"
 
 func (t TradingService) ConfirmServiceProvided(ctx context.Context, confirmedItemKey model.OfferItemKey) error {
 
-	ctx, l := service.GetCtx(ctx, "TradingService", "ConfirmServiceProvided")
-
 	loggedInUser, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
 		return err
@@ -30,12 +26,11 @@ func (t TradingService) ConfirmServiceProvided(ctx context.Context, confirmedIte
 	// retrieving item
 	offerItem, err := t.tradingStore.GetOfferItem(nil, confirmedItemKey)
 	if err != nil {
-		l.Error("could not get offer item", zap.Error(err))
 		return err
 	}
 
 	if !offerItem.IsServiceProviding() {
-		return errs.ErrWrongOfferItemType
+		return exceptions.ErrWrongOfferItemType
 	}
 
 	serviceProvided := offerItem.(*trading2.ProvideServiceItem)
@@ -68,8 +63,6 @@ func (t TradingService) ConfirmServiceProvided(ctx context.Context, confirmedIte
 
 func (t TradingService) ConfirmResourceTransferred(ctx context.Context, confirmedItemKey model.OfferItemKey) error {
 
-	ctx, l := service.GetCtx(ctx, "TradingService", "ConfirmResourceTransferred")
-
 	loggedInUser, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
 		return err
@@ -79,12 +72,11 @@ func (t TradingService) ConfirmResourceTransferred(ctx context.Context, confirme
 	// retrieving item
 	offerItem, err := t.tradingStore.GetOfferItem(nil, confirmedItemKey)
 	if err != nil {
-		l.Error("could not get offer item", zap.Error(err))
 		return err
 	}
 
 	if !offerItem.IsResourceTransfer() {
-		return errs.ErrWrongOfferItemType
+		return exceptions.ErrWrongOfferItemType
 	}
 
 	resourceTransfer := offerItem.(*trading2.ResourceTransferItem)
@@ -117,8 +109,6 @@ func (t TradingService) ConfirmResourceTransferred(ctx context.Context, confirme
 
 func (t TradingService) ConfirmResourceBorrowed(ctx context.Context, confirmedItemKey model.OfferItemKey) error {
 
-	ctx, l := service.GetCtx(ctx, "TradingService", "ConfirmResourceBorrowed")
-
 	loggedInUser, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
 		return err
@@ -128,12 +118,11 @@ func (t TradingService) ConfirmResourceBorrowed(ctx context.Context, confirmedIt
 	// retrieving item
 	offerItem, err := t.tradingStore.GetOfferItem(nil, confirmedItemKey)
 	if err != nil {
-		l.Error("could not get offer item", zap.Error(err))
 		return err
 	}
 
 	if !offerItem.IsBorrowingResource() {
-		return errs.ErrWrongOfferItemType
+		return exceptions.ErrWrongOfferItemType
 	}
 
 	resourceTransfer := offerItem.(*trading2.BorrowResourceItem)
@@ -170,8 +159,6 @@ func (t TradingService) ConfirmResourceBorrowed(ctx context.Context, confirmedIt
 
 func (t TradingService) ConfirmBorrowedResourceReturned(ctx context.Context, confirmedItemKey model.OfferItemKey) error {
 
-	ctx, l := service.GetCtx(ctx, "TradingService", "ConfirmResourceBorrowed")
-
 	loggedInUser, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
 		return err
@@ -181,12 +168,11 @@ func (t TradingService) ConfirmBorrowedResourceReturned(ctx context.Context, con
 	// retrieving item
 	offerItem, err := t.tradingStore.GetOfferItem(nil, confirmedItemKey)
 	if err != nil {
-		l.Error("could not get offer item", zap.Error(err))
 		return err
 	}
 
 	if !offerItem.IsBorrowingResource() {
-		return errs.ErrWrongOfferItemType
+		return exceptions.ErrWrongOfferItemType
 	}
 
 	resourceTransfer := offerItem.(*trading2.BorrowResourceItem)

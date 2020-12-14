@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/commonpool/backend/auth"
-	errs "github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/exceptions"
 	group2 "github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/web"
 	"github.com/stretchr/testify/assert"
@@ -98,8 +98,8 @@ func TestCreateGroupUnauthenticatedShouldFailWithUnauthorized(t *testing.T) {
 	if err == nil {
 		t.Fatal("err should not be nil")
 	}
-	assert.IsType(t, &errs.WebServiceException{}, err)
-	assert.Equal(t, http.StatusUnauthorized, err.(*errs.WebServiceException).Status)
+	assert.IsType(t, &exceptions.WebServiceException{}, err)
+	assert.Equal(t, http.StatusUnauthorized, err.(*exceptions.WebServiceException).Status)
 }
 
 func TestCreateGroupEmptyName(t *testing.T) {
@@ -326,7 +326,7 @@ func TestInviteeShouldBeAbleToDeclineInvitationFromOwner(t *testing.T) {
 
 	grpKey, _ := model.ParseGroupKey(createGroup.Group.ID)
 	_, err = GroupStore.GetMembership(ctx, model.NewMembershipKey(grpKey, user2.GetUserKey()))
-	assert.True(t, errors.Is(err, errs.ErrMembershipNotFound))
+	assert.True(t, errors.Is(err, exceptions.ErrMembershipNotFound))
 }
 
 func TestOwnerShouldBeAbleToDeclineInvitationFromOwner(t *testing.T) {
@@ -363,7 +363,7 @@ func TestOwnerShouldBeAbleToDeclineInvitationFromOwner(t *testing.T) {
 	assert.Equal(t, http.StatusAccepted, httpRes.StatusCode)
 	grpKey, _ := model.ParseGroupKey(createGroup.Group.ID)
 	_, err = GroupStore.GetMembership(ctx, model.NewMembershipKey(grpKey, user2.GetUserKey()))
-	assert.True(t, errors.Is(err, errs.ErrMembershipNotFound))
+	assert.True(t, errors.Is(err, exceptions.ErrMembershipNotFound))
 }
 
 func TestRandomUserShouldNotBeAbleToAcceptInvitation(t *testing.T) {
@@ -404,8 +404,8 @@ func TestRandomUserShouldNotBeAbleToAcceptInvitation(t *testing.T) {
 		t.Fatal("err should not be nil")
 	}
 
-	assert.IsType(t, &errs.WebServiceException{}, err)
-	assert.Equal(t, http.StatusForbidden, err.(*errs.WebServiceException).Status)
+	assert.IsType(t, &exceptions.WebServiceException{}, err)
+	assert.Equal(t, http.StatusForbidden, err.(*exceptions.WebServiceException).Status)
 }
 
 func TestPersonShouldBeAbleToRequestBeingInvitedInGroup(t *testing.T) {

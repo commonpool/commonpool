@@ -2,8 +2,8 @@ package handler
 
 import (
 	"context"
-	"github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/logging"
+	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/router"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
@@ -22,8 +22,8 @@ var HttpErrorHandler = func(err error, c echo.Context) {
 	_, l := GetEchoContext(c, "")
 	l.Error(err.Error(), zap.Error(err))
 
-	if ws, ok := err.(*errors.WebServiceException); ok {
-		c.JSON(ws.Status, &errors.ErrorResponse{
+	if ws, ok := err.(*exceptions.WebServiceException); ok {
+		c.JSON(ws.Status, &exceptions.ErrorResponse{
 			Message:    ws.Message,
 			Code:       ws.Code,
 			StatusCode: ws.Status,
@@ -34,9 +34,9 @@ var HttpErrorHandler = func(err error, c echo.Context) {
 	if _, ok := err.(validator.ValidationErrors); ok {
 		validationError := err.(validator.ValidationErrors)
 
-		var validErrors []errors.ValidError
+		var validErrors []exceptions.ValidError
 		for _, fieldError := range validationError {
-			validErrors = append(validErrors, errors.ValidError{
+			validErrors = append(validErrors, exceptions.ValidError{
 				Tag:             fieldError.Tag(),
 				ActualTag:       fieldError.ActualTag(),
 				Namespace:       fieldError.Namespace(),
@@ -51,7 +51,7 @@ var HttpErrorHandler = func(err error, c echo.Context) {
 
 		translated := validationError.Translate(router.DefaultTranslator)
 
-		response := &errors.ErrorResponse{
+		response := &exceptions.ErrorResponse{
 			Message:    validationError.Error(),
 			Code:       "ErrValidation",
 			StatusCode: http.StatusBadRequest,
@@ -63,7 +63,7 @@ var HttpErrorHandler = func(err error, c echo.Context) {
 		return
 	}
 
-	c.JSON(http.StatusInternalServerError, &errors.ErrorResponse{
+	c.JSON(http.StatusInternalServerError, &exceptions.ErrorResponse{
 		Message:    "Internal server error",
 		Code:       "ErrInternalServerError",
 		StatusCode: http.StatusInternalServerError,

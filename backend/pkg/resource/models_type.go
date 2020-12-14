@@ -1,6 +1,8 @@
 package resource
 
-import "github.com/commonpool/backend/errors"
+import (
+	"github.com/commonpool/backend/pkg/exceptions"
+)
 
 type Type int
 
@@ -23,6 +25,6 @@ func ParseResourceType(s string) (*Type, error) {
 		return &res, nil
 	}
 
-	err := errors.ErrParseResourceType(s)
+	err := exceptions.ErrParseResourceType(s)
 	return nil, &err
 }

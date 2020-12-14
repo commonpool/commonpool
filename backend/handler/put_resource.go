@@ -3,8 +3,8 @@ package handler
 import (
 	"fmt"
 	"github.com/commonpool/backend/auth"
-	"github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/pkg/handler"
 	resource2 "github.com/commonpool/backend/pkg/resource"
 	"github.com/commonpool/backend/web"
@@ -61,7 +61,7 @@ func (h *Handler) UpdateResource(c echo.Context) error {
 
 	loggedInUser, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
-		return errors.ErrUnauthorized
+		return exceptions.ErrUnauthorized
 	}
 	if resToUpdate.GetOwnerKey() != loggedInUser.GetUserKey() {
 		err := fmt.Errorf("cannot update a resource you do not own")

@@ -1,8 +1,8 @@
 package handler
 
 import (
-	. "github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/exceptions"
 	group2 "github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
 	resource2 "github.com/commonpool/backend/pkg/resource"
@@ -74,10 +74,10 @@ func NewResourceResponse(res *resource2.Resource, creatorUsername string, creato
 }
 
 func NewErrResponse(c echo.Context, err error) error {
-	res, ok := err.(*ErrorResponse)
+	res, ok := err.(*exceptions.ErrorResponse)
 	if !ok {
 		statusCode := http.StatusInternalServerError
-		return c.JSON(statusCode, NewError(err.Error(), "", statusCode))
+		return c.JSON(statusCode, exceptions.NewError(err.Error(), "", statusCode))
 	}
 	return c.JSON(res.StatusCode, res)
 }

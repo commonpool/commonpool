@@ -2,7 +2,7 @@ package utils
 
 import (
 	"fmt"
-	"github.com/commonpool/backend/errors"
+	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/labstack/echo/v4"
 	"strconv"
 	"time"
@@ -11,7 +11,7 @@ import (
 func ParseSkip(c echo.Context) (int, error) {
 	skip, err := ParseQueryParamInt(c, "skip", 0)
 	if err != nil {
-		return 0, errors.ErrInvalidSkipQueryParam
+		return 0, exceptions.ErrInvalidSkipQueryParam
 	}
 	if skip < 0 {
 		skip = 0
@@ -22,7 +22,7 @@ func ParseSkip(c echo.Context) (int, error) {
 func ParseBefore(c echo.Context) (*time.Time, error) {
 	before, err := ParseQueryParamTimestamp(c, "before")
 	if err != nil {
-		return nil, errors.ErrInvalidBeforeQueryParam
+		return nil, exceptions.ErrInvalidBeforeQueryParam
 	}
 	return before, nil
 }
@@ -30,7 +30,7 @@ func ParseBefore(c echo.Context) (*time.Time, error) {
 func ParseTake(c echo.Context, defaultTake int, maxTake int) (int, error) {
 	take, err := ParseQueryParamInt(c, "take", defaultTake)
 	if err != nil {
-		return 0, errors.ErrInvalidTakeQueryParam
+		return 0, exceptions.ErrInvalidTakeQueryParam
 	}
 	if take < 0 {
 		take = 0
@@ -46,7 +46,7 @@ func ParseQueryParamInt(c echo.Context, paramName string, defaultValue int) (int
 	if paramAsStr != "" {
 		intValue, err := strconv.Atoi(paramAsStr)
 		if err != nil {
-			response := errors.ErrCannotConvertToInt(paramAsStr, err.Error())
+			response := exceptions.ErrCannotConvertToInt(paramAsStr, err.Error())
 			return 0, &response
 		}
 		return intValue, nil

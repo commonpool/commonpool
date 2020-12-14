@@ -6,35 +6,27 @@ import (
 	"fmt"
 	"github.com/commonpool/backend/amqp"
 	"github.com/commonpool/backend/auth"
-	errs "github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/exceptions"
 	group2 "github.com/commonpool/backend/pkg/group"
-	"github.com/commonpool/backend/service"
-	"go.uber.org/zap"
 )
 
 func (g GroupService) CreateOrAcceptInvitation(ctx context.Context, request *group2.CreateOrAcceptInvitationRequest) (*group2.CreateOrAcceptInvitationResponse, error) {
 
-	ctx, l := service.GetCtx(ctx, "GroupService", "CreateOrAcceptInvitation")
-
-	l = l.With(zap.Object("membership", request.MembershipKey))
-
 	userSession, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
-		l.Error("could not get user session")
 		return nil, err
 	}
 
 	isNewMembership := false
 	membershipKey := request.MembershipKey
 	membershipToAccept, err := g.groupStore.GetMembership(ctx, membershipKey)
-	if err != nil && !errors.Is(err, errs.ErrMembershipNotFound) {
-		l.Error("could not get membership to accept", zap.Error(err))
+	if err != nil && !errors.Is(err, exceptions.ErrMembershipNotFound) {
 		return nil, err
 	}
 
-	if err != nil && errors.Is(err, errs.ErrMembershipNotFound) {
+	if err != nil && errors.Is(err, exceptions.ErrMembershipNotFound) {
 		isNewMembership = true
 	}
 
@@ -50,32 +42,26 @@ func (g GroupService) CreateOrAcceptInvitation(ctx context.Context, request *gro
 			}, nil
 		}
 
-		l.Debug("user was invited by group. he has to accept the invitation")
-
 		if membershipToAccept.UserConfirmed {
 			err := fmt.Errorf("membership already confirmed")
-			l.Error(err.Error())
 			return nil, err
 		}
 
 		err := g.groupStore.MarkInvitationAsAccepted(ctx, membershipKey, group2.PartyUser)
 		if err != nil {
-			l.Error("could not mark invitation as accepted", zap.Error(err))
 			return nil, err
 		}
 
 	} else {
 
-		l.Debug("user asked the group to join. group admin has to confirm the invitation")
-
 		loggedInUserMembershipKey := model.NewMembershipKey(membershipKey.GroupKey, userSession.GetUserKey())
 		loggedInUserMembership, err := g.groupStore.GetMembership(ctx, loggedInUserMembershipKey)
 		if err != nil {
-			return nil, errs.ErrMembershipPartyUnauthorized
+			return nil, exceptions.ErrMembershipPartyUnauthorized
 		}
 
 		if !loggedInUserMembership.IsAdmin {
-			return nil, errs.ErrManageMembershipsNotAdmin
+			return nil, exceptions.ErrManageMembershipsNotAdmin
 		}
 
 		if isNewMembership {
@@ -90,13 +76,11 @@ func (g GroupService) CreateOrAcceptInvitation(ctx context.Context, request *gro
 
 		if membershipToAccept.GroupConfirmed {
 			err := fmt.Errorf("already accepted")
-			l.Error(err.Error())
 			return nil, err
 		}
 
 		err = g.groupStore.MarkInvitationAsAccepted(ctx, membershipKey, group2.PartyGroup)
 		if err != nil {
-			l.Error("could not mark invitation as accepted", zap.Error(err))
 			return nil, err
 		}
 
@@ -104,7 +88,6 @@ func (g GroupService) CreateOrAcceptInvitation(ctx context.Context, request *gro
 
 	acceptedMembership, err := g.groupStore.GetMembership(ctx, membershipKey)
 	if err != nil {
-		l.Error("could not get accepted membership", zap.Error(err))
 		return nil, err
 	}
 
@@ -113,26 +96,22 @@ func (g GroupService) CreateOrAcceptInvitation(ctx context.Context, request *gro
 
 		grp, err := g.groupStore.GetGroup(ctx, request.MembershipKey.GroupKey)
 		if err != nil {
-			l.Error("could not get group", zap.Error(err))
 			return nil, err
 		}
 
 		usernameJoiningGroup, err := g.authStore.GetUsername(membershipKey.UserKey)
 		if err != nil {
-			l.Error("could not get username of user leaving group", zap.Error(err))
 			return nil, err
 		}
 
 		channelSubscriptionKey := model.NewChannelSubscriptionKey(acceptedMembership.GetGroupKey().GetChannelKey(), acceptedMembership.GetUserKey())
 		_, err = g.chatService.SubscribeToChannel(ctx, channelSubscriptionKey, grp.Name)
 		if err != nil {
-			l.Error("could not subscribe to channel", zap.Error(err))
 			return nil, err
 		}
 
 		amqpChannel, err := g.amqpClient.GetChannel()
 		if err != nil {
-			l.Error("could not gat amqp client", zap.Error(err))
 			return nil, err
 		}
 
@@ -143,7 +122,6 @@ func (g GroupService) CreateOrAcceptInvitation(ctx context.Context, request *gro
 			"x-match":    "all",
 		})
 		if err != nil {
-			l.Error("could not unbind exchanges", zap.Error(err))
 			return nil, err
 		}
 
@@ -155,7 +133,6 @@ func (g GroupService) CreateOrAcceptInvitation(ctx context.Context, request *gro
 
 		_, err = g.chatService.SendGroupMessage(ctx, chat.NewSendGroupMessage(request.MembershipKey.GroupKey, membershipKey.UserKey, usernameJoiningGroup, text, []chat.Block{*message}, []chat.Attachment{}, nil))
 		if err != nil {
-			l.Error("could not send user leaving message", zap.Error(err))
 			return nil, err
 		}
 

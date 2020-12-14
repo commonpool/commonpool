@@ -8,12 +8,13 @@ import (
 	group2 "github.com/commonpool/backend/pkg/group"
 	resource2 "github.com/commonpool/backend/pkg/resource"
 	trading2 "github.com/commonpool/backend/pkg/trading"
+	"github.com/commonpool/backend/pkg/user"
 )
 
 type Handler struct {
 	amqp           amqp.Client
 	resourceStore  resource2.Store
-	authStore      auth.Store
+	authStore      user.Store
 	authorization  auth.Authenticator
 	chatStore      chat.Store
 	tradingStore   trading2.Store
@@ -25,7 +26,7 @@ type Handler struct {
 
 func NewHandler(
 	rs resource2.Store,
-	as auth.Store,
+	as user.Store,
 	cs chat.Store,
 	ts trading2.Store,
 	auth auth.Authenticator,

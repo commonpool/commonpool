@@ -3,14 +3,14 @@ package store
 import (
 	ctx "context"
 	"fmt"
-	errs "github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/graph"
 	"github.com/commonpool/backend/logging"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/exceptions"
+	graph2 "github.com/commonpool/backend/pkg/graph"
 	"github.com/commonpool/backend/pkg/resource"
 	"github.com/commonpool/backend/pkg/shared/store"
-	store2 "github.com/commonpool/backend/store"
-	"github.com/commonpool/backend/transaction"
+	transaction2 "github.com/commonpool/backend/pkg/transaction"
 	"github.com/mitchellh/mapstructure"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
 	"go.uber.org/zap"
@@ -20,12 +20,12 @@ import (
 
 type ResourceStore struct {
 	graphDriver        graph.GraphDriver
-	transactionService transaction.Service
+	transactionService transaction2.Service
 }
 
 var _ resource.Store = &ResourceStore{}
 
-func NewResourceStore(graphDriver graph.GraphDriver, transactionService transaction.Service) *ResourceStore {
+func NewResourceStore(graphDriver graph.GraphDriver, transactionService transaction2.Service) *ResourceStore {
 	return &ResourceStore{
 		graphDriver:        graphDriver,
 		transactionService: transactionService,
@@ -201,7 +201,7 @@ func (rs *ResourceStore) Delete(deleteResourceQuery *resource.DeleteResourceQuer
 	}
 	if !deleteResult.Next() {
 		return &resource.DeleteResourceResponse{
-			Error: errs.ErrResourceNotFound,
+			Error: exceptions.ErrResourceNotFound,
 		}
 	}
 
@@ -327,7 +327,7 @@ func (rs *ResourceStore) mapGraphResourceRecord(record neo4j.Record, key string)
 }
 
 func IsResourceNode(node neo4j.Node) bool {
-	return store2.NodeHasLabel(node, "Resource")
+	return graph2.NodeHasLabel(node, "Resource")
 }
 
 func MapResourceNode(node neo4j.Node) (*resource.Resource, error) {
@@ -461,7 +461,7 @@ func (rs *ResourceStore) Update(request *resource.UpdateResourceQuery) *resource
 
 	if !updateResult.Next() {
 		return &resource.UpdateResourceResponse{
-			Error: errs.ErrResourceNotFound,
+			Error: exceptions.ErrResourceNotFound,
 		}
 	}
 

@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/exceptions"
 	group2 "github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/web"
@@ -36,7 +36,7 @@ func (h *Handler) CreateGroup(c echo.Context) error {
 	req.Description = strings.TrimSpace(req.Description)
 
 	if req.Name == "" {
-		return NewErrResponse(c, errors.ErrValidation("name is required"))
+		return NewErrResponse(c, exceptions.ErrValidation("name is required"))
 	}
 
 	var groupKey = model.NewGroupKey(uuid.NewV4())

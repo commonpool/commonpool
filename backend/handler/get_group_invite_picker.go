@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/user"
 	"github.com/commonpool/backend/utils"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
@@ -38,7 +38,7 @@ func (h *Handler) GetUsersForGroupInvitePicker(c echo.Context) error {
 		return NewErrResponse(c, err)
 	}
 
-	userQuery := auth.UserQuery{
+	userQuery := user.UserQuery{
 		Query:      qry,
 		Skip:       skip,
 		Take:       take,

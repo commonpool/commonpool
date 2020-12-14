@@ -3,35 +3,32 @@ package store
 import (
 	"context"
 	"errors"
-	"github.com/commonpool/backend/auth"
-	errs "github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/graph"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/exceptions"
+	graph2 "github.com/commonpool/backend/pkg/graph"
+	"github.com/commonpool/backend/pkg/user"
 	"github.com/labstack/gommon/log"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
 	"gorm.io/gorm"
 	"strings"
 )
 
-type AuthStore struct {
+type UserStore struct {
 	db          *gorm.DB
 	graphDriver graph.GraphDriver
 }
 
-var _ auth.Store = &AuthStore{}
+var _ user.Store = &UserStore{}
 
-func NewAuthStore(db *gorm.DB, graphDriver graph.GraphDriver) *AuthStore {
-	return &AuthStore{
+func NewAuthStore(db *gorm.DB, graphDriver graph.GraphDriver) *UserStore {
+	return &UserStore{
 		db:          db,
 		graphDriver: graphDriver,
 	}
 }
 
-type UserStore struct {
-	db *gorm.DB
-}
-
-func (as *AuthStore) GetByKeys(ctx context.Context, keys []model.UserKey) (*auth.Users, error) {
+func (as *UserStore) GetByKeys(ctx context.Context, keys []model.UserKey) (*user.Users, error) {
 
 	session, err := as.graphDriver.GetSession()
 	if err != nil {
@@ -42,7 +39,7 @@ func (as *AuthStore) GetByKeys(ctx context.Context, keys []model.UserKey) (*auth
 	return as.getByKeys(session, model.NewUserKeys(keys))
 }
 
-func (as *AuthStore) Upsert(key model.UserKey, email string, username string) error {
+func (as *UserStore) Upsert(key model.UserKey, email string, username string) error {
 
 	session, err := as.graphDriver.GetSession()
 	if err != nil {
@@ -78,7 +75,7 @@ func (as *AuthStore) Upsert(key model.UserKey, email string, username string) er
 			return updateResult.Err()
 		}
 
-	} else if errors.Is(err, errs.ErrUserNotFound) {
+	} else if errors.Is(err, exceptions.ErrUserNotFound) {
 
 		createResult, err := session.Run(`
 			CREATE (u:User {id:$id, username: $username, email:$email}) 
@@ -107,7 +104,7 @@ func (as *AuthStore) Upsert(key model.UserKey, email string, username string) er
 
 }
 
-func (as *AuthStore) getByKey(session neo4j.Session, key model.UserKey) (*auth.User, error) {
+func (as *UserStore) getByKey(session neo4j.Session, key model.UserKey) (*user.User, error) {
 
 	getResult, err := session.Run(`
 		MATCH (n:User {id:$id}) 
@@ -129,7 +126,7 @@ func (as *AuthStore) getByKey(session neo4j.Session, key model.UserKey) (*auth.U
 	if getResult.Next() {
 
 	} else {
-		return nil, errs.ErrUserNotFound
+		return nil, exceptions.ErrUserNotFound
 	}
 
 	record := getResult.Record()
@@ -138,7 +135,7 @@ func (as *AuthStore) getByKey(session neo4j.Session, key model.UserKey) (*auth.U
 
 }
 
-func (as *AuthStore) getByKeys(session neo4j.Session, key *model.UserKeys) (*auth.Users, error) {
+func (as *UserStore) getByKeys(session neo4j.Session, key *model.UserKeys) (*user.Users, error) {
 
 	getResult, err := session.Run(`
 		MATCH (n:User) 
@@ -158,7 +155,7 @@ func (as *AuthStore) getByKeys(session neo4j.Session, key *model.UserKeys) (*aut
 		return nil, getResult.Err()
 	}
 
-	var users []*auth.User
+	var users []*user.User
 
 	for getResult.Next() {
 		record := getResult.Record()
@@ -169,11 +166,11 @@ func (as *AuthStore) getByKeys(session neo4j.Session, key *model.UserKeys) (*aut
 
 	_, err = getResult.Consume()
 
-	return auth.NewUsers(users), err
+	return user.NewUsers(users), err
 
 }
 
-func (as *AuthStore) GetByKey(key model.UserKey) (*auth.User, error) {
+func (as *UserStore) GetByKey(key model.UserKey) (*user.User, error) {
 	session, err := as.graphDriver.GetSession()
 	if err != nil {
 		return nil, err
@@ -187,7 +184,7 @@ func (as *AuthStore) GetByKey(key model.UserKey) (*auth.User, error) {
 	return user, nil
 }
 
-func (as *AuthStore) GetUsername(key model.UserKey) (string, error) {
+func (as *UserStore) GetUsername(key model.UserKey) (string, error) {
 	user, err := as.GetByKey(key)
 	if err != nil {
 		return "", err
@@ -195,7 +192,7 @@ func (as *AuthStore) GetUsername(key model.UserKey) (string, error) {
 	return user.Username, err
 }
 
-func (as *AuthStore) Find(query auth.UserQuery) ([]*auth.User, error) {
+func (as *UserStore) Find(query user.UserQuery) ([]*user.User, error) {
 
 	session, err := as.graphDriver.GetSession()
 	if err != nil {
@@ -237,7 +234,7 @@ func (as *AuthStore) Find(query auth.UserQuery) ([]*auth.User, error) {
 		return nil, result.Err()
 	}
 
-	var users []*auth.User
+	var users []*user.User
 
 	for result.Next() {
 		record := result.Record()
@@ -248,11 +245,11 @@ func (as *AuthStore) Find(query auth.UserQuery) ([]*auth.User, error) {
 	return users, err
 }
 func IsUserNode(node neo4j.Node) bool {
-	return NodeHasLabel(node, "User")
+	return graph2.NodeHasLabel(node, "User")
 }
 
-func MapUserNode(node neo4j.Node) *auth.User {
-	return &auth.User{
+func MapUserNode(node neo4j.Node) *user.User {
+	return &user.User{
 		ID:       node.Props()["id"].(string),
 		Username: node.Props()["username"].(string),
 		Email:    node.Props()["email"].(string),

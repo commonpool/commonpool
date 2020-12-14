@@ -4,28 +4,21 @@ import (
 	"context"
 	"fmt"
 	"github.com/commonpool/backend/auth"
-	errs "github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/exceptions"
 	trading2 "github.com/commonpool/backend/pkg/trading"
-	"github.com/commonpool/backend/service"
-	"go.uber.org/zap"
 )
 
 func (t TradingService) DeclineOffer(ctx context.Context, offerKey model.OfferKey) error {
 
-	ctx, l := service.GetCtx(ctx, "TradingService", "AcceptOffer")
-	l = l.With(zap.Object("offer", offerKey))
-
 	user, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
-		l.Error("could not get user session", zap.Error(err))
 		return err
 	}
 	loggedInUserKey := user.GetUserKey()
 
 	offer, err := t.tradingStore.GetOffer(offerKey)
 	if err != nil {
-		l.Error("could not get offer", zap.Error(err))
 		return err
 	}
 
@@ -35,12 +28,11 @@ func (t TradingService) DeclineOffer(ctx context.Context, offerKey model.OfferKe
 
 	approvers, err := t.tradingStore.FindApproversForOffer(offerKey)
 	if err != nil {
-		l.Error("could not get approvers for offer", zap.Error(err))
 		return err
 	}
 
 	if !approvers.IsUserAnApprover(loggedInUserKey) {
-		return errs.ErrForbidden
+		return exceptions.ErrForbidden
 	}
 
 	err = t.tradingStore.UpdateOfferStatus(offerKey, trading2.DeclinedOffer)
@@ -54,37 +46,29 @@ func (t TradingService) DeclineOffer(ctx context.Context, offerKey model.OfferKe
 
 func (t TradingService) AcceptOffer(ctx context.Context, offerKey model.OfferKey) error {
 
-	ctx, l := service.GetCtx(ctx, "TradingService", "AcceptOffer")
-	l = l.With(zap.Object("offer", offerKey))
-
 	loggedInUser, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
-		l.Error("could not get user session", zap.Error(err))
 		return err
 	}
 	loggedInUserKey := loggedInUser.GetUserKey()
 
 	offer, err := t.tradingStore.GetOffer(offerKey)
 	if err != nil {
-		l.Error("could not get offer", zap.Error(err))
 		return err
 	}
 
 	offerItems, err := t.tradingStore.GetOfferItemsForOffer(offerKey)
 	if err != nil {
-		l.Error("could not get offer items", zap.Error(err))
 		return err
 	}
 
 	if offerItems.AllPartiesAccepted() {
 		err := fmt.Errorf("offer is already accepted")
-		l.Error("", zap.Error(err))
 		return err
 	}
 
 	approvers, err := t.tradingStore.FindApproversForOffer(offerKey)
 	if err != nil {
-		l.Error("could not get approvers for offer", zap.Error(err))
 		return err
 	}
 
@@ -94,7 +78,7 @@ func (t TradingService) AcceptOffer(ctx context.Context, offerKey model.OfferKey
 		approvers.OfferItemsUsersCanReceive[loggedInUserKey]
 
 	if !canApproveOfferGivingAnything && !canApproveReceivingAnything {
-		return errs.ErrUnauthorized
+		return exceptions.ErrUnauthorized
 	}
 
 	var offerItemsPendingGiverApproval []model.OfferItemKey
@@ -191,14 +175,12 @@ func (t TradingService) AcceptOffer(ctx context.Context, offerKey model.OfferKey
 
 	offerItems, err = t.tradingStore.GetOfferItemsForOffer(offerKey)
 	if err != nil {
-		l.Error("could not get offer items", zap.Error(err))
 		return err
 	}
 
 	if offerItems.AllPartiesAccepted() {
 		err := t.tradingStore.UpdateOfferStatus(offerKey, trading2.AcceptedOffer)
 		if err != nil {
-			l.Error("could not update offer status", zap.Error(err))
 			return err
 		}
 	}

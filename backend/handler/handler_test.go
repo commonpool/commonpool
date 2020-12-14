@@ -3,10 +3,11 @@ package handler
 import (
 	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/db"
 	group2 "github.com/commonpool/backend/pkg/group"
 	resource2 "github.com/commonpool/backend/pkg/resource"
 	trading2 "github.com/commonpool/backend/pkg/trading"
-	"github.com/commonpool/backend/store"
+	"github.com/commonpool/backend/pkg/user"
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 	"log"
@@ -17,7 +18,7 @@ import (
 var (
 	d          *gorm.DB
 	rs         resource2.Store
-	as         auth.Store
+	as         exceptions.Store
 	cs         chat.Store
 	ts         trading2.Store
 	gs         group2.Store
@@ -129,7 +130,7 @@ func setup() {
 }
 
 func tearDown() {
-	if err := store.DropTestDB(); err != nil {
+	if err := db.DropTestDB(); err != nil {
 		log.Fatal(err)
 	}
 }

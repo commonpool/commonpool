@@ -1,7 +1,7 @@
 package model
 
 import (
-	"github.com/commonpool/backend/errors"
+	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/utils"
 	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap/zapcore"
@@ -87,7 +87,7 @@ func (i *GroupKeys) Count() int {
 func ParseGroupKey(value string) (GroupKey, error) {
 	offerId, err := uuid.FromString(value)
 	if err != nil {
-		return GroupKey{}, errors.ErrInvalidGroupId
+		return GroupKey{}, exceptions.ErrInvalidGroupId
 	}
 	return NewGroupKey(offerId), err
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/commonpool/backend/config"
 	"github.com/commonpool/backend/logging"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/user"
 	"github.com/commonpool/backend/utils"
 	"github.com/coreos/go-oidc"
 	"github.com/labstack/echo/v4"
@@ -25,7 +26,7 @@ type OidcAuthenticator struct {
 	oidcConfig   *oidc.Config
 	oidcProvider *oidc.Provider
 	verifier     *oidc.IDTokenVerifier
-	authStore    Store
+	authStore    user.Store
 }
 
 func (a *OidcAuthenticator) GetLoggedInUser(ctx context.Context) (model.UserReference, error) {

@@ -14,6 +14,7 @@ import (
 	chathandler "github.com/commonpool/backend/pkg/chat/handler"
 	chatservice "github.com/commonpool/backend/pkg/chat/service"
 	chatstore "github.com/commonpool/backend/pkg/chat/store"
+	db2 "github.com/commonpool/backend/pkg/db"
 	group2 "github.com/commonpool/backend/pkg/group"
 	service2 "github.com/commonpool/backend/pkg/group/service"
 	store4 "github.com/commonpool/backend/pkg/group/store"
@@ -25,8 +26,9 @@ import (
 	store2 "github.com/commonpool/backend/pkg/trading/store"
 	service4 "github.com/commonpool/backend/pkg/transaction/service"
 	store3 "github.com/commonpool/backend/pkg/transaction/store"
+	"github.com/commonpool/backend/pkg/user"
+	store6 "github.com/commonpool/backend/pkg/user/store"
 	"github.com/commonpool/backend/router"
-	"github.com/commonpool/backend/store"
 	"github.com/labstack/echo/v4"
 	echoSwagger "github.com/swaggo/echo-swagger"
 	"go.uber.org/zap"
@@ -42,7 +44,7 @@ import (
 var (
 	d             *gorm.DB
 	resourceStore resource2.Store
-	authStore     auth.Store
+	authStore     user.Store
 	cs            chat.Store
 	ts            trading2.Store
 	gs            group2.Store
@@ -92,12 +94,12 @@ func main() {
 	r.GET("/api/swagger/*", echoSwagger.WrapHandler)
 
 	db := getDb(appConfig)
-	store.AutoMigrate(db)
+	db2.AutoMigrate(db)
 
 	transactionStore := store3.NewTransactionStore(db)
 	transactionService := service4.NewTransactionService(transactionStore)
 	resourceStore = store5.NewResourceStore(driver, transactionService)
-	authStore = store.NewAuthStore(db, driver)
+	authStore = store6.NewAuthStore(db, driver)
 	chatStore := chatstore.NewChatStore(db, authStore, amqpCli)
 	tradingStore := store2.NewTradingStore(driver)
 	groupStore := store4.NewGroupStore(driver)
@@ -128,8 +130,8 @@ func main() {
 
 	h.Register(v1)
 
-	var users []auth.User
-	err = db.Model(auth.User{}).Find(&users).Error
+	var users []user.User
+	err = db.Model(user.User{}).Find(&users).Error
 	if err != nil {
 		l.Error("could not find users", zap.Error(err))
 		panic(err)

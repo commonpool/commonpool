@@ -1,8 +1,8 @@
 package chat
 
 import (
-	"github.com/commonpool/backend/errors"
+	"github.com/commonpool/backend/pkg/exceptions"
 	"net/http"
 )
 
-var ErrChannelNotFound = errors.NewWebServiceException("channel not found", "ErrChannelNotFound", http.StatusNotFound)
+var ErrChannelNotFound = exceptions.NewWebServiceException("channel not found", "ErrChannelNotFound", http.StatusNotFound)

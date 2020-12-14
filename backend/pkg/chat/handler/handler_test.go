@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/commonpool/backend/auth"
-	"github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/mock"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/router"
 	"github.com/labstack/echo/v4"
@@ -55,7 +55,7 @@ func (s *chatHandlerSuite) SetupTest() {
 			if s.LoggedInUser != nil {
 				return s.LoggedInUser, nil
 			}
-			return nil, errors.ErrUnauthorized
+			return nil, exceptions.ErrUnauthorized
 		},
 		GetRedirectResponseFunc: nil,
 		LoginFunc:               nil,
@@ -157,10 +157,10 @@ func (s *chatHandlerSuite) AssertCreated() bool {
 	return s.AssertResponseCode(http.StatusCreated)
 }
 
-type ErrorResponseAssertion = func(t *testing.T) func(err *errors.ErrorResponse) bool
+type ErrorResponseAssertion = func(t *testing.T) func(err *exceptions.ErrorResponse) bool
 
 func (s *chatHandlerSuite) AssertErrorResponse(do ...ErrorResponseAssertion) bool {
-	wse := errors.ErrorResponse{}
+	wse := exceptions.ErrorResponse{}
 	if err := json.Unmarshal(s.Recorder.Body.Bytes(), &wse); err != nil {
 		s.T().Fatal(err)
 		return false
@@ -174,32 +174,32 @@ func (s *chatHandlerSuite) AssertErrorResponse(do ...ErrorResponseAssertion) boo
 }
 
 func HasStatusCode(statusCode int) ErrorResponseAssertion {
-	return func(t *testing.T) func(err *errors.ErrorResponse) bool {
-		return func(err *errors.ErrorResponse) bool {
+	return func(t *testing.T) func(err *exceptions.ErrorResponse) bool {
+		return func(err *exceptions.ErrorResponse) bool {
 			return assert.Equal(t, statusCode, err.StatusCode)
 		}
 	}
 }
 
 func HasCode(code string) ErrorResponseAssertion {
-	return func(t *testing.T) func(err *errors.ErrorResponse) bool {
-		return func(err *errors.ErrorResponse) bool {
+	return func(t *testing.T) func(err *exceptions.ErrorResponse) bool {
+		return func(err *exceptions.ErrorResponse) bool {
 			return assert.Equal(t, code, err.Code)
 		}
 	}
 }
 
 func HasMessage(message string) ErrorResponseAssertion {
-	return func(t *testing.T) func(err *errors.ErrorResponse) bool {
-		return func(err *errors.ErrorResponse) bool {
+	return func(t *testing.T) func(err *exceptions.ErrorResponse) bool {
+		return func(err *exceptions.ErrorResponse) bool {
 			return assert.Equal(t, message, err.Message)
 		}
 	}
 }
 
 func HasValidationError(key string, message string) ErrorResponseAssertion {
-	return func(t *testing.T) func(err *errors.ErrorResponse) bool {
-		return func(err *errors.ErrorResponse) bool {
+	return func(t *testing.T) func(err *exceptions.ErrorResponse) bool {
+		return func(err *exceptions.ErrorResponse) bool {
 			if !assert.NotNil(t, err, "error should not be nil") {
 				return false
 			}

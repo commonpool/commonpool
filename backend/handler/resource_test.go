@@ -3,8 +3,8 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/exceptions"
 	resource2 "github.com/commonpool/backend/pkg/resource"
 	"github.com/commonpool/backend/router"
 	"github.com/commonpool/backend/web"
@@ -98,7 +98,7 @@ func TestCreateResourceInvalid400(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 
-	res := errors.ErrorResponse{}
+	res := exceptions.ErrorResponse{}
 	assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &res))
 	assert.Equal(t, "ErrCreateResourceBadRequest", res.Code)
 	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
@@ -197,7 +197,7 @@ func TestGetResourceBadId400(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 
-	res := errors.ErrorResponse{}
+	res := exceptions.ErrorResponse{}
 	assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &res))
 	assert.Equal(t, "ErrInvalidResourceKey", res.Code)
 	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
@@ -217,7 +217,7 @@ func TestGetUnknownResource404(t *testing.T) {
 	assert.NoError(t, h.GetResource(c))
 	assert.Equal(t, http.StatusNotFound, rec.Code)
 
-	res := errors.ErrorResponse{}
+	res := exceptions.ErrorResponse{}
 	assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &res))
 	assert.Equal(t, "ErrResourceNotFound", res.Code)
 	assert.Equal(t, http.StatusNotFound, res.StatusCode)

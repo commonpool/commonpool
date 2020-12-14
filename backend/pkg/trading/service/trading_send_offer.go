@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/commonpool/backend/auth"
-	"github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/exceptions"
 	resource2 "github.com/commonpool/backend/pkg/resource"
 	trading2 "github.com/commonpool/backend/pkg/trading"
 	uuid "github.com/satori/go.uuid"
@@ -19,7 +19,7 @@ func (t TradingService) SendOffer(ctx ctx.Context, groupKey model.GroupKey, offe
 
 	userSession, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
-		return nil, nil, errors.ErrUnauthorized
+		return nil, nil, exceptions.ErrUnauthorized
 	}
 
 	// The ownership of a resource can only be moved once in an offer
@@ -105,7 +105,7 @@ func (t TradingService) findAppropriateChannelForOffer(offer *trading2.Offer, of
 func (t TradingService) assertResourcesAreViewableByGroup(resources *resource2.GetResourceByKeysResponse, groupKey model.GroupKey) error {
 	for _, item := range resources.Resources.Items {
 		if !resources.Claims.GroupHasClaim(groupKey, item.Key, resource2.ViewerClaim) {
-			return errors.ErrResourceNotSharedWithGroup
+			return exceptions.ErrResourceNotSharedWithGroup
 		}
 	}
 	return nil
@@ -118,7 +118,7 @@ func (t TradingService) assertResourcesAreNotTransferredToTheirCurrentOwner(reso
 		}
 		resourceTransfer := offerItem.(*trading2.ResourceTransferItem)
 		if resources.Claims.HasClaim(resourceTransfer.To, resourceTransfer.ResourceKey, resource2.OwnershipClaim) {
-			return errors.ErrCannotTransferResourceToItsOwner
+			return exceptions.ErrCannotTransferResourceToItsOwner
 		}
 	}
 	return nil
@@ -135,7 +135,7 @@ func (t TradingService) assertResourceTransferOfferItemsReferToObjectResources(r
 			return err
 		}
 		if !r.IsObject() {
-			return errors.ErrResourceTransferOfferItemsMustReferToObjectResources
+			return exceptions.ErrResourceTransferOfferItemsMustReferToObjectResources
 		}
 	}
 	return nil
@@ -152,7 +152,7 @@ func (t TradingService) assertProvideServiceItemsAreForServiceResources(resource
 			return err
 		}
 		if !r.IsService() {
-			return errors.ErrServiceProvisionOfferItemsMustPointToServiceResources
+			return exceptions.ErrServiceProvisionOfferItemsMustPointToServiceResources
 		}
 	}
 	return nil
@@ -169,7 +169,7 @@ func (t TradingService) assertBorrowOfferItemPointToObjectTypedResource(resource
 			return err
 		}
 		if !r.IsObject() {
-			return errors.ErrBorrowOfferItemMustReferToObjectTypedResource
+			return exceptions.ErrBorrowOfferItemMustReferToObjectTypedResource
 		}
 	}
 	return nil
@@ -371,7 +371,7 @@ func assertTimeOfferItemsHavePositiveTimeValue(offerItems *trading2.OfferItems) 
 		}
 
 		if duration < 0 {
-			return errors.ErrNegativeDuration
+			return exceptions.ErrNegativeDuration
 		}
 	}
 	return nil
@@ -385,7 +385,7 @@ func assertResourcesAreTransferredOnlyOnce(offerItems *trading2.OfferItems) erro
 			resourceKey := resourceTransfer.ResourceKey
 			for _, seenResourceKey := range seenResourceKeys {
 				if seenResourceKey == resourceKey {
-					return errors.ErrDuplicateResourceInOffer
+					return exceptions.ErrDuplicateResourceInOffer
 				}
 			}
 			seenResourceKeys = append(seenResourceKeys, resourceKey)

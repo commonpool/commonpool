@@ -2,7 +2,7 @@ package store
 
 import (
 	"github.com/commonpool/backend/model"
-	"github.com/commonpool/backend/transaction"
+	transaction2 "github.com/commonpool/backend/pkg/transaction"
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
 	"time"
@@ -18,9 +18,9 @@ func NewTransactionStore(db *gorm.DB) *TransactionStore {
 	}
 }
 
-var _ transaction.Store = &TransactionStore{}
+var _ transaction2.Store = &TransactionStore{}
 
-func (t TransactionStore) SaveEntry(entry *transaction.Entry) error {
+func (t TransactionStore) SaveEntry(entry *transaction2.Entry) error {
 
 	var resourceID *uuid.UUID = nil
 	if entry.ResourceKey != nil {
@@ -83,7 +83,7 @@ func (t TransactionStore) SaveEntry(entry *transaction.Entry) error {
 	return nil
 }
 
-func (t TransactionStore) GetEntry(transactionKey model.TransactionEntryKey) (*transaction.Entry, error) {
+func (t TransactionStore) GetEntry(transactionKey model.TransactionEntryKey) (*transaction2.Entry, error) {
 	var transactionEntry TransactionEntry
 	err := t.db.Model(TransactionEntry{}).First(&transactionEntry, "id = ?", transactionKey.String()).Error
 	if err != nil {
@@ -92,7 +92,7 @@ func (t TransactionStore) GetEntry(transactionKey model.TransactionEntryKey) (*t
 	return mapDbTransactionEntry(&transactionEntry)
 }
 
-func (t TransactionStore) GetEntriesForGroupAndUsers(groupKey model.GroupKey, userKeys *model.UserKeys) (*transaction.Entries, error) {
+func (t TransactionStore) GetEntriesForGroupAndUsers(groupKey model.GroupKey, userKeys *model.UserKeys) (*transaction2.Entries, error) {
 
 	sql := "(group_id = ? OR recipient_id = ? OR from_id = ?)"
 	var params = []interface{}{}
@@ -119,7 +119,7 @@ func (t TransactionStore) GetEntriesForGroupAndUsers(groupKey model.GroupKey, us
 	var dbEntries []*TransactionEntry
 	t.db.Where(sql, params...).Find(&dbEntries)
 
-	var entries []*transaction.Entry
+	var entries []*transaction2.Entry
 	for _, dbEntry := range dbEntries {
 		entry, err := mapDbTransactionEntry(dbEntry)
 		if err != nil {
@@ -128,13 +128,13 @@ func (t TransactionStore) GetEntriesForGroupAndUsers(groupKey model.GroupKey, us
 		entries = append(entries, entry)
 	}
 
-	return transaction.NewEntries(entries), nil
+	return transaction2.NewEntries(entries), nil
 
 }
 
 type TransactionEntry struct {
 	ID            uuid.UUID `gorm:"type:uuid;primary_key"`
-	Type          transaction.TransactionType
+	Type          transaction2.TransactionType
 	GroupID       uuid.UUID
 	ResourceID    *uuid.UUID
 	Duration      *time.Duration
@@ -145,7 +145,7 @@ type TransactionEntry struct {
 	Timestamp     time.Time
 }
 
-func mapDbTransactionEntry(dbTransactionEntry *TransactionEntry) (*transaction.Entry, error) {
+func mapDbTransactionEntry(dbTransactionEntry *TransactionEntry) (*transaction2.Entry, error) {
 
 	var resourceKey *model.ResourceKey = nil
 	if dbTransactionEntry.ResourceID != nil {
@@ -163,7 +163,7 @@ func mapDbTransactionEntry(dbTransactionEntry *TransactionEntry) (*transaction.E
 		return nil, err
 	}
 
-	return &transaction.Entry{
+	return &transaction2.Entry{
 		Key:         model.NewTransactionEntryKey(dbTransactionEntry.ID),
 		Type:        dbTransactionEntry.Type,
 		GroupKey:    model.NewGroupKey(dbTransactionEntry.GroupID),

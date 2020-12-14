@@ -1,7 +1,7 @@
 package model
 
 import (
-	errs "github.com/commonpool/backend/errors"
+	"github.com/commonpool/backend/pkg/exceptions"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -18,7 +18,7 @@ func NewResourceKey(id uuid.UUID) ResourceKey {
 func ParseResourceKey(key string) (ResourceKey, error) {
 	resourceUuid, err := uuid.FromString(key)
 	if err != nil {
-		response := errs.ErrInvalidResourceKey(key)
+		response := exceptions.ErrInvalidResourceKey(key)
 		return ResourceKey{}, &response
 	}
 	resourceKey := ResourceKey{

@@ -2,8 +2,8 @@ package handler
 
 import (
 	"fmt"
-	errs "github.com/commonpool/backend/errors"
 	. "github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/exceptions"
 	trading2 "github.com/commonpool/backend/pkg/trading"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
@@ -20,7 +20,7 @@ func parseTargetFromQueryParams(c echo.Context, typeQueryParam string, valueQuer
 		targetType := &typeValue
 		targetIdStr := c.QueryParams().Get(valueQueryParam)
 		if targetIdStr == "" {
-			return nil, errs.ErrQueryParamRequired(valueQueryParam)
+			return nil, exceptions.ErrQueryParamRequired(valueQueryParam)
 		}
 		if targetType.IsGroup() {
 			groupKey, err := ParseGroupKey(targetIdStr)

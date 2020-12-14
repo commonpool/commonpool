@@ -5,27 +5,18 @@ import (
 	"github.com/commonpool/backend/amqp"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/chat"
-	"github.com/commonpool/backend/service"
-	"go.uber.org/zap"
 )
 
 // SubscribeToChannel will subscribe a user to a given channel
 func (c ChatService) SubscribeToChannel(ctx context.Context, channelSubscriptionKey model.ChannelSubscriptionKey, name string) (*chat.ChannelSubscription, error) {
 
-	ctx, l := service.GetCtx(ctx, "ChatService", "SubscribeToChannel")
-	l = l.With(zap.Object("channel_subscription", channelSubscriptionKey))
-
-	l.Debug("subscribing to channel")
-
 	channelSubscription, err := c.chatStore.CreateSubscription(ctx, channelSubscriptionKey, name)
 	if err != nil {
-		l.Error("could not create channel subscription", zap.Error(err))
 		return nil, err
 	}
 
 	amqpChannel, err := c.amqpClient.GetChannel()
 	if err != nil {
-		l.Error("could not get amqp channel", zap.Error(err))
 		return nil, err
 	}
 	defer amqpChannel.Close()
@@ -38,7 +29,6 @@ func (c ChatService) SubscribeToChannel(ctx context.Context, channelSubscription
 	headers := c.getChannelBindingHeaders(channelSubscriptionKey)
 	err = amqpChannel.ExchangeBind(ctx, userExchangeName, "", amqp.WebsocketMessagesExchange, false, headers)
 	if err != nil {
-		l.Error("could not bind user exchange", zap.Error(err))
 		return nil, err
 	}
 

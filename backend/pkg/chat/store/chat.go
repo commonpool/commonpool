@@ -4,21 +4,21 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/commonpool/backend/amqp"
-	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/user"
 	"gorm.io/gorm"
 )
 
 type ChatStore struct {
 	db         *gorm.DB
-	authStore  auth.Store
+	authStore  user.Store
 	amqpClient amqp.Client
 }
 
 var _ chat.Store = &ChatStore{}
 
-func NewChatStore(db *gorm.DB, as auth.Store, amqpClient amqp.Client) *ChatStore {
+func NewChatStore(db *gorm.DB, as user.Store, amqpClient amqp.Client) *ChatStore {
 	return &ChatStore{
 		authStore:  as,
 		db:         db,

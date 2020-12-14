@@ -4,18 +4,15 @@ import (
 	"context"
 	"fmt"
 	"github.com/commonpool/backend/auth"
-	"github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/exceptions"
 	resource3 "github.com/commonpool/backend/pkg/resource"
-	"github.com/commonpool/backend/service"
 )
 
 // NotifyUserInterestedAboutResource will create a channel between two users if it doesn't exist,
 // and will send a message to the owner of the resource notifying them that someone is interested.
 func (c ChatService) NotifyUserInterestedAboutResource(ctx context.Context, request *chat.NotifyUserInterestedAboutResource) (*chat.NotifyUserInterestedAboutResourceResponse, error) {
-
-	ctx, _ = service.GetCtx(ctx, "ChatService", "NotifyUserInterestedAboutResource")
 
 	loggedInUser, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
@@ -33,7 +30,7 @@ func (c ChatService) NotifyUserInterestedAboutResource(ctx context.Context, requ
 	// make sure auth user is not resource owner
 	// doesn't make sense for one to inquire about his own stuff
 	if resourceOwnerKey == loggedInUserKey {
-		err := errors.ErrCannotInquireAboutOwnResource()
+		err := exceptions.ErrCannotInquireAboutOwnResource()
 		return nil, err
 	}
 

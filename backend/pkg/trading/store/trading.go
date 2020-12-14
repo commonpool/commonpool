@@ -3,15 +3,15 @@ package store
 import (
 	"context"
 	"fmt"
-	errs "github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/graph"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/exceptions"
 	groupstore "github.com/commonpool/backend/pkg/group/store"
 	"github.com/commonpool/backend/pkg/resource"
 	resourcestore "github.com/commonpool/backend/pkg/resource/store"
 	sharedstore "github.com/commonpool/backend/pkg/shared/store"
 	"github.com/commonpool/backend/pkg/trading"
-	"github.com/commonpool/backend/store"
+	store2 "github.com/commonpool/backend/pkg/user/store"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
 	"strconv"
 	"strings"
@@ -887,7 +887,7 @@ func (t TradingStore) UpdateOfferStatus(key model.OfferKey, status trading.Offer
 		return result.Err()
 	}
 	if !result.Next() {
-		return errs.ErrOfferNotFound
+		return exceptions.ErrOfferNotFound
 	}
 	return nil
 }
@@ -916,7 +916,7 @@ func (t TradingStore) GetOfferItem(ctx context.Context, key model.OfferItemKey) 
 	}
 
 	if !result.Next() {
-		return nil, errs.ErrOfferItemNotFound
+		return nil, exceptions.ErrOfferItemNotFound
 	}
 
 	offerIdField, _ := result.Record().Get("offerId")
@@ -948,7 +948,7 @@ func MapOfferItem(offerKey model.OfferKey, offerItemNode neo4j.Node, fromNode ne
 	var err error
 
 	if fromNode != nil {
-		if groupstore.IsGroupNode(fromNode) || store.IsUserNode(fromNode) {
+		if groupstore.IsGroupNode(fromNode) || store2.IsUserNode(fromNode) {
 			fromTarget, err = sharedstore.MapOfferItemTarget(fromNode)
 			if err != nil {
 				return nil, err
@@ -961,7 +961,7 @@ func MapOfferItem(offerKey model.OfferKey, offerItemNode neo4j.Node, fromNode ne
 		}
 	}
 	if toNode != nil {
-		if groupstore.IsGroupNode(toNode) || store.IsUserNode(toNode) {
+		if groupstore.IsGroupNode(toNode) || store2.IsUserNode(toNode) {
 			toTarget, err = sharedstore.MapOfferItemTarget(toNode)
 			if err != nil {
 				return nil, err
@@ -1185,7 +1185,7 @@ func (t TradingStore) UpdateOfferItem(ctx context.Context, offerItem trading.Off
 		return result.Err()
 	}
 	if !result.Next() {
-		return errs.ErrOfferItemNotFound
+		return exceptions.ErrOfferItemNotFound
 	}
 	return nil
 }
@@ -1212,7 +1212,7 @@ func (t TradingStore) ConfirmItemGiven(ctx context.Context, key model.OfferItemK
 	}
 
 	if !result.Next() {
-		return errs.ErrOfferItemNotFound
+		return exceptions.ErrOfferItemNotFound
 	}
 	return nil
 }
@@ -1237,7 +1237,7 @@ func (t TradingStore) GetOffer(key model.OfferKey) (*trading.Offer, error) {
 		return nil, result.Err()
 	}
 	if !result.Next() {
-		return nil, errs.ErrOfferNotFound
+		return nil, exceptions.ErrOfferNotFound
 	}
 
 	createdByField, _ := result.Record().Get("createdById")

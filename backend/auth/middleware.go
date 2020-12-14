@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/commonpool/backend/config"
 	"github.com/commonpool/backend/logging"
+	"github.com/commonpool/backend/pkg/user"
 	"github.com/coreos/go-oidc"
 	"github.com/labstack/echo/v4"
 	"github.com/opentracing/opentracing-go/log"
@@ -14,7 +15,7 @@ import (
 const oauthCallbackPath = "/oauth2/callback"
 
 // NewAuth Setup auth middleware
-func NewAuth(e *echo.Group, appConfig *config.AppConfig, groupPrefix string, as Store) Authenticator {
+func NewAuth(e *echo.Group, appConfig *config.AppConfig, groupPrefix string, as user.Store) Authenticator {
 
 	ctx := context.Background()
 	l := logging.WithContext(ctx)

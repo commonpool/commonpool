@@ -1,6 +1,8 @@
 package trading
 
-import "github.com/commonpool/backend/errors"
+import (
+	"github.com/commonpool/backend/pkg/exceptions"
+)
 
 type OfferItemType string
 
@@ -21,6 +23,6 @@ func ParseOfferItemType(str string) (OfferItemType, error) {
 	} else if str == string(ResourceTransfer) {
 		return ResourceTransfer, nil
 	} else {
-		return "", errors.ErrInvalidOfferItemType
+		return "", exceptions.ErrInvalidOfferItemType
 	}
 }

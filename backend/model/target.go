@@ -1,6 +1,8 @@
 package model
 
-import "github.com/commonpool/backend/errors"
+import (
+	"github.com/commonpool/backend/pkg/exceptions"
+)
 
 type Target struct {
 	UserKey  *UserKey
@@ -88,6 +90,6 @@ func ParseOfferItemTargetType(str string) (TargetType, error) {
 	} else if str == "group" {
 		return GroupTarget, nil
 	} else {
-		return "", errors.ErrInvalidTargetType
+		return "", exceptions.ErrInvalidTargetType
 	}
 }

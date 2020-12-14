@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/utils"
 	"github.com/commonpool/backend/web"
@@ -29,7 +29,7 @@ func (chatHandler *ChatHandler) GetMessages(c echo.Context) error {
 
 	channelSrt := c.QueryParam("channel")
 	if channelSrt == "" {
-		return errors.ErrQueryParamRequired("channel")
+		return exceptions.ErrQueryParamRequired("channel")
 	}
 
 	take, err := utils.ParseTake(c, 10, 100)

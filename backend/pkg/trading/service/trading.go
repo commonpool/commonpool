@@ -3,25 +3,23 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/chat"
 	group2 "github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/resource"
 	trading2 "github.com/commonpool/backend/pkg/trading"
-	"github.com/commonpool/backend/service"
-	"github.com/commonpool/backend/transaction"
-	"go.uber.org/zap"
+	transaction2 "github.com/commonpool/backend/pkg/transaction"
+	"github.com/commonpool/backend/pkg/user"
 	ctx "golang.org/x/net/context"
 	"time"
 )
 
 type TradingService struct {
 	tradingStore       trading2.Store
-	transactionService transaction.Service
+	transactionService transaction2.Service
 	groupService       group2.Service
 	rs                 resource.Store
-	us                 auth.Store
+	us                 user.Store
 	chatService        chat.Service
 }
 
@@ -30,10 +28,10 @@ var _ trading2.Service = &TradingService{}
 func NewTradingService(
 	tradingStore trading2.Store,
 	resourceStore resource.Store,
-	authStore auth.Store,
+	authStore user.Store,
 	chatService chat.Service,
 	groupService group2.Service,
-	transactionService transaction.Service) *TradingService {
+	transactionService transaction2.Service) *TradingService {
 	return &TradingService{
 		tradingStore:       tradingStore,
 		rs:                 resourceStore,
@@ -44,9 +42,7 @@ func NewTradingService(
 	}
 }
 
-func (t TradingService) checkOfferCompleted(ctx context.Context, groupKey model.GroupKey, offerKey model.OfferKey, offerItems *trading2.OfferItems, userConfirmingItem model.UserReference, usersInOffer *auth.Users) error {
-
-	ctx, l := service.GetCtx(ctx, "TradingService", "checkOfferCompleted")
+func (t TradingService) checkOfferCompleted(ctx context.Context, groupKey model.GroupKey, offerKey model.OfferKey, offerItems *trading2.OfferItems, userConfirmingItem model.UserReference, usersInOffer *user.Users) error {
 
 	if offerItems.AllPartiesAccepted() && offerItems.AllUserActionsCompleted() {
 		for _, offerItem := range offerItems.Items {
@@ -82,13 +78,11 @@ func (t TradingService) checkOfferCompleted(ctx context.Context, groupKey model.
 
 		err := t.tradingStore.UpdateOfferStatus(offerKey, trading2.CompletedOffer)
 		if err != nil {
-			l.Error("could not mark offer as completed", zap.Error(err))
 			return err
 		}
 
 		blocks, mainText, err := t.buildOfferCompletedMessage(ctx, offerItems, usersInOffer)
 		if err != nil {
-			l.Debug("could not build offer completion message", zap.Error(err))
 			return err
 		}
 
@@ -105,9 +99,7 @@ func (t TradingService) checkOfferCompleted(ctx context.Context, groupKey model.
 	return nil
 }
 
-func (t TradingService) buildOfferCompletedMessage(ctx context.Context, items *trading2.OfferItems, users *auth.Users) ([]chat.Block, string, error) {
-
-	ctx, _ = service.GetCtx(ctx, "TradingService", "buildOfferCompletedMessage")
+func (t TradingService) buildOfferCompletedMessage(ctx context.Context, items *trading2.OfferItems, users *user.Users) ([]chat.Block, string, error) {
 
 	var blocks []chat.Block
 

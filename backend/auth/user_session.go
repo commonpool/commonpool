@@ -2,8 +2,9 @@ package auth
 
 import (
 	"context"
-	"github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/exceptions"
+	exceptions2 "github.com/commonpool/backend/pkg/user"
 	"github.com/labstack/echo/v4"
 )
 
@@ -51,7 +52,7 @@ func SetContextAuthenticatedUser(c context.Context, username, subject, email str
 
 // saveAuthenticatedUser when user logs in, update the context with the user info,
 // and also saves the newly gotten user info in the db
-func saveAuthenticatedUser(c echo.Context, store Store, sub string, username string, email string) error {
+func saveAuthenticatedUser(c echo.Context, store exceptions2.Store, sub string, username string, email string) error {
 	SetIsAuthenticated(c, true)
 	c.Set(SubjectUsernameKey, username)
 	c.Set(SubjectEmailKey, email)
@@ -60,7 +61,7 @@ func saveAuthenticatedUser(c echo.Context, store Store, sub string, username str
 }
 
 // saveUserInfo saves the logged in user info th database
-func saveUserInfo(as Store, sub string, email string, username string) error {
+func saveUserInfo(as exceptions2.Store, sub string, email string, username string) error {
 	return as.Upsert(model.NewUserKey(sub), email, username)
 }
 
@@ -75,11 +76,11 @@ func GetLoggedInUser(ctx context.Context) (*UserSession, error) {
 	valIntf := ctx.Value(IsAuthenticatedKey)
 
 	if valIntf == nil {
-		return nil, errors.ErrUnauthorized
+		return nil, exceptions.ErrUnauthorized
 	}
 
 	if !valIntf.(bool) {
-		return nil, errors.ErrUnauthorized
+		return nil, exceptions.ErrUnauthorized
 	}
 	return &UserSession{
 		Username:        ctx.Value(SubjectUsernameKey).(string),

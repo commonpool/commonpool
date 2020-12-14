@@ -12,6 +12,7 @@ import (
 	"github.com/commonpool/backend/handler"
 	"github.com/commonpool/backend/mock"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/db"
 	service2 "github.com/commonpool/backend/pkg/group/service"
 	store4 "github.com/commonpool/backend/pkg/group/store"
 	store5 "github.com/commonpool/backend/pkg/resource/store"
@@ -19,6 +20,8 @@ import (
 	store2 "github.com/commonpool/backend/pkg/trading/store"
 	service4 "github.com/commonpool/backend/pkg/transaction/service"
 	store3 "github.com/commonpool/backend/pkg/transaction/store"
+	"github.com/commonpool/backend/pkg/user"
+	store6 "github.com/commonpool/backend/pkg/user/store"
 	store "github.com/commonpool/backend/store"
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/driver/postgres"
@@ -36,7 +39,7 @@ var a *handler.Handler
 var Db *gorm.DB
 var AmqpClient amqp.Client
 var ResourceStore store5.ResourceStore
-var AuthStore store.AuthStore
+var AuthStore store6.UserStore
 var ChatStore chatstore.ChatStore
 var TradingStore store2.TradingStore
 var GroupStore store4.GroupStore
@@ -88,7 +91,7 @@ func TestMain(m *testing.M) {
 	TransactionStore = store3.NewTransactionStore(Db)
 	TransactionService = service4.NewTransactionService(TransactionStore)
 	ResourceStore = *store5.NewResourceStore(Driver, TransactionService)
-	AuthStore = *store.NewAuthStore(Db, Driver)
+	AuthStore = *store6.NewAuthStore(Db, Driver)
 	ChatStore = *chatstore.NewChatStore(Db, &AuthStore, AmqpClient)
 	TradingStore = *store2.NewTradingStore(Driver)
 	GroupStore = *store4.NewGroupStore(Driver)
@@ -96,7 +99,7 @@ func TestMain(m *testing.M) {
 	GroupService = *service2.NewGroupService(&GroupStore, AmqpClient, ChatService, &AuthStore)
 	TradingService = *service3.NewTradingService(TradingStore, &ResourceStore, &AuthStore, ChatService, GroupService, TransactionService)
 
-	store.AutoMigrate(Db)
+	db.AutoMigrate(Db)
 
 	a = handler.NewHandler(
 		&ResourceStore,
@@ -111,7 +114,7 @@ func TestMain(m *testing.M) {
 		GroupService)
 
 	cleanDb()
-	Db.Delete(auth.User{}, "1 = 1")
+	Db.Delete(exceptions.User{}, "1 = 1")
 
 	os.Exit(m.Run())
 

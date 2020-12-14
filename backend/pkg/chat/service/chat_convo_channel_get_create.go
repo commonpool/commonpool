@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"github.com/commonpool/backend/amqp"
-	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/user"
 	"sort"
 	"strings"
 )
@@ -90,8 +90,8 @@ func (c ChatService) createSubscriptionsAndMqBindingsForUserConversation(ctx con
 
 func (c ChatService) createSubscriptionAndMqBindingForUserConversation(
 	ctx context.Context,
-	user *auth.User,
-	conversationUsers *auth.Users,
+	user *user.User,
+	conversationUsers *user.Users,
 	channelKey model.ChannelKey,
 ) (*chat.ChannelSubscription, error) {
 
@@ -128,14 +128,14 @@ func (c ChatService) createSubscriptionAndMqBindingForUserConversation(
 // Mark would see "Dana, Joe"
 func (c ChatService) getConversationNameForUser(
 	ctx context.Context,
-	us *auth.Users,
-	u *auth.User,
+	us *user.Users,
+	u *user.User,
 ) string {
 
 	// First, sort the user names
 	userList := us.Items
 
-	copied := make([]*auth.User, len(userList))
+	copied := make([]*user.User, len(userList))
 	copy(copied, userList)
 	sort.Slice(copied, func(i, j int) bool {
 		return copied[i].Username > copied[j].Username

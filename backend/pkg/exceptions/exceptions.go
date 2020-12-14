@@ -1,4 +1,4 @@
-package errors
+package exceptions
 
 import (
 	"fmt"
@@ -11,6 +11,27 @@ type WebServiceException struct {
 	Status  int
 	Code    string
 	Message string
+}
+
+func (e WebServiceException) Error() string {
+	return e.Message
+}
+
+func (e WebServiceException) Is(err error) bool {
+	a, ok := err.(WebServiceException)
+	if !ok {
+		return false
+	}
+	return e.Code == a.Code
+}
+
+func NewWebServiceException(message string, code string, status int) error {
+	e := WebServiceException{
+		Status:  status,
+		Code:    code,
+		Message: message,
+	}
+	return &e
 }
 
 var ErrUserNotFound = NewWebServiceException("user not found", "ErrUserNotFound", http.StatusNotFound)
@@ -44,27 +65,6 @@ func ErrQueryParamRequired(queryParameter string) error {
 	return NewWebServiceException(fmt.Sprintf("query parameter '%s' is required", queryParameter), "ErrQueryParamRequired", http.StatusBadRequest)
 }
 
-func (e WebServiceException) Error() string {
-	return e.Message
-}
-
-func (e WebServiceException) Is(err error) bool {
-	a, ok := err.(WebServiceException)
-	if !ok {
-		return false
-	}
-	return e.Code == a.Code
-}
-
-func NewWebServiceException(message string, code string, status int) error {
-	e := WebServiceException{
-		Status:  status,
-		Code:    code,
-		Message: message,
-	}
-	return &e
-}
-
 type ValidError struct {
 	Tag             string `json:"tag"`
 	ActualTag       string `json:"actualTag"`
@@ -91,9 +91,6 @@ var (
 	ErrInvalidResourceKey = func(key string) ErrorResponse {
 		return NewError(fmt.Sprintf("invalid resource key: '%s'", key), "ErrInvalidResourceKey", http.StatusBadRequest)
 	}
-	ErrParseBefore = func(err string) ErrorResponse {
-		return NewError(fmt.Sprintf("cannot parse before: '%s'", err), "ErrParseBefore", http.StatusBadRequest)
-	}
 	ErrParseResourceType = func(resType string) ErrorResponse {
 		return NewError(fmt.Sprintf("cannot parse resource type '%s'", resType), "ErrParseResourceType", http.StatusBadRequest)
 	}
@@ -103,12 +100,6 @@ var (
 	ErrCannotInquireAboutOwnResource = func() *ErrorResponse {
 		err := NewError("cannot inquire about your own resource", "ErrCannotInquireAboutOwnResource", http.StatusForbidden)
 		return &err
-	}
-	ErrInvalidTopicId = func(threadId string) ErrorResponse {
-		return NewError(fmt.Sprintf("invalid thread id: '%s'", threadId), "ErrInvalidTopicId", http.StatusBadRequest)
-	}
-	ErrTransactionResourceOwnerMismatch = func() ErrorResponse {
-		return NewError("resource owner doesn't match offer.item[].from", "ErrTransactionResourceOwnerMismatch", http.StatusBadRequest)
 	}
 )
 
