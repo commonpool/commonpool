@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
+	group2 "github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
 	trading2 "github.com/commonpool/backend/pkg/trading"
 	"github.com/commonpool/backend/web"
@@ -14,7 +14,7 @@ func (h *Handler) HandleOfferItemTargetPicker(c echo.Context) error {
 
 	ctx, _ := handler.GetEchoContext(c, "HandleOfferItemTargetPicker")
 
-	groupKey, err := group.ParseGroupKey(c.QueryParams().Get("group_id"))
+	groupKey, err := model.ParseGroupKey(c.QueryParams().Get("group_id"))
 	if err != nil {
 		return err
 	}
@@ -52,7 +52,7 @@ func (h *Handler) HandleOfferItemTargetPicker(c echo.Context) error {
 	}
 
 	for _, grpKey := range groupKeys {
-		grp, err := h.groupService.GetGroup(ctx, &group.GetGroupRequest{
+		grp, err := h.groupService.GetGroup(ctx, &group2.GetGroupRequest{
 			Key: grpKey,
 		})
 		if err != nil {

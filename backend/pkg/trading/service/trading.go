@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/commonpool/backend/auth"
-	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/chat"
+	group2 "github.com/commonpool/backend/pkg/group"
+	"github.com/commonpool/backend/pkg/resource"
 	trading2 "github.com/commonpool/backend/pkg/trading"
-	res "github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/service"
 	"github.com/commonpool/backend/transaction"
 	"go.uber.org/zap"
@@ -19,8 +19,8 @@ import (
 type TradingService struct {
 	tradingStore       trading2.Store
 	transactionService transaction.Service
-	groupService       group.Service
-	rs                 res.Store
+	groupService       group2.Service
+	rs                 resource.Store
 	us                 auth.Store
 	chatService        chat.Service
 }
@@ -29,10 +29,10 @@ var _ trading2.Service = &TradingService{}
 
 func NewTradingService(
 	tradingStore trading2.Store,
-	resourceStore res.Store,
+	resourceStore resource.Store,
 	authStore auth.Store,
 	chatService chat.Service,
-	groupService group.Service,
+	groupService group2.Service,
 	transactionService transaction.Service) *TradingService {
 	return &TradingService{
 		tradingStore:       tradingStore,
@@ -162,8 +162,8 @@ func (t TradingService) FindTargetsForOfferItem(
 	from *model.Target,
 	to *model.Target) (*model.Targets, error) {
 
-	membershipStatus := group.ApprovedMembershipStatus
-	membershipsForGroup, err := t.groupService.GetGroupMemberships(ctx, &group.GetMembershipsForGroupRequest{
+	membershipStatus := group2.ApprovedMembershipStatus
+	membershipsForGroup, err := t.groupService.GetGroupMemberships(ctx, &group2.GetMembershipsForGroupRequest{
 		GroupKey:         groupKey,
 		MembershipStatus: &membershipStatus,
 	})
@@ -171,7 +171,7 @@ func (t TradingService) FindTargetsForOfferItem(
 		return nil, err
 	}
 
-	group, err := t.groupService.GetGroup(ctx, &group.GetGroupRequest{
+	group, err := t.groupService.GetGroup(ctx, &group2.GetGroupRequest{
 		Key: groupKey,
 	})
 	if err != nil {

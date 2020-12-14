@@ -2,10 +2,10 @@ package handler
 
 import (
 	"github.com/commonpool/backend/auth"
-	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/pkg/chat"
+	group2 "github.com/commonpool/backend/pkg/group"
+	resource2 "github.com/commonpool/backend/pkg/resource"
 	trading2 "github.com/commonpool/backend/pkg/trading"
-	"github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/store"
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
@@ -16,11 +16,11 @@ import (
 
 var (
 	d          *gorm.DB
-	rs         resource.Store
+	rs         resource2.Store
 	as         auth.Store
 	cs         chat.Store
 	ts         trading2.Store
-	gs         group.Store
+	gs         group2.Store
 	h          *Handler
 	e          *echo.Echo
 	userSub1   = "user-1-sub"

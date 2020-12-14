@@ -2,7 +2,7 @@ package handler
 
 import (
 	"github.com/commonpool/backend/auth"
-	"github.com/commonpool/backend/group"
+	group2 "github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
@@ -29,7 +29,7 @@ func (h *Handler) GetLoggedInUserMemberships(c echo.Context) error {
 	}
 	authUserKey := authUser.GetUserKey()
 
-	userMemberships, err := h.groupService.GetUserMemberships(ctx, group.NewGetMembershipsForUserRequest(authUserKey, group.AnyMembershipStatus()))
+	userMemberships, err := h.groupService.GetUserMemberships(ctx, group2.NewGetMembershipsForUserRequest(authUserKey, group2.AnyMembershipStatus()))
 	if err != nil {
 		return err
 	}

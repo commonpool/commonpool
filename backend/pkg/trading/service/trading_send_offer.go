@@ -7,8 +7,8 @@ import (
 	"github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/chat"
+	resource2 "github.com/commonpool/backend/pkg/resource"
 	trading2 "github.com/commonpool/backend/pkg/trading"
-	"github.com/commonpool/backend/resource"
 	uuid "github.com/satori/go.uuid"
 	ctx "golang.org/x/net/context"
 	"strings"
@@ -102,29 +102,29 @@ func (t TradingService) findAppropriateChannelForOffer(offer *trading2.Offer, of
 	return channelKey, chat.ConversationChannel, nil
 }
 
-func (t TradingService) assertResourcesAreViewableByGroup(resources *resource.GetResourceByKeysResponse, groupKey model.GroupKey) error {
+func (t TradingService) assertResourcesAreViewableByGroup(resources *resource2.GetResourceByKeysResponse, groupKey model.GroupKey) error {
 	for _, item := range resources.Resources.Items {
-		if !resources.Claims.GroupHasClaim(groupKey, item.Key, resource.ViewerClaim) {
+		if !resources.Claims.GroupHasClaim(groupKey, item.Key, resource2.ViewerClaim) {
 			return errors.ErrResourceNotSharedWithGroup
 		}
 	}
 	return nil
 }
 
-func (t TradingService) assertResourcesAreNotTransferredToTheirCurrentOwner(resources *resource.GetResourceByKeysResponse, items *trading2.OfferItems) error {
+func (t TradingService) assertResourcesAreNotTransferredToTheirCurrentOwner(resources *resource2.GetResourceByKeysResponse, items *trading2.OfferItems) error {
 	for _, offerItem := range items.Items {
 		if !offerItem.IsResourceTransfer() {
 			continue
 		}
 		resourceTransfer := offerItem.(*trading2.ResourceTransferItem)
-		if resources.Claims.HasClaim(resourceTransfer.To, resourceTransfer.ResourceKey, resource.OwnershipClaim) {
+		if resources.Claims.HasClaim(resourceTransfer.To, resourceTransfer.ResourceKey, resource2.OwnershipClaim) {
 			return errors.ErrCannotTransferResourceToItsOwner
 		}
 	}
 	return nil
 }
 
-func (t TradingService) assertResourceTransferOfferItemsReferToObjectResources(resources *resource.GetResourceByKeysResponse, items *trading2.OfferItems) error {
+func (t TradingService) assertResourceTransferOfferItemsReferToObjectResources(resources *resource2.GetResourceByKeysResponse, items *trading2.OfferItems) error {
 	for _, offerItem := range items.Items {
 		if !offerItem.IsResourceTransfer() {
 			continue
@@ -141,7 +141,7 @@ func (t TradingService) assertResourceTransferOfferItemsReferToObjectResources(r
 	return nil
 }
 
-func (t TradingService) assertProvideServiceItemsAreForServiceResources(resources *resource.GetResourceByKeysResponse, items *trading2.OfferItems) error {
+func (t TradingService) assertProvideServiceItemsAreForServiceResources(resources *resource2.GetResourceByKeysResponse, items *trading2.OfferItems) error {
 	for _, offerItem := range items.Items {
 		if !offerItem.IsServiceProviding() {
 			continue
@@ -158,7 +158,7 @@ func (t TradingService) assertProvideServiceItemsAreForServiceResources(resource
 	return nil
 }
 
-func (t TradingService) assertBorrowOfferItemPointToObjectTypedResource(resources *resource.GetResourceByKeysResponse, items *trading2.OfferItems) error {
+func (t TradingService) assertBorrowOfferItemPointToObjectTypedResource(resources *resource2.GetResourceByKeysResponse, items *trading2.OfferItems) error {
 	for _, offerItem := range items.Items {
 		if !offerItem.IsBorrowingResource() {
 			continue

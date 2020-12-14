@@ -3,7 +3,7 @@ package handler
 import (
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/handler"
-	"github.com/commonpool/backend/resource"
+	resource2 "github.com/commonpool/backend/pkg/resource"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -29,7 +29,7 @@ func (h *Handler) GetResource(c echo.Context) error {
 		return err
 	}
 
-	getResourceByKeyResponse, err := h.resourceStore.GetByKey(ctx, resource.NewGetResourceByKeyQuery(resourceKey))
+	getResourceByKeyResponse, err := h.resourceStore.GetByKey(ctx, resource2.NewGetResourceByKeyQuery(resourceKey))
 	if err != nil {
 		return err
 	}

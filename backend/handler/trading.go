@@ -3,7 +3,6 @@ package handler
 import (
 	"fmt"
 	errs "github.com/commonpool/backend/errors"
-	"github.com/commonpool/backend/group"
 	. "github.com/commonpool/backend/model"
 	trading2 "github.com/commonpool/backend/pkg/trading"
 	"github.com/commonpool/backend/web"
@@ -24,7 +23,7 @@ func parseTargetFromQueryParams(c echo.Context, typeQueryParam string, valueQuer
 			return nil, errs.ErrQueryParamRequired(valueQueryParam)
 		}
 		if targetType.IsGroup() {
-			groupKey, err := group.ParseGroupKey(targetIdStr)
+			groupKey, err := ParseGroupKey(targetIdStr)
 			if err != nil {
 				return nil, err
 			}

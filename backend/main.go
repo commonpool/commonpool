@@ -8,21 +8,23 @@ import (
 	"github.com/commonpool/backend/config"
 	_ "github.com/commonpool/backend/docs"
 	"github.com/commonpool/backend/graph"
-	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/handler"
 	"github.com/commonpool/backend/logging"
 	"github.com/commonpool/backend/pkg/chat"
 	chathandler "github.com/commonpool/backend/pkg/chat/handler"
 	chatservice "github.com/commonpool/backend/pkg/chat/service"
 	chatstore "github.com/commonpool/backend/pkg/chat/store"
+	group2 "github.com/commonpool/backend/pkg/group"
 	service2 "github.com/commonpool/backend/pkg/group/service"
+	store4 "github.com/commonpool/backend/pkg/group/store"
 	handler2 "github.com/commonpool/backend/pkg/handler"
+	resource2 "github.com/commonpool/backend/pkg/resource"
+	store5 "github.com/commonpool/backend/pkg/resource/store"
 	trading2 "github.com/commonpool/backend/pkg/trading"
 	service3 "github.com/commonpool/backend/pkg/trading/service"
 	store2 "github.com/commonpool/backend/pkg/trading/store"
 	service4 "github.com/commonpool/backend/pkg/transaction/service"
 	store3 "github.com/commonpool/backend/pkg/transaction/store"
-	"github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/router"
 	"github.com/commonpool/backend/store"
 	"github.com/labstack/echo/v4"
@@ -39,11 +41,11 @@ import (
 
 var (
 	d             *gorm.DB
-	resourceStore resource.Store
+	resourceStore resource2.Store
 	authStore     auth.Store
 	cs            chat.Store
 	ts            trading2.Store
-	gs            group.Store
+	gs            group2.Store
 	e             *echo.Echo
 )
 
@@ -94,11 +96,11 @@ func main() {
 
 	transactionStore := store3.NewTransactionStore(db)
 	transactionService := service4.NewTransactionService(transactionStore)
-	resourceStore = store.NewResourceStore(driver, transactionService)
+	resourceStore = store5.NewResourceStore(driver, transactionService)
 	authStore = store.NewAuthStore(db, driver)
 	chatStore := chatstore.NewChatStore(db, authStore, amqpCli)
 	tradingStore := store2.NewTradingStore(driver)
-	groupStore := store.NewGroupStore(driver)
+	groupStore := store4.NewGroupStore(driver)
 
 	chatService := chatservice.NewChatService(authStore, groupStore, resourceStore, amqpCli, chatStore)
 	groupService := service2.NewGroupService(groupStore, amqpCli, chatService, authStore)

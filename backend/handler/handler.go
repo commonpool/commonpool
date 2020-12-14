@@ -4,27 +4,27 @@ import (
 	"github.com/commonpool/backend/amqp"
 	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/config"
-	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/pkg/chat"
+	group2 "github.com/commonpool/backend/pkg/group"
+	resource2 "github.com/commonpool/backend/pkg/resource"
 	trading2 "github.com/commonpool/backend/pkg/trading"
-	"github.com/commonpool/backend/resource"
 )
 
 type Handler struct {
 	amqp           amqp.Client
-	resourceStore  resource.Store
+	resourceStore  resource2.Store
 	authStore      auth.Store
 	authorization  auth.Authenticator
 	chatStore      chat.Store
 	tradingStore   trading2.Store
-	groupService   group.Service
+	groupService   group2.Service
 	config         config.AppConfig
 	chatService    chat.Service
 	tradingService trading2.Service
 }
 
 func NewHandler(
-	rs resource.Store,
+	rs resource2.Store,
 	as auth.Store,
 	cs chat.Store,
 	ts trading2.Store,
@@ -33,7 +33,7 @@ func NewHandler(
 	cfg config.AppConfig,
 	chatService chat.Service,
 	tradingService trading2.Service,
-	groupService group.Service,
+	groupService group2.Service,
 ) *Handler {
 	return &Handler{
 		resourceStore:  rs,

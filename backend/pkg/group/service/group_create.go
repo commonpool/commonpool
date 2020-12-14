@@ -3,13 +3,13 @@ package service
 import (
 	"context"
 	"github.com/commonpool/backend/auth"
-	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/chat"
+	group2 "github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/service"
 )
 
-func (g GroupService) CreateGroup(ctx context.Context, request *group.CreateGroupRequest) (*group.CreateGroupResponse, error) {
+func (g GroupService) CreateGroup(ctx context.Context, request *group2.CreateGroupRequest) (*group2.CreateGroupResponse, error) {
 
 	ctx, _ = service.GetCtx(ctx, "GroupService", "CreateGroup")
 
@@ -39,7 +39,7 @@ func (g GroupService) CreateGroup(ctx context.Context, request *group.CreateGrou
 		return nil, err
 	}
 
-	return &group.CreateGroupResponse{
+	return &group2.CreateGroupResponse{
 		ChannelKey:      channel.GetKey(),
 		SubscriptionKey: channelSubscription.GetKey(),
 		Group:           grp,

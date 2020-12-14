@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
+	group2 "github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
@@ -29,7 +29,7 @@ func (h *Handler) CancelOrDeclineInvitation(c echo.Context) error {
 		return err
 	}
 
-	groupKey, err := group.ParseGroupKey(req.GroupID)
+	groupKey, err := model.ParseGroupKey(req.GroupID)
 	if err != nil {
 		return err
 	}
@@ -37,7 +37,7 @@ func (h *Handler) CancelOrDeclineInvitation(c echo.Context) error {
 
 	membershipKey := model.NewMembershipKey(groupKey, userKey)
 
-	err = h.groupService.CancelOrDeclineInvitation(ctx, group.NewDelineInvitationRequest(membershipKey))
+	err = h.groupService.CancelOrDeclineInvitation(ctx, group2.NewDelineInvitationRequest(membershipKey))
 	if err != nil {
 		l.Error("could not decline invitation", zap.Error(err))
 		return err

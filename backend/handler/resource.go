@@ -2,10 +2,10 @@ package handler
 
 import (
 	. "github.com/commonpool/backend/errors"
-	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
+	group2 "github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
-	"github.com/commonpool/backend/resource"
+	resource2 "github.com/commonpool/backend/pkg/resource"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
@@ -16,9 +16,9 @@ func (h *Handler) ensureResourceIsSharedWithGroupsTheUserIsActiveMemberOf(c echo
 
 	ctx, l := handler.GetEchoContext(c, "ensureResourceIsSharedWithGroupsTheUserIsActiveMemberOf")
 
-	var membershipStatus = group.ApprovedMembershipStatus
+	var membershipStatus = group2.ApprovedMembershipStatus
 
-	userMemberships, err := h.groupService.GetUserMemberships(ctx, group.NewGetMembershipsForUserRequest(loggedInUserKey, &membershipStatus))
+	userMemberships, err := h.groupService.GetUserMemberships(ctx, group2.NewGetMembershipsForUserRequest(loggedInUserKey, &membershipStatus))
 	if err != nil {
 		l.Error("could not get user memberships", zap.Error(err))
 		return err, true
@@ -38,7 +38,7 @@ func (h *Handler) parseGroupKeys(c echo.Context, sharedWith []web.InputResourceS
 	sharedWithGroupKeys := make([]model.GroupKey, len(sharedWith))
 	for i := range sharedWith {
 		groupKeyStr := sharedWith[i].GroupID
-		groupKey, err := group.ParseGroupKey(groupKeyStr)
+		groupKey, err := model.ParseGroupKey(groupKeyStr)
 		if err != nil {
 			return nil, c.String(http.StatusBadRequest, "invalid group key : "+groupKeyStr), true
 		}
@@ -47,7 +47,7 @@ func (h *Handler) parseGroupKeys(c echo.Context, sharedWith []web.InputResourceS
 	return model.NewGroupKeys(sharedWithGroupKeys), nil, false
 }
 
-func NewResourceResponse(res *resource.Resource, creatorUsername string, creatorId string, sharedWithGroups *group.Groups) web.Resource {
+func NewResourceResponse(res *resource2.Resource, creatorUsername string, creatorId string, sharedWithGroups *group2.Groups) web.Resource {
 
 	//goland:noinspection GoPreferNilSlice
 	var sharings = []web.OutputResourceSharing{}

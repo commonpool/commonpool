@@ -1,10 +1,10 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
+	group2 "github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
-	"github.com/commonpool/backend/resource"
+	resource2 "github.com/commonpool/backend/pkg/resource"
 	"github.com/commonpool/backend/utils"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
@@ -44,12 +44,12 @@ func (h *Handler) SearchResources(c echo.Context) error {
 
 	searchQuery := strings.TrimSpace(c.QueryParam("query"))
 
-	resourceType, err := resource.ParseResourceType(c.QueryParam("type"))
+	resourceType, err := resource2.ParseResourceType(c.QueryParam("type"))
 	if err != nil {
 		return err
 	}
 
-	resourceSubType, err := resource.ParseResourceSubType(c.QueryParam("sub_type"))
+	resourceSubType, err := resource2.ParseResourceSubType(c.QueryParam("sub_type"))
 	if err != nil {
 		return err
 	}
@@ -59,14 +59,14 @@ func (h *Handler) SearchResources(c echo.Context) error {
 	var groupKey *model.GroupKey
 	groupStr := c.QueryParam("group_id")
 	if groupStr != "" {
-		groupKey2, err := group.ParseGroupKey(groupStr)
+		groupKey2, err := model.ParseGroupKey(groupStr)
 		if err != nil {
 			return err
 		}
 		groupKey = &groupKey2
 	}
 
-	resourcesQuery := resource.NewSearchResourcesQuery(&searchQuery, resourceType, resourceSubType, skip, take, createdBy, groupKey)
+	resourcesQuery := resource2.NewSearchResourcesQuery(&searchQuery, resourceType, resourceSubType, skip, take, createdBy, groupKey)
 	resources := h.resourceStore.Search(ctx, resourcesQuery)
 	if resources.Error != nil {
 		return err
@@ -77,7 +77,7 @@ func (h *Handler) SearchResources(c echo.Context) error {
 		return err
 	}
 
-	groupMap := map[model.GroupKey]*group.Group{}
+	groupMap := map[model.GroupKey]*group2.Group{}
 	for _, g := range getGroupsResponse.Items {
 		groupMap[g.GetKey()] = g
 	}
@@ -101,13 +101,13 @@ func (h *Handler) SearchResources(c echo.Context) error {
 			return err
 		}
 
-		var groups []*group.Group
+		var groups []*group2.Group
 		sharings := resources.Sharings.GetSharingsForResource(item.GetKey())
 		for _, groupKey := range sharings.GetAllGroupKeys().Items {
 			groups = append(groups, groupMap[groupKey])
 		}
 
-		resourcesResponse[i] = NewResourceResponse(item, createdBy.Username, createdBy.ID, group.NewGroups(groups))
+		resourcesResponse[i] = NewResourceResponse(item, createdBy.Username, createdBy.ID, group2.NewGroups(groups))
 	}
 
 	// return

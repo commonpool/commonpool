@@ -2,8 +2,8 @@ package web
 
 import (
 	"github.com/commonpool/backend/auth"
-	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
+	group2 "github.com/commonpool/backend/pkg/group"
 	"time"
 )
 
@@ -14,7 +14,7 @@ type Group struct {
 	Description string    `json:"description"`
 }
 
-func NewGroup(group *group.Group) *Group {
+func NewGroup(group *group2.Group) *Group {
 	return &Group{
 		ID:          group.Key.String(),
 		CreatedAt:   group.CreatedAt,
@@ -37,7 +37,7 @@ type Membership struct {
 	UserName       string    `json:"userName"`
 }
 
-func NewMembership(membership *group.Membership, groupNames group.Names, names auth.UserNames) Membership {
+func NewMembership(membership *group2.Membership, groupNames group2.Names, names auth.UserNames) Membership {
 	return Membership{
 		UserID:         membership.Key.UserKey.String(),
 		GroupID:        membership.Key.GroupKey.String(),
@@ -62,7 +62,7 @@ type CreateGroupResponse struct {
 	Group *Group `json:"group"`
 }
 
-func NewCreateGroupResponse(group *group.Group) CreateGroupResponse {
+func NewCreateGroupResponse(group *group2.Group) CreateGroupResponse {
 	return CreateGroupResponse{
 		Group: NewGroup(group),
 	}
@@ -72,7 +72,7 @@ type GetGroupResponse struct {
 	Group *Group `json:"group"`
 }
 
-func NewGetGroupResponse(group *group.Group) GetGroupResponse {
+func NewGetGroupResponse(group *group2.Group) GetGroupResponse {
 	return GetGroupResponse{
 		Group: NewGroup(group),
 	}
@@ -86,7 +86,7 @@ type GetUserMembershipsResponse struct {
 	Memberships []Membership `json:"memberships"`
 }
 
-func NewGetUserMembershipsResponse(memberships *group.Memberships, groupNames group.Names, userNames auth.UserNames) GetUserMembershipsResponse {
+func NewGetUserMembershipsResponse(memberships *group2.Memberships, groupNames group2.Names, userNames auth.UserNames) GetUserMembershipsResponse {
 	responseMemberships := make([]Membership, len(memberships.Items))
 	for i, membership := range memberships.Items {
 		responseMemberships[i] = NewMembership(membership, groupNames, userNames)
@@ -110,7 +110,7 @@ type GetMembershipResponse struct {
 	Membership Membership `json:"membership"`
 }
 
-func NewGetMembershipResponse(membership *group.Membership, groupNames group.Names, userNames auth.UserNames) *GetMembershipResponse {
+func NewGetMembershipResponse(membership *group2.Membership, groupNames group2.Names, userNames auth.UserNames) *GetMembershipResponse {
 	return &GetMembershipResponse{
 		Membership: NewMembership(membership, groupNames, userNames),
 	}
@@ -120,7 +120,7 @@ type CreateOrAcceptInvitationResponse struct {
 	Membership Membership `json:"membership"`
 }
 
-func NewCreateOrAcceptInvitationResponse(membership *group.Membership, groupNames group.Names, userNames auth.UserNames) *CreateOrAcceptInvitationResponse {
+func NewCreateOrAcceptInvitationResponse(membership *group2.Membership, groupNames group2.Names, userNames auth.UserNames) *CreateOrAcceptInvitationResponse {
 	return &CreateOrAcceptInvitationResponse{
 		Membership: NewMembership(membership, groupNames, userNames),
 	}

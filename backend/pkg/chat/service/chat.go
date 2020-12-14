@@ -3,21 +3,21 @@ package service
 import (
 	"github.com/commonpool/backend/amqp"
 	"github.com/commonpool/backend/auth"
-	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/chat"
-	res "github.com/commonpool/backend/resource"
+	group2 "github.com/commonpool/backend/pkg/group"
+	"github.com/commonpool/backend/pkg/resource"
 )
 
 type ChatService struct {
 	us         auth.Store
-	gs         group.Store
+	gs         group2.Store
 	amqpClient amqp.Client
-	rs         res.Store
+	rs         resource.Store
 	chatStore  chat.Store
 }
 
-func NewChatService(us auth.Store, gs group.Store, rs res.Store, mq amqp.Client, cs chat.Store) *ChatService {
+func NewChatService(us auth.Store, gs group2.Store, rs resource.Store, mq amqp.Client, cs chat.Store) *ChatService {
 	return &ChatService{
 		us:         us,
 		gs:         gs,

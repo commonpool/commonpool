@@ -1,7 +1,8 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/group"
+	"github.com/commonpool/backend/model"
+	group2 "github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
@@ -26,13 +27,13 @@ func (h *Handler) GetGroup(c echo.Context) error {
 
 	l.Debug("getting group")
 
-	groupKey, err := group.ParseGroupKey(c.Param("id"))
+	groupKey, err := model.ParseGroupKey(c.Param("id"))
 	if err != nil {
 		l.Error("could not parse group key", zap.Error(err))
 		return NewErrResponse(c, err)
 	}
 
-	getGroupResponse, err := h.groupService.GetGroup(ctx, group.NewGetGroupRequest(groupKey))
+	getGroupResponse, err := h.groupService.GetGroup(ctx, group2.NewGetGroupRequest(groupKey))
 	if err != nil {
 		l.Error("could not get group", zap.Error(err))
 		return err

@@ -154,3 +154,8 @@ func ExpectWebServiceException(t *testing.T, err error, do func(exception *WebSe
 	wse, _ := err.(*WebServiceException)
 	do(wse)
 }
+
+var ErrInvalidGroupId = NewWebServiceException("invalid group id", "ErrInvalidGroupId", http.StatusBadRequest)
+
+var ErrMembershipPartyUnauthorized = NewWebServiceException("not allowed to manage other people memberships", "ErrMembershipPartyUnauthorized", http.StatusForbidden)
+var ErrManageMembershipsNotAdmin = NewWebServiceException("don't have sufficient privilegtes", "ErrManageMembershipsNotAdmin", http.StatusForbidden)

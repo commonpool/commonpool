@@ -2,7 +2,7 @@ package handler
 
 import (
 	"github.com/commonpool/backend/auth"
-	"github.com/commonpool/backend/group"
+	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/utils"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
@@ -33,7 +33,7 @@ func (h *Handler) GetUsersForGroupInvitePicker(c echo.Context) error {
 
 	qry := c.QueryParam("query")
 
-	groupKey, err := group.ParseGroupKey(c.Param("id"))
+	groupKey, err := model.ParseGroupKey(c.Param("id"))
 	if err != nil {
 		return NewErrResponse(c, err)
 	}

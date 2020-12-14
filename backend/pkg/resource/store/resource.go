@@ -5,11 +5,11 @@ import (
 	"fmt"
 	errs "github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/graph"
-	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/logging"
 	"github.com/commonpool/backend/model"
-	"github.com/commonpool/backend/pkg/trading/store"
-	"github.com/commonpool/backend/resource"
+	"github.com/commonpool/backend/pkg/resource"
+	"github.com/commonpool/backend/pkg/shared/store"
+	store2 "github.com/commonpool/backend/store"
 	"github.com/commonpool/backend/transaction"
 	"github.com/mitchellh/mapstructure"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
@@ -90,19 +90,19 @@ func (rs *ResourceStore) getByKeys(ctx ctx.Context, session neo4j.Session, resou
 		}
 		sharings.AppendAll(sharingsForResource)
 
-		ownerTargets, err := mapOfferItemTargets(getResult.Record(), "owners")
+		ownerTargets, err := store.MapTargets(getResult.Record(), "owners")
 		if err != nil {
 			return nil, err
 		}
 		claims.AppendAll(createClaimsForTargets(r.Key, resource.OwnershipClaim, ownerTargets))
 
-		managerTargets, err := mapOfferItemTargets(getResult.Record(), "managers")
+		managerTargets, err := store.MapTargets(getResult.Record(), "managers")
 		if err != nil {
 			return nil, err
 		}
 		claims.AppendAll(createClaimsForTargets(r.Key, resource.ManagerClaim, managerTargets))
 
-		viewerTargets, err := mapOfferItemTargets(getResult.Record(), "viewers")
+		viewerTargets, err := store.MapTargets(getResult.Record(), "viewers")
 		if err != nil {
 			return nil, err
 		}
@@ -129,26 +129,6 @@ func createClaimsForTargets(resourceKey model.ResourceKey, claimType resource.Cl
 		})
 	}
 	return resource.NewClaims(claims)
-}
-
-func mapOfferItemTargets(record neo4j.Record, targetsFieldName string) (*model.Targets, error) {
-	field, _ := record.Get(targetsFieldName)
-
-	if field == nil {
-		return model.NewEmptyTargets(), nil
-	}
-
-	intfs := field.([]interface{})
-	var targets []*model.Target
-	for _, intf := range intfs {
-		node := intf.(neo4j.Node)
-		target, err := store.MapOfferItemTarget(node)
-		if err != nil {
-			return nil, err
-		}
-		targets = append(targets, target)
-	}
-	return model.NewTargets(targets), nil
 }
 
 // GetByKey Gets a resource by key
@@ -323,7 +303,7 @@ func (rs *ResourceStore) Create(createResourceQuery *resource.CreateResourceQuer
 		groupIdsIntfs := groupIdsField.([]interface{})
 		for _, groupIdIntf := range groupIdsIntfs {
 			groupId := groupIdIntf.(string)
-			groupKey, err := group.ParseGroupKey(groupId)
+			groupKey, err := model.ParseGroupKey(groupId)
 			if err != nil {
 				return &resource.CreateResourceResponse{
 					Error: err,
@@ -347,11 +327,11 @@ func (rs *ResourceStore) mapGraphResourceRecord(record neo4j.Record, key string)
 }
 
 func IsResourceNode(node neo4j.Node) bool {
-	return NodeHasLabel(node, "Resource")
+	return store2.NodeHasLabel(node, "Resource")
 }
 
 func MapResourceNode(node neo4j.Node) (*resource.Resource, error) {
-	var graphResource = GraphResource{}
+	var graphResource = Resource{}
 	err := mapstructure.Decode(node.Props(), &graphResource)
 	if err != nil {
 		return nil, err
@@ -379,7 +359,7 @@ func (rs *ResourceStore) mapGraphSharingRecord(record neo4j.Record, resourceFiel
 	groupIds := groupIdsField.([]interface{})
 	var sharings []*resource.Sharing
 	for _, groupId := range groupIds {
-		groupKey, err := group.ParseGroupKey(groupId.(string))
+		groupKey, err := model.ParseGroupKey(groupId.(string))
 		if err != nil {
 			return nil, err
 		}
@@ -489,7 +469,7 @@ func (rs *ResourceStore) Update(request *resource.UpdateResourceQuery) *resource
 	deletedSharingIntfs := deletedSharingField.([]interface{})
 	for _, deletedSharingIntf := range deletedSharingIntfs {
 		groupId := deletedSharingIntf.(string)
-		groupKey, err := group.ParseGroupKey(groupId)
+		groupKey, err := model.ParseGroupKey(groupId)
 		if err != nil {
 			return &resource.UpdateResourceResponse{
 				Error: err,
@@ -507,7 +487,7 @@ func (rs *ResourceStore) Update(request *resource.UpdateResourceQuery) *resource
 	createdSharingIntfs := createdSharingsField.([]interface{})
 	for _, createdSharingIntf := range createdSharingIntfs {
 		groupId := createdSharingIntf.(string)
-		groupKey, err := group.ParseGroupKey(groupId)
+		groupKey, err := model.ParseGroupKey(groupId)
 		if err != nil {
 			return &resource.UpdateResourceResponse{
 				Error: err,
@@ -660,25 +640,4 @@ LIMIT $take
 		TotalCount: int(totalCount),
 	}
 
-}
-
-func mapGraphResourceToResource(dbResultItem *GraphResource) (*resource.Resource, error) {
-
-	key, err := model.ParseResourceKey(dbResultItem.ID)
-	if err != nil {
-		return nil, err
-	}
-	return &resource.Resource{
-		Key:              key,
-		CreatedAt:        dbResultItem.CreatedAt,
-		UpdatedAt:        dbResultItem.UpdatedAt,
-		DeletedAt:        dbResultItem.DeletedAt,
-		Summary:          dbResultItem.Summary,
-		Description:      dbResultItem.Description,
-		CreatedBy:        dbResultItem.CreatedBy,
-		Type:             dbResultItem.Type,
-		SubType:          dbResultItem.SubType,
-		ValueInHoursFrom: dbResultItem.ValueInHoursFrom,
-		ValueInHoursTo:   dbResultItem.ValueInHoursTo,
-	}, nil
 }

@@ -7,14 +7,14 @@ import (
 	"github.com/commonpool/backend/amqp"
 	"github.com/commonpool/backend/auth"
 	errs "github.com/commonpool/backend/errors"
-	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/chat"
+	group2 "github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/service"
 	"go.uber.org/zap"
 )
 
-func (g GroupService) CreateOrAcceptInvitation(ctx context.Context, request *group.CreateOrAcceptInvitationRequest) (*group.CreateOrAcceptInvitationResponse, error) {
+func (g GroupService) CreateOrAcceptInvitation(ctx context.Context, request *group2.CreateOrAcceptInvitationRequest) (*group2.CreateOrAcceptInvitationResponse, error) {
 
 	ctx, l := service.GetCtx(ctx, "GroupService", "CreateOrAcceptInvitation")
 
@@ -45,7 +45,7 @@ func (g GroupService) CreateOrAcceptInvitation(ctx context.Context, request *gro
 			if err != nil {
 				return nil, err
 			}
-			return &group.CreateOrAcceptInvitationResponse{
+			return &group2.CreateOrAcceptInvitationResponse{
 				Membership: newMembership,
 			}, nil
 		}
@@ -58,7 +58,7 @@ func (g GroupService) CreateOrAcceptInvitation(ctx context.Context, request *gro
 			return nil, err
 		}
 
-		err := g.groupStore.MarkInvitationAsAccepted(ctx, membershipKey, group.PartyUser)
+		err := g.groupStore.MarkInvitationAsAccepted(ctx, membershipKey, group2.PartyUser)
 		if err != nil {
 			l.Error("could not mark invitation as accepted", zap.Error(err))
 			return nil, err
@@ -71,11 +71,11 @@ func (g GroupService) CreateOrAcceptInvitation(ctx context.Context, request *gro
 		loggedInUserMembershipKey := model.NewMembershipKey(membershipKey.GroupKey, userSession.GetUserKey())
 		loggedInUserMembership, err := g.groupStore.GetMembership(ctx, loggedInUserMembershipKey)
 		if err != nil {
-			return nil, group.ErrMembershipPartyUnauthorized
+			return nil, errs.ErrMembershipPartyUnauthorized
 		}
 
 		if !loggedInUserMembership.IsAdmin {
-			return nil, group.ErrManageMembershipsNotAdmin
+			return nil, errs.ErrManageMembershipsNotAdmin
 		}
 
 		if isNewMembership {
@@ -83,7 +83,7 @@ func (g GroupService) CreateOrAcceptInvitation(ctx context.Context, request *gro
 			if err != nil {
 				return nil, err
 			}
-			return &group.CreateOrAcceptInvitationResponse{
+			return &group2.CreateOrAcceptInvitationResponse{
 				Membership: newMembership,
 			}, nil
 		}
@@ -94,7 +94,7 @@ func (g GroupService) CreateOrAcceptInvitation(ctx context.Context, request *gro
 			return nil, err
 		}
 
-		err = g.groupStore.MarkInvitationAsAccepted(ctx, membershipKey, group.PartyGroup)
+		err = g.groupStore.MarkInvitationAsAccepted(ctx, membershipKey, group2.PartyGroup)
 		if err != nil {
 			l.Error("could not mark invitation as accepted", zap.Error(err))
 			return nil, err
@@ -161,7 +161,7 @@ func (g GroupService) CreateOrAcceptInvitation(ctx context.Context, request *gro
 
 	}
 
-	return &group.CreateOrAcceptInvitationResponse{
+	return &group2.CreateOrAcceptInvitationResponse{
 		Membership: acceptedMembership,
 	}, nil
 

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
-	"github.com/commonpool/backend/resource"
+	resource2 "github.com/commonpool/backend/pkg/resource"
 	"github.com/commonpool/backend/router"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
@@ -25,8 +25,8 @@ func TestSearchBySummaryAndType(t *testing.T) {
 
 	// Creating the resource
 	key := model.NewResourceKey(uuid.NewV4())
-	r := resource.NewResource(key, resource.Offer, "", "author", "a superb summary", "Description", 1, 2)
-	rq := resource.NewCreateResourceQuery(&r, model.NewEmptyGroupKeys())
+	r := resource2.NewResource(key, resource2.Offer, "", "author", "a superb summary", "Description", 1, 2)
+	rq := resource2.NewCreateResourceQuery(&r, model.NewEmptyGroupKeys())
 
 	assert.NoError(t, rs.Create(rq).Error)
 
@@ -73,7 +73,7 @@ func TestCreateResource(t *testing.T) {
 	assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &res))
 	assert.Equal(t, "summary", res.Resource.Summary)
 	assert.Equal(t, "description", res.Resource.Description)
-	assert.Equal(t, resource.Offer, res.Resource.Type)
+	assert.Equal(t, resource2.Offer, res.Resource.Type)
 }
 
 // TestCreateResourceInvalid400
@@ -161,8 +161,8 @@ func TestGetResource(t *testing.T) {
 
 	// Creating the resource
 	key := model.NewResourceKey(uuid.NewV4())
-	r := resource.NewResource(key, resource.Offer, "", user1.Subject, "Summary", "Description", 1, 2)
-	rq := resource.NewCreateResourceQuery(&r, model.NewEmptyGroupKeys())
+	r := resource2.NewResource(key, resource2.Offer, "", user1.Subject, "Summary", "Description", 1, 2)
+	rq := resource2.NewCreateResourceQuery(&r, model.NewEmptyGroupKeys())
 	assert.NoError(t, rs.Create(rq).Error)
 
 	// Getting the resource
@@ -177,7 +177,7 @@ func TestGetResource(t *testing.T) {
 	assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &res))
 	assert.Equal(t, "Summary", res.Resource.Summary)
 	assert.Equal(t, "Description", res.Resource.Description)
-	assert.Equal(t, resource.Offer, res.Resource.Type)
+	assert.Equal(t, resource2.Offer, res.Resource.Type)
 	assert.Equal(t, 1, res.Resource.ValueInHoursFrom)
 	assert.Equal(t, 2, res.Resource.ValueInHoursTo)
 
@@ -234,8 +234,8 @@ func TestUpdateResource(t *testing.T) {
 
 	// Creating the resource
 	key := model.NewResourceKey(uuid.NewV4())
-	r := resource.NewResource(key, resource.Offer, "", user1.Subject, "Summary", "Description", 1, 2)
-	rq := resource.NewCreateResourceQuery(&r, model.NewEmptyGroupKeys())
+	r := resource2.NewResource(key, resource2.Offer, "", user1.Subject, "Summary", "Description", 1, 2)
+	rq := resource2.NewCreateResourceQuery(&r, model.NewEmptyGroupKeys())
 	assert.NoError(t, rs.Create(rq).Error)
 
 	// Setting up the request
@@ -301,7 +301,7 @@ func newCreateResourceRequest(js string) (*httptest.ResponseRecorder, echo.Conte
 	return rec, c
 }
 
-func createResource(t *testing.T, summary string, description string, resType resource.Type) web.CreateResourceResponse {
+func createResource(t *testing.T, summary string, description string, resType resource2.Type) web.CreateResourceResponse {
 	payload := web.CreateResourceRequest{
 		Resource: web.CreateResourcePayload{
 			Summary:          summary,

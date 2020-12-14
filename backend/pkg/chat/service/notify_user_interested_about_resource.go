@@ -7,7 +7,7 @@ import (
 	"github.com/commonpool/backend/errors"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/chat"
-	resource2 "github.com/commonpool/backend/resource"
+	resource3 "github.com/commonpool/backend/pkg/resource"
 	"github.com/commonpool/backend/service"
 )
 
@@ -23,7 +23,7 @@ func (c ChatService) NotifyUserInterestedAboutResource(ctx context.Context, requ
 	}
 	loggedInUserKey := loggedInUser.GetUserKey()
 
-	getResource, err := c.rs.GetByKey(ctx, resource2.NewGetResourceByKeyQuery(request.ResourceKey))
+	getResource, err := c.rs.GetByKey(ctx, resource3.NewGetResourceByKeyQuery(request.ResourceKey))
 	if err != nil {
 		return nil, err
 	}

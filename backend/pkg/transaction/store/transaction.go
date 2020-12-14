@@ -1,7 +1,6 @@
 package store
 
 import (
-	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/transaction"
 	uuid "github.com/satori/go.uuid"
@@ -183,7 +182,7 @@ func mapTarget(targetType *model.TargetType, targetId *string) (*model.Target, e
 		if targetType.IsUser() {
 			target = model.NewUserTarget(model.NewUserKey(*targetId))
 		} else if targetType.IsGroup() {
-			groupKey, err := group.ParseGroupKey(*targetId)
+			groupKey, err := model.ParseGroupKey(*targetId)
 			if err != nil {
 				return nil, err
 			}

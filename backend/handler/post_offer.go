@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/handler"
 	trading2 "github.com/commonpool/backend/pkg/trading"
@@ -36,7 +35,7 @@ func (h *Handler) HandleSendOffer(c echo.Context) error {
 		tradingOfferItems = append(tradingOfferItems, tradingOfferItem)
 	}
 
-	groupKey, err := group.ParseGroupKey(req.Offer.GroupID)
+	groupKey, err := model.ParseGroupKey(req.Offer.GroupID)
 	if err != nil {
 		return err
 	}

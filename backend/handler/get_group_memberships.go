@@ -1,7 +1,8 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/group"
+	"github.com/commonpool/backend/model"
+	group2 "github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
@@ -24,27 +25,27 @@ func (h *Handler) GetGroupMemberships(c echo.Context) error {
 
 	ctx, _ := handler.GetEchoContext(c, "GetGroupMemberships")
 
-	var membershipStatus = group.AnyMembershipStatus()
+	var membershipStatus = group2.AnyMembershipStatus()
 	statusStr := c.QueryParam("status")
 	if statusStr != "" {
-		ms, err := group.ParseMembershipStatus(statusStr)
+		ms, err := group2.ParseMembershipStatus(statusStr)
 		if err != nil {
 			return err
 		}
 		membershipStatus = &ms
 	}
 
-	groupKey, err := group.ParseGroupKey(c.Param("id"))
+	groupKey, err := model.ParseGroupKey(c.Param("id"))
 	if err != nil {
 		return err
 	}
 
-	_, err = h.groupService.GetGroup(ctx, group.NewGetGroupRequest(groupKey))
+	_, err = h.groupService.GetGroup(ctx, group2.NewGetGroupRequest(groupKey))
 	if err != nil {
 		return err
 	}
 
-	getGroupMemberships, err := h.groupService.GetGroupMemberships(ctx, group.NewGetMembershipsForGroupRequest(groupKey, membershipStatus))
+	getGroupMemberships, err := h.groupService.GetGroupMemberships(ctx, group2.NewGetMembershipsForGroupRequest(groupKey, membershipStatus))
 	if err != nil {
 		return err
 	}

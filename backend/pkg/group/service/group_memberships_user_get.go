@@ -2,12 +2,12 @@ package service
 
 import (
 	"context"
-	"github.com/commonpool/backend/group"
+	group2 "github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/service"
 	"go.uber.org/zap"
 )
 
-func (g GroupService) GetUserMemberships(ctx context.Context, request *group.GetMembershipsForUserRequest) (*group.GetMembershipsForUserResponse, error) {
+func (g GroupService) GetUserMemberships(ctx context.Context, request *group2.GetMembershipsForUserRequest) (*group2.GetMembershipsForUserResponse, error) {
 
 	ctx, l := service.GetCtx(ctx, "GroupService", "GetUserMemberships")
 
@@ -19,7 +19,7 @@ func (g GroupService) GetUserMemberships(ctx context.Context, request *group.Get
 		return nil, err
 	}
 
-	return &group.GetMembershipsForUserResponse{
+	return &group2.GetMembershipsForUserResponse{
 		Memberships: memberships,
 	}, nil
 }

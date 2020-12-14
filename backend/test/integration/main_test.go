@@ -13,6 +13,8 @@ import (
 	"github.com/commonpool/backend/mock"
 	"github.com/commonpool/backend/pkg/chat"
 	service2 "github.com/commonpool/backend/pkg/group/service"
+	store4 "github.com/commonpool/backend/pkg/group/store"
+	store5 "github.com/commonpool/backend/pkg/resource/store"
 	service3 "github.com/commonpool/backend/pkg/trading/service"
 	store2 "github.com/commonpool/backend/pkg/trading/store"
 	service4 "github.com/commonpool/backend/pkg/transaction/service"
@@ -33,11 +35,11 @@ var a *handler.Handler
 
 var Db *gorm.DB
 var AmqpClient amqp.Client
-var ResourceStore store.ResourceStore
+var ResourceStore store5.ResourceStore
 var AuthStore store.AuthStore
 var ChatStore chatstore.ChatStore
 var TradingStore store2.TradingStore
-var GroupStore store.GroupStore
+var GroupStore store4.GroupStore
 var ChatService chatservice.ChatService
 var TradingService service3.TradingService
 var GroupService service2.GroupService
@@ -85,11 +87,11 @@ func TestMain(m *testing.M) {
 
 	TransactionStore = store3.NewTransactionStore(Db)
 	TransactionService = service4.NewTransactionService(TransactionStore)
-	ResourceStore = *store.NewResourceStore(Driver, TransactionService)
+	ResourceStore = *store5.NewResourceStore(Driver, TransactionService)
 	AuthStore = *store.NewAuthStore(Db, Driver)
 	ChatStore = *chatstore.NewChatStore(Db, &AuthStore, AmqpClient)
 	TradingStore = *store2.NewTradingStore(Driver)
-	GroupStore = *store.NewGroupStore(Driver)
+	GroupStore = *store4.NewGroupStore(Driver)
 	ChatService = *chatservice.NewChatService(&AuthStore, &GroupStore, &ResourceStore, AmqpClient, &ChatStore)
 	GroupService = *service2.NewGroupService(&GroupStore, AmqpClient, ChatService, &AuthStore)
 	TradingService = *service3.NewTradingService(TradingStore, &ResourceStore, &AuthStore, ChatService, GroupService, TransactionService)

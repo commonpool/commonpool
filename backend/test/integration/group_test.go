@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"github.com/commonpool/backend/auth"
 	errs "github.com/commonpool/backend/errors"
-	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
+	group2 "github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/web"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -153,8 +153,8 @@ func TestCreateGroupShouldCreateOwnerMembership(t *testing.T) {
 
 	assert.Equal(t, http.StatusCreated, createGroupHttp.StatusCode)
 
-	gk, _ := group.ParseGroupKey(createGroup.Group.ID)
-	grps, _ := GroupService.GetGroupMemberships(ctx, group.NewGetMembershipsForGroupRequest(gk, nil))
+	gk, _ := model.ParseGroupKey(createGroup.Group.ID)
+	grps, _ := GroupService.GetGroupMemberships(ctx, group2.NewGetMembershipsForGroupRequest(gk, nil))
 	assert.Equal(t, 1, len(grps.Memberships.Items))
 	assert.Equal(t, true, grps.Memberships.Items[0].IsOwner)
 	assert.Equal(t, true, grps.Memberships.Items[0].UserConfirmed)
@@ -324,7 +324,7 @@ func TestInviteeShouldBeAbleToDeclineInvitationFromOwner(t *testing.T) {
 	})
 	assert.Equal(t, http.StatusAccepted, declineInvitationHttp.StatusCode)
 
-	grpKey, _ := group.ParseGroupKey(createGroup.Group.ID)
+	grpKey, _ := model.ParseGroupKey(createGroup.Group.ID)
 	_, err = GroupStore.GetMembership(ctx, model.NewMembershipKey(grpKey, user2.GetUserKey()))
 	assert.True(t, errors.Is(err, errs.ErrMembershipNotFound))
 }
@@ -361,7 +361,7 @@ func TestOwnerShouldBeAbleToDeclineInvitationFromOwner(t *testing.T) {
 		GroupID: createGroup.Group.ID,
 	})
 	assert.Equal(t, http.StatusAccepted, httpRes.StatusCode)
-	grpKey, _ := group.ParseGroupKey(createGroup.Group.ID)
+	grpKey, _ := model.ParseGroupKey(createGroup.Group.ID)
 	_, err = GroupStore.GetMembership(ctx, model.NewMembershipKey(grpKey, user2.GetUserKey()))
 	assert.True(t, errors.Is(err, errs.ErrMembershipNotFound))
 }
@@ -667,7 +667,7 @@ func TestGetUsersForInvitePickerShouldNotReturnDuplicates(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	grpKey, _ := group.ParseGroupKey(grp.Group.ID)
+	grpKey, _ := model.ParseGroupKey(grp.Group.ID)
 	resp, httpResp := GetUsersForInvitePicker(t, ctx, grpKey, 100, 0, user3)
 
 	assert.Equal(t, http.StatusOK, httpResp.StatusCode)

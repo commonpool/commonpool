@@ -31,56 +31,87 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b50bce1a-5445-4a69-8265-74993e439f0e" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/pkg/trading/model_borrow_resource_item.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/trading/model_credit_transfer_item.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/trading/model_offer.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/trading/model_offer_approvers.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/trading/model_offer_item.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/trading/model_offer_item_base.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/trading/model_offer_item_type.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/trading/model_offer_items.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/trading/model_offer_status.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/trading/model_provide_service_item.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/trading/model_resource_transfer_item.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/group/models_group.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/group/models_groups.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/group/models_membership.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/group/models_membership_status.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/group/models_memberships.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/group/models_names.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/group/store/models_group.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/resource/models_claim.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/resource/models_claim_type.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/resource/models_claims.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/resource/models_resource.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/resource/models_resources.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/resource/models_sharing.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/resource/models_sharings.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/resource/models_subtype.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/resource/models_type.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/resource/store/models_resource.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/shared/store/model.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/errors/errors.go" beforeDir="false" afterPath="$PROJECT_DIR$/errors/errors.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/group/errors.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/group/models.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/group/service.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/service.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/group/store.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/store.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/group/utils.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/utils.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/handler/chatback.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/chatback.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handler/delete_membership.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/delete_membership.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handler/get_group.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/get_group.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handler/get_group_invite_picker.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/get_group_invite_picker.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handler/get_group_memberships.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/get_group_memberships.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handler/get_logged_user_memberships.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/get_logged_user_memberships.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handler/get_membership.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/get_membership.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/handler/get_offer_target_picker.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/get_offer_target_picker.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handler/get_resource.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/get_resource.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handler/get_resources.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/get_resources.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handler/get_user_memberships.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/get_user_memberships.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handler/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/group.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/handler/handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/handler.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/handler/handler_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/handler_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handler/post_group.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/post_group.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handler/post_membership.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/post_membership.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/handler/post_offer.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/post_offer.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/handler/post_offer_acceptance.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/post_offer_acceptance.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handler/post_resource.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/post_resource.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handler/put_resource.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/put_resource.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handler/resource.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/resource.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/handler/resource_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/resource_test.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/handler/trading.go" beforeDir="false" afterPath="$PROJECT_DIR$/handler/trading.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/service/group.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/group_create.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/service/group_create.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/group_get.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/service/group_get.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/group_get_by_keys.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/service/group_get_by_keys.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/group_invitation_create_accept.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/service/group_invitation_create_accept.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/group_invitation_decline_cancel.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/service/group_invitation_decline_cancel.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/group_membership_get.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/service/group_membership_get.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/group_memberships_get.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/service/group_memberships_get.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/group_memberships_user_get.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/service/group_memberships_user_get.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/groups_get.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/service/groups_get.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/trading.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/service/trading.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/trading_history_get.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/service/trading_history_get.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/trading_item_get.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/service/trading_item_get.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/trading_item_given_received_notify.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/service/trading_item_given_received_notify.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/trading_item_received_given.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/service/trading_item_received_given.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/trading_offer_accept.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/service/trading_offer_accept.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/trading_send_offer.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/service/trading_send_offer.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/transaction.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/transaction/service/transaction.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/store/db.go" beforeDir="false" afterPath="$PROJECT_DIR$/store/db.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/store/resource.go" beforeDir="false" afterPath="$PROJECT_DIR$/store/resource.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/store/trading.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/store/trading.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/store/transaction.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/transaction/store/transaction.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mock/resource_store_mock.go" beforeDir="false" afterPath="$PROJECT_DIR$/mock/resource_store_mock.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/model/group.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/chat/service/chat.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/chat/service/chat.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/chat/service/notify_user_interested_about_resource.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/chat/service/notify_user_interested_about_resource.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/group/service/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/service/group.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/group/service/group_create.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/service/group_create.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/group/service/group_get.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/service/group_get.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/group/service/group_get_by_keys.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/service/group_get_by_keys.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/group/service/group_invitation_create_accept.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/service/group_invitation_create_accept.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/group/service/group_invitation_decline_cancel.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/service/group_invitation_decline_cancel.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/group/service/group_membership_get.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/service/group_membership_get.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/group/service/group_memberships_get.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/service/group_memberships_get.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/group/service/group_memberships_user_get.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/service/group_memberships_user_get.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/group/service/groups_get.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/service/groups_get.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/trading/service/trading.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/service/trading.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/trading/service/trading_send_offer.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/service/trading_send_offer.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/trading/store/trading.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/store/trading.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/transaction/store/transaction.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/transaction/store/transaction.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resource/models.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resource/service.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/resource/service.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resource/store.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/resource/store.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/store/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/store/group.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/store/models.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/store/models_membership.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/store/resource.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/resource/store/resource.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/integration/group_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/test/integration/group_test.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/test/integration/main_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/test/integration/main_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/integration/trading_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/test/integration/trading_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/trading/items.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/trading/models.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/models.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/trading/offer_item_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/trading/offer_item_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/trading/service.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/service.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/trading/store.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/store.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/integration/resource_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/test/integration/resource_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/trading/errors.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/trading/offer_item_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/web/group.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/web/offer.go" beforeDir="false" afterPath="$PROJECT_DIR$/web/offer.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/resource.go" beforeDir="false" afterPath="$PROJECT_DIR$/web/resource.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -126,22 +157,22 @@
   </component>
   <component name="RecentsManager">
     <key name="GoMoveDeclarationDialog.RECENT_KEY">
-      <recent name="$PROJECT_DIR$/pkg/trading" />
-      <recent name="$PROJECT_DIR$/pkg/chat/store" />
-      <recent name="$PROJECT_DIR$/pkg/handler" />
-      <recent name="$PROJECT_DIR$/pkg/http" />
-      <recent name="$PROJECT_DIR$/chat/store" />
+      <recent name="$PROJECT_DIR$/pkg/shared/store" />
+      <recent name="$PROJECT_DIR$/model" />
+      <recent name="$PROJECT_DIR$/models" />
+      <recent name="$PROJECT_DIR$/pkg/group" />
+      <recent name="$PROJECT_DIR$/errors" />
     </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/chat/service" />
       <recent name="$PROJECT_DIR$/k8s" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/model" />
+      <recent name="$PROJECT_DIR$/pkg/group" />
+      <recent name="$PROJECT_DIR$/pkg/resource" />
       <recent name="$PROJECT_DIR$/pkg/trading" />
-      <recent name="$PROJECT_DIR$/pkg/transaction/store" />
-      <recent name="$PROJECT_DIR$/pkg/trading/store" />
-      <recent name="$PROJECT_DIR$/pkg/transaction/service" />
-      <recent name="$PROJECT_DIR$/pkg/trading/service" />
+      <recent name="$PROJECT_DIR$/pkg/group/store" />
     </key>
   </component>
   <component name="RunManager" selected="Go Test.go test chat">
@@ -349,7 +380,14 @@
       <option name="project" value="LOCAL" />
       <updated>1607925901512</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="work">
+      <created>1607926573501</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1607926573501</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

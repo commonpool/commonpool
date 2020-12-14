@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/errors"
-	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/handler"
-	"github.com/commonpool/backend/resource"
+	resource2 "github.com/commonpool/backend/pkg/resource"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
@@ -51,7 +50,7 @@ func (h *Handler) UpdateResource(c echo.Context) error {
 	}
 
 	// Retrieves the resource
-	getResourceByKeyResponse, err := h.resourceStore.GetByKey(ctx, resource.NewGetResourceByKeyQuery(resourceKey))
+	getResourceByKeyResponse, err := h.resourceStore.GetByKey(ctx, resource2.NewGetResourceByKeyQuery(resourceKey))
 	if err != nil {
 		return err
 	}
@@ -92,7 +91,7 @@ func (h *Handler) UpdateResource(c echo.Context) error {
 	// get shared with keys
 	var groupKeys []model.GroupKey
 	for _, sharing := range req.Resource.SharedWith {
-		groupKey, err := group.ParseGroupKey(sharing.GroupID)
+		groupKey, err := model.ParseGroupKey(sharing.GroupID)
 		if err != nil {
 			message := "UpdateResource: could not parse groupKey"
 			c.Logger().Error(err, message)
@@ -102,14 +101,14 @@ func (h *Handler) UpdateResource(c echo.Context) error {
 	}
 
 	// saving changes
-	updateResourceQuery := resource.NewUpdateResourceQuery(resToUpdate, model.NewGroupKeys(groupKeys))
+	updateResourceQuery := resource2.NewUpdateResourceQuery(resToUpdate, model.NewGroupKeys(groupKeys))
 	updateResourceResponse := h.resourceStore.Update(updateResourceQuery)
 	if updateResourceResponse.Error != nil {
 		return updateResourceResponse.Error
 	}
 
 	// retrieving resource
-	getResourceResponse, err := h.resourceStore.GetByKey(ctx, resource.NewGetResourceByKeyQuery(resToUpdate.GetKey()))
+	getResourceResponse, err := h.resourceStore.GetByKey(ctx, resource2.NewGetResourceByKeyQuery(resToUpdate.GetKey()))
 	if err != nil {
 		return err
 	}

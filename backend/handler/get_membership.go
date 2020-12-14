@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
+	group2 "github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
@@ -27,17 +27,17 @@ func (h *Handler) GetMembership(c echo.Context) error {
 
 	userKey := model.NewUserKey(c.Param("userId"))
 
-	groupKey, err := group.ParseGroupKey(c.Param("groupId"))
+	groupKey, err := model.ParseGroupKey(c.Param("groupId"))
 	if err != nil {
 		return err
 	}
 
-	getMemberships, err := h.groupService.GetMembership(ctx, group.NewGetMembershipRequest(model.NewMembershipKey(groupKey, userKey)))
+	getMemberships, err := h.groupService.GetMembership(ctx, group2.NewGetMembershipRequest(model.NewMembershipKey(groupKey, userKey)))
 	if err != nil {
 		return err
 	}
 
-	var memberships = group.NewMemberships([]*group.Membership{getMemberships.Membership})
+	var memberships = group2.NewMemberships([]*group2.Membership{getMemberships.Membership})
 
 	groupNames, err := h.getGroupNamesForMemberships(ctx, memberships)
 	if err != nil {
