@@ -15,12 +15,12 @@ import (
 )
 
 type GroupStore struct {
-	graphDriver graph.GraphDriver
+	graphDriver graph.Driver
 }
 
 var _ group2.Store = &GroupStore{}
 
-func NewGroupStore(graphDriver graph.GraphDriver) *GroupStore {
+func NewGroupStore(graphDriver graph.Driver) *GroupStore {
 	return &GroupStore{
 		graphDriver: graphDriver,
 	}

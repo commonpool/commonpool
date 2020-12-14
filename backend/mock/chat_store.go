@@ -41,7 +41,7 @@ var _ chat.Store = &ChatStore{}
 //             GetSubscriptionFunc: func(ctx context.Context, request *chat.GetSubscription) (*chat.ChannelSubscription, error) {
 // 	               panic("mock out the GetSubscription method")
 //             },
-//             GetSubscriptionsForChannelFunc: func(ctx context.Context, channelKey model.ChannelKey) ([]chat.ChannelSubscription, error) {
+//             GetSubscriptionsForChannelFunc: func(ctx context.Context, channelKey model.ChannelKey) ([]*chat.ChannelSubscription, error) {
 // 	               panic("mock out the GetSubscriptionsForChannel method")
 //             },
 //             GetSubscriptionsForUserFunc: func(ctx context.Context, request *chat.GetSubscriptions) (*chat.ChannelSubscriptions, error) {
@@ -79,7 +79,7 @@ type ChatStore struct {
 	GetSubscriptionFunc func(ctx context.Context, request *chat.GetSubscription) (*chat.ChannelSubscription, error)
 
 	// GetSubscriptionsForChannelFunc mocks the GetSubscriptionsForChannel method.
-	GetSubscriptionsForChannelFunc func(ctx context.Context, channelKey model.ChannelKey) ([]chat.ChannelSubscription, error)
+	GetSubscriptionsForChannelFunc func(ctx context.Context, channelKey model.ChannelKey) ([]*chat.ChannelSubscription, error)
 
 	// GetSubscriptionsForUserFunc mocks the GetSubscriptionsForUser method.
 	GetSubscriptionsForUserFunc func(ctx context.Context, request *chat.GetSubscriptions) (*chat.ChannelSubscriptions, error)
@@ -424,7 +424,7 @@ func (mock *ChatStore) GetSubscriptionCalls() []struct {
 }
 
 // GetSubscriptionsForChannel calls GetSubscriptionsForChannelFunc.
-func (mock *ChatStore) GetSubscriptionsForChannel(ctx context.Context, channelKey model.ChannelKey) ([]chat.ChannelSubscription, error) {
+func (mock *ChatStore) GetSubscriptionsForChannel(ctx context.Context, channelKey model.ChannelKey) ([]*chat.ChannelSubscription, error) {
 	if mock.GetSubscriptionsForChannelFunc == nil {
 		panic("ChatStore.GetSubscriptionsForChannelFunc: method is nil but Store.GetSubscriptionsForChannel was just called")
 	}

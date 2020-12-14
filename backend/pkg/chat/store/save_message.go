@@ -13,8 +13,8 @@ func (cs *ChatStore) SaveMessage(ctx context.Context, request *chat.Message) err
 	var err error
 	sentAt := time.Now()
 
-	var subscriptions []chat.ChannelSubscription
-	err = cs.db.Model(chat.ChannelSubscription{}).
+	var subscriptions []ChannelSubscription
+	err = cs.db.Model(ChannelSubscription{}).
 		Where("channel_id = ?", request.ChannelKey.String()).
 		Find(&subscriptions).
 		Error
@@ -23,7 +23,7 @@ func (cs *ChatStore) SaveMessage(ctx context.Context, request *chat.Message) err
 		return err
 	}
 
-	err = cs.db.Model(&chat.ChannelSubscription{}).
+	err = cs.db.Model(&ChannelSubscription{}).
 		Where("channel_id = ?", request.ChannelKey.String()).
 		Updates(map[string]interface{}{
 			"last_message_at":        sentAt,
@@ -37,7 +37,7 @@ func (cs *ChatStore) SaveMessage(ctx context.Context, request *chat.Message) err
 		return err
 	}
 
-	err = cs.db.Model(&chat.ChannelSubscription{}).
+	err = cs.db.Model(&ChannelSubscription{}).
 		Where("channel_id = ? and user_id = ?",
 			request.ChannelKey.String(),
 			request.SentBy.UserKey.String()).

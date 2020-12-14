@@ -16,38 +16,38 @@ import (
 
 type UserStore struct {
 	db          *gorm.DB
-	graphDriver graph.GraphDriver
+	graphDriver graph.Driver
 }
 
 var _ user.Store = &UserStore{}
 
-func NewAuthStore(db *gorm.DB, graphDriver graph.GraphDriver) *UserStore {
+func NewAuthStore(db *gorm.DB, graphDriver graph.Driver) *UserStore {
 	return &UserStore{
 		db:          db,
 		graphDriver: graphDriver,
 	}
 }
 
-func (as *UserStore) GetByKeys(ctx context.Context, keys []model.UserKey) (*user.Users, error) {
+func (us *UserStore) GetByKeys(ctx context.Context, keys []model.UserKey) (*user.Users, error) {
 
-	session, err := as.graphDriver.GetSession()
+	session, err := us.graphDriver.GetSession()
 	if err != nil {
 		return nil, err
 	}
 	defer session.Close()
 
-	return as.getByKeys(session, model.NewUserKeys(keys))
+	return us.getByKeys(session, model.NewUserKeys(keys))
 }
 
-func (as *UserStore) Upsert(key model.UserKey, email string, username string) error {
+func (us *UserStore) Upsert(key model.UserKey, email string, username string) error {
 
-	session, err := as.graphDriver.GetSession()
+	session, err := us.graphDriver.GetSession()
 	if err != nil {
 		return err
 	}
 	defer session.Close()
 
-	usr, err := as.getByKey(session, key)
+	usr, err := us.getByKey(session, key)
 
 	if err == nil {
 
@@ -104,7 +104,7 @@ func (as *UserStore) Upsert(key model.UserKey, email string, username string) er
 
 }
 
-func (as *UserStore) getByKey(session neo4j.Session, key model.UserKey) (*user.User, error) {
+func (us *UserStore) getByKey(session neo4j.Session, key model.UserKey) (*user.User, error) {
 
 	getResult, err := session.Run(`
 		MATCH (n:User {id:$id}) 
@@ -135,7 +135,7 @@ func (as *UserStore) getByKey(session neo4j.Session, key model.UserKey) (*user.U
 
 }
 
-func (as *UserStore) getByKeys(session neo4j.Session, key *model.UserKeys) (*user.Users, error) {
+func (us *UserStore) getByKeys(session neo4j.Session, key *model.UserKeys) (*user.Users, error) {
 
 	getResult, err := session.Run(`
 		MATCH (n:User) 
@@ -170,37 +170,37 @@ func (as *UserStore) getByKeys(session neo4j.Session, key *model.UserKeys) (*use
 
 }
 
-func (as *UserStore) GetByKey(key model.UserKey) (*user.User, error) {
-	session, err := as.graphDriver.GetSession()
+func (us *UserStore) GetByKey(key model.UserKey) (*user.User, error) {
+	session, err := us.graphDriver.GetSession()
 	if err != nil {
 		return nil, err
 	}
 	defer session.Close()
 
-	user, err := as.getByKey(session, key)
+	u, err := us.getByKey(session, key)
 	if err != nil {
 		return nil, err
 	}
-	return user, nil
+	return u, nil
 }
 
-func (as *UserStore) GetUsername(key model.UserKey) (string, error) {
-	user, err := as.GetByKey(key)
+func (us *UserStore) GetUsername(key model.UserKey) (string, error) {
+	u, err := us.GetByKey(key)
 	if err != nil {
 		return "", err
 	}
-	return user.Username, err
+	return u.Username, err
 }
 
-func (as *UserStore) Find(query user.UserQuery) ([]*user.User, error) {
+func (us *UserStore) Find(query user.Query) ([]*user.User, error) {
 
-	session, err := as.graphDriver.GetSession()
+	session, err := us.graphDriver.GetSession()
 	if err != nil {
 		return nil, err
 	}
 	defer session.Close()
 
-	var whereClauses = []string{}
+	var whereClauses []string
 	var params = map[string]interface{}{}
 
 	cypher := []string{

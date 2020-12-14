@@ -1,13 +1,13 @@
 package transaction
 
-type TransactionType string
+type Type string
 
 const (
-	ResourceSharedWithGroup  TransactionType = "resource_shared_with_group"
-	ResourceRemovedFromGroup TransactionType = "resource_removed_from_group"
-	ServiceProvided          TransactionType = "service_provided"
-	ResourceBorrowed         TransactionType = "resource_borrowed"
-	ResourceReturned         TransactionType = "resource_returned"
-	ResourceTaken            TransactionType = "resource_taken"
-	TimeCreditsExchanged     TransactionType = "time_credits_exchanged"
+	ResourceSharedWithGroup  Type = "resource_shared_with_group"
+	ResourceRemovedFromGroup Type = "resource_removed_from_group"
+	ServiceProvided          Type = "service_provided"
+	ResourceBorrowed         Type = "resource_borrowed"
+	ResourceReturned         Type = "resource_returned"
+	ResourceTaken            Type = "resource_taken"
+	TimeCreditsExchanged     Type = "time_credits_exchanged"
 )

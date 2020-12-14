@@ -137,10 +137,10 @@ func main() {
 		panic(err)
 	}
 
-	for _, user := range users {
-		_, err = chatService.CreateUserExchange(ctx, user.GetUserKey())
+	for _, u := range users {
+		_, err = chatService.CreateUserExchange(ctx, u.GetUserKey())
 		if err != nil {
-			l.Error("could not create user exchange for user", zap.Object("user", user.GetUserKey()), zap.Error(err))
+			l.Error("could not create user exchange for user", zap.Object("user", u.GetUserKey()), zap.Error(err))
 			panic(err)
 		}
 	}

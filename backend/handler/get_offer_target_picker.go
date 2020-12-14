@@ -39,10 +39,10 @@ func (h *Handler) HandleOfferItemTargetPicker(c echo.Context) error {
 		return err
 	}
 
-	items := []web.OfferGroupOrUserPickerItem{}
+	var items []web.OfferGroupOrUserPickerItem
 
-	userKeys := []model.UserKey{}
-	groupKeys := []model.GroupKey{}
+	var userKeys []model.UserKey
+	var groupKeys []model.GroupKey
 	for _, target := range targets.Items {
 		if target.IsForUser() {
 			userKeys = append(userKeys, target.GetUserKey())

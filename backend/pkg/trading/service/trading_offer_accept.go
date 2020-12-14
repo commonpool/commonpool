@@ -103,7 +103,7 @@ func (t TradingService) AcceptOffer(ctx context.Context, offerKey model.OfferKey
 	}
 
 	if len(offerItemsPendingReceiverApproval) == 0 && len(offerItemsPendingGiverApproval) == 0 {
-		return fmt.Errorf("Nothing left to approve by you")
+		return fmt.Errorf("nothing left to approve by you")
 	}
 
 	err = t.tradingStore.MarkOfferItemsAsAccepted(

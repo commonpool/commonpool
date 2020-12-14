@@ -2,9 +2,7 @@ package exceptions
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"net/http"
-	"testing"
 )
 
 type WebServiceException struct {
@@ -47,7 +45,6 @@ var ErrWrongOfferItemType = NewWebServiceException("wrong offer item type", "Err
 var ErrUnauthorized = NewWebServiceException("unauthorized", "ErrUnauthorized", http.StatusUnauthorized)
 var ErrForbidden = NewWebServiceException("forbidden", "ErrForbidden", http.StatusForbidden)
 var ErrDuplicateResourceInOffer = NewWebServiceException("resource can only appear once in an offer", "ErrDuplicateResourceInOffer", http.StatusBadRequest)
-var ErrResourceMustBeTradedByOwner = NewWebServiceException("resource an only be traded by their owner", "ErrResourceMustBeTradedByOwner", http.StatusForbidden)
 var ErrResourceNotSharedWithGroup = NewWebServiceException("resource is not shared with the group", "ErrResourceNotSharedWithGroup", http.StatusBadRequest)
 var ErrCannotTransferResourceToItsOwner = NewWebServiceException("resource cannot be transferred to its own owner", "ErrCannotTransferResourceToItsOwner", http.StatusBadRequest)
 var ErrResourceTransferOfferItemsMustReferToObjectResources = NewWebServiceException("resource transfers can only be for object-typed resources", "ErrResourceTransferOfferItemsMustReferToObjectResources", http.StatusBadRequest)
@@ -55,11 +52,12 @@ var ErrServiceProvisionOfferItemsMustPointToServiceResources = NewWebServiceExce
 var ErrBorrowOfferItemMustReferToObjectTypedResource = NewWebServiceException("borrow offer items must be for a service-type resource!", "ErrBorrowOfferItemMustReferToObjectTypedResource", http.StatusBadRequest)
 var ErrInvalidOfferItemType = NewWebServiceException("invalid offer item type", "ErrInvalidOfferItemType", http.StatusBadRequest)
 var ErrInvalidTargetType = NewWebServiceException("invalid target type", "ErrInvalidTargetType", http.StatusBadRequest)
-var ErrFromIdQueryParamRequired = NewWebServiceException("from_id query parameter is required", "ErrFromIdQueryParamRequired", http.StatusBadRequest)
-var ErrToIdQueryParamRequired = NewWebServiceException("to_id query parameter is required", "ErrToIdQueryParamRequired", http.StatusBadRequest)
 var ErrInvalidTakeQueryParam = NewWebServiceException("query parameter 'take' is invalid", "ErrInvalidTakeQueryParam", http.StatusBadRequest)
 var ErrInvalidSkipQueryParam = NewWebServiceException("query parameter 'skip' is invalid", "ErrInvalidSkipQueryParam", http.StatusBadRequest)
 var ErrInvalidBeforeQueryParam = NewWebServiceException("query parameter 'before' is invalid", "ErrInvalidBeforeQueryParam", http.StatusBadRequest)
+var ErrInvalidGroupId = NewWebServiceException("invalid group id", "ErrInvalidGroupId", http.StatusBadRequest)
+var ErrMembershipPartyUnauthorized = NewWebServiceException("not allowed to manage other people memberships", "ErrMembershipPartyUnauthorized", http.StatusForbidden)
+var ErrManageMembershipsNotAdmin = NewWebServiceException("don't have sufficient privilegtes", "ErrManageMembershipsNotAdmin", http.StatusForbidden)
 
 func ErrQueryParamRequired(queryParameter string) error {
 	return NewWebServiceException(fmt.Sprintf("query parameter '%s' is required", queryParameter), "ErrQueryParamRequired", http.StatusBadRequest)
@@ -125,28 +123,3 @@ func (r *ErrorResponse) Error() string {
 func (r *ErrorResponse) IsNotFoundError() bool {
 	return r.StatusCode == http.StatusNotFound
 }
-
-func IsNotFoundError(err error) bool {
-	res, ok := err.(*ErrorResponse)
-	if !ok {
-		return false
-	}
-	return res.StatusCode == http.StatusNotFound
-}
-
-func ExpectWebServiceException(t *testing.T, err error, do func(exception *WebServiceException)) {
-	if !assert.NotNil(t, t, err) {
-		return
-	}
-
-	if !assert.IsType(t, &WebServiceException{}, err) {
-		return
-	}
-	wse, _ := err.(*WebServiceException)
-	do(wse)
-}
-
-var ErrInvalidGroupId = NewWebServiceException("invalid group id", "ErrInvalidGroupId", http.StatusBadRequest)
-
-var ErrMembershipPartyUnauthorized = NewWebServiceException("not allowed to manage other people memberships", "ErrMembershipPartyUnauthorized", http.StatusForbidden)
-var ErrManageMembershipsNotAdmin = NewWebServiceException("don't have sufficient privilegtes", "ErrManageMembershipsNotAdmin", http.StatusForbidden)

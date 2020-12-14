@@ -3,7 +3,6 @@ package integration
 import (
 	"context"
 	"github.com/commonpool/backend/auth"
-	"github.com/commonpool/backend/pkg/user"
 	"github.com/commonpool/backend/web"
 	"net/http"
 	"strconv"
@@ -15,12 +14,12 @@ func testUser(t *testing.T) (*auth.UserSession, func()) {
 
 	createUserLock.Lock()
 
-	user := NewUser()
-	upsertError := AuthStore.Upsert(user.GetUserKey(), user.Email, user.Username)
+	u := NewUser()
+	upsertError := AuthStore.Upsert(u.GetUserKey(), u.Email, u.Username)
 
 	var userXchangeErr error
 	if upsertError != nil {
-		_, userXchangeErr = ChatService.CreateUserExchange(context.TODO(), user.GetUserKey())
+		_, userXchangeErr = ChatService.CreateUserExchange(context.TODO(), u.GetUserKey())
 	}
 
 	createUserLock.Unlock()
@@ -33,13 +32,24 @@ func testUser(t *testing.T) (*auth.UserSession, func()) {
 		t.Fatalf("exchange error: %s", userXchangeErr)
 	}
 
-	return user, func(user *auth.UserSession) func() {
+	return u, func(user *auth.UserSession) func() {
 		return func() {
-			createUserLock.Lock()
-			_ = Db.Delete(exceptions.User{}, "id = ?", user.Subject).Error
-			createUserLock.Unlock()
+			session, err := Driver.GetSession()
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer session.Close()
+			result, err := session.Run(`MATCH (u:User{id:$id}) detach delete u`, map[string]interface{}{
+				"id": user.Subject,
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if result.Err() != nil {
+				t.Fatal(result.Err())
+			}
 		}
-	}(user)
+	}(u)
 }
 
 var groupCounter = 0

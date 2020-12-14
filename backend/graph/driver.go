@@ -6,7 +6,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/neo4j"
 )
 
-type GraphDriver interface {
+type Driver interface {
 	GetSession() (neo4j.Session, error)
 }
 
@@ -24,7 +24,7 @@ func (n Neo4jGraphDriver) GetSession() (neo4j.Session, error) {
 	return sess, err
 }
 
-var _ GraphDriver = &Neo4jGraphDriver{}
+var _ Driver = &Neo4jGraphDriver{}
 
 func NewNeo4jDriver(appConfig *config.AppConfig, databaseName string) (*Neo4jGraphDriver, error) {
 
@@ -44,11 +44,11 @@ func NewNeo4jDriver(appConfig *config.AppConfig, databaseName string) (*Neo4jGra
 		Bookmarks:    nil,
 		DatabaseName: "system",
 	})
-	defer session.Close()
-
 	if err != nil {
 		return nil, fmt.Errorf("could not open connection: %v", err)
 	}
+
+	defer session.Close()
 
 	leaderBoltUrl, err := findDatabaseLeaderBoltUrl(session, databaseName)
 	if err != nil {

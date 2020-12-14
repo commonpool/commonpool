@@ -64,7 +64,7 @@ func (t TransactionService) UserRemovedResourceFromGroup(groupKey model.GroupKey
 func (t TransactionService) ServiceWasProvided(groupKey model.GroupKey, resourceKey model.ResourceKey, duration time.Duration) (*transaction2.Entry, error) {
 	entry := &transaction2.Entry{
 		Key:         model.NewTransactionEntryKey(uuid.NewV4()),
-		Type:        transaction2.ResourceRemovedFromGroup,
+		Type:        transaction2.ServiceProvided,
 		GroupKey:    groupKey,
 		ResourceKey: &resourceKey,
 		Duration:    &duration,

@@ -7,7 +7,7 @@ import (
 
 type Entry struct {
 	Key         model.TransactionEntryKey
-	Type        TransactionType
+	Type        Type
 	GroupKey    model.GroupKey
 	ResourceKey *model.ResourceKey
 	Duration    *time.Duration

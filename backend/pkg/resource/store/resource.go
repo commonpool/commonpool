@@ -19,13 +19,13 @@ import (
 )
 
 type ResourceStore struct {
-	graphDriver        graph.GraphDriver
+	graphDriver        graph.Driver
 	transactionService transaction2.Service
 }
 
 var _ resource.Store = &ResourceStore{}
 
-func NewResourceStore(graphDriver graph.GraphDriver, transactionService transaction2.Service) *ResourceStore {
+func NewResourceStore(graphDriver graph.Driver, transactionService transaction2.Service) *ResourceStore {
 	return &ResourceStore{
 		graphDriver:        graphDriver,
 		transactionService: transactionService,

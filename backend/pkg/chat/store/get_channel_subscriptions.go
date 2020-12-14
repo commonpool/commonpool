@@ -6,9 +6,9 @@ import (
 	"github.com/commonpool/backend/pkg/chat"
 )
 
-func (cs *ChatStore) GetSubscriptionsForChannel(ctx context.Context, channelKey model.ChannelKey) ([]chat.ChannelSubscription, error) {
+func (cs *ChatStore) GetSubscriptionsForChannel(ctx context.Context, channelKey model.ChannelKey) ([]*chat.ChannelSubscription, error) {
 
-	var subscriptions []chat.ChannelSubscription
+	var subscriptions []ChannelSubscription
 	err := cs.db.
 		Where("channel_id = ?", channelKey.String()).
 		Find(&subscriptions).
@@ -18,5 +18,11 @@ func (cs *ChatStore) GetSubscriptionsForChannel(ctx context.Context, channelKey 
 		return nil, err
 	}
 
-	return subscriptions, nil
+	var result []*chat.ChannelSubscription
+	for _, subscription := range subscriptions {
+		mappedSubscription := subscription.Map()
+		result = append(result, mappedSubscription)
+	}
+
+	return result, nil
 }

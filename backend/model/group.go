@@ -53,9 +53,9 @@ func NewEmptyGroupKeys() *GroupKeys {
 	return NewGroupKeys([]GroupKey{})
 }
 
-func (k GroupKeys) Strings() []string {
+func (gk GroupKeys) Strings() []string {
 	var groupKeys []string
-	for _, groupKey := range k.Items {
+	for _, groupKey := range gk.Items {
 		groupKeys = append(groupKeys, groupKey.String())
 	}
 	if groupKeys == nil {
@@ -64,8 +64,8 @@ func (k GroupKeys) Strings() []string {
 	return groupKeys
 }
 
-func (k GroupKeys) Contains(groupKey GroupKey) bool {
-	for _, gk := range k.Items {
+func (gk GroupKeys) Contains(groupKey GroupKey) bool {
+	for _, gk := range gk.Items {
 		if groupKey == gk {
 			return true
 		}
@@ -73,15 +73,15 @@ func (k GroupKeys) Contains(groupKey GroupKey) bool {
 	return false
 }
 
-func (i *GroupKeys) IsEmpty() bool {
-	return i.Items == nil || len(i.Items) == 0
+func (gk *GroupKeys) IsEmpty() bool {
+	return gk.Items == nil || len(gk.Items) == 0
 }
 
-func (i *GroupKeys) Count() int {
-	if i.Items == nil {
+func (gk *GroupKeys) Count() int {
+	if gk.Items == nil {
 		return 0
 	}
-	return len(i.Items)
+	return len(gk.Items)
 }
 
 func ParseGroupKey(value string) (GroupKey, error) {

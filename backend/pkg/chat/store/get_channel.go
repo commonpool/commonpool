@@ -10,7 +10,7 @@ import (
 
 func (cs *ChatStore) GetChannel(ctx context.Context, channelKey model.ChannelKey) (*chat.Channel, error) {
 
-	var channel chat.Channel
+	var channel Channel
 	err := cs.db.Where("id = ?", channelKey.String()).First(&channel).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -21,6 +21,6 @@ func (cs *ChatStore) GetChannel(ctx context.Context, channelKey model.ChannelKey
 		return nil, err
 	}
 
-	return &channel, nil
+	return channel.Map(), nil
 
 }

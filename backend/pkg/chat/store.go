@@ -8,7 +8,7 @@ import (
 
 type Store interface {
 	GetSubscriptionsForUser(ctx context.Context, request *GetSubscriptions) (*ChannelSubscriptions, error)
-	GetSubscriptionsForChannel(ctx context.Context, channelKey model.ChannelKey) ([]ChannelSubscription, error)
+	GetSubscriptionsForChannel(ctx context.Context, channelKey model.ChannelKey) ([]*ChannelSubscription, error)
 	GetSubscription(ctx context.Context, request *GetSubscription) (*ChannelSubscription, error)
 	GetMessage(ctx context.Context, messageKey model.MessageKey) (*Message, error)
 	GetMessages(ctx context.Context, request *GetMessages) (*GetMessagesResponse, error)
@@ -50,26 +50,6 @@ type SaveMessageResponse struct {
 }
 
 type SendMessageToThreadResponse struct {
-}
-
-func NewSaveMessageRequest(
-	topicKey model.ChannelKey,
-	fromUser model.UserKey,
-	fromUserName string,
-	text string,
-	blocks []Block,
-	attachments []Attachment,
-	visibleToUserOnly *model.UserKey,
-) *SaveMessageRequest {
-	return &SaveMessageRequest{
-		ChannelKey:    topicKey,
-		Text:          text,
-		Attachments:   attachments,
-		Blocks:        blocks,
-		FromUser:      fromUser,
-		FromUserName:  fromUserName,
-		VisibleToUser: visibleToUserOnly,
-	}
 }
 
 type GetMessages struct {

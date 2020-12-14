@@ -10,23 +10,23 @@ import (
 	"sync"
 )
 
-// Ensure, that AuthStore does implement auth.Store.
+// Ensure, that UserStore does implement user.Store.
 // If this is not the case, regenerate this file with moq.
-var _ exceptions.Store = &AuthStore{}
+var _ user.Store = &UserStore{}
 
-// AuthStore is a mock implementation of auth.Store.
+// UserStore is a mock implementation of user.Store.
 //
 //     func TestSomethingThatUsesStore(t *testing.T) {
 //
-//         // make and configure a mocked auth.Store
-//         mockedStore := &AuthStore{
-//             FindFunc: func(query auth.UserQuery) ([]*auth.User, error) {
+//         // make and configure a mocked user.Store
+//         mockedStore := &UserStore{
+//             FindFunc: func(query user.Query) ([]*user.User, error) {
 // 	               panic("mock out the Find method")
 //             },
-//             GetByKeyFunc: func(key model.UserKey) (*auth.User, error) {
+//             GetByKeyFunc: func(key model.UserKey) (*user.User, error) {
 // 	               panic("mock out the GetByKey method")
 //             },
-//             GetByKeysFunc: func(ctx context.Context, keys []model.UserKey) (*auth.Users, error) {
+//             GetByKeysFunc: func(ctx context.Context, keys []model.UserKey) (*user.Users, error) {
 // 	               panic("mock out the GetByKeys method")
 //             },
 //             GetUsernameFunc: func(key model.UserKey) (string, error) {
@@ -37,19 +37,19 @@ var _ exceptions.Store = &AuthStore{}
 //             },
 //         }
 //
-//         // use mockedStore in code that requires auth.Store
+//         // use mockedStore in code that requires user.Store
 //         // and then make assertions.
 //
 //     }
-type AuthStore struct {
+type UserStore struct {
 	// FindFunc mocks the Find method.
-	FindFunc func(query exceptions.UserQuery) ([]*exceptions.User, error)
+	FindFunc func(query user.Query) ([]*user.User, error)
 
 	// GetByKeyFunc mocks the GetByKey method.
-	GetByKeyFunc func(key model.UserKey) (*exceptions.User, error)
+	GetByKeyFunc func(key model.UserKey) (*user.User, error)
 
 	// GetByKeysFunc mocks the GetByKeys method.
-	GetByKeysFunc func(ctx context.Context, keys []model.UserKey) (*exceptions.Users, error)
+	GetByKeysFunc func(ctx context.Context, keys []model.UserKey) (*user.Users, error)
 
 	// GetUsernameFunc mocks the GetUsername method.
 	GetUsernameFunc func(key model.UserKey) (string, error)
@@ -62,7 +62,7 @@ type AuthStore struct {
 		// Find holds details about calls to the Find method.
 		Find []struct {
 			// Query is the query argument value.
-			Query exceptions.UserQuery
+			Query user.Query
 		}
 		// GetByKey holds details about calls to the GetByKey method.
 		GetByKey []struct {
@@ -99,12 +99,12 @@ type AuthStore struct {
 }
 
 // Find calls FindFunc.
-func (mock *AuthStore) Find(query exceptions.UserQuery) ([]*exceptions.User, error) {
+func (mock *UserStore) Find(query user.Query) ([]*user.User, error) {
 	if mock.FindFunc == nil {
-		panic("AuthStore.FindFunc: method is nil but Store.Find was just called")
+		panic("UserStore.FindFunc: method is nil but Store.Find was just called")
 	}
 	callInfo := struct {
-		Query exceptions.UserQuery
+		Query user.Query
 	}{
 		Query: query,
 	}
@@ -117,11 +117,11 @@ func (mock *AuthStore) Find(query exceptions.UserQuery) ([]*exceptions.User, err
 // FindCalls gets all the calls that were made to Find.
 // Check the length with:
 //     len(mockedStore.FindCalls())
-func (mock *AuthStore) FindCalls() []struct {
-	Query exceptions.UserQuery
+func (mock *UserStore) FindCalls() []struct {
+	Query user.Query
 } {
 	var calls []struct {
-		Query exceptions.UserQuery
+		Query user.Query
 	}
 	mock.lockFind.RLock()
 	calls = mock.calls.Find
@@ -130,9 +130,9 @@ func (mock *AuthStore) FindCalls() []struct {
 }
 
 // GetByKey calls GetByKeyFunc.
-func (mock *AuthStore) GetByKey(key model.UserKey) (*exceptions.User, error) {
+func (mock *UserStore) GetByKey(key model.UserKey) (*user.User, error) {
 	if mock.GetByKeyFunc == nil {
-		panic("AuthStore.GetByKeyFunc: method is nil but Store.GetByKey was just called")
+		panic("UserStore.GetByKeyFunc: method is nil but Store.GetByKey was just called")
 	}
 	callInfo := struct {
 		Key model.UserKey
@@ -148,7 +148,7 @@ func (mock *AuthStore) GetByKey(key model.UserKey) (*exceptions.User, error) {
 // GetByKeyCalls gets all the calls that were made to GetByKey.
 // Check the length with:
 //     len(mockedStore.GetByKeyCalls())
-func (mock *AuthStore) GetByKeyCalls() []struct {
+func (mock *UserStore) GetByKeyCalls() []struct {
 	Key model.UserKey
 } {
 	var calls []struct {
@@ -161,9 +161,9 @@ func (mock *AuthStore) GetByKeyCalls() []struct {
 }
 
 // GetByKeys calls GetByKeysFunc.
-func (mock *AuthStore) GetByKeys(ctx context.Context, keys []model.UserKey) (*exceptions.Users, error) {
+func (mock *UserStore) GetByKeys(ctx context.Context, keys []model.UserKey) (*user.Users, error) {
 	if mock.GetByKeysFunc == nil {
-		panic("AuthStore.GetByKeysFunc: method is nil but Store.GetByKeys was just called")
+		panic("UserStore.GetByKeysFunc: method is nil but Store.GetByKeys was just called")
 	}
 	callInfo := struct {
 		Ctx  context.Context
@@ -181,7 +181,7 @@ func (mock *AuthStore) GetByKeys(ctx context.Context, keys []model.UserKey) (*ex
 // GetByKeysCalls gets all the calls that were made to GetByKeys.
 // Check the length with:
 //     len(mockedStore.GetByKeysCalls())
-func (mock *AuthStore) GetByKeysCalls() []struct {
+func (mock *UserStore) GetByKeysCalls() []struct {
 	Ctx  context.Context
 	Keys []model.UserKey
 } {
@@ -196,9 +196,9 @@ func (mock *AuthStore) GetByKeysCalls() []struct {
 }
 
 // GetUsername calls GetUsernameFunc.
-func (mock *AuthStore) GetUsername(key model.UserKey) (string, error) {
+func (mock *UserStore) GetUsername(key model.UserKey) (string, error) {
 	if mock.GetUsernameFunc == nil {
-		panic("AuthStore.GetUsernameFunc: method is nil but Store.GetUsername was just called")
+		panic("UserStore.GetUsernameFunc: method is nil but Store.GetUsername was just called")
 	}
 	callInfo := struct {
 		Key model.UserKey
@@ -214,7 +214,7 @@ func (mock *AuthStore) GetUsername(key model.UserKey) (string, error) {
 // GetUsernameCalls gets all the calls that were made to GetUsername.
 // Check the length with:
 //     len(mockedStore.GetUsernameCalls())
-func (mock *AuthStore) GetUsernameCalls() []struct {
+func (mock *UserStore) GetUsernameCalls() []struct {
 	Key model.UserKey
 } {
 	var calls []struct {
@@ -227,9 +227,9 @@ func (mock *AuthStore) GetUsernameCalls() []struct {
 }
 
 // Upsert calls UpsertFunc.
-func (mock *AuthStore) Upsert(key model.UserKey, email string, username string) error {
+func (mock *UserStore) Upsert(key model.UserKey, email string, username string) error {
 	if mock.UpsertFunc == nil {
-		panic("AuthStore.UpsertFunc: method is nil but Store.Upsert was just called")
+		panic("UserStore.UpsertFunc: method is nil but Store.Upsert was just called")
 	}
 	callInfo := struct {
 		Key      model.UserKey
@@ -249,7 +249,7 @@ func (mock *AuthStore) Upsert(key model.UserKey, email string, username string) 
 // UpsertCalls gets all the calls that were made to Upsert.
 // Check the length with:
 //     len(mockedStore.UpsertCalls())
-func (mock *AuthStore) UpsertCalls() []struct {
+func (mock *UserStore) UpsertCalls() []struct {
 	Key      model.UserKey
 	Email    string
 	Username string

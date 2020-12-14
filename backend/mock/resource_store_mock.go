@@ -6,13 +6,13 @@ package mock
 import (
 	"context"
 	"github.com/commonpool/backend/model"
-	resource2 "github.com/commonpool/backend/pkg/resource"
+	"github.com/commonpool/backend/pkg/resource"
 	"sync"
 )
 
 // Ensure, that ResourceStore does implement resource.Store.
 // If this is not the case, regenerate this file with moq.
-var _ resource2.Store = &ResourceStore{}
+var _ resource.Store = &ResourceStore{}
 
 // ResourceStore is a mock implementation of resource.Store.
 //
@@ -46,41 +46,41 @@ var _ resource2.Store = &ResourceStore{}
 //     }
 type ResourceStore struct {
 	// CreateFunc mocks the Create method.
-	CreateFunc func(createResourceQuery *resource2.CreateResourceQuery) *resource2.CreateResourceResponse
+	CreateFunc func(createResourceQuery *resource.CreateResourceQuery) *resource.CreateResourceResponse
 
 	// DeleteFunc mocks the Delete method.
-	DeleteFunc func(deleteResourceQuery *resource2.DeleteResourceQuery) *resource2.DeleteResourceResponse
+	DeleteFunc func(deleteResourceQuery *resource.DeleteResourceQuery) *resource.DeleteResourceResponse
 
 	// GetByKeyFunc mocks the GetByKey method.
-	GetByKeyFunc func(ctx context.Context, getResourceByKeyQuery *resource2.GetResourceByKeyQuery) (*resource2.GetResourceByKeyResponse, error)
+	GetByKeyFunc func(ctx context.Context, getResourceByKeyQuery *resource.GetResourceByKeyQuery) (*resource.GetResourceByKeyResponse, error)
 
 	// GetByKeysFunc mocks the GetByKeys method.
-	GetByKeysFunc func(ctx context.Context, resourceKeys *model.ResourceKeys) (*resource2.GetResourceByKeysResponse, error)
+	GetByKeysFunc func(ctx context.Context, resourceKeys *model.ResourceKeys) (*resource.GetResourceByKeysResponse, error)
 
 	// SearchFunc mocks the Search method.
-	SearchFunc func(ctx context.Context, searchResourcesQuery *resource2.SearchResourcesQuery) *resource2.SearchResourcesResponse
+	SearchFunc func(ctx context.Context, searchResourcesQuery *resource.SearchResourcesQuery) *resource.SearchResourcesResponse
 
 	// UpdateFunc mocks the Update method.
-	UpdateFunc func(updateResourceQuery *resource2.UpdateResourceQuery) *resource2.UpdateResourceResponse
+	UpdateFunc func(updateResourceQuery *resource.UpdateResourceQuery) *resource.UpdateResourceResponse
 
 	// calls tracks calls to the methods.
 	calls struct {
 		// Create holds details about calls to the Create method.
 		Create []struct {
 			// CreateResourceQuery is the createResourceQuery argument value.
-			CreateResourceQuery *resource2.CreateResourceQuery
+			CreateResourceQuery *resource.CreateResourceQuery
 		}
 		// Delete holds details about calls to the Delete method.
 		Delete []struct {
 			// DeleteResourceQuery is the deleteResourceQuery argument value.
-			DeleteResourceQuery *resource2.DeleteResourceQuery
+			DeleteResourceQuery *resource.DeleteResourceQuery
 		}
 		// GetByKey holds details about calls to the GetByKey method.
 		GetByKey []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// GetResourceByKeyQuery is the getResourceByKeyQuery argument value.
-			GetResourceByKeyQuery *resource2.GetResourceByKeyQuery
+			GetResourceByKeyQuery *resource.GetResourceByKeyQuery
 		}
 		// GetByKeys holds details about calls to the GetByKeys method.
 		GetByKeys []struct {
@@ -94,12 +94,12 @@ type ResourceStore struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// SearchResourcesQuery is the searchResourcesQuery argument value.
-			SearchResourcesQuery *resource2.SearchResourcesQuery
+			SearchResourcesQuery *resource.SearchResourcesQuery
 		}
 		// Update holds details about calls to the Update method.
 		Update []struct {
 			// UpdateResourceQuery is the updateResourceQuery argument value.
-			UpdateResourceQuery *resource2.UpdateResourceQuery
+			UpdateResourceQuery *resource.UpdateResourceQuery
 		}
 	}
 	lockCreate    sync.RWMutex
@@ -111,12 +111,12 @@ type ResourceStore struct {
 }
 
 // Create calls CreateFunc.
-func (mock *ResourceStore) Create(createResourceQuery *resource2.CreateResourceQuery) *resource2.CreateResourceResponse {
+func (mock *ResourceStore) Create(createResourceQuery *resource.CreateResourceQuery) *resource.CreateResourceResponse {
 	if mock.CreateFunc == nil {
 		panic("ResourceStore.CreateFunc: method is nil but Store.Create was just called")
 	}
 	callInfo := struct {
-		CreateResourceQuery *resource2.CreateResourceQuery
+		CreateResourceQuery *resource.CreateResourceQuery
 	}{
 		CreateResourceQuery: createResourceQuery,
 	}
@@ -130,10 +130,10 @@ func (mock *ResourceStore) Create(createResourceQuery *resource2.CreateResourceQ
 // Check the length with:
 //     len(mockedStore.CreateCalls())
 func (mock *ResourceStore) CreateCalls() []struct {
-	CreateResourceQuery *resource2.CreateResourceQuery
+	CreateResourceQuery *resource.CreateResourceQuery
 } {
 	var calls []struct {
-		CreateResourceQuery *resource2.CreateResourceQuery
+		CreateResourceQuery *resource.CreateResourceQuery
 	}
 	mock.lockCreate.RLock()
 	calls = mock.calls.Create
@@ -142,12 +142,12 @@ func (mock *ResourceStore) CreateCalls() []struct {
 }
 
 // Delete calls DeleteFunc.
-func (mock *ResourceStore) Delete(deleteResourceQuery *resource2.DeleteResourceQuery) *resource2.DeleteResourceResponse {
+func (mock *ResourceStore) Delete(deleteResourceQuery *resource.DeleteResourceQuery) *resource.DeleteResourceResponse {
 	if mock.DeleteFunc == nil {
 		panic("ResourceStore.DeleteFunc: method is nil but Store.Delete was just called")
 	}
 	callInfo := struct {
-		DeleteResourceQuery *resource2.DeleteResourceQuery
+		DeleteResourceQuery *resource.DeleteResourceQuery
 	}{
 		DeleteResourceQuery: deleteResourceQuery,
 	}
@@ -161,10 +161,10 @@ func (mock *ResourceStore) Delete(deleteResourceQuery *resource2.DeleteResourceQ
 // Check the length with:
 //     len(mockedStore.DeleteCalls())
 func (mock *ResourceStore) DeleteCalls() []struct {
-	DeleteResourceQuery *resource2.DeleteResourceQuery
+	DeleteResourceQuery *resource.DeleteResourceQuery
 } {
 	var calls []struct {
-		DeleteResourceQuery *resource2.DeleteResourceQuery
+		DeleteResourceQuery *resource.DeleteResourceQuery
 	}
 	mock.lockDelete.RLock()
 	calls = mock.calls.Delete
@@ -173,13 +173,13 @@ func (mock *ResourceStore) DeleteCalls() []struct {
 }
 
 // GetByKey calls GetByKeyFunc.
-func (mock *ResourceStore) GetByKey(ctx context.Context, getResourceByKeyQuery *resource2.GetResourceByKeyQuery) (*resource2.GetResourceByKeyResponse, error) {
+func (mock *ResourceStore) GetByKey(ctx context.Context, getResourceByKeyQuery *resource.GetResourceByKeyQuery) (*resource.GetResourceByKeyResponse, error) {
 	if mock.GetByKeyFunc == nil {
 		panic("ResourceStore.GetByKeyFunc: method is nil but Store.GetByKey was just called")
 	}
 	callInfo := struct {
 		Ctx                   context.Context
-		GetResourceByKeyQuery *resource2.GetResourceByKeyQuery
+		GetResourceByKeyQuery *resource.GetResourceByKeyQuery
 	}{
 		Ctx:                   ctx,
 		GetResourceByKeyQuery: getResourceByKeyQuery,
@@ -195,11 +195,11 @@ func (mock *ResourceStore) GetByKey(ctx context.Context, getResourceByKeyQuery *
 //     len(mockedStore.GetByKeyCalls())
 func (mock *ResourceStore) GetByKeyCalls() []struct {
 	Ctx                   context.Context
-	GetResourceByKeyQuery *resource2.GetResourceByKeyQuery
+	GetResourceByKeyQuery *resource.GetResourceByKeyQuery
 } {
 	var calls []struct {
 		Ctx                   context.Context
-		GetResourceByKeyQuery *resource2.GetResourceByKeyQuery
+		GetResourceByKeyQuery *resource.GetResourceByKeyQuery
 	}
 	mock.lockGetByKey.RLock()
 	calls = mock.calls.GetByKey
@@ -208,7 +208,7 @@ func (mock *ResourceStore) GetByKeyCalls() []struct {
 }
 
 // GetByKeys calls GetByKeysFunc.
-func (mock *ResourceStore) GetByKeys(ctx context.Context, resourceKeys *model.ResourceKeys) (*resource2.GetResourceByKeysResponse, error) {
+func (mock *ResourceStore) GetByKeys(ctx context.Context, resourceKeys *model.ResourceKeys) (*resource.GetResourceByKeysResponse, error) {
 	if mock.GetByKeysFunc == nil {
 		panic("ResourceStore.GetByKeysFunc: method is nil but Store.GetByKeys was just called")
 	}
@@ -243,13 +243,13 @@ func (mock *ResourceStore) GetByKeysCalls() []struct {
 }
 
 // Search calls SearchFunc.
-func (mock *ResourceStore) Search(ctx context.Context, searchResourcesQuery *resource2.SearchResourcesQuery) *resource2.SearchResourcesResponse {
+func (mock *ResourceStore) Search(ctx context.Context, searchResourcesQuery *resource.SearchResourcesQuery) *resource.SearchResourcesResponse {
 	if mock.SearchFunc == nil {
 		panic("ResourceStore.SearchFunc: method is nil but Store.Search was just called")
 	}
 	callInfo := struct {
 		Ctx                  context.Context
-		SearchResourcesQuery *resource2.SearchResourcesQuery
+		SearchResourcesQuery *resource.SearchResourcesQuery
 	}{
 		Ctx:                  ctx,
 		SearchResourcesQuery: searchResourcesQuery,
@@ -265,11 +265,11 @@ func (mock *ResourceStore) Search(ctx context.Context, searchResourcesQuery *res
 //     len(mockedStore.SearchCalls())
 func (mock *ResourceStore) SearchCalls() []struct {
 	Ctx                  context.Context
-	SearchResourcesQuery *resource2.SearchResourcesQuery
+	SearchResourcesQuery *resource.SearchResourcesQuery
 } {
 	var calls []struct {
 		Ctx                  context.Context
-		SearchResourcesQuery *resource2.SearchResourcesQuery
+		SearchResourcesQuery *resource.SearchResourcesQuery
 	}
 	mock.lockSearch.RLock()
 	calls = mock.calls.Search
@@ -278,12 +278,12 @@ func (mock *ResourceStore) SearchCalls() []struct {
 }
 
 // Update calls UpdateFunc.
-func (mock *ResourceStore) Update(updateResourceQuery *resource2.UpdateResourceQuery) *resource2.UpdateResourceResponse {
+func (mock *ResourceStore) Update(updateResourceQuery *resource.UpdateResourceQuery) *resource.UpdateResourceResponse {
 	if mock.UpdateFunc == nil {
 		panic("ResourceStore.UpdateFunc: method is nil but Store.Update was just called")
 	}
 	callInfo := struct {
-		UpdateResourceQuery *resource2.UpdateResourceQuery
+		UpdateResourceQuery *resource.UpdateResourceQuery
 	}{
 		UpdateResourceQuery: updateResourceQuery,
 	}
@@ -297,10 +297,10 @@ func (mock *ResourceStore) Update(updateResourceQuery *resource2.UpdateResourceQ
 // Check the length with:
 //     len(mockedStore.UpdateCalls())
 func (mock *ResourceStore) UpdateCalls() []struct {
-	UpdateResourceQuery *resource2.UpdateResourceQuery
+	UpdateResourceQuery *resource.UpdateResourceQuery
 } {
 	var calls []struct {
-		UpdateResourceQuery *resource2.UpdateResourceQuery
+		UpdateResourceQuery *resource.UpdateResourceQuery
 	}
 	mock.lockUpdate.RLock()
 	calls = mock.calls.Update

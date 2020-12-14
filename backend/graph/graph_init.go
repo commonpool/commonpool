@@ -149,11 +149,10 @@ func getDatabaseLeaderSession(appConfig *config.AppConfig, databaseName string) 
 		Bookmarks:    nil,
 		DatabaseName: "system",
 	})
-	defer session.Close()
-
 	if err != nil {
 		return nil, fmt.Errorf("could not open connection: %v", err)
 	}
+	defer session.Close()
 
 	leaderBoltUrl, err := findDatabaseLeaderBoltUrl(session, databaseName)
 	if err != nil {

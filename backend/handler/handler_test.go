@@ -18,7 +18,7 @@ import (
 var (
 	d          *gorm.DB
 	rs         resource2.Store
-	as         exceptions.Store
+	as         user.Store
 	cs         chat.Store
 	ts         trading2.Store
 	gs         group2.Store
@@ -48,9 +48,6 @@ var (
 
 func mockLoggedInAs(user *auth.UserSession) {
 	authenticatedUser = user
-}
-
-type TestBench struct {
 }
 
 /**type Handler struct {

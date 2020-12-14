@@ -41,12 +41,12 @@ const (
 )
 
 type TradingStore struct {
-	graphDriver graph.GraphDriver
+	graphDriver graph.Driver
 }
 
 var _ trading.Store = TradingStore{}
 
-func NewTradingStore(graphDriver graph.GraphDriver) *TradingStore {
+func NewTradingStore(graphDriver graph.Driver) *TradingStore {
 	return &TradingStore{
 		graphDriver: graphDriver,
 	}
@@ -366,7 +366,7 @@ func (t TradingStore) FindApproversForOffers(offerKeys *model.OfferKeys) (*tradi
 		return nil, result.Err()
 	}
 
-	approversForOffer := []*trading.OfferApprovers{}
+	var approversForOffer []*trading.OfferApprovers
 
 	for result.Next() {
 

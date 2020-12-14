@@ -30,10 +30,8 @@ func NewRequest(ctx context.Context, session *auth.UserSession, method, target s
 	recorder := httptest.NewRecorder()
 	c := e.NewContext(httpRequest, recorder)
 	if session != nil {
-		authenticatedUser = session
 		setAuthenticatedUser(c, session.Username, session.Subject, session.Email)
 	} else {
-		authenticatedUser = nil
 		setUnauthenticated(c)
 	}
 	requestMu.Unlock()

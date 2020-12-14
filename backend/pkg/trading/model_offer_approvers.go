@@ -21,14 +21,14 @@ func (o OfferApprovers) IsUserAnApprover(userKey model.UserKey) bool {
 
 func (o *OfferApprovers) AllUserKeys() *model.UserKeys {
 	userKeyMap := map[model.UserKey]bool{}
-	for userKey, _ := range o.OfferItemsUsersCanGive {
+	for userKey := range o.OfferItemsUsersCanGive {
 		userKeyMap[userKey] = true
 	}
-	for userKey, _ := range o.OfferItemsUsersCanReceive {
+	for userKey := range o.OfferItemsUsersCanReceive {
 		userKeyMap[userKey] = true
 	}
 	var userKeys []model.UserKey
-	for userKey, _ := range userKeyMap {
+	for userKey := range userKeyMap {
 		userKeys = append(userKeys, userKey)
 	}
 	return model.NewUserKeys(userKeys)

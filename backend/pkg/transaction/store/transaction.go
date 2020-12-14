@@ -95,7 +95,7 @@ func (t TransactionStore) GetEntry(transactionKey model.TransactionEntryKey) (*t
 func (t TransactionStore) GetEntriesForGroupAndUsers(groupKey model.GroupKey, userKeys *model.UserKeys) (*transaction2.Entries, error) {
 
 	sql := "(group_id = ? OR recipient_id = ? OR from_id = ?)"
-	var params = []interface{}{}
+	var params []interface{}
 	params = append(params, groupKey.String())
 	params = append(params, groupKey.String())
 	params = append(params, groupKey.String())
@@ -134,7 +134,7 @@ func (t TransactionStore) GetEntriesForGroupAndUsers(groupKey model.GroupKey, us
 
 type TransactionEntry struct {
 	ID            uuid.UUID `gorm:"type:uuid;primary_key"`
-	Type          transaction2.TransactionType
+	Type          transaction2.Type
 	GroupID       uuid.UUID
 	ResourceID    *uuid.UUID
 	Duration      *time.Duration

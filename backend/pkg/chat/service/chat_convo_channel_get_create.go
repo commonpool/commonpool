@@ -77,9 +77,8 @@ func (c ChatService) createSubscriptionsAndMqBindingsForUserConversation(ctx con
 	}
 
 	var subscriptions []chat.ChannelSubscription
-	for _, user := range users.Items {
-
-		subscription, err := c.createSubscriptionAndMqBindingForUserConversation(ctx, user, users, channelKey)
+	for _, u := range users.Items {
+		subscription, err := c.createSubscriptionAndMqBindingForUserConversation(ctx, u, users, channelKey)
 		if err != nil {
 			return nil, err
 		}

@@ -38,7 +38,7 @@ func (h *Handler) GetUsersForGroupInvitePicker(c echo.Context) error {
 		return NewErrResponse(c, err)
 	}
 
-	userQuery := user.UserQuery{
+	userQuery := user.Query{
 		Query:      qry,
 		Skip:       skip,
 		Take:       take,
@@ -51,10 +51,10 @@ func (h *Handler) GetUsersForGroupInvitePicker(c echo.Context) error {
 	}
 
 	responseItems := make([]web.UserInfoResponse, len(users))
-	for i, user := range users {
+	for i, u := range users {
 		responseItems[i] = web.UserInfoResponse{
-			Id:       user.ID,
-			Username: user.Username,
+			Id:       u.ID,
+			Username: u.Username,
 		}
 	}
 

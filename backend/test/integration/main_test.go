@@ -5,24 +5,21 @@ import (
 	"fmt"
 	"github.com/commonpool/backend/amqp"
 	"github.com/commonpool/backend/auth"
-	chatservice "github.com/commonpool/backend/chat/service"
-	chatstore "github.com/commonpool/backend/chat/store"
 	"github.com/commonpool/backend/config"
 	"github.com/commonpool/backend/graph"
 	"github.com/commonpool/backend/handler"
 	"github.com/commonpool/backend/mock"
-	"github.com/commonpool/backend/pkg/chat"
+	chatservice "github.com/commonpool/backend/pkg/chat/service"
+	chatstore "github.com/commonpool/backend/pkg/chat/store"
 	"github.com/commonpool/backend/pkg/db"
-	service2 "github.com/commonpool/backend/pkg/group/service"
-	store4 "github.com/commonpool/backend/pkg/group/store"
-	store5 "github.com/commonpool/backend/pkg/resource/store"
-	service3 "github.com/commonpool/backend/pkg/trading/service"
-	store2 "github.com/commonpool/backend/pkg/trading/store"
-	service4 "github.com/commonpool/backend/pkg/transaction/service"
-	store3 "github.com/commonpool/backend/pkg/transaction/store"
-	"github.com/commonpool/backend/pkg/user"
-	store6 "github.com/commonpool/backend/pkg/user/store"
-	store "github.com/commonpool/backend/store"
+	groupservice "github.com/commonpool/backend/pkg/group/service"
+	groupstore "github.com/commonpool/backend/pkg/group/store"
+	resourcestore "github.com/commonpool/backend/pkg/resource/store"
+	tradingservice "github.com/commonpool/backend/pkg/trading/service"
+	tradingstore "github.com/commonpool/backend/pkg/trading/store"
+	transactionservice "github.com/commonpool/backend/pkg/transaction/service"
+	transactionstore "github.com/commonpool/backend/pkg/transaction/store"
+	userstore "github.com/commonpool/backend/pkg/user/store"
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -33,23 +30,21 @@ import (
 	"testing"
 )
 
-var authenticatedUser = &auth.UserSession{}
 var a *handler.Handler
-
 var Db *gorm.DB
 var AmqpClient amqp.Client
-var ResourceStore store5.ResourceStore
-var AuthStore store6.UserStore
+var ResourceStore resourcestore.ResourceStore
+var AuthStore userstore.UserStore
 var ChatStore chatstore.ChatStore
-var TradingStore store2.TradingStore
-var GroupStore store4.GroupStore
+var TradingStore tradingstore.TradingStore
+var GroupStore groupstore.GroupStore
 var ChatService chatservice.ChatService
-var TradingService service3.TradingService
-var GroupService service2.GroupService
-var Authorizer *mock.Authorizer
+var TradingService tradingservice.TradingService
+var GroupService groupservice.GroupService
+var Authorizer *mock.AuthenticatorMock
 var Driver *graph.Neo4jGraphDriver
-var TransactionStore *store3.TransactionStore
-var TransactionService *service4.TransactionService
+var TransactionStore *transactionstore.TransactionStore
+var TransactionService *transactionservice.TransactionService
 
 func TestMain(m *testing.M) {
 
@@ -66,15 +61,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(err)
 	}
-	Authorizer = mock.NewTestAuthorizer()
-	Authorizer.MockCurrentSession = func() auth.UserSession {
-		if authenticatedUser == nil {
-			return auth.UserSession{
-				IsAuthenticated: false,
-			}
-		}
-		return *authenticatedUser
-	}
+	Authorizer = &mock.AuthenticatorMock{}
 
 	err = graph.InitGraphDatabase(nil, appConfig)
 	if err != nil {
@@ -88,16 +75,16 @@ func TestMain(m *testing.M) {
 
 	Db = getDb(appConfig)
 
-	TransactionStore = store3.NewTransactionStore(Db)
-	TransactionService = service4.NewTransactionService(TransactionStore)
-	ResourceStore = *store5.NewResourceStore(Driver, TransactionService)
-	AuthStore = *store6.NewAuthStore(Db, Driver)
+	TransactionStore = transactionstore.NewTransactionStore(Db)
+	TransactionService = transactionservice.NewTransactionService(TransactionStore)
+	ResourceStore = *resourcestore.NewResourceStore(Driver, TransactionService)
+	AuthStore = *userstore.NewAuthStore(Db, Driver)
 	ChatStore = *chatstore.NewChatStore(Db, &AuthStore, AmqpClient)
-	TradingStore = *store2.NewTradingStore(Driver)
-	GroupStore = *store4.NewGroupStore(Driver)
+	TradingStore = *tradingstore.NewTradingStore(Driver)
+	GroupStore = *groupstore.NewGroupStore(Driver)
 	ChatService = *chatservice.NewChatService(&AuthStore, &GroupStore, &ResourceStore, AmqpClient, &ChatStore)
-	GroupService = *service2.NewGroupService(&GroupStore, AmqpClient, ChatService, &AuthStore)
-	TradingService = *service3.NewTradingService(TradingStore, &ResourceStore, &AuthStore, ChatService, GroupService, TransactionService)
+	GroupService = *groupservice.NewGroupService(&GroupStore, AmqpClient, ChatService, &AuthStore)
+	TradingService = *tradingservice.NewTradingService(TradingStore, &ResourceStore, &AuthStore, ChatService, GroupService, TransactionService)
 
 	db.AutoMigrate(Db)
 
@@ -114,7 +101,20 @@ func TestMain(m *testing.M) {
 		GroupService)
 
 	cleanDb()
-	Db.Delete(exceptions.User{}, "1 = 1")
+
+	session, err := Driver.GetSession()
+	if err != nil {
+		panic(err)
+	}
+	defer session.Close()
+
+	result, err := session.Run(`MATCH (u:User) detach delete u`, map[string]interface{}{})
+	if err != nil {
+		panic(err)
+	}
+	if result.Err() != nil {
+		panic(result.Err())
+	}
 
 	os.Exit(m.Run())
 
@@ -154,16 +154,16 @@ func cleanDb() {
 		panic(err)
 	}
 
-	Db.Delete(chat.Channel{}, "1 = 1")
-	Db.Delete(chat.ChannelSubscription{}, "1 = 1")
-	Db.Delete(store.Message{}, "1 = 1")
+	Db.Delete(chatstore.Channel{}, "1 = 1")
+	Db.Delete(chatstore.ChannelSubscription{}, "1 = 1")
+	Db.Delete(chatstore.Message{}, "1 = 1")
 }
 
 func getDb(appConfig *config.AppConfig) *gorm.DB {
 	cs := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable", appConfig.DbHost, appConfig.DbUsername, appConfig.DbPassword, appConfig.DbName, appConfig.DbPort)
-	db, err := gorm.Open(postgres.Open(cs), &gorm.Config{})
+	database, err := gorm.Open(postgres.Open(cs), &gorm.Config{})
 	if err != nil {
 		panic(err)
 	}
-	return db
+	return database
 }

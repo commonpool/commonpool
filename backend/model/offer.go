@@ -13,8 +13,8 @@ func NewOfferKey(id uuid.UUID) OfferKey {
 	return OfferKey{ID: id}
 }
 
-func (o OfferKey) String() string {
-	return o.ID.String()
+func (ok OfferKey) String() string {
+	return ok.ID.String()
 }
 
 func ParseOfferKey(value string) (OfferKey, error) {
@@ -34,8 +34,8 @@ func MustParseOfferKey(value string) OfferKey {
 	return NewOfferKey(offerId)
 }
 
-func (m OfferKey) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
-	encoder.AddString("offer_id", m.String())
+func (ok OfferKey) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
+	encoder.AddString("offer_id", ok.String())
 	return nil
 }
 

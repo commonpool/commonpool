@@ -300,27 +300,3 @@ func newCreateResourceRequest(js string) (*httptest.ResponseRecorder, echo.Conte
 	_, _, rec, c := newRequest(echo.POST, "/api/resources", &js)
 	return rec, c
 }
-
-func createResource(t *testing.T, summary string, description string, resType resource2.Type) web.CreateResourceResponse {
-	payload := web.CreateResourceRequest{
-		Resource: web.CreateResourcePayload{
-			Summary:          summary,
-			Description:      description,
-			Type:             resType,
-			ValueInHoursFrom: 1,
-			ValueInHoursTo:   3,
-			SharedWith:       []web.InputResourceSharing{},
-		},
-	}
-	js, err := json.Marshal(payload)
-	assert.NoError(t, err)
-
-	rec, c := newCreateResourceRequest(string(js))
-	err = h.CreateResource(c)
-
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusCreated, rec.Code)
-	webResponse := web.CreateResourceResponse{}
-	assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &webResponse))
-	return webResponse
-}

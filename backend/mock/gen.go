@@ -1,8 +1,8 @@
 package mock
 
-//go:generate moq -pkg mock -out auth_mock.go ../auth Store:AuthStore
+//go:generate moq -pkg mock -out auth_mock.go ../pkg/user Store:UserStore
 //go:generate moq -pkg mock -out authenticator.go ../auth Authenticator
-//go:generate moq -pkg mock -out resource_store_mock.go ../resource Store:ResourceStore
+//go:generate moq -pkg mock -out resource_store_mock.go ../pkg/resource Store:ResourceStore
 //go:generate moq -pkg mock -out chat_store.go ../pkg/chat Store:ChatStore
 //go:generate moq -pkg mock -out chat_service.go ../pkg/chat Service:ChatService
 //go:generate moq -pkg mock -out amqp_client_mock.go ../amqp Client:AmqpClient
