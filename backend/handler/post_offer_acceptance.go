@@ -3,7 +3,7 @@ package handler
 import (
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/handler"
-	"github.com/commonpool/backend/trading"
+	trading2 "github.com/commonpool/backend/pkg/trading"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
@@ -17,7 +17,7 @@ func (h *Handler) HandleAcceptOffer(c echo.Context) error {
 		return err
 	}
 
-	_, err = h.tradingService.AcceptOffer(ctx, trading.NewAcceptOffer(offerKey))
+	_, err = h.tradingService.AcceptOffer(ctx, trading2.NewAcceptOffer(offerKey))
 
 	if err != nil {
 		return err

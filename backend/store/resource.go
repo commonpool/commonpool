@@ -8,6 +8,7 @@ import (
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/logging"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/trading/store"
 	"github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/transaction"
 	"github.com/mitchellh/mapstructure"
@@ -141,7 +142,7 @@ func mapOfferItemTargets(record neo4j.Record, targetsFieldName string) (*model.T
 	var targets []*model.Target
 	for _, intf := range intfs {
 		node := intf.(neo4j.Node)
-		target, err := MapOfferItemTarget(node)
+		target, err := store.MapOfferItemTarget(node)
 		if err != nil {
 			return nil, err
 		}

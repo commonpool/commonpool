@@ -4,7 +4,7 @@ import (
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/handler"
-	"github.com/commonpool/backend/trading"
+	trading2 "github.com/commonpool/backend/pkg/trading"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -19,7 +19,7 @@ func (h *Handler) HandleOfferItemTargetPicker(c echo.Context) error {
 		return err
 	}
 
-	offerItemType, err := trading.ParseOfferItemType(c.QueryParams().Get("type"))
+	offerItemType, err := trading2.ParseOfferItemType(c.QueryParams().Get("type"))
 	if err != nil {
 		return err
 	}

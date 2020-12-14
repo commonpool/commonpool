@@ -6,8 +6,8 @@ import (
 	"github.com/commonpool/backend/config"
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/pkg/chat"
+	trading2 "github.com/commonpool/backend/pkg/trading"
 	"github.com/commonpool/backend/resource"
-	"github.com/commonpool/backend/trading"
 )
 
 type Handler struct {
@@ -16,23 +16,23 @@ type Handler struct {
 	authStore      auth.Store
 	authorization  auth.Authenticator
 	chatStore      chat.Store
-	tradingStore   trading.Store
+	tradingStore   trading2.Store
 	groupService   group.Service
 	config         config.AppConfig
 	chatService    chat.Service
-	tradingService trading.Service
+	tradingService trading2.Service
 }
 
 func NewHandler(
 	rs resource.Store,
 	as auth.Store,
 	cs chat.Store,
-	ts trading.Store,
+	ts trading2.Store,
 	auth auth.Authenticator,
 	amqp amqp.Client,
 	cfg config.AppConfig,
 	chatService chat.Service,
-	tradingService trading.Service,
+	tradingService trading2.Service,
 	groupService group.Service,
 ) *Handler {
 	return &Handler{

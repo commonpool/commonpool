@@ -8,11 +8,12 @@ import (
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/service"
 )
 
 func (g GroupService) CancelOrDeclineInvitation(ctx context.Context, request *group.CancelOrDeclineInvitationRequest) error {
 
-	ctx, _ = GetCtx(ctx, "GroupService", "CancelOrDeclineInvitation")
+	ctx, _ = service.GetCtx(ctx, "GroupService", "CancelOrDeclineInvitation")
 
 	membershipKey := request.MembershipKey
 

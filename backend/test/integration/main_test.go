@@ -12,7 +12,11 @@ import (
 	"github.com/commonpool/backend/handler"
 	"github.com/commonpool/backend/mock"
 	"github.com/commonpool/backend/pkg/chat"
-	"github.com/commonpool/backend/service"
+	service2 "github.com/commonpool/backend/pkg/group/service"
+	service3 "github.com/commonpool/backend/pkg/trading/service"
+	store2 "github.com/commonpool/backend/pkg/trading/store"
+	service4 "github.com/commonpool/backend/pkg/transaction/service"
+	store3 "github.com/commonpool/backend/pkg/transaction/store"
 	store "github.com/commonpool/backend/store"
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/driver/postgres"
@@ -32,15 +36,15 @@ var AmqpClient amqp.Client
 var ResourceStore store.ResourceStore
 var AuthStore store.AuthStore
 var ChatStore chatstore.ChatStore
-var TradingStore store.TradingStore
+var TradingStore store2.TradingStore
 var GroupStore store.GroupStore
 var ChatService chatservice.ChatService
-var TradingService service.TradingService
-var GroupService service.GroupService
+var TradingService service3.TradingService
+var GroupService service2.GroupService
 var Authorizer *mock.Authorizer
 var Driver *graph.Neo4jGraphDriver
-var TransactionStore *store.TransactionStore
-var TransactionService *service.TransactionService
+var TransactionStore *store3.TransactionStore
+var TransactionService *service4.TransactionService
 
 func TestMain(m *testing.M) {
 
@@ -79,16 +83,16 @@ func TestMain(m *testing.M) {
 
 	Db = getDb(appConfig)
 
-	TransactionStore = store.NewTransactionStore(Db)
-	TransactionService = service.NewTransactionService(TransactionStore)
+	TransactionStore = store3.NewTransactionStore(Db)
+	TransactionService = service4.NewTransactionService(TransactionStore)
 	ResourceStore = *store.NewResourceStore(Driver, TransactionService)
 	AuthStore = *store.NewAuthStore(Db, Driver)
 	ChatStore = *chatstore.NewChatStore(Db, &AuthStore, AmqpClient)
-	TradingStore = *store.NewTradingStore(Driver)
+	TradingStore = *store2.NewTradingStore(Driver)
 	GroupStore = *store.NewGroupStore(Driver)
 	ChatService = *chatservice.NewChatService(&AuthStore, &GroupStore, &ResourceStore, AmqpClient, &ChatStore)
-	GroupService = *service.NewGroupService(&GroupStore, AmqpClient, ChatService, &AuthStore)
-	TradingService = *service.NewTradingService(TradingStore, &ResourceStore, &AuthStore, ChatService, GroupService, TransactionService)
+	GroupService = *service2.NewGroupService(&GroupStore, AmqpClient, ChatService, &AuthStore)
+	TradingService = *service3.NewTradingService(TradingStore, &ResourceStore, &AuthStore, ChatService, GroupService, TransactionService)
 
 	store.AutoMigrate(Db)
 

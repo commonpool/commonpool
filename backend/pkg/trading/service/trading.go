@@ -7,8 +7,9 @@ import (
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/chat"
+	trading2 "github.com/commonpool/backend/pkg/trading"
 	res "github.com/commonpool/backend/resource"
-	"github.com/commonpool/backend/trading"
+	"github.com/commonpool/backend/service"
 	"github.com/commonpool/backend/transaction"
 	"go.uber.org/zap"
 	ctx "golang.org/x/net/context"
@@ -16,7 +17,7 @@ import (
 )
 
 type TradingService struct {
-	tradingStore       trading.Store
+	tradingStore       trading2.Store
 	transactionService transaction.Service
 	groupService       group.Service
 	rs                 res.Store
@@ -24,10 +25,10 @@ type TradingService struct {
 	chatService        chat.Service
 }
 
-var _ trading.Service = &TradingService{}
+var _ trading2.Service = &TradingService{}
 
 func NewTradingService(
-	tradingStore trading.Store,
+	tradingStore trading2.Store,
 	resourceStore res.Store,
 	authStore auth.Store,
 	chatService chat.Service,
@@ -43,35 +44,35 @@ func NewTradingService(
 	}
 }
 
-func (t TradingService) checkOfferCompleted(ctx context.Context, groupKey model.GroupKey, offerKey model.OfferKey, offerItems *trading.OfferItems, userConfirmingItem model.UserReference, usersInOffer *auth.Users) error {
+func (t TradingService) checkOfferCompleted(ctx context.Context, groupKey model.GroupKey, offerKey model.OfferKey, offerItems *trading2.OfferItems, userConfirmingItem model.UserReference, usersInOffer *auth.Users) error {
 
-	ctx, l := GetCtx(ctx, "TradingService", "checkOfferCompleted")
+	ctx, l := service.GetCtx(ctx, "TradingService", "checkOfferCompleted")
 
 	if offerItems.AllPartiesAccepted() && offerItems.AllUserActionsCompleted() {
 		for _, offerItem := range offerItems.Items {
 			if offerItem.IsCreditTransfer() {
-				creditTransfer := offerItem.(*trading.CreditTransferItem)
+				creditTransfer := offerItem.(*trading2.CreditTransferItem)
 				_, err := t.transactionService.TimeCreditsExchanged(groupKey, creditTransfer.From, creditTransfer.To, creditTransfer.Amount)
 				if err != nil {
 					return err
 				}
 			}
 			if offerItem.IsServiceProviding() {
-				serviceProvision := offerItem.(*trading.ProvideServiceItem)
+				serviceProvision := offerItem.(*trading2.ProvideServiceItem)
 				_, err := t.transactionService.ServiceWasProvided(groupKey, serviceProvision.ResourceKey, serviceProvision.Duration)
 				if err != nil {
 					return err
 				}
 			}
 			if offerItem.IsBorrowingResource() {
-				borrowResource := offerItem.(*trading.BorrowResourceItem)
+				borrowResource := offerItem.(*trading2.BorrowResourceItem)
 				_, err := t.transactionService.ResourceWasBorrowed(groupKey, borrowResource.ResourceKey, borrowResource.To, borrowResource.Duration)
 				if err != nil {
 					return err
 				}
 			}
 			if offerItem.IsResourceTransfer() {
-				transfer := offerItem.(*trading.ResourceTransferItem)
+				transfer := offerItem.(*trading2.ResourceTransferItem)
 				_, err := t.transactionService.ResourceWasTaken(groupKey, transfer.ResourceKey, transfer.To)
 				if err != nil {
 					return err
@@ -79,7 +80,7 @@ func (t TradingService) checkOfferCompleted(ctx context.Context, groupKey model.
 			}
 		}
 
-		err := t.tradingStore.UpdateOfferStatus(offerKey, trading.CompletedOffer)
+		err := t.tradingStore.UpdateOfferStatus(offerKey, trading2.CompletedOffer)
 		if err != nil {
 			l.Error("could not mark offer as completed", zap.Error(err))
 			return err
@@ -104,9 +105,9 @@ func (t TradingService) checkOfferCompleted(ctx context.Context, groupKey model.
 	return nil
 }
 
-func (t TradingService) buildOfferCompletedMessage(ctx context.Context, items *trading.OfferItems, users *auth.Users) ([]chat.Block, string, error) {
+func (t TradingService) buildOfferCompletedMessage(ctx context.Context, items *trading2.OfferItems, users *auth.Users) ([]chat.Block, string, error) {
 
-	ctx, _ = GetCtx(ctx, "TradingService", "buildOfferCompletedMessage")
+	ctx, _ = service.GetCtx(ctx, "TradingService", "buildOfferCompletedMessage")
 
 	var blocks []chat.Block
 
@@ -120,7 +121,7 @@ func (t TradingService) buildOfferCompletedMessage(ctx context.Context, items *t
 
 		if offerItem.IsCreditTransfer() {
 
-			creditTransfer := offerItem.(*trading.CreditTransferItem)
+			creditTransfer := offerItem.(*trading2.CreditTransferItem)
 
 			var toLink = ""
 			var fromLink = ""
@@ -157,7 +158,7 @@ func (t TradingService) buildOfferCompletedMessage(ctx context.Context, items *t
 func (t TradingService) FindTargetsForOfferItem(
 	ctx ctx.Context,
 	groupKey model.GroupKey,
-	itemType trading.OfferItemType,
+	itemType trading2.OfferItemType,
 	from *model.Target,
 	to *model.Target) (*model.Targets, error) {
 

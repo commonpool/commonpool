@@ -3,7 +3,7 @@ package handler
 import (
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/handler"
-	"github.com/commonpool/backend/trading"
+	trading2 "github.com/commonpool/backend/pkg/trading"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	uuid "github.com/satori/go.uuid"
@@ -146,7 +146,7 @@ func (h *Handler) HandleChatbackOfferAccepted(c echo.Context, req web.Interactio
 
 	offerKey := model.NewOfferKey(uid)
 
-	_, err = h.tradingService.AcceptOffer(ctx, trading.NewAcceptOffer(offerKey))
+	_, err = h.tradingService.AcceptOffer(ctx, trading2.NewAcceptOffer(offerKey))
 	if err != nil {
 		l.Error("could not accept offer", zap.Error(err))
 		return c.JSON(http.StatusInternalServerError, err.Error())

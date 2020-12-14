@@ -6,11 +6,12 @@ import (
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/service"
 )
 
 func (g GroupService) CreateGroup(ctx context.Context, request *group.CreateGroupRequest) (*group.CreateGroupResponse, error) {
 
-	ctx, _ = GetCtx(ctx, "GroupService", "CreateGroup")
+	ctx, _ = service.GetCtx(ctx, "GroupService", "CreateGroup")
 
 	userSession, err := auth.GetLoggedInUser(ctx)
 	if err != nil {

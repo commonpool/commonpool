@@ -10,12 +10,13 @@ import (
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/service"
 	"go.uber.org/zap"
 )
 
 func (g GroupService) CreateOrAcceptInvitation(ctx context.Context, request *group.CreateOrAcceptInvitationRequest) (*group.CreateOrAcceptInvitationResponse, error) {
 
-	ctx, l := GetCtx(ctx, "GroupService", "CreateOrAcceptInvitation")
+	ctx, l := service.GetCtx(ctx, "GroupService", "CreateOrAcceptInvitation")
 
 	l = l.With(zap.Object("membership", request.MembershipKey))
 

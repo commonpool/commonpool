@@ -4,7 +4,7 @@ import (
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/handler"
-	"github.com/commonpool/backend/trading"
+	trading2 "github.com/commonpool/backend/pkg/trading"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"github.com/satori/go.uuid"
@@ -26,7 +26,7 @@ func (h *Handler) HandleSendOffer(c echo.Context) error {
 		return err
 	}
 
-	var tradingOfferItems []trading.OfferItem
+	var tradingOfferItems []trading2.OfferItem
 	for _, tradingOfferItem := range req.Offer.Items {
 		itemKey := model.NewOfferItemKey(uuid.NewV4())
 		tradingOfferItem, err := mapNewOfferItem(tradingOfferItem, itemKey)
@@ -41,7 +41,7 @@ func (h *Handler) HandleSendOffer(c echo.Context) error {
 		return err
 	}
 
-	offer, offerItems, err := h.tradingService.SendOffer(ctx, groupKey, trading.NewOfferItems(tradingOfferItems), "")
+	offer, offerItems, err := h.tradingService.SendOffer(ctx, groupKey, trading2.NewOfferItems(tradingOfferItems), "")
 	if err != nil {
 		return err
 	}

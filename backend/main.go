@@ -15,12 +15,16 @@ import (
 	chathandler "github.com/commonpool/backend/pkg/chat/handler"
 	chatservice "github.com/commonpool/backend/pkg/chat/service"
 	chatstore "github.com/commonpool/backend/pkg/chat/store"
+	service2 "github.com/commonpool/backend/pkg/group/service"
 	handler2 "github.com/commonpool/backend/pkg/handler"
+	trading2 "github.com/commonpool/backend/pkg/trading"
+	service3 "github.com/commonpool/backend/pkg/trading/service"
+	store2 "github.com/commonpool/backend/pkg/trading/store"
+	service4 "github.com/commonpool/backend/pkg/transaction/service"
+	store3 "github.com/commonpool/backend/pkg/transaction/store"
 	"github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/router"
-	"github.com/commonpool/backend/service"
 	"github.com/commonpool/backend/store"
-	"github.com/commonpool/backend/trading"
 	"github.com/labstack/echo/v4"
 	echoSwagger "github.com/swaggo/echo-swagger"
 	"go.uber.org/zap"
@@ -38,7 +42,7 @@ var (
 	resourceStore resource.Store
 	authStore     auth.Store
 	cs            chat.Store
-	ts            trading.Store
+	ts            trading2.Store
 	gs            group.Store
 	e             *echo.Echo
 )
@@ -88,17 +92,17 @@ func main() {
 	db := getDb(appConfig)
 	store.AutoMigrate(db)
 
-	transactionStore := store.NewTransactionStore(db)
-	transactionService := service.NewTransactionService(transactionStore)
+	transactionStore := store3.NewTransactionStore(db)
+	transactionService := service4.NewTransactionService(transactionStore)
 	resourceStore = store.NewResourceStore(driver, transactionService)
 	authStore = store.NewAuthStore(db, driver)
 	chatStore := chatstore.NewChatStore(db, authStore, amqpCli)
-	tradingStore := store.NewTradingStore(driver)
+	tradingStore := store2.NewTradingStore(driver)
 	groupStore := store.NewGroupStore(driver)
 
 	chatService := chatservice.NewChatService(authStore, groupStore, resourceStore, amqpCli, chatStore)
-	groupService := service.NewGroupService(groupStore, amqpCli, chatService, authStore)
-	tradingService := service.NewTradingService(tradingStore, resourceStore, authStore, chatService, groupService, transactionService)
+	groupService := service2.NewGroupService(groupStore, amqpCli, chatService, authStore)
+	tradingService := service3.NewTradingService(tradingStore, resourceStore, authStore, chatService, groupService, transactionService)
 
 	v1 := r.Group("/api/v1")
 	authorization := auth.NewAuth(v1, appConfig, "/api/v1", authStore)

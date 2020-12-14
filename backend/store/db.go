@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/commonpool/backend/auth"
 	chatstore "github.com/commonpool/backend/pkg/chat/store"
+	"github.com/commonpool/backend/pkg/transaction/store"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"os"
@@ -33,7 +34,7 @@ func AutoMigrate(db *gorm.DB) {
 		&chatstore.ChannelSubscription{},
 		&chatstore.Message{},
 		&auth.User{},
-		&TransactionEntry{},
+		&store.TransactionEntry{},
 	)
 	if err != nil {
 		panic(err)

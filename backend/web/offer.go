@@ -4,39 +4,39 @@ import (
 	"fmt"
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/model"
-	"github.com/commonpool/backend/trading"
+	trading2 "github.com/commonpool/backend/pkg/trading"
 	"time"
 )
 
 type Offer struct {
-	ID             string              `json:"id"`
-	CreatedAt      time.Time           `json:"createdAt"`
-	CompletedAt    *time.Time          `json:"completedAt"`
-	Status         trading.OfferStatus `json:"status"`
-	AuthorID       string              `json:"authorId"`
-	AuthorUsername string              `json:"authorUsername"`
-	Items          []*OfferItem        `json:"items"`
-	Message        string              `json:"message"`
+	ID             string               `json:"id"`
+	CreatedAt      time.Time            `json:"createdAt"`
+	CompletedAt    *time.Time           `json:"completedAt"`
+	Status         trading2.OfferStatus `json:"status"`
+	AuthorID       string               `json:"authorId"`
+	AuthorUsername string               `json:"authorUsername"`
+	Items          []*OfferItem         `json:"items"`
+	Message        string               `json:"message"`
 }
 
 type OfferItem struct {
-	ID                          string                `json:"id"`
-	From                        *OfferItemTarget      `json:"from"`
-	To                          *OfferItemTarget      `json:"to"`
-	Type                        trading.OfferItemType `json:"type"`
-	ResourceId                  *string               `json:"resourceId"`
-	Duration                    *int64                `json:"duration"`
-	Amount                      *int64                `json:"amount"`
-	ReceiverApproved            bool                  `json:"receiverApproved"`
-	GiverApproved               bool                  `json:"giverApproved"`
-	ReceivingApprovers          []string              `json:"receivingApprovers"`
-	GivingApprovers             []string              `json:"givingApprovers"`
-	ServiceGivenConfirmation    bool                  `json:"serviceGivenConfirmation"`
-	ServiceReceivedConfirmation bool                  `json:"serviceReceivedConfirmation"`
-	ItemTaken                   bool                  `json:"itemTaken"`
-	ItemGiven                   bool                  `json:"itemGiven"`
-	ItemReturnedBack            bool                  `json:"itemReturnedBack"`
-	ItemReceivedBack            bool                  `json:"itemReceivedBack"`
+	ID                          string                 `json:"id"`
+	From                        *OfferItemTarget       `json:"from"`
+	To                          *OfferItemTarget       `json:"to"`
+	Type                        trading2.OfferItemType `json:"type"`
+	ResourceId                  *string                `json:"resourceId"`
+	Duration                    *int64                 `json:"duration"`
+	Amount                      *int64                 `json:"amount"`
+	ReceiverApproved            bool                   `json:"receiverApproved"`
+	GiverApproved               bool                   `json:"giverApproved"`
+	ReceivingApprovers          []string               `json:"receivingApprovers"`
+	GivingApprovers             []string               `json:"givingApprovers"`
+	ServiceGivenConfirmation    bool                   `json:"serviceGivenConfirmation"`
+	ServiceReceivedConfirmation bool                   `json:"serviceReceivedConfirmation"`
+	ItemTaken                   bool                   `json:"itemTaken"`
+	ItemGiven                   bool                   `json:"itemGiven"`
+	ItemReturnedBack            bool                   `json:"itemReturnedBack"`
+	ItemReceivedBack            bool                   `json:"itemReceivedBack"`
 }
 
 type GetOfferResponse struct {
@@ -170,18 +170,18 @@ func NewUserTarget(user string) *OfferItemTarget {
 }
 
 type SendOfferPayloadItem struct {
-	Type       trading.OfferItemType `json:"type"`
-	To         OfferItemTarget       `json:"to" validate:"required,uuid"`
-	From       *OfferItemTarget      `json:"from" validate:"required,uuid"`
-	ResourceId *string               `json:"resourceId" validate:"required,uuid"`
-	Duration   *string               `json:"duration"`
-	Amount     *string               `json:"amount"`
+	Type       trading2.OfferItemType `json:"type"`
+	To         OfferItemTarget        `json:"to" validate:"required,uuid"`
+	From       *OfferItemTarget       `json:"from" validate:"required,uuid"`
+	ResourceId *string                `json:"resourceId" validate:"required,uuid"`
+	Duration   *string                `json:"duration"`
+	Amount     *string                `json:"amount"`
 }
 
 func NewResourceTransferItem(to *OfferItemTarget, resourceId string) *SendOfferPayloadItem {
 	return &SendOfferPayloadItem{
 		To:         *to,
-		Type:       trading.ResourceTransfer,
+		Type:       trading2.ResourceTransfer,
 		ResourceId: &resourceId,
 	}
 }
@@ -191,7 +191,7 @@ func NewCreditTransferItem(from *OfferItemTarget, to *OfferItemTarget, time time
 	return &SendOfferPayloadItem{
 		From:   from,
 		To:     *to,
-		Type:   trading.CreditTransfer,
+		Type:   trading2.CreditTransfer,
 		Amount: &seconds,
 	}
 }

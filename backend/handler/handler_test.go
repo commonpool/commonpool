@@ -4,9 +4,9 @@ import (
 	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/group"
 	"github.com/commonpool/backend/pkg/chat"
+	trading2 "github.com/commonpool/backend/pkg/trading"
 	"github.com/commonpool/backend/resource"
 	"github.com/commonpool/backend/store"
-	"github.com/commonpool/backend/trading"
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 	"log"
@@ -19,7 +19,7 @@ var (
 	rs         resource.Store
 	as         auth.Store
 	cs         chat.Store
-	ts         trading.Store
+	ts         trading2.Store
 	gs         group.Store
 	h          *Handler
 	e          *echo.Echo

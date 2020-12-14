@@ -3,12 +3,13 @@ package service
 import (
 	"context"
 	"github.com/commonpool/backend/group"
+	"github.com/commonpool/backend/service"
 	"go.uber.org/zap"
 )
 
 func (g GroupService) GetMembership(ctx context.Context, request *group.GetMembershipRequest) (*group.GetMembershipResponse, error) {
 
-	ctx, l := GetCtx(ctx, "GroupService", "GetMembership")
+	ctx, l := service.GetCtx(ctx, "GroupService", "GetMembership")
 	l = l.With(zap.Object("membership", request.MembershipKey))
 
 	l.Debug("getting membership")

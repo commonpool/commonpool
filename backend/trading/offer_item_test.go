@@ -2,6 +2,7 @@ package trading
 
 import (
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/trading"
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -17,12 +18,12 @@ type TestOfferItem struct {
 	Resource1Key  model.ResourceKey
 	Resource2Key  model.ResourceKey
 	Resource3Key  model.ResourceKey
-	ResourceItem1 OfferItem
-	ResourceItem2 OfferItem
-	ResourceItem3 OfferItem
+	ResourceItem1 trading.OfferItem
+	ResourceItem2 trading.OfferItem
+	ResourceItem3 trading.OfferItem
 
-	TimeItem1 OfferItem
-	TimeItem2 OfferItem
+	TimeItem1 trading.OfferItem
+	TimeItem2 trading.OfferItem
 }
 
 func NewTestOfferItem() TestOfferItem {
@@ -48,7 +49,7 @@ func NewTestOfferItem() TestOfferItem {
 		OfferKey:     offerKey,
 		Resource1Key: resource1Key,
 		Resource2Key: resource2Key,
-		ResourceItem1: OfferItem{
+		ResourceItem1: trading.OfferItem{
 			Key:         resourceItem1.ID,
 			ResourceKey: &resource1Key.ID,
 			From:        user1Key.String(),
@@ -56,7 +57,7 @@ func NewTestOfferItem() TestOfferItem {
 			ItemType:    ResourceItem,
 			OfferKey:    offerKey.ID,
 		},
-		ResourceItem2: OfferItem{
+		ResourceItem2: trading.OfferItem{
 			Key:         resourceItem2.ID,
 			ResourceKey: &resource1Key.ID,
 			From:        user2Key.String(),
@@ -64,7 +65,7 @@ func NewTestOfferItem() TestOfferItem {
 			ItemType:    ResourceItem,
 			OfferKey:    offerKey.ID,
 		},
-		ResourceItem3: OfferItem{
+		ResourceItem3: trading.OfferItem{
 			Key:         resourceItem3.ID,
 			OfferKey:    offerKey.ID,
 			ItemType:    ResourceItem,
@@ -72,7 +73,7 @@ func NewTestOfferItem() TestOfferItem {
 			To:          user3Key.String(),
 			ResourceKey: &resource3Key.ID,
 		},
-		TimeItem1: OfferItem{
+		TimeItem1: trading.OfferItem{
 			Key:                  timeItem1.ID,
 			OfferedTimeInSeconds: &timeInSeconds1,
 			From:                 user2Key.String(),
@@ -80,7 +81,7 @@ func NewTestOfferItem() TestOfferItem {
 			ItemType:             TimeItem,
 			OfferKey:             offerKey.ID,
 		},
-		TimeItem2: OfferItem{
+		TimeItem2: trading.OfferItem{
 			Key:                  timeItem2.ID,
 			OfferedTimeInSeconds: &timeInSeconds2,
 			From:                 user2Key.String(),
@@ -94,13 +95,13 @@ func NewTestOfferItem() TestOfferItem {
 
 func TestNewOfferItemsDuplicate(t *testing.T) {
 	test := NewTestOfferItem()
-	i := NewOfferItems([]OfferItem{test.TimeItem1, test.TimeItem1})
+	i := trading.NewOfferItems([]trading.OfferItem{test.TimeItem1, test.TimeItem1})
 	assert.Equal(t, 1, len(i.Items))
 }
 
 func TestGetUsers(t *testing.T) {
 	test := NewTestOfferItem()
-	i := NewOfferItems([]OfferItem{test.TimeItem1, test.TimeItem2, test.ResourceItem1, test.ResourceItem2})
+	i := trading.NewOfferItems([]trading.OfferItem{test.TimeItem1, test.TimeItem2, test.ResourceItem1, test.ResourceItem2})
 	u := i.GetUserKeys()
 
 	assert.True(t, u.Contains(test.User1Key))
@@ -110,7 +111,7 @@ func TestGetUsers(t *testing.T) {
 
 func TestGetItemsForUser(t *testing.T) {
 	test := NewTestOfferItem()
-	i := NewOfferItems([]OfferItem{
+	i := trading.NewOfferItems([]trading.OfferItem{
 		test.TimeItem1,
 		test.TimeItem2,
 		test.ResourceItem1,
