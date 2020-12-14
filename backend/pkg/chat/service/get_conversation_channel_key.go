@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/commonpool/backend/model"
-	"github.com/commonpool/backend/utils"
+	"github.com/commonpool/backend/pkg/utils"
 	"sort"
 	"strings"
 )

@@ -3,7 +3,7 @@ package handler
 import (
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/user"
-	"github.com/commonpool/backend/utils"
+	"github.com/commonpool/backend/pkg/utils"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"net/http"

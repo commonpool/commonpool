@@ -2,7 +2,6 @@ package store
 
 import (
 	"context"
-	"github.com/commonpool/backend/graph"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/exceptions"
 	graph2 "github.com/commonpool/backend/pkg/graph"
@@ -15,12 +14,12 @@ import (
 )
 
 type GroupStore struct {
-	graphDriver graph.Driver
+	graphDriver graph2.Driver
 }
 
 var _ group2.Store = &GroupStore{}
 
-func NewGroupStore(graphDriver graph.Driver) *GroupStore {
+func NewGroupStore(graphDriver graph2.Driver) *GroupStore {
 	return &GroupStore{
 		graphDriver: graphDriver,
 	}

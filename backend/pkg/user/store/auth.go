@@ -3,7 +3,6 @@ package store
 import (
 	"context"
 	"errors"
-	"github.com/commonpool/backend/graph"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/exceptions"
 	graph2 "github.com/commonpool/backend/pkg/graph"
@@ -16,12 +15,12 @@ import (
 
 type UserStore struct {
 	db          *gorm.DB
-	graphDriver graph.Driver
+	graphDriver graph2.Driver
 }
 
 var _ user.Store = &UserStore{}
 
-func NewAuthStore(db *gorm.DB, graphDriver graph.Driver) *UserStore {
+func NewAuthStore(db *gorm.DB, graphDriver graph2.Driver) *UserStore {
 	return &UserStore{
 		db:          db,
 		graphDriver: graphDriver,

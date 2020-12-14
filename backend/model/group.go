@@ -2,7 +2,7 @@ package model
 
 import (
 	"github.com/commonpool/backend/pkg/exceptions"
-	"github.com/commonpool/backend/utils"
+	"github.com/commonpool/backend/pkg/utils"
 	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap/zapcore"
 )

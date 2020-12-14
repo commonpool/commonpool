@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/commonpool/backend/pkg/chat"
-	"github.com/commonpool/backend/utils"
+	"github.com/commonpool/backend/pkg/utils"
 	"time"
 )
 

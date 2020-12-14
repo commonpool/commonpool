@@ -8,7 +8,7 @@ import (
 	"github.com/commonpool/backend/logging"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/user"
-	"github.com/commonpool/backend/utils"
+	"github.com/commonpool/backend/pkg/utils"
 	"github.com/coreos/go-oidc"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"

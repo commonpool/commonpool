@@ -9,7 +9,7 @@ import (
 	"github.com/commonpool/backend/logging"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/handler"
-	"github.com/commonpool/backend/utils"
+	"github.com/commonpool/backend/pkg/utils"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 	uuid "github.com/satori/go.uuid"

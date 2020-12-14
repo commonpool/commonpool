@@ -3,9 +3,9 @@ package store
 import (
 	"context"
 	"fmt"
-	"github.com/commonpool/backend/graph"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/exceptions"
+	graph2 "github.com/commonpool/backend/pkg/graph"
 	groupstore "github.com/commonpool/backend/pkg/group/store"
 	"github.com/commonpool/backend/pkg/resource"
 	resourcestore "github.com/commonpool/backend/pkg/resource/store"
@@ -41,12 +41,12 @@ const (
 )
 
 type TradingStore struct {
-	graphDriver graph.Driver
+	graphDriver graph2.Driver
 }
 
 var _ trading.Store = TradingStore{}
 
-func NewTradingStore(graphDriver graph.Driver) *TradingStore {
+func NewTradingStore(graphDriver graph2.Driver) *TradingStore {
 	return &TradingStore{
 		graphDriver: graphDriver,
 	}

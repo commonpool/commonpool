@@ -1,4 +1,4 @@
-package amqp
+package mq
 
 import (
 	"github.com/commonpool/backend/model"

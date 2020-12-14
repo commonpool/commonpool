@@ -2,7 +2,7 @@ package model
 
 import (
 	"fmt"
-	"github.com/commonpool/backend/utils"
+	"github.com/commonpool/backend/pkg/utils"
 	"go.uber.org/zap/zapcore"
 	"sort"
 	"strings"

@@ -3,7 +3,6 @@ package store
 import (
 	ctx "context"
 	"fmt"
-	"github.com/commonpool/backend/graph"
 	"github.com/commonpool/backend/logging"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/exceptions"
@@ -19,13 +18,13 @@ import (
 )
 
 type ResourceStore struct {
-	graphDriver        graph.Driver
+	graphDriver        graph2.Driver
 	transactionService transaction2.Service
 }
 
 var _ resource.Store = &ResourceStore{}
 
-func NewResourceStore(graphDriver graph.Driver, transactionService transaction2.Service) *ResourceStore {
+func NewResourceStore(graphDriver graph2.Driver, transactionService transaction2.Service) *ResourceStore {
 	return &ResourceStore{
 		graphDriver:        graphDriver,
 		transactionService: transactionService,

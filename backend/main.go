@@ -7,7 +7,6 @@ import (
 	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/config"
 	_ "github.com/commonpool/backend/docs"
-	"github.com/commonpool/backend/graph"
 	"github.com/commonpool/backend/handler"
 	"github.com/commonpool/backend/logging"
 	"github.com/commonpool/backend/pkg/chat"
@@ -15,6 +14,7 @@ import (
 	chatservice "github.com/commonpool/backend/pkg/chat/service"
 	chatstore "github.com/commonpool/backend/pkg/chat/store"
 	db2 "github.com/commonpool/backend/pkg/db"
+	graph2 "github.com/commonpool/backend/pkg/graph"
 	group2 "github.com/commonpool/backend/pkg/group"
 	service2 "github.com/commonpool/backend/pkg/group/service"
 	store4 "github.com/commonpool/backend/pkg/group/store"
@@ -77,13 +77,13 @@ func main() {
 		log.Fatal(err, "cannot crate amqp client")
 	}
 
-	err = graph.InitGraphDatabase(ctx, appConfig)
+	err = graph2.InitGraphDatabase(ctx, appConfig)
 	if err != nil {
 		l.Error("could not initialize graph database", zap.Error(err))
 		panic(err)
 	}
 
-	driver, err := graph.NewNeo4jDriver(appConfig, appConfig.Neo4jDatabase)
+	driver, err := graph2.NewNeo4jDriver(appConfig, appConfig.Neo4jDatabase)
 	if err != nil {
 		l.Error("could not create neo4j driver", zap.Error(err))
 		panic(err)

@@ -6,12 +6,12 @@ import (
 	"github.com/commonpool/backend/amqp"
 	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/config"
-	"github.com/commonpool/backend/graph"
 	"github.com/commonpool/backend/handler"
 	"github.com/commonpool/backend/mock"
 	chatservice "github.com/commonpool/backend/pkg/chat/service"
 	chatstore "github.com/commonpool/backend/pkg/chat/store"
 	"github.com/commonpool/backend/pkg/db"
+	graph2 "github.com/commonpool/backend/pkg/graph"
 	groupservice "github.com/commonpool/backend/pkg/group/service"
 	groupstore "github.com/commonpool/backend/pkg/group/store"
 	resourcestore "github.com/commonpool/backend/pkg/resource/store"
@@ -42,7 +42,7 @@ var ChatService chatservice.ChatService
 var TradingService tradingservice.TradingService
 var GroupService groupservice.GroupService
 var Authorizer *mock.AuthenticatorMock
-var Driver *graph.Neo4jGraphDriver
+var Driver *graph2.Neo4jGraphDriver
 var TransactionStore *transactionstore.TransactionStore
 var TransactionService *transactionservice.TransactionService
 
@@ -63,12 +63,12 @@ func TestMain(m *testing.M) {
 	}
 	Authorizer = &mock.AuthenticatorMock{}
 
-	err = graph.InitGraphDatabase(nil, appConfig)
+	err = graph2.InitGraphDatabase(nil, appConfig)
 	if err != nil {
 		panic(err)
 	}
 
-	Driver, err = graph.NewNeo4jDriver(appConfig, appConfig.Neo4jDatabase)
+	Driver, err = graph2.NewNeo4jDriver(appConfig, appConfig.Neo4jDatabase)
 	if err != nil {
 		panic(err)
 	}
