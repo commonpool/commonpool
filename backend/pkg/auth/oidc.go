@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"github.com/commonpool/backend/config"
+	"github.com/commonpool/backend/pkg/config"
 	"github.com/coreos/go-oidc"
 	"golang.org/x/oauth2"
 )

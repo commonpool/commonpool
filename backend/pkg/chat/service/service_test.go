@@ -2,9 +2,9 @@ package service
 
 import (
 	"context"
-	"github.com/commonpool/backend/amqp"
 	"github.com/commonpool/backend/mock"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/mq"
 	"github.com/stretchr/testify/suite"
 	"testing"
 )
@@ -21,12 +21,12 @@ func (s *serviceTestSuite) SetupTest() {
 	s.Service = &ChatService{}
 	s.AmqpChannel = &mock.AmqpChannel{
 		CloseFunc: func() error { return nil },
-		PublishFunc: func(ctx context.Context, exchange string, key string, mandatory bool, immediate bool, publishing amqp.Message) error {
+		PublishFunc: func(ctx context.Context, exchange string, key string, mandatory bool, immediate bool, publishing mq.Message) error {
 			return nil
 		},
 	}
 	s.AmqpClient = &mock.AmqpClient{
-		GetChannelFunc: func() (amqp.Channel, error) { return s.AmqpChannel, nil },
+		GetChannelFunc: func() (mq.Channel, error) { return s.AmqpChannel, nil },
 	}
 	s.Service.amqpClient = s.AmqpClient
 

@@ -2,8 +2,8 @@ package handler
 
 import (
 	"fmt"
-	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/pkg/handler"
 	resource2 "github.com/commonpool/backend/pkg/resource"

@@ -2,8 +2,8 @@ package handler
 
 import (
 	"context"
-	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/logging"
+	"github.com/commonpool/backend/pkg/auth"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 )

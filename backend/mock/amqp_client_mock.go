@@ -4,21 +4,21 @@
 package mock
 
 import (
-	"github.com/commonpool/backend/amqp"
+	"github.com/commonpool/backend/pkg/mq"
 	"sync"
 )
 
-// Ensure, that AmqpClient does implement amqp.Client.
+// Ensure, that AmqpClient does implement mq.Client.
 // If this is not the case, regenerate this file with moq.
-var _ amqp.Client = &AmqpClient{}
+var _ mq.Client = &AmqpClient{}
 
-// AmqpClient is a mock implementation of amqp.Client.
+// AmqpClient is a mock implementation of mq.Client.
 //
 //     func TestSomethingThatUsesClient(t *testing.T) {
 //
-//         // make and configure a mocked amqp.Client
+//         // make and configure a mocked mq.Client
 //         mockedClient := &AmqpClient{
-//             GetChannelFunc: func() (amqp.Channel, error) {
+//             GetChannelFunc: func() (mq.Channel, error) {
 // 	               panic("mock out the GetChannel method")
 //             },
 //             ShutdownFunc: func() error {
@@ -26,13 +26,13 @@ var _ amqp.Client = &AmqpClient{}
 //             },
 //         }
 //
-//         // use mockedClient in code that requires amqp.Client
+//         // use mockedClient in code that requires mq.Client
 //         // and then make assertions.
 //
 //     }
 type AmqpClient struct {
 	// GetChannelFunc mocks the GetChannel method.
-	GetChannelFunc func() (amqp.Channel, error)
+	GetChannelFunc func() (mq.Channel, error)
 
 	// ShutdownFunc mocks the Shutdown method.
 	ShutdownFunc func() error
@@ -51,7 +51,7 @@ type AmqpClient struct {
 }
 
 // GetChannel calls GetChannelFunc.
-func (mock *AmqpClient) GetChannel() (amqp.Channel, error) {
+func (mock *AmqpClient) GetChannel() (mq.Channel, error) {
 	if mock.GetChannelFunc == nil {
 		panic("AmqpClient.GetChannelFunc: method is nil but Client.GetChannel was just called")
 	}

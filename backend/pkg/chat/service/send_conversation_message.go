@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"github.com/commonpool/backend/amqp"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/mq"
 	uuid "github.com/satori/go.uuid"
 	"time"
 )
@@ -40,7 +40,7 @@ func (c ChatService) SendConversationMessage(ctx context.Context, request *chat.
 		return nil, err
 	}
 
-	evt := amqp.Event{
+	evt := mq.Event{
 		Type:      "message",
 		SubType:   "user",
 		Channel:   channelKey.String(),
@@ -61,7 +61,7 @@ func (c ChatService) SendConversationMessage(ctx context.Context, request *chat.
 	}
 	defer amqpChannel.Close()
 
-	err = amqpChannel.Publish(ctx, amqp.MessagesExchange, "", false, false, amqp.Message{
+	err = amqpChannel.Publish(ctx, mq.MessagesExchange, "", false, false, mq.Message{
 		Headers: map[string]interface{}{
 			"channel_id": channelKey.String(),
 			"event_type": "chat.message",

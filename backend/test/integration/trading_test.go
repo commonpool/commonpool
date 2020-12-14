@@ -3,8 +3,8 @@ package integration
 import (
 	"context"
 	"fmt"
-	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/auth"
 	trading2 "github.com/commonpool/backend/pkg/trading"
 	"github.com/commonpool/backend/web"
 	"github.com/stretchr/testify/assert"

@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/auth"
+	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/chat"
 	"github.com/commonpool/backend/pkg/db"
 	group2 "github.com/commonpool/backend/pkg/group"
@@ -51,7 +51,7 @@ func mockLoggedInAs(user *auth.UserSession) {
 }
 
 /**type Handler struct {
-	amqp           amqp.AmqpClient
+	amqp           mq.AmqpClient
 	resourceStore  resource.Store
 	authStore      auth.Store
 	authorization  auth.Authenticator

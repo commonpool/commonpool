@@ -3,8 +3,8 @@ package handler
 import (
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/chat"
+	model2 "github.com/commonpool/backend/pkg/chat/handler/model"
 	"github.com/commonpool/backend/pkg/handler"
-	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	uuid "github.com/satori/go.uuid"
 	"net/http"
@@ -27,7 +27,7 @@ func (chatHandler *ChatHandler) SendMessage(c echo.Context) error {
 	ctx, _ := handler.GetEchoContext(c, "SendMessage")
 
 	// Unmarshal request
-	req := web.SendMessageRequest{}
+	req := model2.SendMessageRequest{}
 	if err := c.Bind(&req); err != nil {
 		return err
 	}

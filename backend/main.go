@@ -3,22 +3,22 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/commonpool/backend/amqp"
-	"github.com/commonpool/backend/auth"
-	"github.com/commonpool/backend/config"
 	_ "github.com/commonpool/backend/docs"
 	"github.com/commonpool/backend/handler"
 	"github.com/commonpool/backend/logging"
+	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/chat"
 	chathandler "github.com/commonpool/backend/pkg/chat/handler"
 	chatservice "github.com/commonpool/backend/pkg/chat/service"
 	chatstore "github.com/commonpool/backend/pkg/chat/store"
+	"github.com/commonpool/backend/pkg/config"
 	db2 "github.com/commonpool/backend/pkg/db"
 	graph2 "github.com/commonpool/backend/pkg/graph"
 	group2 "github.com/commonpool/backend/pkg/group"
 	service2 "github.com/commonpool/backend/pkg/group/service"
 	store4 "github.com/commonpool/backend/pkg/group/store"
 	handler2 "github.com/commonpool/backend/pkg/handler"
+	"github.com/commonpool/backend/pkg/mq"
 	resource2 "github.com/commonpool/backend/pkg/resource"
 	store5 "github.com/commonpool/backend/pkg/resource/store"
 	trading2 "github.com/commonpool/backend/pkg/trading"
@@ -72,7 +72,7 @@ func main() {
 		panic(err)
 	}
 
-	amqpCli, err := amqp.NewRabbitMqClient(ctx, appConfig.AmqpUrl)
+	amqpCli, err := mq.NewRabbitMqClient(ctx, appConfig.AmqpUrl)
 	if err != nil {
 		log.Fatal(err, "cannot crate amqp client")
 	}

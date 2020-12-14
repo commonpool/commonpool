@@ -3,17 +3,17 @@ package integration
 import (
 	"context"
 	"fmt"
-	"github.com/commonpool/backend/amqp"
-	"github.com/commonpool/backend/auth"
-	"github.com/commonpool/backend/config"
 	"github.com/commonpool/backend/handler"
 	"github.com/commonpool/backend/mock"
+	"github.com/commonpool/backend/pkg/auth"
 	chatservice "github.com/commonpool/backend/pkg/chat/service"
 	chatstore "github.com/commonpool/backend/pkg/chat/store"
+	"github.com/commonpool/backend/pkg/config"
 	"github.com/commonpool/backend/pkg/db"
 	graph2 "github.com/commonpool/backend/pkg/graph"
 	groupservice "github.com/commonpool/backend/pkg/group/service"
 	groupstore "github.com/commonpool/backend/pkg/group/store"
+	"github.com/commonpool/backend/pkg/mq"
 	resourcestore "github.com/commonpool/backend/pkg/resource/store"
 	tradingservice "github.com/commonpool/backend/pkg/trading/service"
 	tradingstore "github.com/commonpool/backend/pkg/trading/store"
@@ -32,7 +32,7 @@ import (
 
 var a *handler.Handler
 var Db *gorm.DB
-var AmqpClient amqp.Client
+var AmqpClient mq.Client
 var ResourceStore resourcestore.ResourceStore
 var AuthStore userstore.UserStore
 var ChatStore chatstore.ChatStore
@@ -57,7 +57,7 @@ func TestMain(m *testing.M) {
 
 	ctx := context.Background()
 
-	AmqpClient, err = amqp.NewRabbitMqClient(ctx, appConfig.AmqpUrl)
+	AmqpClient, err = mq.NewRabbitMqClient(ctx, appConfig.AmqpUrl)
 	if err != nil {
 		panic(err)
 	}

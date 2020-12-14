@@ -2,10 +2,10 @@ package handler
 
 import (
 	"github.com/commonpool/backend/model"
+	model2 "github.com/commonpool/backend/pkg/chat/handler/model"
 	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/utils"
-	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
@@ -49,12 +49,12 @@ func (chatHandler *ChatHandler) GetMessages(c echo.Context) error {
 		return err
 	}
 
-	items := make([]*web.Message, len(messages.Messages.Items))
+	items := make([]*model2.Message, len(messages.Messages.Items))
 	for i, message := range messages.Messages.Items {
-		items[i] = web.MapMessage(&message)
+		items[i] = model2.MapMessage(&message)
 	}
 
-	return c.JSON(http.StatusOK, web.GetTopicMessagesResponse{
+	return c.JSON(http.StatusOK, model2.GetTopicMessagesResponse{
 		Messages: items,
 	})
 }

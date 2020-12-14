@@ -2,7 +2,7 @@ package integration
 
 import (
 	"context"
-	"github.com/commonpool/backend/auth"
+	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/web"
 	"net/http"
 	"strconv"

@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/auth"
+	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"

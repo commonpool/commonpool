@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/chat"
-	"github.com/commonpool/backend/web"
+	model2 "github.com/commonpool/backend/pkg/chat/handler/model"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"time"
@@ -56,7 +56,7 @@ func (s *chatHandlerSuite) TestGetMessages() {
 	if !s.AssertOK() {
 		return
 	}
-	response := web.GetTopicMessagesResponse{}
+	response := model2.GetTopicMessagesResponse{}
 	s.ReadResponse(&response)
 	assert.NotNil(s.T(), response.Messages)
 	assert.Len(s.T(), response.Messages, 0)

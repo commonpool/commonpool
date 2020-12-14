@@ -4,19 +4,19 @@
 package mock
 
 import (
-	"github.com/commonpool/backend/amqp"
+	"github.com/commonpool/backend/pkg/mq"
 	"sync"
 )
 
-// Ensure, that AmqpAck does implement amqp.Ack.
+// Ensure, that AmqpAck does implement mq.Ack.
 // If this is not the case, regenerate this file with moq.
-var _ amqp.Ack = &AmqpAck{}
+var _ mq.Ack = &AmqpAck{}
 
-// AmqpAck is a mock implementation of amqp.Ack.
+// AmqpAck is a mock implementation of mq.Ack.
 //
 //     func TestSomethingThatUsesAck(t *testing.T) {
 //
-//         // make and configure a mocked amqp.Ack
+//         // make and configure a mocked mq.Ack
 //         mockedAck := &AmqpAck{
 //             AckFunc: func(tag uint64, multiple bool) error {
 // 	               panic("mock out the Ack method")
@@ -29,7 +29,7 @@ var _ amqp.Ack = &AmqpAck{}
 //             },
 //         }
 //
-//         // use mockedAck in code that requires amqp.Ack
+//         // use mockedAck in code that requires mq.Ack
 //         // and then make assertions.
 //
 //     }

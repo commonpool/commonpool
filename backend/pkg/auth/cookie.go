@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"github.com/commonpool/backend/config"
+	"github.com/commonpool/backend/pkg/config"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"time"

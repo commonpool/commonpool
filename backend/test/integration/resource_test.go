@@ -3,7 +3,7 @@ package integration
 import (
 	"context"
 	"fmt"
-	"github.com/commonpool/backend/auth"
+	"github.com/commonpool/backend/pkg/auth"
 	resource2 "github.com/commonpool/backend/pkg/resource"
 	"github.com/commonpool/backend/web"
 	"github.com/stretchr/testify/assert"

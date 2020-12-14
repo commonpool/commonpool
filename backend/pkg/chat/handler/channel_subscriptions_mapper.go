@@ -3,22 +3,22 @@ package handler
 import (
 	"context"
 	"github.com/commonpool/backend/pkg/chat"
-	"github.com/commonpool/backend/web"
+	"github.com/commonpool/backend/pkg/chat/handler/model"
 )
 
-func MapChannelSubscriptions(ctx context.Context, chatService chat.Service, subscriptions *chat.ChannelSubscriptions) ([]web.Subscription, error) {
+func MapChannelSubscriptions(ctx context.Context, chatService chat.Service, subscriptions *chat.ChannelSubscriptions) ([]model.Subscription, error) {
 
-	var items []web.Subscription
+	var items []model.Subscription
 	for _, subscription := range subscriptions.Items {
 		channel, err := chatService.GetChannel(ctx, subscription.GetChannelKey())
 		if err != nil {
 			return nil, err
 		}
-		items = append(items, *web.MapSubscription(channel, &subscription))
+		items = append(items, *model.MapSubscription(channel, &subscription))
 	}
 
 	if items == nil {
-		items = []web.Subscription{}
+		items = []model.Subscription{}
 	}
 
 	return items, nil

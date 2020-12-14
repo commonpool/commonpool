@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
-	"github.com/commonpool/backend/amqp"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/mq"
 )
 
 func (c ChatService) SendMessage(ctx context.Context, message *chat.Message) error {
@@ -21,6 +21,6 @@ func (c ChatService) SendMessage(ctx context.Context, message *chat.Message) err
 		return err
 	}
 
-	return amqpChannel.Publish(ctx, amqp.MessagesExchange, "", false, false, *publishing)
+	return amqpChannel.Publish(ctx, mq.MessagesExchange, "", false, false, *publishing)
 
 }

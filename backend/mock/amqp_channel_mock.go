@@ -5,56 +5,56 @@ package mock
 
 import (
 	"context"
-	"github.com/commonpool/backend/amqp"
+	"github.com/commonpool/backend/pkg/mq"
 	"sync"
 )
 
-// Ensure, that AmqpChannel does implement amqp.Channel.
+// Ensure, that AmqpChannel does implement mq.Channel.
 // If this is not the case, regenerate this file with moq.
-var _ amqp.Channel = &AmqpChannel{}
+var _ mq.Channel = &AmqpChannel{}
 
-// AmqpChannel is a mock implementation of amqp.Channel.
+// AmqpChannel is a mock implementation of mq.Channel.
 //
 //     func TestSomethingThatUsesChannel(t *testing.T) {
 //
-//         // make and configure a mocked amqp.Channel
+//         // make and configure a mocked mq.Channel
 //         mockedChannel := &AmqpChannel{
 //             CloseFunc: func() error {
 // 	               panic("mock out the Close method")
 //             },
-//             ConsumeFunc: func(ctx context.Context, queue string, consumer string, autoAck bool, exclusive bool, noLocal bool, noWait bool, args amqp.Args) (<-chan amqp.Delivery, error) {
+//             ConsumeFunc: func(ctx context.Context, queue string, consumer string, autoAck bool, exclusive bool, noLocal bool, noWait bool, args mq.Args) (<-chan mq.Delivery, error) {
 // 	               panic("mock out the Consume method")
 //             },
-//             ExchangeBindFunc: func(ctx context.Context, destination string, key string, source string, nowait bool, args amqp.Args) error {
+//             ExchangeBindFunc: func(ctx context.Context, destination string, key string, source string, nowait bool, args mq.Args) error {
 // 	               panic("mock out the ExchangeBind method")
 //             },
-//             ExchangeDeclareFunc: func(ctx context.Context, name string, exchangeType string, durable bool, autoDelete bool, internal bool, nowait bool, args amqp.Args) error {
+//             ExchangeDeclareFunc: func(ctx context.Context, name string, exchangeType string, durable bool, autoDelete bool, internal bool, nowait bool, args mq.Args) error {
 // 	               panic("mock out the ExchangeDeclare method")
 //             },
 //             ExchangeDeleteFunc: func(ctx context.Context, name string, ifUnused bool, noWait bool) error {
 // 	               panic("mock out the ExchangeDelete method")
 //             },
-//             ExchangeUnbindFunc: func(ctx context.Context, destination string, key string, source string, noWait bool, args amqp.Args) error {
+//             ExchangeUnbindFunc: func(ctx context.Context, destination string, key string, source string, noWait bool, args mq.Args) error {
 // 	               panic("mock out the ExchangeUnbind method")
 //             },
-//             PublishFunc: func(ctx context.Context, exchange string, key string, mandatory bool, immediate bool, publishing amqp.Message) error {
+//             PublishFunc: func(ctx context.Context, exchange string, key string, mandatory bool, immediate bool, publishing mq.Message) error {
 // 	               panic("mock out the Publish method")
 //             },
-//             QueueBindFunc: func(ctx context.Context, name string, key string, exchange string, nowait bool, args amqp.Args) error {
+//             QueueBindFunc: func(ctx context.Context, name string, key string, exchange string, nowait bool, args mq.Args) error {
 // 	               panic("mock out the QueueBind method")
 //             },
-//             QueueDeclareFunc: func(ctx context.Context, name string, durable bool, autoDelete bool, exclusive bool, noWait bool, args amqp.Args) error {
+//             QueueDeclareFunc: func(ctx context.Context, name string, durable bool, autoDelete bool, exclusive bool, noWait bool, args mq.Args) error {
 // 	               panic("mock out the QueueDeclare method")
 //             },
 //             QueueDeleteFunc: func(ctx context.Context, name string, ifUnused bool, ifEmpty bool, noWait bool) error {
 // 	               panic("mock out the QueueDelete method")
 //             },
-//             QueueUnbindFunc: func(ctx context.Context, name string, key string, exchange string, args amqp.Args) error {
+//             QueueUnbindFunc: func(ctx context.Context, name string, key string, exchange string, args mq.Args) error {
 // 	               panic("mock out the QueueUnbind method")
 //             },
 //         }
 //
-//         // use mockedChannel in code that requires amqp.Channel
+//         // use mockedChannel in code that requires mq.Channel
 //         // and then make assertions.
 //
 //     }
@@ -63,34 +63,34 @@ type AmqpChannel struct {
 	CloseFunc func() error
 
 	// ConsumeFunc mocks the Consume method.
-	ConsumeFunc func(ctx context.Context, queue string, consumer string, autoAck bool, exclusive bool, noLocal bool, noWait bool, args amqp.Args) (<-chan amqp.Delivery, error)
+	ConsumeFunc func(ctx context.Context, queue string, consumer string, autoAck bool, exclusive bool, noLocal bool, noWait bool, args mq.Args) (<-chan mq.Delivery, error)
 
 	// ExchangeBindFunc mocks the ExchangeBind method.
-	ExchangeBindFunc func(ctx context.Context, destination string, key string, source string, nowait bool, args amqp.Args) error
+	ExchangeBindFunc func(ctx context.Context, destination string, key string, source string, nowait bool, args mq.Args) error
 
 	// ExchangeDeclareFunc mocks the ExchangeDeclare method.
-	ExchangeDeclareFunc func(ctx context.Context, name string, exchangeType string, durable bool, autoDelete bool, internal bool, nowait bool, args amqp.Args) error
+	ExchangeDeclareFunc func(ctx context.Context, name string, exchangeType string, durable bool, autoDelete bool, internal bool, nowait bool, args mq.Args) error
 
 	// ExchangeDeleteFunc mocks the ExchangeDelete method.
 	ExchangeDeleteFunc func(ctx context.Context, name string, ifUnused bool, noWait bool) error
 
 	// ExchangeUnbindFunc mocks the ExchangeUnbind method.
-	ExchangeUnbindFunc func(ctx context.Context, destination string, key string, source string, noWait bool, args amqp.Args) error
+	ExchangeUnbindFunc func(ctx context.Context, destination string, key string, source string, noWait bool, args mq.Args) error
 
 	// PublishFunc mocks the Publish method.
-	PublishFunc func(ctx context.Context, exchange string, key string, mandatory bool, immediate bool, publishing amqp.Message) error
+	PublishFunc func(ctx context.Context, exchange string, key string, mandatory bool, immediate bool, publishing mq.Message) error
 
 	// QueueBindFunc mocks the QueueBind method.
-	QueueBindFunc func(ctx context.Context, name string, key string, exchange string, nowait bool, args amqp.Args) error
+	QueueBindFunc func(ctx context.Context, name string, key string, exchange string, nowait bool, args mq.Args) error
 
 	// QueueDeclareFunc mocks the QueueDeclare method.
-	QueueDeclareFunc func(ctx context.Context, name string, durable bool, autoDelete bool, exclusive bool, noWait bool, args amqp.Args) error
+	QueueDeclareFunc func(ctx context.Context, name string, durable bool, autoDelete bool, exclusive bool, noWait bool, args mq.Args) error
 
 	// QueueDeleteFunc mocks the QueueDelete method.
 	QueueDeleteFunc func(ctx context.Context, name string, ifUnused bool, ifEmpty bool, noWait bool) error
 
 	// QueueUnbindFunc mocks the QueueUnbind method.
-	QueueUnbindFunc func(ctx context.Context, name string, key string, exchange string, args amqp.Args) error
+	QueueUnbindFunc func(ctx context.Context, name string, key string, exchange string, args mq.Args) error
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -114,7 +114,7 @@ type AmqpChannel struct {
 			// NoWait is the noWait argument value.
 			NoWait bool
 			// Args is the args argument value.
-			Args amqp.Args
+			Args mq.Args
 		}
 		// ExchangeBind holds details about calls to the ExchangeBind method.
 		ExchangeBind []struct {
@@ -129,7 +129,7 @@ type AmqpChannel struct {
 			// Nowait is the nowait argument value.
 			Nowait bool
 			// Args is the args argument value.
-			Args amqp.Args
+			Args mq.Args
 		}
 		// ExchangeDeclare holds details about calls to the ExchangeDeclare method.
 		ExchangeDeclare []struct {
@@ -148,7 +148,7 @@ type AmqpChannel struct {
 			// Nowait is the nowait argument value.
 			Nowait bool
 			// Args is the args argument value.
-			Args amqp.Args
+			Args mq.Args
 		}
 		// ExchangeDelete holds details about calls to the ExchangeDelete method.
 		ExchangeDelete []struct {
@@ -174,7 +174,7 @@ type AmqpChannel struct {
 			// NoWait is the noWait argument value.
 			NoWait bool
 			// Args is the args argument value.
-			Args amqp.Args
+			Args mq.Args
 		}
 		// Publish holds details about calls to the Publish method.
 		Publish []struct {
@@ -189,7 +189,7 @@ type AmqpChannel struct {
 			// Immediate is the immediate argument value.
 			Immediate bool
 			// Publishing is the publishing argument value.
-			Publishing amqp.Message
+			Publishing mq.Message
 		}
 		// QueueBind holds details about calls to the QueueBind method.
 		QueueBind []struct {
@@ -204,7 +204,7 @@ type AmqpChannel struct {
 			// Nowait is the nowait argument value.
 			Nowait bool
 			// Args is the args argument value.
-			Args amqp.Args
+			Args mq.Args
 		}
 		// QueueDeclare holds details about calls to the QueueDeclare method.
 		QueueDeclare []struct {
@@ -221,7 +221,7 @@ type AmqpChannel struct {
 			// NoWait is the noWait argument value.
 			NoWait bool
 			// Args is the args argument value.
-			Args amqp.Args
+			Args mq.Args
 		}
 		// QueueDelete holds details about calls to the QueueDelete method.
 		QueueDelete []struct {
@@ -247,7 +247,7 @@ type AmqpChannel struct {
 			// Exchange is the exchange argument value.
 			Exchange string
 			// Args is the args argument value.
-			Args amqp.Args
+			Args mq.Args
 		}
 	}
 	lockClose           sync.RWMutex
@@ -290,7 +290,7 @@ func (mock *AmqpChannel) CloseCalls() []struct {
 }
 
 // Consume calls ConsumeFunc.
-func (mock *AmqpChannel) Consume(ctx context.Context, queue string, consumer string, autoAck bool, exclusive bool, noLocal bool, noWait bool, args amqp.Args) (<-chan amqp.Delivery, error) {
+func (mock *AmqpChannel) Consume(ctx context.Context, queue string, consumer string, autoAck bool, exclusive bool, noLocal bool, noWait bool, args mq.Args) (<-chan mq.Delivery, error) {
 	if mock.ConsumeFunc == nil {
 		panic("AmqpChannel.ConsumeFunc: method is nil but Channel.Consume was just called")
 	}
@@ -302,7 +302,7 @@ func (mock *AmqpChannel) Consume(ctx context.Context, queue string, consumer str
 		Exclusive bool
 		NoLocal   bool
 		NoWait    bool
-		Args      amqp.Args
+		Args      mq.Args
 	}{
 		Ctx:       ctx,
 		Queue:     queue,
@@ -330,7 +330,7 @@ func (mock *AmqpChannel) ConsumeCalls() []struct {
 	Exclusive bool
 	NoLocal   bool
 	NoWait    bool
-	Args      amqp.Args
+	Args      mq.Args
 } {
 	var calls []struct {
 		Ctx       context.Context
@@ -340,7 +340,7 @@ func (mock *AmqpChannel) ConsumeCalls() []struct {
 		Exclusive bool
 		NoLocal   bool
 		NoWait    bool
-		Args      amqp.Args
+		Args      mq.Args
 	}
 	mock.lockConsume.RLock()
 	calls = mock.calls.Consume
@@ -349,7 +349,7 @@ func (mock *AmqpChannel) ConsumeCalls() []struct {
 }
 
 // ExchangeBind calls ExchangeBindFunc.
-func (mock *AmqpChannel) ExchangeBind(ctx context.Context, destination string, key string, source string, nowait bool, args amqp.Args) error {
+func (mock *AmqpChannel) ExchangeBind(ctx context.Context, destination string, key string, source string, nowait bool, args mq.Args) error {
 	if mock.ExchangeBindFunc == nil {
 		panic("AmqpChannel.ExchangeBindFunc: method is nil but Channel.ExchangeBind was just called")
 	}
@@ -359,7 +359,7 @@ func (mock *AmqpChannel) ExchangeBind(ctx context.Context, destination string, k
 		Key         string
 		Source      string
 		Nowait      bool
-		Args        amqp.Args
+		Args        mq.Args
 	}{
 		Ctx:         ctx,
 		Destination: destination,
@@ -383,7 +383,7 @@ func (mock *AmqpChannel) ExchangeBindCalls() []struct {
 	Key         string
 	Source      string
 	Nowait      bool
-	Args        amqp.Args
+	Args        mq.Args
 } {
 	var calls []struct {
 		Ctx         context.Context
@@ -391,7 +391,7 @@ func (mock *AmqpChannel) ExchangeBindCalls() []struct {
 		Key         string
 		Source      string
 		Nowait      bool
-		Args        amqp.Args
+		Args        mq.Args
 	}
 	mock.lockExchangeBind.RLock()
 	calls = mock.calls.ExchangeBind
@@ -400,7 +400,7 @@ func (mock *AmqpChannel) ExchangeBindCalls() []struct {
 }
 
 // ExchangeDeclare calls ExchangeDeclareFunc.
-func (mock *AmqpChannel) ExchangeDeclare(ctx context.Context, name string, exchangeType string, durable bool, autoDelete bool, internal bool, nowait bool, args amqp.Args) error {
+func (mock *AmqpChannel) ExchangeDeclare(ctx context.Context, name string, exchangeType string, durable bool, autoDelete bool, internal bool, nowait bool, args mq.Args) error {
 	if mock.ExchangeDeclareFunc == nil {
 		panic("AmqpChannel.ExchangeDeclareFunc: method is nil but Channel.ExchangeDeclare was just called")
 	}
@@ -412,7 +412,7 @@ func (mock *AmqpChannel) ExchangeDeclare(ctx context.Context, name string, excha
 		AutoDelete   bool
 		Internal     bool
 		Nowait       bool
-		Args         amqp.Args
+		Args         mq.Args
 	}{
 		Ctx:          ctx,
 		Name:         name,
@@ -440,7 +440,7 @@ func (mock *AmqpChannel) ExchangeDeclareCalls() []struct {
 	AutoDelete   bool
 	Internal     bool
 	Nowait       bool
-	Args         amqp.Args
+	Args         mq.Args
 } {
 	var calls []struct {
 		Ctx          context.Context
@@ -450,7 +450,7 @@ func (mock *AmqpChannel) ExchangeDeclareCalls() []struct {
 		AutoDelete   bool
 		Internal     bool
 		Nowait       bool
-		Args         amqp.Args
+		Args         mq.Args
 	}
 	mock.lockExchangeDeclare.RLock()
 	calls = mock.calls.ExchangeDeclare
@@ -502,7 +502,7 @@ func (mock *AmqpChannel) ExchangeDeleteCalls() []struct {
 }
 
 // ExchangeUnbind calls ExchangeUnbindFunc.
-func (mock *AmqpChannel) ExchangeUnbind(ctx context.Context, destination string, key string, source string, noWait bool, args amqp.Args) error {
+func (mock *AmqpChannel) ExchangeUnbind(ctx context.Context, destination string, key string, source string, noWait bool, args mq.Args) error {
 	if mock.ExchangeUnbindFunc == nil {
 		panic("AmqpChannel.ExchangeUnbindFunc: method is nil but Channel.ExchangeUnbind was just called")
 	}
@@ -512,7 +512,7 @@ func (mock *AmqpChannel) ExchangeUnbind(ctx context.Context, destination string,
 		Key         string
 		Source      string
 		NoWait      bool
-		Args        amqp.Args
+		Args        mq.Args
 	}{
 		Ctx:         ctx,
 		Destination: destination,
@@ -536,7 +536,7 @@ func (mock *AmqpChannel) ExchangeUnbindCalls() []struct {
 	Key         string
 	Source      string
 	NoWait      bool
-	Args        amqp.Args
+	Args        mq.Args
 } {
 	var calls []struct {
 		Ctx         context.Context
@@ -544,7 +544,7 @@ func (mock *AmqpChannel) ExchangeUnbindCalls() []struct {
 		Key         string
 		Source      string
 		NoWait      bool
-		Args        amqp.Args
+		Args        mq.Args
 	}
 	mock.lockExchangeUnbind.RLock()
 	calls = mock.calls.ExchangeUnbind
@@ -553,7 +553,7 @@ func (mock *AmqpChannel) ExchangeUnbindCalls() []struct {
 }
 
 // Publish calls PublishFunc.
-func (mock *AmqpChannel) Publish(ctx context.Context, exchange string, key string, mandatory bool, immediate bool, publishing amqp.Message) error {
+func (mock *AmqpChannel) Publish(ctx context.Context, exchange string, key string, mandatory bool, immediate bool, publishing mq.Message) error {
 	if mock.PublishFunc == nil {
 		panic("AmqpChannel.PublishFunc: method is nil but Channel.Publish was just called")
 	}
@@ -563,7 +563,7 @@ func (mock *AmqpChannel) Publish(ctx context.Context, exchange string, key strin
 		Key        string
 		Mandatory  bool
 		Immediate  bool
-		Publishing amqp.Message
+		Publishing mq.Message
 	}{
 		Ctx:        ctx,
 		Exchange:   exchange,
@@ -587,7 +587,7 @@ func (mock *AmqpChannel) PublishCalls() []struct {
 	Key        string
 	Mandatory  bool
 	Immediate  bool
-	Publishing amqp.Message
+	Publishing mq.Message
 } {
 	var calls []struct {
 		Ctx        context.Context
@@ -595,7 +595,7 @@ func (mock *AmqpChannel) PublishCalls() []struct {
 		Key        string
 		Mandatory  bool
 		Immediate  bool
-		Publishing amqp.Message
+		Publishing mq.Message
 	}
 	mock.lockPublish.RLock()
 	calls = mock.calls.Publish
@@ -604,7 +604,7 @@ func (mock *AmqpChannel) PublishCalls() []struct {
 }
 
 // QueueBind calls QueueBindFunc.
-func (mock *AmqpChannel) QueueBind(ctx context.Context, name string, key string, exchange string, nowait bool, args amqp.Args) error {
+func (mock *AmqpChannel) QueueBind(ctx context.Context, name string, key string, exchange string, nowait bool, args mq.Args) error {
 	if mock.QueueBindFunc == nil {
 		panic("AmqpChannel.QueueBindFunc: method is nil but Channel.QueueBind was just called")
 	}
@@ -614,7 +614,7 @@ func (mock *AmqpChannel) QueueBind(ctx context.Context, name string, key string,
 		Key      string
 		Exchange string
 		Nowait   bool
-		Args     amqp.Args
+		Args     mq.Args
 	}{
 		Ctx:      ctx,
 		Name:     name,
@@ -638,7 +638,7 @@ func (mock *AmqpChannel) QueueBindCalls() []struct {
 	Key      string
 	Exchange string
 	Nowait   bool
-	Args     amqp.Args
+	Args     mq.Args
 } {
 	var calls []struct {
 		Ctx      context.Context
@@ -646,7 +646,7 @@ func (mock *AmqpChannel) QueueBindCalls() []struct {
 		Key      string
 		Exchange string
 		Nowait   bool
-		Args     amqp.Args
+		Args     mq.Args
 	}
 	mock.lockQueueBind.RLock()
 	calls = mock.calls.QueueBind
@@ -655,7 +655,7 @@ func (mock *AmqpChannel) QueueBindCalls() []struct {
 }
 
 // QueueDeclare calls QueueDeclareFunc.
-func (mock *AmqpChannel) QueueDeclare(ctx context.Context, name string, durable bool, autoDelete bool, exclusive bool, noWait bool, args amqp.Args) error {
+func (mock *AmqpChannel) QueueDeclare(ctx context.Context, name string, durable bool, autoDelete bool, exclusive bool, noWait bool, args mq.Args) error {
 	if mock.QueueDeclareFunc == nil {
 		panic("AmqpChannel.QueueDeclareFunc: method is nil but Channel.QueueDeclare was just called")
 	}
@@ -666,7 +666,7 @@ func (mock *AmqpChannel) QueueDeclare(ctx context.Context, name string, durable 
 		AutoDelete bool
 		Exclusive  bool
 		NoWait     bool
-		Args       amqp.Args
+		Args       mq.Args
 	}{
 		Ctx:        ctx,
 		Name:       name,
@@ -692,7 +692,7 @@ func (mock *AmqpChannel) QueueDeclareCalls() []struct {
 	AutoDelete bool
 	Exclusive  bool
 	NoWait     bool
-	Args       amqp.Args
+	Args       mq.Args
 } {
 	var calls []struct {
 		Ctx        context.Context
@@ -701,7 +701,7 @@ func (mock *AmqpChannel) QueueDeclareCalls() []struct {
 		AutoDelete bool
 		Exclusive  bool
 		NoWait     bool
-		Args       amqp.Args
+		Args       mq.Args
 	}
 	mock.lockQueueDeclare.RLock()
 	calls = mock.calls.QueueDeclare
@@ -757,7 +757,7 @@ func (mock *AmqpChannel) QueueDeleteCalls() []struct {
 }
 
 // QueueUnbind calls QueueUnbindFunc.
-func (mock *AmqpChannel) QueueUnbind(ctx context.Context, name string, key string, exchange string, args amqp.Args) error {
+func (mock *AmqpChannel) QueueUnbind(ctx context.Context, name string, key string, exchange string, args mq.Args) error {
 	if mock.QueueUnbindFunc == nil {
 		panic("AmqpChannel.QueueUnbindFunc: method is nil but Channel.QueueUnbind was just called")
 	}
@@ -766,7 +766,7 @@ func (mock *AmqpChannel) QueueUnbind(ctx context.Context, name string, key strin
 		Name     string
 		Key      string
 		Exchange string
-		Args     amqp.Args
+		Args     mq.Args
 	}{
 		Ctx:      ctx,
 		Name:     name,
@@ -788,14 +788,14 @@ func (mock *AmqpChannel) QueueUnbindCalls() []struct {
 	Name     string
 	Key      string
 	Exchange string
-	Args     amqp.Args
+	Args     mq.Args
 } {
 	var calls []struct {
 		Ctx      context.Context
 		Name     string
 		Key      string
 		Exchange string
-		Args     amqp.Args
+		Args     mq.Args
 	}
 	mock.lockQueueUnbind.RLock()
 	calls = mock.calls.QueueUnbind

@@ -2,8 +2,8 @@ package handler
 
 import (
 	"github.com/commonpool/backend/model"
+	model2 "github.com/commonpool/backend/pkg/chat/handler/model"
 	"github.com/commonpool/backend/pkg/handler"
-	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
@@ -13,7 +13,7 @@ import (
 func (h *Handler) Chatback(c echo.Context) error {
 
 	// Unmarshal request
-	req := web.InteractionCallback{}
+	req := model2.InteractionCallback{}
 	if err := c.Bind(&req); err != nil {
 		return err
 	}
@@ -39,7 +39,7 @@ func (h *Handler) Chatback(c echo.Context) error {
 
 }
 
-func (h *Handler) HandleChatbackConfirmServiceProvided(c echo.Context, req web.InteractionCallback) error {
+func (h *Handler) HandleChatbackConfirmServiceProvided(c echo.Context, req model2.InteractionCallback) error {
 
 	ctx, l := handler.GetEchoContext(c, "HandleChatbackConfirmServiceProvided")
 
@@ -61,7 +61,7 @@ func (h *Handler) HandleChatbackConfirmServiceProvided(c echo.Context, req web.I
 
 }
 
-func (h *Handler) HandleChatbackConfirmResourceTransferred(c echo.Context, req web.InteractionCallback) error {
+func (h *Handler) HandleChatbackConfirmResourceTransferred(c echo.Context, req model2.InteractionCallback) error {
 
 	ctx, l := handler.GetEchoContext(c, "HandleChatbackConfirmResourceTransferred")
 
@@ -83,7 +83,7 @@ func (h *Handler) HandleChatbackConfirmResourceTransferred(c echo.Context, req w
 
 }
 
-func (h *Handler) HandleChatbackConfirmResourceBorrowed(c echo.Context, req web.InteractionCallback) error {
+func (h *Handler) HandleChatbackConfirmResourceBorrowed(c echo.Context, req model2.InteractionCallback) error {
 
 	ctx, l := handler.GetEchoContext(c, "HandleChatbackConfirmResourceBorrowed")
 
@@ -105,7 +105,7 @@ func (h *Handler) HandleChatbackConfirmResourceBorrowed(c echo.Context, req web.
 
 }
 
-func (h *Handler) HandleChatbackConfirmResourceBorrowedReturned(c echo.Context, req web.InteractionCallback) error {
+func (h *Handler) HandleChatbackConfirmResourceBorrowedReturned(c echo.Context, req model2.InteractionCallback) error {
 
 	ctx, l := handler.GetEchoContext(c, "HandleChatbackConfirmResourceBorrowed")
 
@@ -127,7 +127,7 @@ func (h *Handler) HandleChatbackConfirmResourceBorrowedReturned(c echo.Context, 
 
 }
 
-func (h *Handler) HandleChatbackOfferAccepted(c echo.Context, req web.InteractionCallback) error {
+func (h *Handler) HandleChatbackOfferAccepted(c echo.Context, req model2.InteractionCallback) error {
 
 	ctx, l := handler.GetEchoContext(c, "HandleChatbackOfferAccepted")
 

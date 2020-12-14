@@ -3,7 +3,7 @@ package handler
 import (
 	"context"
 	"github.com/commonpool/backend/pkg/chat"
-	"github.com/commonpool/backend/web"
+	"github.com/commonpool/backend/pkg/chat/handler/model"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 )
@@ -19,7 +19,7 @@ func (s *chatHandlerSuite) TestGetSubscriptions() {
 	if !s.AssertOK() {
 		return
 	}
-	response := &web.GetLatestSubscriptionsResponse{}
+	response := &model.GetLatestSubscriptionsResponse{}
 	s.ReadResponse(response)
 	assert.Len(s.T(), response.Subscriptions, 0)
 }

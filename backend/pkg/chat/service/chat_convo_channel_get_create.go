@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 	"errors"
-	"github.com/commonpool/backend/amqp"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/mq"
 	"github.com/commonpool/backend/pkg/user"
 	"sort"
 	"strings"
@@ -110,7 +110,7 @@ func (c ChatService) createSubscriptionAndMqBindingForUserConversation(
 
 	headers := c.getChannelBindingHeaders(subscription.GetKey())
 	userExchangeName, err := c.CreateUserExchange(ctx, user.GetUserKey())
-	err = amqpChannel.ExchangeBind(ctx, userExchangeName, "", amqp.WebsocketMessagesExchange, false, headers)
+	err = amqpChannel.ExchangeBind(ctx, userExchangeName, "", mq.WebsocketMessagesExchange, false, headers)
 	if err != nil {
 		return nil, err
 	}

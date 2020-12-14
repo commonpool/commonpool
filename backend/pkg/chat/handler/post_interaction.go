@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/auth"
+	model2 "github.com/commonpool/backend/pkg/chat/handler/model"
 	"github.com/commonpool/backend/pkg/handler"
-	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"github.com/satori/go.uuid"
 	"net/http"
@@ -34,7 +34,7 @@ func (chatHandler *ChatHandler) SubmitInteraction(c echo.Context) error {
 	}
 	loggedInUserKey := model.NewUserKey(loggedInUser.Subject)
 
-	req := web.SubmitInteractionRequest{}
+	req := model2.SubmitInteractionRequest{}
 	if err := c.Bind(&req); err != nil {
 		return err
 	}
@@ -54,10 +54,10 @@ func (chatHandler *ChatHandler) SubmitInteraction(c echo.Context) error {
 
 	now := time.Now()
 
-	var actions []web.Action
+	var actions []model2.Action
 	for _, action := range req.Payload.Actions {
-		actions = append(actions, web.Action{
-			SubmitAction: web.SubmitAction{
+		actions = append(actions, model2.Action{
+			SubmitAction: model2.SubmitAction{
 				ElementState: action.ElementState,
 				BlockID:      action.BlockID,
 				ActionID:     action.ActionID,
@@ -66,15 +66,15 @@ func (chatHandler *ChatHandler) SubmitInteraction(c echo.Context) error {
 		})
 	}
 
-	webMessage := web.MapMessage(message)
+	webMessage := model2.MapMessage(message)
 
-	interactionPayload := web.InteractionCallback{
+	interactionPayload := model2.InteractionCallback{
 		Token: chatHandler.appConfig.CallbackToken,
-		Payload: web.InteractionCallbackPayload{
-			Type:        web.BlockActions,
+		Payload: model2.InteractionCallbackPayload{
+			Type:        model2.BlockActions,
 			TriggerId:   "",
 			ResponseURL: "",
-			User: web.InteractionPayloadUser{
+			User: model2.InteractionPayloadUser{
 				ID:       loggedInUserKey.String(),
 				Username: loggedInUser.Username,
 			},

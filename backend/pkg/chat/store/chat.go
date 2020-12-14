@@ -3,9 +3,9 @@ package store
 import (
 	"context"
 	"encoding/json"
-	"github.com/commonpool/backend/amqp"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/mq"
 	"github.com/commonpool/backend/pkg/user"
 	"gorm.io/gorm"
 )
@@ -13,12 +13,12 @@ import (
 type ChatStore struct {
 	db         *gorm.DB
 	authStore  user.Store
-	amqpClient amqp.Client
+	amqpClient mq.Client
 }
 
 var _ chat.Store = &ChatStore{}
 
-func NewChatStore(db *gorm.DB, as user.Store, amqpClient amqp.Client) *ChatStore {
+func NewChatStore(db *gorm.DB, as user.Store, amqpClient mq.Client) *ChatStore {
 	return &ChatStore{
 		authStore:  as,
 		db:         db,

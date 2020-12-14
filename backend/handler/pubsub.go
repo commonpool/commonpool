@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/commonpool/backend/amqp"
-	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/logging"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/handler"
+	"github.com/commonpool/backend/pkg/mq"
 	"github.com/commonpool/backend/pkg/utils"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
@@ -22,7 +22,7 @@ import (
 type Client struct {
 	hub                 *Hub
 	websocketConnection *websocket.Conn
-	amqpChannel         amqp.Channel
+	amqpChannel         mq.Channel
 	send                chan []byte
 	id                  string
 	userKey             model.UserKey
@@ -95,7 +95,7 @@ func (c *Client) eventPump(ctx context.Context) error {
 			return err
 		}
 
-		var event amqp.Event
+		var event mq.Event
 		err = json.Unmarshal(delivery.Body, &event)
 		if err != nil {
 			l.Error("could not unmarshal event", zap.Error(err))
@@ -199,7 +199,7 @@ func (h *Hub) run() {
 	}
 }
 
-func NewClient(hub *Hub, conn *websocket.Conn, amqpChannel amqp.Channel, queueName *string, key *string) *Client {
+func NewClient(hub *Hub, conn *websocket.Conn, amqpChannel mq.Channel, queueName *string, key *string) *Client {
 	return &Client{
 		hub:                 hub,
 		websocketConnection: conn,
@@ -324,7 +324,7 @@ func (h *Handler) Websocket(c echo.Context) error {
 
 	return client.eventPump(ctx)
 
-	// ch, err := h.amqp.RegisterWsChannel(ctx, clientId, userKey)
+	// ch, err := h.mq.RegisterWsChannel(ctx, clientId, userKey)
 	// if err != nil {
 	// 	l.Error("could not register ws amqpChannel", zap.Error(err))
 	// 	return err
@@ -342,7 +342,7 @@ func (h *Handler) Websocket(c echo.Context) error {
 	//
 	// c.Logger().Info("creating subscriptions for user")
 	// for _, item := range subs.Subscriptions.Items {
-	// 	err := h.amqp.BindUserExchangeToChannel(ctx, item.GetChannelKey(), userKey)
+	// 	err := h.mq.BindUserExchangeToChannel(ctx, item.GetChannelKey(), userKey)
 	// 	if err != nil {
 	// 		l.Error("could not create rabbitmq binding for subscription",
 	// 			zap.String("channel_id", item.ChannelID),
@@ -362,7 +362,7 @@ func (h *Handler) Websocket(c echo.Context) error {
 	// }
 	//
 	// for _, membership := range getMembershipsResponse.Memberships.Items {
-	// 	err = h.amqp.RegisterUserMembershipBinding(membership.GetUserKey(), membership.GetGroupKey())
+	// 	err = h.mq.RegisterUserMembershipBinding(membership.GetUserKey(), membership.GetGroupKey())
 	// 	if err != nil {
 	// 		l.Error("could not register user membership binding", zap.Error(err))
 	// 		return err

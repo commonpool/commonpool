@@ -2,8 +2,8 @@ package chat
 
 import (
 	"encoding/json"
-	"github.com/commonpool/backend/amqp"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/mq"
 	"time"
 )
 
@@ -33,11 +33,11 @@ type Message struct {
 	VisibleToUser  *model.UserKey
 }
 
-func (m *Message) AsAmqpMessage() (*amqp.Message, error) {
+func (m *Message) AsAmqpMessage() (*mq.Message, error) {
 
-	evt := amqp.Event{
-		Type:      amqp.NewChatMessage,
-		SubType:   amqp.UserMessage,
+	evt := mq.Event{
+		Type:      mq.NewChatMessage,
+		SubType:   mq.UserMessage,
 		Channel:   m.ChannelKey.String(),
 		User:      m.SentBy.UserKey.String(),
 		ID:        m.Key.String(),
@@ -50,11 +50,11 @@ func (m *Message) AsAmqpMessage() (*amqp.Message, error) {
 		return nil, err
 	}
 
-	headers := amqp.NewArgs().
+	headers := mq.NewArgs().
 		WithChannelKey(m.ChannelKey).
-		WithEventType(amqp.NewChatMessage)
+		WithEventType(mq.NewChatMessage)
 
-	return amqp.NewMessage().
+	return mq.NewMessage().
 			WithType(string(evt.Type)).
 			WithHeaders(headers).
 			WithJsonBody(string(js)).

@@ -2,9 +2,9 @@ package service
 
 import (
 	"context"
-	"github.com/commonpool/backend/amqp"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/mq"
 )
 
 // SubscribeToChannel will subscribe a user to a given channel
@@ -27,7 +27,7 @@ func (c ChatService) SubscribeToChannel(ctx context.Context, channelSubscription
 	}
 
 	headers := c.getChannelBindingHeaders(channelSubscriptionKey)
-	err = amqpChannel.ExchangeBind(ctx, userExchangeName, "", amqp.WebsocketMessagesExchange, false, headers)
+	err = amqpChannel.ExchangeBind(ctx, userExchangeName, "", mq.WebsocketMessagesExchange, false, headers)
 	if err != nil {
 		return nil, err
 	}

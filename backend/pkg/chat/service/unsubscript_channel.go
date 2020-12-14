@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
-	"github.com/commonpool/backend/amqp"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/mq"
 )
 
 func (c ChatService) UnsubscribeFromChannel(ctx context.Context, channelSubscriptionKey model.ChannelSubscriptionKey) error {
@@ -21,7 +21,7 @@ func (c ChatService) UnsubscribeFromChannel(ctx context.Context, channelSubscrip
 
 	userExchangeName := channelSubscriptionKey.UserKey.GetExchangeName()
 	headers := c.getChannelBindingHeaders(channelSubscriptionKey)
-	err = amqpChannel.ExchangeUnbind(ctx, userExchangeName, "", amqp.WebsocketMessagesExchange, false, headers)
+	err = amqpChannel.ExchangeUnbind(ctx, userExchangeName, "", mq.WebsocketMessagesExchange, false, headers)
 	if err != nil {
 		return err
 	}

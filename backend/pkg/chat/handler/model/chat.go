@@ -1,4 +1,4 @@
-package web
+package model
 
 import (
 	"github.com/commonpool/backend/pkg/chat"

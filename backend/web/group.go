@@ -1,8 +1,8 @@
 package web
 
 import (
-	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/auth"
 	group2 "github.com/commonpool/backend/pkg/group"
 	"time"
 )

@@ -1,9 +1,9 @@
 package handler
 
 import (
+	"github.com/commonpool/backend/pkg/chat/handler/model"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/utils"
-	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
@@ -44,7 +44,7 @@ func (chatHandler *ChatHandler) GetRecentlyActiveSubscriptions(c echo.Context) e
 		return err
 	}
 
-	return c.JSON(http.StatusOK, web.GetLatestSubscriptionsResponse{
+	return c.JSON(http.StatusOK, model.GetLatestSubscriptionsResponse{
 		Subscriptions: mappedSubscriptions,
 	})
 

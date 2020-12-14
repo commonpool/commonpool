@@ -3,8 +3,8 @@ package graph
 import (
 	"context"
 	"fmt"
-	"github.com/commonpool/backend/config"
 	"github.com/commonpool/backend/logging"
+	"github.com/commonpool/backend/pkg/config"
 	"github.com/mitchellh/mapstructure"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
 	"go.uber.org/zap"

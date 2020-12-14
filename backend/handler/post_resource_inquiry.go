@@ -1,11 +1,11 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/chat"
+	model2 "github.com/commonpool/backend/pkg/chat/handler/model"
 	"github.com/commonpool/backend/pkg/handler"
-	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
@@ -38,7 +38,7 @@ func (h *Handler) InquireAboutResource(c echo.Context) error {
 		return err
 	}
 
-	req := web.InquireAboutResourceRequest{}
+	req := model2.InquireAboutResourceRequest{}
 	if err := c.Bind(&req); err != nil {
 		return err
 	}

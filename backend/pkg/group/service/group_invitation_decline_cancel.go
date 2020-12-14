@@ -3,11 +3,11 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/commonpool/backend/amqp"
-	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/chat"
 	group2 "github.com/commonpool/backend/pkg/group"
+	"github.com/commonpool/backend/pkg/mq"
 )
 
 func (g GroupService) CancelOrDeclineInvitation(ctx context.Context, request *group2.CancelOrDeclineInvitationRequest) error {
@@ -74,7 +74,7 @@ func (g GroupService) CancelOrDeclineInvitation(ctx context.Context, request *gr
 		}
 
 		channelKey := request.MembershipKey.GroupKey.GetChannelKey()
-		err = amqpChannel.ExchangeUnbind(ctx, membershipKey.UserKey.GetExchangeName(), "", amqp.WebsocketMessagesExchange, false, map[string]interface{}{
+		err = amqpChannel.ExchangeUnbind(ctx, membershipKey.UserKey.GetExchangeName(), "", mq.WebsocketMessagesExchange, false, map[string]interface{}{
 			"event_type": "chat.message",
 			"channel_id": channelKey.String(),
 			"x-match":    "all",

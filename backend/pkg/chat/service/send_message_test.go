@@ -3,10 +3,10 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"github.com/commonpool/backend/amqp"
-	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/mq"
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -46,12 +46,12 @@ func (s *serviceTestSuite) TestSendMessage() {
 	assert.Len(s.T(), s.ChatStore.SaveMessageCalls(), 1)
 	assert.Len(s.T(), s.AmqpChannel.PublishCalls(), 1)
 	assert.Equal(s.T(), "Hello", message.Text)
-	assert.Equal(s.T(), amqp.MessagesExchange, s.AmqpChannel.PublishCalls()[0].Exchange)
+	assert.Equal(s.T(), mq.MessagesExchange, s.AmqpChannel.PublishCalls()[0].Exchange)
 
-	expectedEvent := amqp.Message{
-		Headers: amqp.NewArgs().
+	expectedEvent := mq.Message{
+		Headers: mq.NewArgs().
 			WithChannelKey(channelKey).
-			WithEventType(amqp.NewChatMessage),
+			WithEventType(mq.NewChatMessage),
 		ContentType:     "application/json",
 		ContentEncoding: "",
 		DeliveryMode:    0,
@@ -61,7 +61,7 @@ func (s *serviceTestSuite) TestSendMessage() {
 		Expiration:      "",
 		MessageId:       messageKey.String(),
 		Timestamp:       timestamp,
-		Type:            amqp.EventTypeMessage,
+		Type:            mq.EventTypeMessage,
 		UserId:          "",
 		AppId:           "",
 		Body: []byte(CompactJson(s.T(), `{

@@ -2,8 +2,8 @@ package auth
 
 import (
 	"context"
-	"github.com/commonpool/backend/config"
 	"github.com/commonpool/backend/logging"
+	"github.com/commonpool/backend/pkg/config"
 	"github.com/commonpool/backend/pkg/user"
 	"github.com/coreos/go-oidc"
 	"github.com/labstack/echo/v4"

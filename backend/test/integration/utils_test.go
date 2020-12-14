@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/commonpool/backend/amqp"
-	"github.com/commonpool/backend/auth"
 	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/auth"
+	"github.com/commonpool/backend/pkg/mq"
 	"github.com/commonpool/backend/router"
 	"github.com/labstack/echo/v4"
 	uuid "github.com/satori/go.uuid"
@@ -77,7 +77,7 @@ func ListenOnUserExchange(t *testing.T, ctx context.Context, userKey model.UserK
 	delivery, err := amqpChan.Consume(ctx, randomStr, randomStr, false, false, false, false, nil)
 	assert.NoError(t, err)
 
-	del := make(chan amqp.Delivery)
+	del := make(chan mq.Delivery)
 
 	go func() {
 		for d := range delivery {
@@ -94,8 +94,8 @@ func ListenOnUserExchange(t *testing.T, ctx context.Context, userKey model.UserK
 }
 
 type UserExchangeListener struct {
-	Channel  amqp.Channel
-	Delivery <-chan amqp.Delivery
+	Channel  mq.Channel
+	Delivery <-chan mq.Delivery
 }
 
 func (l *UserExchangeListener) Close() error {

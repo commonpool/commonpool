@@ -2,7 +2,7 @@ package handler
 
 import (
 	"context"
-	"github.com/commonpool/backend/auth"
+	"github.com/commonpool/backend/pkg/auth"
 	group2 "github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
 	"go.uber.org/zap"

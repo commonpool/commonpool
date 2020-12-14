@@ -2,7 +2,7 @@ package graph
 
 import (
 	"fmt"
-	"github.com/commonpool/backend/config"
+	"github.com/commonpool/backend/pkg/config"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
 )
 
