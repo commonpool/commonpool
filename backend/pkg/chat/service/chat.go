@@ -5,7 +5,6 @@ import (
 	chatmodel "github.com/commonpool/backend/pkg/chat/model"
 	group2 "github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/mq"
-	"github.com/commonpool/backend/pkg/resource"
 	"github.com/commonpool/backend/pkg/user"
 )
 
@@ -13,16 +12,14 @@ type ChatService struct {
 	us         user.Store
 	gs         group2.Store
 	amqpClient mq.Client
-	rs         resource.Store
 	chatStore  chat.Store
 }
 
-func NewChatService(us user.Store, gs group2.Store, rs resource.Store, mq mq.Client, cs chat.Store) *ChatService {
+func NewChatService(us user.Store, gs group2.Store, mq mq.Client, cs chat.Store) *ChatService {
 	return &ChatService{
 		us:         us,
 		gs:         gs,
 		amqpClient: mq,
-		rs:         rs,
 		chatStore:  cs,
 	}
 }

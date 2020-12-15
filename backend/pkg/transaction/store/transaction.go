@@ -31,13 +31,13 @@ func (t TransactionStore) SaveEntry(entry *transaction.Entry) error {
 		resourceID = &resourceKeyVal
 	}
 
-	var recipientType *model.TargetType
+	var recipientType *resourcemodel.TargetType
 	if entry.Recipient != nil {
 		recipientTypeVal := entry.Recipient.Type
 		recipientType = &recipientTypeVal
 	}
 
-	var fromType *model.TargetType
+	var fromType *resourcemodel.TargetType
 	if entry.From != nil {
 		fromTypeVal := entry.From.Type
 		fromType = &fromTypeVal
@@ -141,9 +141,9 @@ type TransactionEntry struct {
 	GroupID       uuid.UUID
 	ResourceID    *uuid.UUID
 	Duration      *time.Duration
-	RecipientType *model.TargetType
+	RecipientType *resourcemodel.TargetType
 	RecipientID   *string
-	FromType      *model.TargetType
+	FromType      *resourcemodel.TargetType
 	FromID        *string
 	Timestamp     time.Time
 }
@@ -179,17 +179,17 @@ func mapDbTransactionEntry(dbTransactionEntry *TransactionEntry) (*transaction.E
 
 }
 
-func mapTarget(targetType *model.TargetType, targetId *string) (*model.Target, error) {
-	var target *model.Target
+func mapTarget(targetType *resourcemodel.TargetType, targetId *string) (*resourcemodel.Target, error) {
+	var target *resourcemodel.Target
 	if targetType != nil && targetId != nil {
 		if targetType.IsUser() {
-			target = model.NewUserTarget(usermodel.NewUserKey(*targetId))
+			target = resourcemodel.NewUserTarget(usermodel.NewUserKey(*targetId))
 		} else if targetType.IsGroup() {
 			groupKey, err := groupmodel.ParseGroupKey(*targetId)
 			if err != nil {
 				return nil, err
 			}
-			target = model.NewGroupTarget(groupKey)
+			target = resourcemodel.NewGroupTarget(groupKey)
 		}
 	}
 	return target, nil

@@ -1,7 +1,7 @@
 package model
 
 import (
-	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/resource/model"
 	"time"
 )
 

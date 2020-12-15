@@ -4,7 +4,6 @@ import (
 	ctx "context"
 	chatmodel "github.com/commonpool/backend/pkg/chat/model"
 	groupmodel "github.com/commonpool/backend/pkg/group/model"
-	resourcemodel "github.com/commonpool/backend/pkg/resource/model"
 	usermodel "github.com/commonpool/backend/pkg/user/model"
 	"golang.org/x/net/context"
 	"time"
@@ -15,7 +14,6 @@ type Service interface {
 	GetSubscriptionsForUser(ctx context.Context, take int, skip int) (*chatmodel.ChannelSubscriptions, error)
 	GetChannel(ctx context.Context, channelKey chatmodel.ChannelKey) (*chatmodel.Channel, error)
 	GetMessage(ctx context.Context, messageKey chatmodel.MessageKey) (*chatmodel.Message, error)
-	NotifyUserInterestedAboutResource(ctx ctx.Context, request *NotifyUserInterestedAboutResource) (*NotifyUserInterestedAboutResourceResponse, error)
 	CreateChannel(ctx ctx.Context, channelKey chatmodel.ChannelKey, channelType chatmodel.ChannelType) (*chatmodel.Channel, error)
 	SubscribeToChannel(ctx ctx.Context, channelSubscriptionKey chatmodel.ChannelSubscriptionKey, name string) (*chatmodel.ChannelSubscription, error)
 	UnsubscribeFromChannel(ctx context.Context, channelSubscriptionKey chatmodel.ChannelSubscriptionKey) error
@@ -25,28 +23,7 @@ type Service interface {
 	SendGroupMessage(ctx ctx.Context, request *SendGroupMessage) (*SendGroupMessageResponse, error)
 	CreateUserExchange(ctx context.Context, userKey usermodel.UserKey) (string, error)
 	GetUserExchangeName(ctx context.Context, userKey usermodel.UserKey) string
-	GetUserLink(userKey usermodel.UserKey) string
-	GetGroupLink(groupKey groupmodel.GroupKey) string
-	GetResourceLink(resource resourcemodel.ResourceKey) string
 }
-
-type NotifyUserInterestedAboutResource struct {
-	InterestedUser usermodel.UserKey
-	ResourceKey    resourcemodel.ResourceKey
-	Message        string
-}
-type NotifyUserInterestedAboutResourceResponse struct {
-	ChannelKey chatmodel.ChannelKey
-}
-
-func NewNotifyUserInterestedAboutResource(interestedUser usermodel.UserKey, resourceKey resourcemodel.ResourceKey, message string) *NotifyUserInterestedAboutResource {
-	return &NotifyUserInterestedAboutResource{
-		InterestedUser: interestedUser,
-		ResourceKey:    resourceKey,
-		Message:        message,
-	}
-}
-
 type GetOrCreateConversationChannelResponse struct {
 	Channel *chatmodel.Channel
 }

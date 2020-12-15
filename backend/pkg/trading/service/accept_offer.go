@@ -149,7 +149,7 @@ func (t TradingService) AcceptOffer(ctx context.Context, offerKey model.OfferKey
 		}
 	}
 
-	usersInOffer, err := t.us.GetByKeys(ctx, approvers.AllUserKeys())
+	usersInOffer, err := t.userStore.GetByKeys(ctx, approvers.AllUserKeys())
 	if err != nil {
 		return err
 	}

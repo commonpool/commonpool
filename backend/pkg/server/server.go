@@ -80,7 +80,7 @@ func (s *Server) Start() {
 	groupStore := groupstore.NewGroupStore(driver)
 	chatStore := chatstore.NewChatStore(db, userStore, amqpCli)
 	tradingStore := tradingstore.NewTradingStore(driver)
-	chatService := chatservice.NewChatService(userStore, groupStore, resourceStore, amqpCli, chatStore)
+	chatService := chatservice.NewChatService(userStore, groupStore, amqpCli, chatStore)
 	groupService := groupservice.NewGroupService(groupStore, amqpCli, chatService, userStore)
 	userService := userservice.NewUserService(userStore)
 	resourceService := service.NewResourceService(resourceStore)

@@ -2,7 +2,6 @@ package handler
 
 import (
 	fmt "fmt"
-	model2 "github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/exceptions"
 	groupmodel "github.com/commonpool/backend/pkg/group/model"
 	resourcemodel "github.com/commonpool/backend/pkg/resource/model"
@@ -13,10 +12,10 @@ import (
 	"time"
 )
 
-func parseTargetFromQueryParams(c echo.Context, typeQueryParam string, valueQueryParam string) (*model2.Target, error) {
+func parseTargetFromQueryParams(c echo.Context, typeQueryParam string, valueQueryParam string) (*resourcemodel.Target, error) {
 	typeParam := c.QueryParams().Get(typeQueryParam)
 	if typeParam != "" {
-		typeValue, err := model2.ParseOfferItemTargetType(typeParam)
+		typeValue, err := resourcemodel.ParseOfferItemTargetType(typeParam)
 		if err != nil {
 			return nil, err
 		}
@@ -30,10 +29,10 @@ func parseTargetFromQueryParams(c echo.Context, typeQueryParam string, valueQuer
 			if err != nil {
 				return nil, err
 			}
-			return model2.NewGroupTarget(groupKey), nil
+			return resourcemodel.NewGroupTarget(groupKey), nil
 		} else if targetType.IsUser() {
 			userKey := usermodel.NewUserKey(targetIdStr)
-			return model2.NewUserTarget(userKey), nil
+			return resourcemodel.NewUserTarget(userKey), nil
 		}
 	}
 	return nil, nil

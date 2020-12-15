@@ -1,7 +1,6 @@
 package model
 
 import (
-	"github.com/commonpool/backend/model"
 	groupmodel "github.com/commonpool/backend/pkg/group/model"
 	usermodel "github.com/commonpool/backend/pkg/user/model"
 )
@@ -48,7 +47,7 @@ func (c *Claims) GroupHasClaim(groupKey groupmodel.GroupKey, resourceKey Resourc
 	return false
 }
 
-func (c *Claims) HasClaim(target *model.Target, resourceKey ResourceKey, claimType ClaimType) bool {
+func (c *Claims) HasClaim(target *Target, resourceKey ResourceKey, claimType ClaimType) bool {
 	for _, claim := range c.Items {
 		if claim.ClaimType == claimType &&
 			claim.ResourceKey == resourceKey &&

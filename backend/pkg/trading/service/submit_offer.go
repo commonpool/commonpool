@@ -36,7 +36,7 @@ func (t TradingService) SendOffer(ctx context.Context, groupKey model.GroupKey, 
 		return nil, nil, err
 	}
 
-	resources, err := t.rs.GetByKeys(ctx, offerItems.GetResourceKeys())
+	resources, err := t.resourceStore.GetByKeys(ctx, offerItems.GetResourceKeys())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -235,7 +235,7 @@ func (t TradingService) buildAcceptOrDeclineChatMessage(recipientUserKey usermod
 	messageBlocks := []chatmodel.Block{
 		*chatmodel.NewHeaderBlock(
 			chatmodel.NewMarkdownObject(
-				fmt.Sprintf("%s is proposing an exchange", t.chatService.GetUserLink(offer.GetAuthorKey())),
+				fmt.Sprintf("%s is proposing an exchange", offer.GetAuthorKey().GetFrontendLink()),
 			), nil),
 	}
 
@@ -250,15 +250,15 @@ func (t TradingService) buildAcceptOrDeclineChatMessage(recipientUserKey usermod
 			if resourceTransfer.To.IsForUser() {
 
 				message = fmt.Sprintf("%s would take %s",
-					t.chatService.GetUserLink(resourceTransfer.To.GetUserKey()),
-					t.chatService.GetResourceLink(resourceTransfer.ResourceKey),
+					resourceTransfer.To.GetUserKey().GetFrontendLink(),
+					resourceTransfer.ResourceKey.GetFrontendLink(),
 				)
 
 			} else if resourceTransfer.To.IsForGroup() {
 
 				message = fmt.Sprintf("The group %s would take %s",
-					t.chatService.GetGroupLink(resourceTransfer.To.GetGroupKey()),
-					t.chatService.GetResourceLink(resourceTransfer.ResourceKey),
+					resourceTransfer.To.GetGroupKey().GetFrontendLink(),
+					resourceTransfer.ResourceKey.GetFrontendLink(),
 				)
 
 			}
@@ -270,17 +270,17 @@ func (t TradingService) buildAcceptOrDeclineChatMessage(recipientUserKey usermod
 			if serviceProvision.To.IsForGroup() {
 
 				message = fmt.Sprintf("group %s would get %s worth of %s",
-					t.chatService.GetGroupLink(serviceProvision.To.GetGroupKey()),
+					serviceProvision.To.GetGroupKey().GetFrontendLink(),
 					serviceProvision.Duration.String(),
-					t.chatService.GetResourceLink(serviceProvision.ResourceKey),
+					serviceProvision.ResourceKey.GetFrontendLink(),
 				)
 
 			} else if serviceProvision.To.IsForUser() {
 
 				message = fmt.Sprintf("user %s would get %s worth of %s",
-					t.chatService.GetUserLink(serviceProvision.To.GetUserKey()),
+					serviceProvision.To.GetUserKey().GetFrontendLink(),
 					serviceProvision.Duration.String(),
-					t.chatService.GetResourceLink(serviceProvision.ResourceKey),
+					serviceProvision.ResourceKey.GetFrontendLink(),
 				)
 
 			}
@@ -292,16 +292,16 @@ func (t TradingService) buildAcceptOrDeclineChatMessage(recipientUserKey usermod
 			if resourceBorrow.To.IsForUser() {
 
 				message = fmt.Sprintf("user %s would borrow %s for %s",
-					t.chatService.GetUserLink(resourceBorrow.To.GetUserKey()),
-					t.chatService.GetResourceLink(resourceBorrow.ResourceKey),
+					resourceBorrow.To.GetUserKey().GetFrontendLink(),
+					resourceBorrow.ResourceKey.GetFrontendLink(),
 					resourceBorrow.Duration.String(),
 				)
 
 			} else if resourceBorrow.To.IsForGroup() {
 
 				message = fmt.Sprintf("group %s would borrow %s for %s",
-					t.chatService.GetGroupLink(resourceBorrow.To.GetGroupKey()),
-					t.chatService.GetResourceLink(resourceBorrow.ResourceKey),
+					resourceBorrow.To.GetGroupKey().GetFrontendLink(),
+					resourceBorrow.ResourceKey.GetFrontendLink(),
 					resourceBorrow.Duration.String(),
 				)
 
@@ -313,16 +313,16 @@ func (t TradingService) buildAcceptOrDeclineChatMessage(recipientUserKey usermod
 
 			fromLink := ""
 			if creditTransfer.From.IsForGroup() {
-				fromLink = t.chatService.GetGroupLink(creditTransfer.From.GetGroupKey())
+				fromLink = creditTransfer.From.GetGroupKey().GetFrontendLink()
 			} else if creditTransfer.From.IsForUser() {
-				fromLink = t.chatService.GetUserLink(creditTransfer.From.GetUserKey())
+				fromLink = creditTransfer.From.GetUserKey().GetFrontendLink()
 			}
 
 			toLink := ""
 			if creditTransfer.To.IsForGroup() {
-				toLink = "group " + t.chatService.GetGroupLink(creditTransfer.To.GetGroupKey())
+				toLink = "group " + creditTransfer.To.GetGroupKey().GetFrontendLink()
 			} else if creditTransfer.To.IsForUser() {
-				toLink = "user " + t.chatService.GetUserLink(creditTransfer.To.GetUserKey())
+				toLink = "user " + creditTransfer.To.GetUserKey().GetFrontendLink()
 			}
 
 			message = fmt.Sprintf("user %s would get `%s` of time credits from %s",

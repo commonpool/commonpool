@@ -1,6 +1,6 @@
 package model
 
-import "github.com/commonpool/backend/model"
+import "github.com/commonpool/backend/pkg/resource/model"
 
 type OfferItem interface {
 	Type() OfferItemType

@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/satori/go.uuid"
 	"go.uber.org/zap/zapcore"
@@ -35,4 +36,8 @@ func ParseGroupKey(value string) (GroupKey, error) {
 		return GroupKey{}, exceptions.ErrInvalidGroupId
 	}
 	return NewGroupKey(offerId), err
+}
+
+func (k GroupKey) GetFrontendLink() string {
+	return fmt.Sprintf("<commonpool-group id='%s'><commonpool-group>", k.String())
 }

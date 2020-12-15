@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/satori/go.uuid"
 )
@@ -33,4 +34,8 @@ func (r *ResourceKey) GetUUID() uuid.UUID {
 
 func (r *ResourceKey) String() string {
 	return r.ID.String()
+}
+
+func (r *ResourceKey) GetFrontendLink() string {
+	return fmt.Sprintf("<commonpool-resource id='%s'><commonpool-resource>", r.String())
 }

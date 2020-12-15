@@ -3,7 +3,6 @@ package store
 import (
 	"context"
 	"fmt"
-	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/exceptions"
 	graph2 "github.com/commonpool/backend/pkg/graph"
 	groupmodel "github.com/commonpool/backend/pkg/group/model"
@@ -946,8 +945,8 @@ func MapOfferItem(offerKey tradingmodel.OfferKey, offerItemNode neo4j.Node, from
 
 	offerItemType := offerItemNode.Props()["type"].(string)
 	var fromResource *resourcemodel.Resource
-	var fromTarget *model.Target
-	var toTarget *model.Target
+	var fromTarget *resourcemodel.Target
+	var toTarget *resourcemodel.Target
 	var err error
 
 	if fromNode != nil {

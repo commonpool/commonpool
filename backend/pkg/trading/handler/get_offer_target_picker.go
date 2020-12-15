@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/model"
 	groupmodel "github.com/commonpool/backend/pkg/group/model"
 	"github.com/commonpool/backend/pkg/handler"
+	"github.com/commonpool/backend/pkg/resource/model"
 	model2 "github.com/commonpool/backend/pkg/trading/model"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"

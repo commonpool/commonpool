@@ -1,6 +1,9 @@
 package model
 
-import "go.uber.org/zap/zapcore"
+import (
+	"fmt"
+	"go.uber.org/zap/zapcore"
+)
 
 type UserKey struct {
 	subject string
@@ -23,4 +26,8 @@ func (k UserKey) String() string {
 
 func (k UserKey) GetExchangeName() string {
 	return "users." + k.String()
+}
+
+func (k UserKey) GetFrontendLink() string {
+	return fmt.Sprintf("<commonpool-user id='%s'></commonpool-user>", k.String())
 }

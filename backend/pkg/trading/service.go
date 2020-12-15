@@ -2,8 +2,8 @@ package trading
 
 import (
 	ctx "context"
-	"github.com/commonpool/backend/model"
 	groupmodel "github.com/commonpool/backend/pkg/group/model"
+	"github.com/commonpool/backend/pkg/resource/model"
 	tradingmodel "github.com/commonpool/backend/pkg/trading/model"
 	usermodel "github.com/commonpool/backend/pkg/user/model"
 	"golang.org/x/net/context"

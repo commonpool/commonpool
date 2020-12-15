@@ -20,8 +20,8 @@ type TradingService struct {
 	tradingStore       trading2.Store
 	transactionService transaction2.Service
 	groupService       group2.Service
-	rs                 resource.Store
-	us                 user.Store
+	resourceStore      resource.Store
+	userStore          user.Store
 	chatService        chat.Service
 }
 
@@ -36,8 +36,8 @@ func NewTradingService(
 	transactionService transaction2.Service) *TradingService {
 	return &TradingService{
 		tradingStore:       tradingStore,
-		rs:                 resourceStore,
-		us:                 authStore,
+		resourceStore:      resourceStore,
+		userStore:          authStore,
 		chatService:        chatService,
 		groupService:       groupService,
 		transactionService: transactionService,
@@ -127,15 +127,15 @@ func (t TradingService) buildOfferCompletedMessage(ctx context.Context, items *t
 			var fromLink = ""
 
 			if creditTransfer.To.IsForGroup() {
-				toLink = t.chatService.GetGroupLink(creditTransfer.To.GetGroupKey())
+				toLink = creditTransfer.To.GetGroupKey().GetFrontendLink()
 			} else if creditTransfer.To.IsForUser() {
-				toLink = t.chatService.GetUserLink(creditTransfer.To.GetUserKey())
+				toLink = creditTransfer.To.GetUserKey().GetFrontendLink()
 			}
 
 			if creditTransfer.From.IsForGroup() {
-				fromLink = t.chatService.GetGroupLink(creditTransfer.From.GetGroupKey())
+				fromLink = creditTransfer.From.GetGroupKey().GetFrontendLink()
 			} else if creditTransfer.From.IsForUser() {
-				fromLink = t.chatService.GetUserLink(creditTransfer.From.GetUserKey())
+				fromLink = creditTransfer.From.GetUserKey().GetFrontendLink()
 			}
 
 			blocks = append(blocks, *model2.NewSectionBlock(
@@ -172,7 +172,7 @@ func (t TradingService) checkIfAllItemsCompleted(ctx context.Context, loggerInUs
 		return err
 	}
 
-	allUsersInOffer, err := t.us.GetByKeys(ctx, approvers.AllUserKeys())
+	allUsersInOffer, err := t.userStore.GetByKeys(ctx, approvers.AllUserKeys())
 	if err != nil {
 		return err
 	}

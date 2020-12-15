@@ -13,7 +13,7 @@ type Entry struct {
 	GroupKey    groupmodel.GroupKey
 	ResourceKey *resourcemodel.ResourceKey
 	Duration    *time.Duration
-	Recipient   *model.Target
-	From        *model.Target
+	Recipient   *resourcemodel.Target
+	From        *resourcemodel.Target
 	Timestamp   time.Time
 }

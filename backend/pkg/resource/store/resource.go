@@ -4,7 +4,6 @@ import (
 	ctx "context"
 	"fmt"
 	"github.com/commonpool/backend/logging"
-	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/exceptions"
 	graph2 "github.com/commonpool/backend/pkg/graph"
 	groupmodel "github.com/commonpool/backend/pkg/group/model"
@@ -121,7 +120,7 @@ func (rs *ResourceStore) getByKeys(ctx ctx.Context, session neo4j.Session, resou
 
 }
 
-func createClaimsForTargets(resourceKey resourcemodel.ResourceKey, claimType resourcemodel.ClaimType, targets *model.Targets) *resourcemodel.Claims {
+func createClaimsForTargets(resourceKey resourcemodel.ResourceKey, claimType resourcemodel.ClaimType, targets *resourcemodel.Targets) *resourcemodel.Claims {
 	var claims []*resourcemodel.Claim
 	for _, target := range targets.Items {
 		claims = append(claims, &resourcemodel.Claim{

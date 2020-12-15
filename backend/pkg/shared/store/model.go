@@ -2,9 +2,9 @@ package store
 
 import (
 	"fmt"
-	"github.com/commonpool/backend/model"
 	groupmodel "github.com/commonpool/backend/pkg/group/model"
 	store2 "github.com/commonpool/backend/pkg/group/store"
+	"github.com/commonpool/backend/pkg/resource/model"
 	usermodel "github.com/commonpool/backend/pkg/user/model"
 	"github.com/commonpool/backend/pkg/user/store"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
