@@ -2,20 +2,22 @@ package user
 
 import (
 	"context"
-	"github.com/commonpool/backend/model"
+	groupmodel "github.com/commonpool/backend/pkg/group/model"
+	model2 "github.com/commonpool/backend/pkg/user/model"
+	usermodel "github.com/commonpool/backend/pkg/user/model"
 )
 
 type Store interface {
-	GetByKey(key model.UserKey) (*User, error)
-	GetByKeys(ctx context.Context, keys []model.UserKey) (*Users, error)
-	Upsert(key model.UserKey, email string, username string) error
-	GetUsername(key model.UserKey) (string, error)
-	Find(query Query) ([]*User, error)
+	GetByKey(key usermodel.UserKey) (*model2.User, error)
+	GetByKeys(ctx context.Context, keys []usermodel.UserKey) (*Users, error)
+	Upsert(key usermodel.UserKey, email string, username string) error
+	GetUsername(key usermodel.UserKey) (string, error)
+	Find(query Query) ([]*model2.User, error)
 }
 
 type Query struct {
 	Query      string
 	Skip       int
 	Take       int
-	NotInGroup *model.GroupKey
+	NotInGroup *groupmodel.GroupKey
 }

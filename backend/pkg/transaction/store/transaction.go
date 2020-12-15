@@ -2,7 +2,10 @@ package store
 
 import (
 	"github.com/commonpool/backend/model"
-	transaction2 "github.com/commonpool/backend/pkg/transaction"
+	groupmodel "github.com/commonpool/backend/pkg/group/model"
+	resourcemodel "github.com/commonpool/backend/pkg/resource/model"
+	"github.com/commonpool/backend/pkg/transaction"
+	usermodel "github.com/commonpool/backend/pkg/user/model"
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
 	"time"
@@ -18,9 +21,9 @@ func NewTransactionStore(db *gorm.DB) *TransactionStore {
 	}
 }
 
-var _ transaction2.Store = &TransactionStore{}
+var _ transaction.Store = &TransactionStore{}
 
-func (t TransactionStore) SaveEntry(entry *transaction2.Entry) error {
+func (t TransactionStore) SaveEntry(entry *transaction.Entry) error {
 
 	var resourceID *uuid.UUID = nil
 	if entry.ResourceKey != nil {
@@ -83,7 +86,7 @@ func (t TransactionStore) SaveEntry(entry *transaction2.Entry) error {
 	return nil
 }
 
-func (t TransactionStore) GetEntry(transactionKey model.TransactionEntryKey) (*transaction2.Entry, error) {
+func (t TransactionStore) GetEntry(transactionKey model.TransactionEntryKey) (*transaction.Entry, error) {
 	var transactionEntry TransactionEntry
 	err := t.db.Model(TransactionEntry{}).First(&transactionEntry, "id = ?", transactionKey.String()).Error
 	if err != nil {
@@ -92,7 +95,7 @@ func (t TransactionStore) GetEntry(transactionKey model.TransactionEntryKey) (*t
 	return mapDbTransactionEntry(&transactionEntry)
 }
 
-func (t TransactionStore) GetEntriesForGroupAndUsers(groupKey model.GroupKey, userKeys *model.UserKeys) (*transaction2.Entries, error) {
+func (t TransactionStore) GetEntriesForGroupAndUsers(groupKey groupmodel.GroupKey, userKeys *usermodel.UserKeys) (*transaction.Entries, error) {
 
 	sql := "(group_id = ? OR recipient_id = ? OR from_id = ?)"
 	var params []interface{}
@@ -119,7 +122,7 @@ func (t TransactionStore) GetEntriesForGroupAndUsers(groupKey model.GroupKey, us
 	var dbEntries []*TransactionEntry
 	t.db.Where(sql, params...).Find(&dbEntries)
 
-	var entries []*transaction2.Entry
+	var entries []*transaction.Entry
 	for _, dbEntry := range dbEntries {
 		entry, err := mapDbTransactionEntry(dbEntry)
 		if err != nil {
@@ -128,13 +131,13 @@ func (t TransactionStore) GetEntriesForGroupAndUsers(groupKey model.GroupKey, us
 		entries = append(entries, entry)
 	}
 
-	return transaction2.NewEntries(entries), nil
+	return transaction.NewEntries(entries), nil
 
 }
 
 type TransactionEntry struct {
 	ID            uuid.UUID `gorm:"type:uuid;primary_key"`
-	Type          transaction2.Type
+	Type          transaction.Type
 	GroupID       uuid.UUID
 	ResourceID    *uuid.UUID
 	Duration      *time.Duration
@@ -145,11 +148,11 @@ type TransactionEntry struct {
 	Timestamp     time.Time
 }
 
-func mapDbTransactionEntry(dbTransactionEntry *TransactionEntry) (*transaction2.Entry, error) {
+func mapDbTransactionEntry(dbTransactionEntry *TransactionEntry) (*transaction.Entry, error) {
 
-	var resourceKey *model.ResourceKey = nil
+	var resourceKey *resourcemodel.ResourceKey = nil
 	if dbTransactionEntry.ResourceID != nil {
-		resourceKeyVal := model.NewResourceKey(*dbTransactionEntry.ResourceID)
+		resourceKeyVal := resourcemodel.NewResourceKey(*dbTransactionEntry.ResourceID)
 		resourceKey = &resourceKeyVal
 	}
 
@@ -163,10 +166,10 @@ func mapDbTransactionEntry(dbTransactionEntry *TransactionEntry) (*transaction2.
 		return nil, err
 	}
 
-	return &transaction2.Entry{
+	return &transaction.Entry{
 		Key:         model.NewTransactionEntryKey(dbTransactionEntry.ID),
 		Type:        dbTransactionEntry.Type,
-		GroupKey:    model.NewGroupKey(dbTransactionEntry.GroupID),
+		GroupKey:    groupmodel.NewGroupKey(dbTransactionEntry.GroupID),
 		ResourceKey: resourceKey,
 		Duration:    dbTransactionEntry.Duration,
 		Recipient:   recipient,
@@ -180,9 +183,9 @@ func mapTarget(targetType *model.TargetType, targetId *string) (*model.Target, e
 	var target *model.Target
 	if targetType != nil && targetId != nil {
 		if targetType.IsUser() {
-			target = model.NewUserTarget(model.NewUserKey(*targetId))
+			target = model.NewUserTarget(usermodel.NewUserKey(*targetId))
 		} else if targetType.IsGroup() {
-			groupKey, err := model.ParseGroupKey(*targetId)
+			groupKey, err := groupmodel.ParseGroupKey(*targetId)
 			if err != nil {
 				return nil, err
 			}

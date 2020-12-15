@@ -3,12 +3,12 @@ package store
 import (
 	"context"
 	"errors"
-	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/chat/model"
 	"gorm.io/gorm"
 )
 
-func (cs *ChatStore) GetChannel(ctx context.Context, channelKey model.ChannelKey) (*chat.Channel, error) {
+func (cs *ChatStore) GetChannel(ctx context.Context, channelKey model.ChannelKey) (*model.Channel, error) {
 
 	var channel Channel
 	err := cs.db.Where("id = ?", channelKey.String()).First(&channel).Error

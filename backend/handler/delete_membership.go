@@ -1,9 +1,10 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/model"
 	group2 "github.com/commonpool/backend/pkg/group"
+	groupmodel "github.com/commonpool/backend/pkg/group/model"
 	"github.com/commonpool/backend/pkg/handler"
+	usermodel "github.com/commonpool/backend/pkg/user/model"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
@@ -29,13 +30,13 @@ func (h *Handler) CancelOrDeclineInvitation(c echo.Context) error {
 		return err
 	}
 
-	groupKey, err := model.ParseGroupKey(req.GroupID)
+	groupKey, err := groupmodel.ParseGroupKey(req.GroupID)
 	if err != nil {
 		return err
 	}
-	userKey := model.NewUserKey(req.UserID)
+	userKey := usermodel.NewUserKey(req.UserID)
 
-	membershipKey := model.NewMembershipKey(groupKey, userKey)
+	membershipKey := groupmodel.NewMembershipKey(groupKey, userKey)
 
 	err = h.groupService.CancelOrDeclineInvitation(ctx, group2.NewDelineInvitationRequest(membershipKey))
 	if err != nil {

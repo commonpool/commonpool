@@ -3,8 +3,10 @@ package handler
 import (
 	"github.com/commonpool/backend/model"
 	group2 "github.com/commonpool/backend/pkg/group"
+	groupmodel "github.com/commonpool/backend/pkg/group/model"
 	"github.com/commonpool/backend/pkg/handler"
-	trading2 "github.com/commonpool/backend/pkg/trading"
+	model2 "github.com/commonpool/backend/pkg/trading/model"
+	usermodel "github.com/commonpool/backend/pkg/user/model"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -14,12 +16,12 @@ func (h *Handler) HandleOfferItemTargetPicker(c echo.Context) error {
 
 	ctx, _ := handler.GetEchoContext(c, "HandleOfferItemTargetPicker")
 
-	groupKey, err := model.ParseGroupKey(c.QueryParams().Get("group_id"))
+	groupKey, err := groupmodel.ParseGroupKey(c.QueryParams().Get("group_id"))
 	if err != nil {
 		return err
 	}
 
-	offerItemType, err := trading2.ParseOfferItemType(c.QueryParams().Get("type"))
+	offerItemType, err := model2.ParseOfferItemType(c.QueryParams().Get("type"))
 	if err != nil {
 		return err
 	}
@@ -41,8 +43,8 @@ func (h *Handler) HandleOfferItemTargetPicker(c echo.Context) error {
 
 	var items []web.OfferGroupOrUserPickerItem
 
-	var userKeys []model.UserKey
-	var groupKeys []model.GroupKey
+	var userKeys []usermodel.UserKey
+	var groupKeys []groupmodel.GroupKey
 	for _, target := range targets.Items {
 		if target.IsForUser() {
 			userKeys = append(userKeys, target.GetUserKey())

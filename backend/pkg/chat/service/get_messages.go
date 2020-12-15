@@ -2,9 +2,9 @@ package service
 
 import (
 	"context"
-	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/chat/model"
 	"time"
 )
 

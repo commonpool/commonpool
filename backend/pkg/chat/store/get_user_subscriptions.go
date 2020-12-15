@@ -3,11 +3,12 @@ package store
 import (
 	"context"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/chat/model"
 )
 
-func (cs *ChatStore) GetSubscriptionsForUser(ctx context.Context, request *chat.GetSubscriptions) (*chat.ChannelSubscriptions, error) {
+func (cs *ChatStore) GetSubscriptionsForUser(ctx context.Context, request *chat.GetSubscriptions) (*model.ChannelSubscriptions, error) {
 
-	var subscriptions []chat.ChannelSubscription
+	var subscriptions []model.ChannelSubscription
 	err := cs.db.
 		Where("user_id = ?", request.UserKey.String()).
 		Order("last_message_at desc").
@@ -19,5 +20,5 @@ func (cs *ChatStore) GetSubscriptionsForUser(ctx context.Context, request *chat.
 	if err != nil {
 		return nil, err
 	}
-	return chat.NewChannelSubscriptions(subscriptions), nil
+	return model.NewChannelSubscriptions(subscriptions), nil
 }

@@ -2,14 +2,14 @@ package handler
 
 import (
 	"context"
-	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/chat/model"
 	"net/http"
 )
 
 func (s *chatHandlerSuite) TestPostMessage() {
 	s.NewContext(http.MethodPost, "/api/v1/chat/channel-1", `{"message":"hello"}`)
 	s.LoggedInAs("user", "username", "user@email.com")
-	s.ChatService.SendMessageFunc = func(ctx context.Context, message *chat.Message) error {
+	s.ChatService.SendMessageFunc = func(ctx context.Context, message *model.Message) error {
 		return nil
 	}
 	s.ServeHTTP()

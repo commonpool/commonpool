@@ -3,10 +3,11 @@ package service
 import (
 	"context"
 	"errors"
-	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/chat"
+	chatmodel "github.com/commonpool/backend/pkg/chat/model"
 	"github.com/commonpool/backend/pkg/mq"
 	"github.com/commonpool/backend/pkg/user"
+	usermodel "github.com/commonpool/backend/pkg/user/model"
 	"sort"
 	"strings"
 )
@@ -14,7 +15,7 @@ import (
 // getOrCreateConversationChannel Will retrieve or create the conversation channel for a given set of users
 // If the channel is not already created, it will automatically be created and the users will be subscribed to it.
 // It also sets up RabbitMQ routing so that messages to this channel will find the user's exchange.
-func (c ChatService) getOrCreateConversationChannel(ctx context.Context, userKeys *model.UserKeys) (*chat.GetOrCreateConversationChannelResponse, error) {
+func (c ChatService) getOrCreateConversationChannel(ctx context.Context, userKeys *usermodel.UserKeys) (*chat.GetOrCreateConversationChannelResponse, error) {
 
 	channelKey, err := c.GetConversationChannelKey(ctx, userKeys)
 	if err != nil {
@@ -30,10 +31,10 @@ func (c ChatService) getOrCreateConversationChannel(ctx context.Context, userKey
 
 		var title = ""
 
-		newChannel := &chat.Channel{
+		newChannel := &chatmodel.Channel{
 			Key:   channelKey,
 			Title: title,
-			Type:  chat.ConversationChannel,
+			Type:  chatmodel.ConversationChannel,
 		}
 
 		err := c.chatStore.CreateChannel(ctx, newChannel)
@@ -64,7 +65,7 @@ func (c ChatService) getOrCreateConversationChannel(ctx context.Context, userKey
 
 }
 
-func (c ChatService) createSubscriptionsAndMqBindingsForUserConversation(ctx context.Context, userKeys *model.UserKeys) ([]chat.ChannelSubscription, error) {
+func (c ChatService) createSubscriptionsAndMqBindingsForUserConversation(ctx context.Context, userKeys *usermodel.UserKeys) ([]chatmodel.ChannelSubscription, error) {
 
 	channelKey, err := c.GetConversationChannelKey(ctx, userKeys)
 	if err != nil {
@@ -76,7 +77,7 @@ func (c ChatService) createSubscriptionsAndMqBindingsForUserConversation(ctx con
 		return nil, err
 	}
 
-	var subscriptions []chat.ChannelSubscription
+	var subscriptions []chatmodel.ChannelSubscription
 	for _, u := range users.Items {
 		subscription, err := c.createSubscriptionAndMqBindingForUserConversation(ctx, u, users, channelKey)
 		if err != nil {
@@ -89,14 +90,14 @@ func (c ChatService) createSubscriptionsAndMqBindingsForUserConversation(ctx con
 
 func (c ChatService) createSubscriptionAndMqBindingForUserConversation(
 	ctx context.Context,
-	user *user.User,
+	user *usermodel.User,
 	conversationUsers *user.Users,
-	channelKey model.ChannelKey,
-) (*chat.ChannelSubscription, error) {
+	channelKey chatmodel.ChannelKey,
+) (*chatmodel.ChannelSubscription, error) {
 
 	conversationName := c.getConversationNameForUser(ctx, conversationUsers, user)
 
-	channelSubscriptionKey := model.NewChannelSubscriptionKey(channelKey, user.GetUserKey())
+	channelSubscriptionKey := chatmodel.NewChannelSubscriptionKey(channelKey, user.GetUserKey())
 	subscription, err := c.chatStore.CreateSubscription(ctx, channelSubscriptionKey, conversationName)
 	if err != nil {
 		return nil, err
@@ -128,13 +129,13 @@ func (c ChatService) createSubscriptionAndMqBindingForUserConversation(
 func (c ChatService) getConversationNameForUser(
 	ctx context.Context,
 	us *user.Users,
-	u *user.User,
+	u *usermodel.User,
 ) string {
 
 	// First, sort the user names
 	userList := us.Items
 
-	copied := make([]*user.User, len(userList))
+	copied := make([]*usermodel.User, len(userList))
 	copy(copied, userList)
 	sort.Slice(copied, func(i, j int) bool {
 		return copied[i].Username > copied[j].Username

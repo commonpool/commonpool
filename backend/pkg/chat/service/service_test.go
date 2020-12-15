@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"github.com/commonpool/backend/mock"
-	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/chat/model"
 	"github.com/commonpool/backend/pkg/mq"
 	"github.com/stretchr/testify/suite"
 	"testing"
@@ -31,7 +31,7 @@ func (s *serviceTestSuite) SetupTest() {
 	s.Service.amqpClient = s.AmqpClient
 
 	s.ChatStore = &mock.ChatStore{
-		SaveMessageFunc: func(ctx context.Context, message *chat.Message) error {
+		SaveMessageFunc: func(ctx context.Context, message *model.Message) error {
 			return nil
 		},
 	}

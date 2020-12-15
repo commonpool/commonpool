@@ -2,10 +2,10 @@ package service
 
 import (
 	"context"
-	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/exceptions"
-	trading2 "github.com/commonpool/backend/pkg/trading"
+	tradingmodel "github.com/commonpool/backend/pkg/trading/model"
+	usermodel "github.com/commonpool/backend/pkg/user/model"
 )
 
 /**
@@ -15,7 +15,7 @@ BorrowResource   OfferItemType = "borrow_resource"
 ResourceTransfer OfferItemType = "transfer_resource"
 */
 
-func (t TradingService) ConfirmServiceProvided(ctx context.Context, confirmedItemKey model.OfferItemKey) error {
+func (t TradingService) ConfirmServiceProvided(ctx context.Context, confirmedItemKey tradingmodel.OfferItemKey) error {
 
 	loggedInUser, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
@@ -33,7 +33,7 @@ func (t TradingService) ConfirmServiceProvided(ctx context.Context, confirmedIte
 		return exceptions.ErrWrongOfferItemType
 	}
 
-	serviceProvided := offerItem.(*trading2.ProvideServiceItem)
+	serviceProvided := offerItem.(*tradingmodel.ProvideServiceItem)
 
 	receivingApprovers, err := t.tradingStore.FindReceivingApproversForOfferItem(offerItem.GetKey())
 	if err != nil {
@@ -61,7 +61,7 @@ func (t TradingService) ConfirmServiceProvided(ctx context.Context, confirmedIte
 
 }
 
-func (t TradingService) ConfirmResourceTransferred(ctx context.Context, confirmedItemKey model.OfferItemKey) error {
+func (t TradingService) ConfirmResourceTransferred(ctx context.Context, confirmedItemKey tradingmodel.OfferItemKey) error {
 
 	loggedInUser, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
@@ -79,7 +79,7 @@ func (t TradingService) ConfirmResourceTransferred(ctx context.Context, confirme
 		return exceptions.ErrWrongOfferItemType
 	}
 
-	resourceTransfer := offerItem.(*trading2.ResourceTransferItem)
+	resourceTransfer := offerItem.(*tradingmodel.ResourceTransferItem)
 
 	receivingApprovers, err := t.tradingStore.FindReceivingApproversForOfferItem(offerItem.GetKey())
 	if err != nil {
@@ -107,7 +107,7 @@ func (t TradingService) ConfirmResourceTransferred(ctx context.Context, confirme
 
 }
 
-func (t TradingService) ConfirmResourceBorrowed(ctx context.Context, confirmedItemKey model.OfferItemKey) error {
+func (t TradingService) ConfirmResourceBorrowed(ctx context.Context, confirmedItemKey tradingmodel.OfferItemKey) error {
 
 	loggedInUser, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
@@ -125,7 +125,7 @@ func (t TradingService) ConfirmResourceBorrowed(ctx context.Context, confirmedIt
 		return exceptions.ErrWrongOfferItemType
 	}
 
-	resourceTransfer := offerItem.(*trading2.BorrowResourceItem)
+	resourceTransfer := offerItem.(*tradingmodel.BorrowResourceItem)
 
 	if resourceTransfer.ItemGiven && resourceTransfer.ItemTaken {
 		return nil
@@ -157,7 +157,7 @@ func (t TradingService) ConfirmResourceBorrowed(ctx context.Context, confirmedIt
 
 }
 
-func (t TradingService) ConfirmBorrowedResourceReturned(ctx context.Context, confirmedItemKey model.OfferItemKey) error {
+func (t TradingService) ConfirmBorrowedResourceReturned(ctx context.Context, confirmedItemKey tradingmodel.OfferItemKey) error {
 
 	loggedInUser, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
@@ -175,7 +175,7 @@ func (t TradingService) ConfirmBorrowedResourceReturned(ctx context.Context, con
 		return exceptions.ErrWrongOfferItemType
 	}
 
-	resourceTransfer := offerItem.(*trading2.BorrowResourceItem)
+	resourceTransfer := offerItem.(*tradingmodel.BorrowResourceItem)
 
 	receivingApprovers, err := t.tradingStore.FindReceivingApproversForOfferItem(offerItem.GetKey())
 	if err != nil {
@@ -205,7 +205,7 @@ func (t TradingService) ConfirmBorrowedResourceReturned(ctx context.Context, con
 
 }
 
-func (t TradingService) checkIfAllItemsCompleted(ctx context.Context, loggerInUser model.UserReference, offerItem trading2.OfferItem) error {
+func (t TradingService) checkIfAllItemsCompleted(ctx context.Context, loggerInUser usermodel.UserReference, offerItem tradingmodel.OfferItem) error {
 
 	offer, err := t.tradingStore.GetOffer(offerItem.GetOfferKey())
 	if err != nil {

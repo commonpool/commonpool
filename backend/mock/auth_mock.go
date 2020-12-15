@@ -7,6 +7,7 @@ import (
 	"context"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/user"
+	model2 "github.com/commonpool/backend/pkg/user/model"
 	"sync"
 )
 
@@ -43,10 +44,10 @@ var _ user.Store = &UserStore{}
 //     }
 type UserStore struct {
 	// FindFunc mocks the Find method.
-	FindFunc func(query user.Query) ([]*user.User, error)
+	FindFunc func(query user.Query) ([]*model2.User, error)
 
 	// GetByKeyFunc mocks the GetByKey method.
-	GetByKeyFunc func(key model.UserKey) (*user.User, error)
+	GetByKeyFunc func(key model.UserKey) (*model2.User, error)
 
 	// GetByKeysFunc mocks the GetByKeys method.
 	GetByKeysFunc func(ctx context.Context, keys []model.UserKey) (*user.Users, error)
@@ -99,7 +100,7 @@ type UserStore struct {
 }
 
 // Find calls FindFunc.
-func (mock *UserStore) Find(query user.Query) ([]*user.User, error) {
+func (mock *UserStore) Find(query user.Query) ([]*model2.User, error) {
 	if mock.FindFunc == nil {
 		panic("UserStore.FindFunc: method is nil but Store.Find was just called")
 	}
@@ -130,7 +131,7 @@ func (mock *UserStore) FindCalls() []struct {
 }
 
 // GetByKey calls GetByKeyFunc.
-func (mock *UserStore) GetByKey(key model.UserKey) (*user.User, error) {
+func (mock *UserStore) GetByKey(key model.UserKey) (*model2.User, error) {
 	if mock.GetByKeyFunc == nil {
 		panic("UserStore.GetByKeyFunc: method is nil but Store.GetByKey was just called")
 	}

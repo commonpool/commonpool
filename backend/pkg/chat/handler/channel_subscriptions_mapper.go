@@ -4,9 +4,10 @@ import (
 	"context"
 	"github.com/commonpool/backend/pkg/chat"
 	"github.com/commonpool/backend/pkg/chat/handler/model"
+	model2 "github.com/commonpool/backend/pkg/chat/model"
 )
 
-func MapChannelSubscriptions(ctx context.Context, chatService chat.Service, subscriptions *chat.ChannelSubscriptions) ([]model.Subscription, error) {
+func MapChannelSubscriptions(ctx context.Context, chatService chat.Service, subscriptions *model2.ChannelSubscriptions) ([]model.Subscription, error) {
 
 	var items []model.Subscription
 	for _, subscription := range subscriptions.Items {

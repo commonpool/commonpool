@@ -2,12 +2,13 @@ package resource
 
 import (
 	"context"
-	"github.com/commonpool/backend/model"
+	groupmodel "github.com/commonpool/backend/pkg/group/model"
+	resourcemodel "github.com/commonpool/backend/pkg/resource/model"
 )
 
 type Store interface {
 	GetByKey(ctx context.Context, getResourceByKeyQuery *GetResourceByKeyQuery) (*GetResourceByKeyResponse, error)
-	GetByKeys(ctx context.Context, resourceKeys *model.ResourceKeys) (*GetResourceByKeysResponse, error)
+	GetByKeys(ctx context.Context, resourceKeys *resourcemodel.ResourceKeys) (*GetResourceByKeysResponse, error)
 	Search(ctx context.Context, searchResourcesQuery *SearchResourcesQuery) *SearchResourcesResponse
 	Delete(deleteResourceQuery *DeleteResourceQuery) *DeleteResourceResponse
 	Create(createResourceQuery *CreateResourceQuery) *CreateResourceResponse
@@ -15,20 +16,20 @@ type Store interface {
 }
 
 type GetResourceByKeysQuery struct {
-	ResourceKeys []model.ResourceKey
+	ResourceKeys []resourcemodel.ResourceKey
 }
 
 type SearchResourcesQuery struct {
-	Type            *Type
-	SubType         *SubType
+	Type            *resourcemodel.Type
+	SubType         *resourcemodel.SubType
 	Query           *string
 	Skip            int
 	Take            int
 	CreatedBy       string
-	SharedWithGroup *model.GroupKey
+	SharedWithGroup *groupmodel.GroupKey
 }
 
-func NewSearchResourcesQuery(query *string, resourceType *Type, resourceSubType *SubType, skip int, take int, createdBy string, sharedWithGroup *model.GroupKey) *SearchResourcesQuery {
+func NewSearchResourcesQuery(query *string, resourceType *resourcemodel.Type, resourceSubType *resourcemodel.SubType, skip int, take int, createdBy string, sharedWithGroup *groupmodel.GroupKey) *SearchResourcesQuery {
 	return &SearchResourcesQuery{
 		Type:            resourceType,
 		SubType:         resourceSubType,
@@ -41,8 +42,8 @@ func NewSearchResourcesQuery(query *string, resourceType *Type, resourceSubType 
 }
 
 type SearchResourcesResponse struct {
-	Resources  *Resources
-	Sharings   *Sharings
+	Resources  *resourcemodel.Resources
+	Sharings   *resourcemodel.Sharings
 	TotalCount int
 	Skip       int
 	Take       int
@@ -50,29 +51,29 @@ type SearchResourcesResponse struct {
 }
 
 type GetResourceByKeyQuery struct {
-	ResourceKey model.ResourceKey
+	ResourceKey resourcemodel.ResourceKey
 }
 
-func NewGetResourceByKeyQuery(resourceKey model.ResourceKey) *GetResourceByKeyQuery {
+func NewGetResourceByKeyQuery(resourceKey resourcemodel.ResourceKey) *GetResourceByKeyQuery {
 	return &GetResourceByKeyQuery{
 		ResourceKey: resourceKey,
 	}
 }
 
 type GetResourceByKeyResponse struct {
-	Resource *Resource
-	Sharings *Sharings
-	Claims   *Claims
+	Resource *resourcemodel.Resource
+	Sharings *resourcemodel.Sharings
+	Claims   *resourcemodel.Claims
 }
 
 type GetResourceByKeysResponse struct {
-	Resources *Resources
-	Sharings  *Sharings
-	Claims    *Claims
+	Resources *resourcemodel.Resources
+	Sharings  *resourcemodel.Sharings
+	Claims    *resourcemodel.Claims
 }
 
 type DeleteResourceQuery struct {
-	ResourceKey model.ResourceKey
+	ResourceKey resourcemodel.ResourceKey
 }
 
 type DeleteResourceResponse struct {
@@ -80,11 +81,11 @@ type DeleteResourceResponse struct {
 }
 
 type CreateResourceQuery struct {
-	Resource   *Resource
-	SharedWith *model.GroupKeys
+	Resource   *resourcemodel.Resource
+	SharedWith *groupmodel.GroupKeys
 }
 
-func NewCreateResourceQuery(resource *Resource, sharedWith *model.GroupKeys) *CreateResourceQuery {
+func NewCreateResourceQuery(resource *resourcemodel.Resource, sharedWith *groupmodel.GroupKeys) *CreateResourceQuery {
 	return &CreateResourceQuery{
 		Resource:   resource,
 		SharedWith: sharedWith,
@@ -96,11 +97,11 @@ type CreateResourceResponse struct {
 }
 
 type UpdateResourceQuery struct {
-	Resource   *Resource
-	SharedWith *model.GroupKeys
+	Resource   *resourcemodel.Resource
+	SharedWith *groupmodel.GroupKeys
 }
 
-func NewUpdateResourceQuery(resource *Resource, sharedWith *model.GroupKeys) *UpdateResourceQuery {
+func NewUpdateResourceQuery(resource *resourcemodel.Resource, sharedWith *groupmodel.GroupKeys) *UpdateResourceQuery {
 	return &UpdateResourceQuery{
 		Resource:   resource,
 		SharedWith: sharedWith,

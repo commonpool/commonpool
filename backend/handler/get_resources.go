@@ -1,10 +1,11 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/model"
-	group2 "github.com/commonpool/backend/pkg/group"
+	groupmodel "github.com/commonpool/backend/pkg/group/model"
 	"github.com/commonpool/backend/pkg/handler"
 	resource2 "github.com/commonpool/backend/pkg/resource"
+	model3 "github.com/commonpool/backend/pkg/resource/model"
+	usermodel "github.com/commonpool/backend/pkg/user/model"
 	"github.com/commonpool/backend/pkg/utils"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
@@ -44,22 +45,22 @@ func (h *Handler) SearchResources(c echo.Context) error {
 
 	searchQuery := strings.TrimSpace(c.QueryParam("query"))
 
-	resourceType, err := resource2.ParseResourceType(c.QueryParam("type"))
+	resourceType, err := model3.ParseResourceType(c.QueryParam("type"))
 	if err != nil {
 		return err
 	}
 
-	resourceSubType, err := resource2.ParseResourceSubType(c.QueryParam("sub_type"))
+	resourceSubType, err := model3.ParseResourceSubType(c.QueryParam("sub_type"))
 	if err != nil {
 		return err
 	}
 
 	createdBy := c.QueryParam("created_by")
 
-	var groupKey *model.GroupKey
+	var groupKey *groupmodel.GroupKey
 	groupStr := c.QueryParam("group_id")
 	if groupStr != "" {
-		groupKey2, err := model.ParseGroupKey(groupStr)
+		groupKey2, err := groupmodel.ParseGroupKey(groupStr)
 		if err != nil {
 			return err
 		}
@@ -77,12 +78,12 @@ func (h *Handler) SearchResources(c echo.Context) error {
 		return err
 	}
 
-	groupMap := map[model.GroupKey]*group2.Group{}
+	groupMap := map[groupmodel.GroupKey]*groupmodel.Group{}
 	for _, g := range getGroupsResponse.Items {
 		groupMap[g.GetKey()] = g
 	}
 
-	var createdByKeys []model.UserKey
+	var createdByKeys []usermodel.UserKey
 	for _, item := range resources.Resources.Items {
 		createdByKeys = append(createdByKeys, item.GetOwnerKey())
 	}
@@ -96,18 +97,18 @@ func (h *Handler) SearchResources(c echo.Context) error {
 	var resourcesResponse = make([]web.Resource, len(resourceItems))
 	for i, item := range resourceItems {
 
-		createdBy, err := createdByUsers.GetUser(model.NewUserKey(item.CreatedBy))
+		createdBy, err := createdByUsers.GetUser(usermodel.NewUserKey(item.CreatedBy))
 		if err != nil {
 			return err
 		}
 
-		var groups []*group2.Group
+		var groups []*groupmodel.Group
 		sharings := resources.Sharings.GetSharingsForResource(item.GetKey())
 		for _, groupKey := range sharings.GetAllGroupKeys().Items {
 			groups = append(groups, groupMap[groupKey])
 		}
 
-		resourcesResponse[i] = NewResourceResponse(item, createdBy.Username, createdBy.ID, group2.NewGroups(groups))
+		resourcesResponse[i] = NewResourceResponse(item, createdBy.Username, createdBy.ID, groupmodel.NewGroups(groups))
 	}
 
 	// return

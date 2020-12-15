@@ -2,41 +2,44 @@ package chat
 
 import (
 	ctx "context"
-	"github.com/commonpool/backend/model"
+	chatmodel "github.com/commonpool/backend/pkg/chat/model"
+	groupmodel "github.com/commonpool/backend/pkg/group/model"
+	resourcemodel "github.com/commonpool/backend/pkg/resource/model"
+	usermodel "github.com/commonpool/backend/pkg/user/model"
 	"golang.org/x/net/context"
 	"time"
 )
 
 type Service interface {
-	GetMessages(ctx context.Context, channel model.ChannelKey, before time.Time, take int) (*GetMessagesResponse, error)
-	GetSubscriptionsForUser(ctx context.Context, take int, skip int) (*ChannelSubscriptions, error)
-	GetChannel(ctx context.Context, channelKey model.ChannelKey) (*Channel, error)
-	GetMessage(ctx context.Context, messageKey model.MessageKey) (*Message, error)
+	GetMessages(ctx context.Context, channel chatmodel.ChannelKey, before time.Time, take int) (*GetMessagesResponse, error)
+	GetSubscriptionsForUser(ctx context.Context, take int, skip int) (*chatmodel.ChannelSubscriptions, error)
+	GetChannel(ctx context.Context, channelKey chatmodel.ChannelKey) (*chatmodel.Channel, error)
+	GetMessage(ctx context.Context, messageKey chatmodel.MessageKey) (*chatmodel.Message, error)
 	NotifyUserInterestedAboutResource(ctx ctx.Context, request *NotifyUserInterestedAboutResource) (*NotifyUserInterestedAboutResourceResponse, error)
-	CreateChannel(ctx ctx.Context, channelKey model.ChannelKey, channelType ChannelType) (*Channel, error)
-	SubscribeToChannel(ctx ctx.Context, channelSubscriptionKey model.ChannelSubscriptionKey, name string) (*ChannelSubscription, error)
-	UnsubscribeFromChannel(ctx context.Context, channelSubscriptionKey model.ChannelSubscriptionKey) error
+	CreateChannel(ctx ctx.Context, channelKey chatmodel.ChannelKey, channelType chatmodel.ChannelType) (*chatmodel.Channel, error)
+	SubscribeToChannel(ctx ctx.Context, channelSubscriptionKey chatmodel.ChannelSubscriptionKey, name string) (*chatmodel.ChannelSubscription, error)
+	UnsubscribeFromChannel(ctx context.Context, channelSubscriptionKey chatmodel.ChannelSubscriptionKey) error
 	DeleteGroupChannel(ctx ctx.Context, request *DeleteGroupChannel) (*DeleteGroupChannelResponse, error)
 	SendConversationMessage(ctx ctx.Context, request *SendConversationMessage) (*SendConversationMessageResponse, error)
-	SendMessage(ctx context.Context, message *Message) error
+	SendMessage(ctx context.Context, message *chatmodel.Message) error
 	SendGroupMessage(ctx ctx.Context, request *SendGroupMessage) (*SendGroupMessageResponse, error)
-	CreateUserExchange(ctx context.Context, userKey model.UserKey) (string, error)
-	GetUserExchangeName(ctx context.Context, userKey model.UserKey) string
-	GetUserLink(userKey model.UserKey) string
-	GetGroupLink(groupKey model.GroupKey) string
-	GetResourceLink(resource model.ResourceKey) string
+	CreateUserExchange(ctx context.Context, userKey usermodel.UserKey) (string, error)
+	GetUserExchangeName(ctx context.Context, userKey usermodel.UserKey) string
+	GetUserLink(userKey usermodel.UserKey) string
+	GetGroupLink(groupKey groupmodel.GroupKey) string
+	GetResourceLink(resource resourcemodel.ResourceKey) string
 }
 
 type NotifyUserInterestedAboutResource struct {
-	InterestedUser model.UserKey
-	ResourceKey    model.ResourceKey
+	InterestedUser usermodel.UserKey
+	ResourceKey    resourcemodel.ResourceKey
 	Message        string
 }
 type NotifyUserInterestedAboutResourceResponse struct {
-	ChannelKey model.ChannelKey
+	ChannelKey chatmodel.ChannelKey
 }
 
-func NewNotifyUserInterestedAboutResource(interestedUser model.UserKey, resourceKey model.ResourceKey, message string) *NotifyUserInterestedAboutResource {
+func NewNotifyUserInterestedAboutResource(interestedUser usermodel.UserKey, resourceKey resourcemodel.ResourceKey, message string) *NotifyUserInterestedAboutResource {
 	return &NotifyUserInterestedAboutResource{
 		InterestedUser: interestedUser,
 		ResourceKey:    resourceKey,
@@ -45,39 +48,39 @@ func NewNotifyUserInterestedAboutResource(interestedUser model.UserKey, resource
 }
 
 type GetOrCreateConversationChannelResponse struct {
-	Channel *Channel
+	Channel *chatmodel.Channel
 }
 
 type DeleteGroupChannel struct {
-	GroupKey model.GroupKey
+	GroupKey groupmodel.GroupKey
 }
 
 type DeleteGroupChannelResponse struct {
-	Channel *Channel
+	Channel *chatmodel.Channel
 }
 
 type SendConversationMessage struct {
-	FromUserKey          model.UserKey
+	FromUserKey          usermodel.UserKey
 	FromUserName         string
-	ToUserKeys           *model.UserKeys
+	ToUserKeys           *usermodel.UserKeys
 	Text                 string
-	Blocks               []Block
-	Attachments          []Attachment
-	OnlyVisibleToUserKey *model.UserKey
+	Blocks               []chatmodel.Block
+	Attachments          []chatmodel.Attachment
+	OnlyVisibleToUserKey *usermodel.UserKey
 }
 
 type SendConversationMessageResponse struct {
-	Message *Message
+	Message *chatmodel.Message
 }
 
 func NewSendConversationMessage(
-	fromUserKey model.UserKey,
+	fromUserKey usermodel.UserKey,
 	fromUserName string,
-	toUserKeys *model.UserKeys,
+	toUserKeys *usermodel.UserKeys,
 	text string,
-	blocks []Block,
-	attachments []Attachment,
-	onlyVisibleToUserKey *model.UserKey) *SendConversationMessage {
+	blocks []chatmodel.Block,
+	attachments []chatmodel.Attachment,
+	onlyVisibleToUserKey *usermodel.UserKey) *SendConversationMessage {
 	return &SendConversationMessage{
 		FromUserKey:          fromUserKey,
 		FromUserName:         fromUserName,
@@ -90,20 +93,20 @@ func NewSendConversationMessage(
 }
 
 type SendGroupMessage struct {
-	GroupKey             model.GroupKey
-	FromUserKey          model.UserKey
+	GroupKey             groupmodel.GroupKey
+	FromUserKey          usermodel.UserKey
 	FromUserName         string
 	Text                 string
-	Blocks               []Block
-	Attachments          []Attachment
-	OnlyVisibleToUserKey *model.UserKey
+	Blocks               []chatmodel.Block
+	Attachments          []chatmodel.Attachment
+	OnlyVisibleToUserKey *usermodel.UserKey
 }
 
 type SendGroupMessageResponse struct {
-	Channel *Channel
+	Channel *chatmodel.Channel
 }
 
-func NewSendGroupMessage(groupKey model.GroupKey, fromUserKey model.UserKey, fromUserName string, text string, blocks []Block, attachments []Attachment, onlyVisibleToUserKey *model.UserKey) *SendGroupMessage {
+func NewSendGroupMessage(groupKey groupmodel.GroupKey, fromUserKey usermodel.UserKey, fromUserName string, text string, blocks []chatmodel.Block, attachments []chatmodel.Attachment, onlyVisibleToUserKey *usermodel.UserKey) *SendGroupMessage {
 	return &SendGroupMessage{
 		GroupKey:             groupKey,
 		FromUserKey:          fromUserKey,

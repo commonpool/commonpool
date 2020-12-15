@@ -1,22 +1,23 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/exceptions"
 	group2 "github.com/commonpool/backend/pkg/group"
+	groupmodel "github.com/commonpool/backend/pkg/group/model"
 	"github.com/commonpool/backend/pkg/handler"
-	resource2 "github.com/commonpool/backend/pkg/resource"
+	model3 "github.com/commonpool/backend/pkg/resource/model"
+	usermodel "github.com/commonpool/backend/pkg/user/model"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 	"net/http"
 )
 
-func (h *Handler) ensureResourceIsSharedWithGroupsTheUserIsActiveMemberOf(c echo.Context, loggedInUserKey model.UserKey, sharedWithGroups *model.GroupKeys) (error, bool) {
+func (h *Handler) ensureResourceIsSharedWithGroupsTheUserIsActiveMemberOf(c echo.Context, loggedInUserKey usermodel.UserKey, sharedWithGroups *groupmodel.GroupKeys) (error, bool) {
 
 	ctx, l := handler.GetEchoContext(c, "ensureResourceIsSharedWithGroupsTheUserIsActiveMemberOf")
 
-	var membershipStatus = group2.ApprovedMembershipStatus
+	var membershipStatus = groupmodel.ApprovedMembershipStatus
 
 	userMemberships, err := h.groupService.GetUserMemberships(ctx, group2.NewGetMembershipsForUserRequest(loggedInUserKey, &membershipStatus))
 	if err != nil {
@@ -34,20 +35,20 @@ func (h *Handler) ensureResourceIsSharedWithGroupsTheUserIsActiveMemberOf(c echo
 	return nil, false
 }
 
-func (h *Handler) parseGroupKeys(c echo.Context, sharedWith []web.InputResourceSharing) (*model.GroupKeys, error, bool) {
-	sharedWithGroupKeys := make([]model.GroupKey, len(sharedWith))
+func (h *Handler) parseGroupKeys(c echo.Context, sharedWith []web.InputResourceSharing) (*groupmodel.GroupKeys, error, bool) {
+	sharedWithGroupKeys := make([]groupmodel.GroupKey, len(sharedWith))
 	for i := range sharedWith {
 		groupKeyStr := sharedWith[i].GroupID
-		groupKey, err := model.ParseGroupKey(groupKeyStr)
+		groupKey, err := groupmodel.ParseGroupKey(groupKeyStr)
 		if err != nil {
 			return nil, c.String(http.StatusBadRequest, "invalid group key : "+groupKeyStr), true
 		}
 		sharedWithGroupKeys[i] = groupKey
 	}
-	return model.NewGroupKeys(sharedWithGroupKeys), nil, false
+	return groupmodel.NewGroupKeys(sharedWithGroupKeys), nil, false
 }
 
-func NewResourceResponse(res *resource2.Resource, creatorUsername string, creatorId string, sharedWithGroups *group2.Groups) web.Resource {
+func NewResourceResponse(res *model3.Resource, creatorUsername string, creatorId string, sharedWithGroups *groupmodel.Groups) web.Resource {
 
 	//goland:noinspection GoPreferNilSlice
 	var sharings = []web.OutputResourceSharing{}

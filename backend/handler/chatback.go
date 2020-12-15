@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/model"
 	model2 "github.com/commonpool/backend/pkg/chat/handler/model"
 	"github.com/commonpool/backend/pkg/handler"
+	tradingmodel "github.com/commonpool/backend/pkg/trading/model"
 	"github.com/labstack/echo/v4"
 	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
@@ -51,7 +51,7 @@ func (h *Handler) HandleChatbackConfirmServiceProvided(c echo.Context, req model
 	}
 
 	// converting item id to item key
-	offerItemKey, err := model.ParseOfferItemKey(*offerItemId)
+	offerItemKey, err := tradingmodel.ParseOfferItemKey(*offerItemId)
 	if err != nil {
 		l.Error("could not get offer item id from request", zap.Error(err))
 		return c.String(http.StatusBadRequest, err.Error())
@@ -73,7 +73,7 @@ func (h *Handler) HandleChatbackConfirmResourceTransferred(c echo.Context, req m
 	}
 
 	// converting item id to item key
-	offerItemKey, err := model.ParseOfferItemKey(*offerItemId)
+	offerItemKey, err := tradingmodel.ParseOfferItemKey(*offerItemId)
 	if err != nil {
 		l.Error("could not get offer item id from request", zap.Error(err))
 		return c.String(http.StatusBadRequest, err.Error())
@@ -95,7 +95,7 @@ func (h *Handler) HandleChatbackConfirmResourceBorrowed(c echo.Context, req mode
 	}
 
 	// converting item id to item key
-	offerItemKey, err := model.ParseOfferItemKey(*offerItemId)
+	offerItemKey, err := tradingmodel.ParseOfferItemKey(*offerItemId)
 	if err != nil {
 		l.Error("could not get offer item id from request", zap.Error(err))
 		return c.String(http.StatusBadRequest, err.Error())
@@ -117,7 +117,7 @@ func (h *Handler) HandleChatbackConfirmResourceBorrowedReturned(c echo.Context, 
 	}
 
 	// converting item id to item key
-	offerItemKey, err := model.ParseOfferItemKey(*offerItemId)
+	offerItemKey, err := tradingmodel.ParseOfferItemKey(*offerItemId)
 	if err != nil {
 		l.Error("could not get offer item id from request", zap.Error(err))
 		return c.String(http.StatusBadRequest, err.Error())
@@ -143,7 +143,7 @@ func (h *Handler) HandleChatbackOfferAccepted(c echo.Context, req model2.Interac
 		return c.String(http.StatusBadRequest, err.Error())
 	}
 
-	err = h.tradingService.AcceptOffer(ctx, model.NewOfferKey(uid))
+	err = h.tradingService.AcceptOffer(ctx, tradingmodel.NewOfferKey(uid))
 	if err != nil {
 		l.Error("could not accept offer", zap.Error(err))
 		return c.JSON(http.StatusInternalServerError, err.Error())

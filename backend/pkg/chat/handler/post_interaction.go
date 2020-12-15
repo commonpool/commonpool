@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/auth"
 	model2 "github.com/commonpool/backend/pkg/chat/handler/model"
+	chatmodel "github.com/commonpool/backend/pkg/chat/model"
 	"github.com/commonpool/backend/pkg/handler"
+	usermodel "github.com/commonpool/backend/pkg/user/model"
 	"github.com/labstack/echo/v4"
 	"github.com/satori/go.uuid"
 	"net/http"
@@ -32,7 +33,7 @@ func (chatHandler *ChatHandler) SubmitInteraction(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	loggedInUserKey := model.NewUserKey(loggedInUser.Subject)
+	loggedInUserKey := usermodel.NewUserKey(loggedInUser.Subject)
 
 	req := model2.SubmitInteractionRequest{}
 	if err := c.Bind(&req); err != nil {
@@ -47,7 +48,7 @@ func (chatHandler *ChatHandler) SubmitInteraction(c echo.Context) error {
 		return err
 	}
 
-	message, err := chatHandler.chatService.GetMessage(ctx, model.NewMessageKey(uid))
+	message, err := chatHandler.chatService.GetMessage(ctx, chatmodel.NewMessageKey(uid))
 	if err != nil {
 		return err
 	}

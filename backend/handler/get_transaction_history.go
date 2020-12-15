@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/handler"
+	usermodel "github.com/commonpool/backend/pkg/user/model"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -17,18 +17,18 @@ func (h *Handler) GetTradingHistory(c echo.Context) error {
 		return err
 	}
 
-	var userKeys []model.UserKey
+	var userKeys []usermodel.UserKey
 	for _, userId := range req.UserIDs {
-		userKey := model.NewUserKey(userId)
+		userKey := usermodel.NewUserKey(userId)
 		userKeys = append(userKeys, userKey)
 	}
 
-	tradingHistory, err := h.tradingService.GetTradingHistory(ctx, model.NewUserKeys(userKeys))
+	tradingHistory, err := h.tradingService.GetTradingHistory(ctx, usermodel.NewUserKeys(userKeys))
 	if err != nil {
 		return err
 	}
 
-	tradingUserKeys := model.NewUserKeys([]model.UserKey{})
+	tradingUserKeys := usermodel.NewUserKeys([]usermodel.UserKey{})
 	for _, entry := range tradingHistory {
 		tradingUserKeys = tradingUserKeys.Append(entry.ToUserID)
 		tradingUserKeys = tradingUserKeys.Append(entry.FromUserID)

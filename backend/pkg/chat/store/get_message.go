@@ -2,11 +2,10 @@ package store
 
 import (
 	"context"
-	"github.com/commonpool/backend/model"
-	"github.com/commonpool/backend/pkg/chat"
+	chatmodel "github.com/commonpool/backend/pkg/chat/model"
 )
 
-func (cs *ChatStore) GetMessage(ctx context.Context, messageKey model.MessageKey) (*chat.Message, error) {
+func (cs *ChatStore) GetMessage(ctx context.Context, messageKey chatmodel.MessageKey) (*chatmodel.Message, error) {
 
 	var message Message
 	err := cs.db.

@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/model"
+	tradingmodel "github.com/commonpool/backend/pkg/trading/model"
 	"github.com/labstack/echo/v4"
 	"github.com/satori/go.uuid"
 	"net/http"
@@ -17,7 +17,7 @@ func (h *Handler) HandleGetOffer(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	offerKey := model.NewOfferKey(offerId)
+	offerKey := tradingmodel.NewOfferKey(offerId)
 
 	offer, err := h.getWebOffer(offerKey)
 	if err != nil {

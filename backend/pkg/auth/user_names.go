@@ -2,12 +2,12 @@ package auth
 
 import (
 	"fmt"
-	"github.com/commonpool/backend/model"
+	usermodel "github.com/commonpool/backend/pkg/user/model"
 )
 
-type UserNames map[model.UserKey]string
+type UserNames map[usermodel.UserKey]string
 
-func (u *UserNames) GetName(userKey model.UserKey) (string, error) {
+func (u *UserNames) GetName(userKey usermodel.UserKey) (string, error) {
 	userName, ok := (*u)[userKey]
 	if !ok {
 		return "", fmt.Errorf("name for '" + userKey.String() + "' not found")

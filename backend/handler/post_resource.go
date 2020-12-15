@@ -1,10 +1,10 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/handler"
-	resource2 "github.com/commonpool/backend/pkg/resource"
+	"github.com/commonpool/backend/pkg/resource"
+	resourcemodel "github.com/commonpool/backend/pkg/resource/model"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"github.com/satori/go.uuid"
@@ -60,8 +60,8 @@ func (h *Handler) CreateResource(c echo.Context) error {
 	}
 
 	newResource := req.Resource
-	res := resource2.NewResource(
-		model.NewResourceKey(uuid.NewV4()),
+	res := resourcemodel.NewResource(
+		resourcemodel.NewResourceKey(uuid.NewV4()),
 		newResource.Type,
 		newResource.SubType,
 		loggedInUser.Subject,
@@ -71,12 +71,12 @@ func (h *Handler) CreateResource(c echo.Context) error {
 		newResource.ValueInHoursTo,
 	)
 
-	createResourceResponse := h.resourceStore.Create(resource2.NewCreateResourceQuery(&res, sharedWithGroupKeys))
+	createResourceResponse := h.resourceStore.Create(resource.NewCreateResourceQuery(&res, sharedWithGroupKeys))
 	if createResourceResponse.Error != nil {
 		return createResourceResponse.Error
 	}
 
-	getResourceResponse, err := h.resourceStore.GetByKey(ctx, resource2.NewGetResourceByKeyQuery(res.GetKey()))
+	getResourceResponse, err := h.resourceStore.GetByKey(ctx, resource.NewGetResourceByKeyQuery(res.GetKey()))
 	if err != nil {
 		return err
 	}

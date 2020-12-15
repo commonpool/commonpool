@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/chat"
+	chatmodel "github.com/commonpool/backend/pkg/chat/model"
 	"github.com/commonpool/backend/pkg/exceptions"
 	group2 "github.com/commonpool/backend/pkg/group"
+	groupmodel "github.com/commonpool/backend/pkg/group/model"
 	"github.com/commonpool/backend/pkg/mq"
 )
 
@@ -54,7 +55,7 @@ func (g GroupService) CreateOrAcceptInvitation(ctx context.Context, request *gro
 
 	} else {
 
-		loggedInUserMembershipKey := model.NewMembershipKey(membershipKey.GroupKey, userSession.GetUserKey())
+		loggedInUserMembershipKey := groupmodel.NewMembershipKey(membershipKey.GroupKey, userSession.GetUserKey())
 		loggedInUserMembership, err := g.groupStore.GetMembership(ctx, loggedInUserMembershipKey)
 		if err != nil {
 			return nil, exceptions.ErrMembershipPartyUnauthorized
@@ -104,7 +105,9 @@ func (g GroupService) CreateOrAcceptInvitation(ctx context.Context, request *gro
 			return nil, err
 		}
 
-		channelSubscriptionKey := model.NewChannelSubscriptionKey(acceptedMembership.GetGroupKey().GetChannelKey(), acceptedMembership.GetUserKey())
+		channelKey := chatmodel.GetChannelKeyForGroup(request.MembershipKey.GroupKey)
+
+		channelSubscriptionKey := chatmodel.NewChannelSubscriptionKey(channelKey, acceptedMembership.GetUserKey())
 		_, err = g.chatService.SubscribeToChannel(ctx, channelSubscriptionKey, grp.Name)
 		if err != nil {
 			return nil, err
@@ -115,7 +118,6 @@ func (g GroupService) CreateOrAcceptInvitation(ctx context.Context, request *gro
 			return nil, err
 		}
 
-		channelKey := request.MembershipKey.GroupKey.GetChannelKey()
 		err = amqpChannel.ExchangeBind(ctx, membershipKey.UserKey.GetExchangeName(), "", mq.WebsocketMessagesExchange, false, map[string]interface{}{
 			"event_type": "chat.message",
 			"channel_id": channelKey.String(),
@@ -126,12 +128,12 @@ func (g GroupService) CreateOrAcceptInvitation(ctx context.Context, request *gro
 		}
 
 		text := fmt.Sprintf("%s has joined #%s", usernameJoiningGroup, grp.Name)
-		message := chat.NewContextBlock([]chat.BlockElement{
-			chat.NewMarkdownObject(text)},
+		message := chatmodel.NewContextBlock([]chatmodel.BlockElement{
+			chatmodel.NewMarkdownObject(text)},
 			nil,
 		)
 
-		_, err = g.chatService.SendGroupMessage(ctx, chat.NewSendGroupMessage(request.MembershipKey.GroupKey, membershipKey.UserKey, usernameJoiningGroup, text, []chat.Block{*message}, []chat.Attachment{}, nil))
+		_, err = g.chatService.SendGroupMessage(ctx, chat.NewSendGroupMessage(request.MembershipKey.GroupKey, membershipKey.UserKey, usernameJoiningGroup, text, []chatmodel.Block{*message}, []chatmodel.Attachment{}, nil))
 		if err != nil {
 			return nil, err
 		}

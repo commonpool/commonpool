@@ -2,9 +2,9 @@ package service
 
 import (
 	"fmt"
-	"github.com/commonpool/backend/model"
+	groupmodel "github.com/commonpool/backend/pkg/group/model"
 )
 
-func (c ChatService) GetGroupLink(groupKey model.GroupKey) string {
+func (c ChatService) GetGroupLink(groupKey groupmodel.GroupKey) string {
 	return fmt.Sprintf("<commonpool-group id='%s'><commonpool-group>", groupKey.String())
 }

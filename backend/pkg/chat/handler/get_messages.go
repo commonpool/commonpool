@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/model"
 	model2 "github.com/commonpool/backend/pkg/chat/handler/model"
+	"github.com/commonpool/backend/pkg/chat/model"
 	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/utils"

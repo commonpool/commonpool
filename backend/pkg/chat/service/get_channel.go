@@ -2,10 +2,9 @@ package service
 
 import (
 	"context"
-	"github.com/commonpool/backend/model"
-	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/chat/model"
 )
 
-func (c ChatService) GetChannel(ctx context.Context, channelKey model.ChannelKey) (*chat.Channel, error) {
+func (c ChatService) GetChannel(ctx context.Context, channelKey model.ChannelKey) (*model.Channel, error) {
 	return c.chatStore.GetChannel(ctx, channelKey)
 }

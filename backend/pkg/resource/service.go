@@ -1,7 +1,9 @@
 package resource
 
-import "github.com/commonpool/backend/model"
+import (
+	resourcemodel "github.com/commonpool/backend/pkg/resource/model"
+)
 
 type Service interface {
-	GetResourcesByKeys(resourceKeys *model.ResourceKeys) (*Resources, error)
+	GetResourcesByKeys(resourceKeys *resourcemodel.ResourceKeys) (*resourcemodel.Resources, error)
 }

@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/model"
+	groupmodel "github.com/commonpool/backend/pkg/group/model"
 	"github.com/commonpool/backend/pkg/handler"
-	trading2 "github.com/commonpool/backend/pkg/trading"
+	tradingmodel "github.com/commonpool/backend/pkg/trading/model"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"github.com/satori/go.uuid"
@@ -25,9 +25,9 @@ func (h *Handler) HandleSendOffer(c echo.Context) error {
 		return err
 	}
 
-	var tradingOfferItems []trading2.OfferItem
+	var tradingOfferItems []tradingmodel.OfferItem
 	for _, tradingOfferItem := range req.Offer.Items {
-		itemKey := model.NewOfferItemKey(uuid.NewV4())
+		itemKey := tradingmodel.NewOfferItemKey(uuid.NewV4())
 		tradingOfferItem, err := mapNewOfferItem(tradingOfferItem, itemKey)
 		if err != nil {
 			return err
@@ -35,12 +35,12 @@ func (h *Handler) HandleSendOffer(c echo.Context) error {
 		tradingOfferItems = append(tradingOfferItems, tradingOfferItem)
 	}
 
-	groupKey, err := model.ParseGroupKey(req.Offer.GroupID)
+	groupKey, err := groupmodel.ParseGroupKey(req.Offer.GroupID)
 	if err != nil {
 		return err
 	}
 
-	offer, offerItems, err := h.tradingService.SendOffer(ctx, groupKey, trading2.NewOfferItems(tradingOfferItems), "")
+	offer, offerItems, err := h.tradingService.SendOffer(ctx, groupKey, tradingmodel.NewOfferItems(tradingOfferItems), "")
 	if err != nil {
 		return err
 	}

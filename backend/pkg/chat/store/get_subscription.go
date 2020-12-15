@@ -3,11 +3,12 @@ package store
 import (
 	"context"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/chat/model"
 )
 
-func (cs *ChatStore) GetSubscription(ctx context.Context, request *chat.GetSubscription) (*chat.ChannelSubscription, error) {
+func (cs *ChatStore) GetSubscription(ctx context.Context, request *chat.GetSubscription) (*model.ChannelSubscription, error) {
 
-	subscription := chat.ChannelSubscription{}
+	subscription := model.ChannelSubscription{}
 
 	err := cs.db.First(&subscription, "channel_id = ? and user_id = ?",
 		request.SubscriptionKey.ChannelKey.String(),

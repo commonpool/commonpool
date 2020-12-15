@@ -2,17 +2,17 @@ package user
 
 import (
 	"fmt"
-	"github.com/commonpool/backend/model"
+	usermodel "github.com/commonpool/backend/pkg/user/model"
 )
 
 type Users struct {
-	Items   []*User
-	userMap map[model.UserKey]*User
+	Items   []*usermodel.User
+	userMap map[usermodel.UserKey]*usermodel.User
 }
 
-func NewUsers(u []*User) *Users {
-	var users []*User
-	var userMap = map[model.UserKey]*User{}
+func NewUsers(u []*usermodel.User) *Users {
+	var users []*usermodel.User
+	var userMap = map[usermodel.UserKey]*usermodel.User{}
 	for _, user := range u {
 		userKey := user.GetUserKey()
 		if _, ok := userMap[userKey]; ok {
@@ -22,7 +22,7 @@ func NewUsers(u []*User) *Users {
 		userMap[userKey] = user
 	}
 	if users == nil {
-		users = []*User{}
+		users = []*usermodel.User{}
 	}
 	return &Users{
 		Items:   users,
@@ -32,12 +32,12 @@ func NewUsers(u []*User) *Users {
 
 func NewEmptyUsers() *Users {
 	return &Users{
-		Items:   []*User{},
-		userMap: map[model.UserKey]*User{},
+		Items:   []*usermodel.User{},
+		userMap: map[usermodel.UserKey]*usermodel.User{},
 	}
 }
 
-func (u *Users) GetUser(key model.UserKey) (*User, error) {
+func (u *Users) GetUser(key usermodel.UserKey) (*usermodel.User, error) {
 	user, ok := u.userMap[key]
 	if !ok {
 		return nil, fmt.Errorf("user not found")
@@ -45,12 +45,12 @@ func (u *Users) GetUser(key model.UserKey) (*User, error) {
 	return user, nil
 }
 
-func (u *Users) Contains(user model.UserKey) bool {
+func (u *Users) Contains(user usermodel.UserKey) bool {
 	_, ok := u.userMap[user]
 	return ok
 }
 
-func (u *Users) Append(user *User) *Users {
+func (u *Users) Append(user *usermodel.User) *Users {
 	if u.Contains(user.GetUserKey()) {
 		return NewUsers(u.Items)
 	}
@@ -66,12 +66,12 @@ func (u *Users) AppendAll(users *Users) *Users {
 	return NewUsers(items)
 }
 
-func (u *Users) GetUserKeys() *model.UserKeys {
-	var userKeys []model.UserKey
+func (u *Users) GetUserKeys() *usermodel.UserKeys {
+	var userKeys []usermodel.UserKey
 	for _, item := range u.Items {
 		userKeys = append(userKeys, item.GetUserKey())
 	}
-	return model.NewUserKeys(userKeys)
+	return usermodel.NewUserKeys(userKeys)
 }
 
 func (u *Users) GetUserCount() int {

@@ -1,9 +1,10 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/model"
-	group2 "github.com/commonpool/backend/pkg/group"
+	"github.com/commonpool/backend/pkg/group"
+	groupmodel "github.com/commonpool/backend/pkg/group/model"
 	"github.com/commonpool/backend/pkg/handler"
+	usermodel "github.com/commonpool/backend/pkg/user/model"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -25,17 +26,17 @@ func (h *Handler) GetUserMemberships(c echo.Context) error {
 
 	ctx, _ := handler.GetEchoContext(c, "GetUserMemberships")
 
-	var membershipStatus = group2.AnyMembershipStatus()
+	var membershipStatus = groupmodel.AnyMembershipStatus()
 	statusStr := c.QueryParam("status")
 	if statusStr != "" {
-		ms, err := group2.ParseMembershipStatus(statusStr)
+		ms, err := groupmodel.ParseMembershipStatus(statusStr)
 		if err != nil {
 			return err
 		}
 		membershipStatus = &ms
 	}
 
-	memberships, err := h.groupService.GetUserMemberships(ctx, group2.NewGetMembershipsForUserRequest(model.NewUserKey(c.Param("id")), membershipStatus))
+	memberships, err := h.groupService.GetUserMemberships(ctx, group.NewGetMembershipsForUserRequest(usermodel.NewUserKey(c.Param("id")), membershipStatus))
 	if err != nil {
 		return err
 	}

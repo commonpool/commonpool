@@ -2,14 +2,13 @@ package service
 
 import (
 	"context"
-	"github.com/commonpool/backend/model"
-	group2 "github.com/commonpool/backend/pkg/group"
+	groupmodel "github.com/commonpool/backend/pkg/group/model"
 )
 
-func (g GroupService) GetGroupsByKeys(ctx context.Context, groupKeys *model.GroupKeys) (*group2.Groups, error) {
+func (g GroupService) GetGroupsByKeys(ctx context.Context, groupKeys *groupmodel.GroupKeys) (*groupmodel.Groups, error) {
 
 	if groupKeys == nil || len(groupKeys.Items) == 0 {
-		return group2.NewGroups([]*group2.Group{}), nil
+		return groupmodel.NewGroups([]*groupmodel.Group{}), nil
 	}
 
 	groups, err := g.groupStore.GetGroupsByKeys(ctx, groupKeys)

@@ -2,11 +2,13 @@ package model
 
 import (
 	"github.com/commonpool/backend/pkg/exceptions"
+	groupmodel "github.com/commonpool/backend/pkg/group/model"
+	usermodel "github.com/commonpool/backend/pkg/user/model"
 )
 
 type Target struct {
-	UserKey  *UserKey
-	GroupKey *GroupKey
+	UserKey  *usermodel.UserKey
+	GroupKey *groupmodel.GroupKey
 	Type     TargetType
 }
 
@@ -31,20 +33,20 @@ func (t Target) IsForUser() bool {
 	return t.Type == UserTarget
 }
 
-func (t Target) GetGroupKey() GroupKey {
+func (t Target) GetGroupKey() groupmodel.GroupKey {
 	return *t.GroupKey
 }
-func (t Target) GetUserKey() UserKey {
+func (t Target) GetUserKey() usermodel.UserKey {
 	return *t.UserKey
 }
 
-func NewUserTarget(userKey UserKey) *Target {
+func NewUserTarget(userKey usermodel.UserKey) *Target {
 	return &Target{
 		UserKey: &userKey,
 		Type:    UserTarget,
 	}
 }
-func NewGroupTarget(groupKey GroupKey) *Target {
+func NewGroupTarget(groupKey groupmodel.GroupKey) *Target {
 	return &Target{
 		GroupKey: &groupKey,
 		Type:     GroupTarget,

@@ -3,11 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/chat"
+	chatmodel "github.com/commonpool/backend/pkg/chat/model"
 	"github.com/commonpool/backend/pkg/exceptions"
 	resource3 "github.com/commonpool/backend/pkg/resource"
+	usermodel "github.com/commonpool/backend/pkg/user/model"
 )
 
 // NotifyUserInterestedAboutResource will create a channel between two users if it doesn't exist,
@@ -34,17 +35,17 @@ func (c ChatService) NotifyUserInterestedAboutResource(ctx context.Context, requ
 		return nil, err
 	}
 
-	userKeys := model.NewUserKeys([]model.UserKey{loggedInUserKey, resourceOwnerKey})
+	userKeys := usermodel.NewUserKeys([]usermodel.UserKey{loggedInUserKey, resourceOwnerKey})
 
 	_, err = c.SendConversationMessage(ctx, chat.NewSendConversationMessage(
 		loggedInUserKey,
 		loggedInUser.Username,
 		userKeys,
 		request.Message,
-		[]chat.Block{
-			*chat.NewHeaderBlock(chat.NewMarkdownObject("Someone is interested in your stuff!"), nil),
-			*chat.NewContextBlock([]chat.BlockElement{
-				chat.NewMarkdownObject(
+		[]chatmodel.Block{
+			*chatmodel.NewHeaderBlock(chatmodel.NewMarkdownObject("Someone is interested in your stuff!"), nil),
+			*chatmodel.NewContextBlock([]chatmodel.BlockElement{
+				chatmodel.NewMarkdownObject(
 					fmt.Sprintf("%s is interested by your post %s.",
 						c.GetUserLink(loggedInUserKey),
 						c.GetResourceLink(request.ResourceKey),
@@ -52,7 +53,7 @@ func (c ChatService) NotifyUserInterestedAboutResource(ctx context.Context, requ
 				),
 			}, nil),
 		},
-		[]chat.Attachment{},
+		[]chatmodel.Attachment{},
 		&resourceOwnerKey,
 	))
 	if err != nil {
@@ -64,8 +65,8 @@ func (c ChatService) NotifyUserInterestedAboutResource(ctx context.Context, requ
 		loggedInUser.Username,
 		userKeys,
 		request.Message,
-		[]chat.Block{},
-		[]chat.Attachment{},
+		[]chatmodel.Block{},
+		[]chatmodel.Attachment{},
 		nil,
 	))
 

@@ -1,9 +1,10 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/model"
 	group2 "github.com/commonpool/backend/pkg/group"
+	groupmodel "github.com/commonpool/backend/pkg/group/model"
 	"github.com/commonpool/backend/pkg/handler"
+	usermodel "github.com/commonpool/backend/pkg/user/model"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -28,19 +29,19 @@ func (h *Handler) CreateOrAcceptMembership(c echo.Context) error {
 		return err
 	}
 
-	groupKey, err := model.ParseGroupKey(req.GroupID)
+	groupKey, err := groupmodel.ParseGroupKey(req.GroupID)
 	if err != nil {
 		return err
 	}
-	userKey := model.NewUserKey(req.UserID)
+	userKey := usermodel.NewUserKey(req.UserID)
 
-	membershipKey := model.NewMembershipKey(groupKey, userKey)
+	membershipKey := groupmodel.NewMembershipKey(groupKey, userKey)
 	acceptInvitationResponse, err := h.groupService.CreateOrAcceptInvitation(ctx, group2.NewAcceptInvitationRequest(membershipKey))
 	if err != nil {
 		return err
 	}
 
-	memberships := group2.NewMemberships([]*group2.Membership{acceptInvitationResponse.Membership})
+	memberships := groupmodel.NewMemberships([]*groupmodel.Membership{acceptInvitationResponse.Membership})
 
 	userNames, err := h.getUserNamesForMemberships(ctx, memberships)
 	if err != nil {

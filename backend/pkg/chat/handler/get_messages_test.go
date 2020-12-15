@@ -2,9 +2,9 @@ package handler
 
 import (
 	"context"
-	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/chat"
 	model2 "github.com/commonpool/backend/pkg/chat/handler/model"
+	"github.com/commonpool/backend/pkg/chat/model"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"time"
@@ -44,8 +44,8 @@ func (s *chatHandlerSuite) TestGetMessages() {
 	s.NewContext(http.MethodGet, "/api/v1/chat/messages?channel=abc&before=0", nil)
 	s.ChatService.GetMessagesFunc = func(ctx context.Context, channel model.ChannelKey, before time.Time, take int) (*chat.GetMessagesResponse, error) {
 		return &chat.GetMessagesResponse{
-			Messages: chat.Messages{
-				Items: []chat.Message{},
+			Messages: model.Messages{
+				Items: []model.Message{},
 			},
 			HasMore: false,
 		}, nil

@@ -3,7 +3,9 @@ package store
 import (
 	"fmt"
 	"github.com/commonpool/backend/model"
+	groupmodel "github.com/commonpool/backend/pkg/group/model"
 	store2 "github.com/commonpool/backend/pkg/group/store"
+	usermodel "github.com/commonpool/backend/pkg/user/model"
 	"github.com/commonpool/backend/pkg/user/store"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
 )
@@ -39,7 +41,7 @@ func MapOfferItemTarget(node neo4j.Node) (*model.Target, error) {
 	}
 
 	if isGroup {
-		groupKey, err := model.ParseGroupKey(node.Props()["id"].(string))
+		groupKey, err := groupmodel.ParseGroupKey(node.Props()["id"].(string))
 		if err != nil {
 			return nil, err
 		}
@@ -48,7 +50,7 @@ func MapOfferItemTarget(node neo4j.Node) (*model.Target, error) {
 			Type:     model.GroupTarget,
 		}, nil
 	}
-	userKey := model.NewUserKey(node.Props()["id"].(string))
+	userKey := usermodel.NewUserKey(node.Props()["id"].(string))
 	return &model.Target{
 		UserKey: &userKey,
 		Type:    model.UserTarget,

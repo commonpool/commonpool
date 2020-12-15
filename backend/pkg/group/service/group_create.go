@@ -2,13 +2,13 @@ package service
 
 import (
 	"context"
-	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/chat"
-	group2 "github.com/commonpool/backend/pkg/group"
+	chatmodel "github.com/commonpool/backend/pkg/chat/model"
+	group "github.com/commonpool/backend/pkg/group"
 )
 
-func (g GroupService) CreateGroup(ctx context.Context, request *group2.CreateGroupRequest) (*group2.CreateGroupResponse, error) {
+func (g GroupService) CreateGroup(ctx context.Context, request *group.CreateGroupRequest) (*group.CreateGroupResponse, error) {
 
 	userSession, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
@@ -20,23 +20,24 @@ func (g GroupService) CreateGroup(ctx context.Context, request *group2.CreateGro
 		return nil, err
 	}
 
-	channel, err := g.chatService.CreateChannel(ctx, request.GroupKey.GetChannelKey(), chat.GroupChannel)
+	channelKey := chatmodel.GetChannelKeyForGroup(request.GroupKey)
+	channel, err := g.chatService.CreateChannel(ctx, channelKey, chatmodel.GroupChannel)
 	if err != nil {
 		return nil, err
 	}
 
-	channelSubscriptionKey := model.NewChannelSubscriptionKey(channel.GetKey(), userSession.GetUserKey())
+	channelSubscriptionKey := chatmodel.NewChannelSubscriptionKey(channel.GetKey(), userSession.GetUserKey())
 	channelSubscription, err := g.chatService.SubscribeToChannel(ctx, channelSubscriptionKey, grp.Name)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = g.chatService.SendGroupMessage(ctx, chat.NewSendGroupMessage(grp.GetKey(), userSession.GetUserKey(), "Commonpool", "Bienvenue!", []chat.Block{}, []chat.Attachment{}, nil))
+	_, err = g.chatService.SendGroupMessage(ctx, chat.NewSendGroupMessage(grp.GetKey(), userSession.GetUserKey(), "Commonpool", "Bienvenue!", []chatmodel.Block{}, []chatmodel.Attachment{}, nil))
 	if err != nil {
 		return nil, err
 	}
 
-	return &group2.CreateGroupResponse{
+	return &group.CreateGroupResponse{
 		ChannelKey:      channel.GetKey(),
 		SubscriptionKey: channelSubscription.GetKey(),
 		Group:           grp,

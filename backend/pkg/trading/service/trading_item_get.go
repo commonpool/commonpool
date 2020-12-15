@@ -2,11 +2,10 @@ package service
 
 import (
 	"context"
-	"github.com/commonpool/backend/model"
-	trading2 "github.com/commonpool/backend/pkg/trading"
+	tradingmodel "github.com/commonpool/backend/pkg/trading/model"
 )
 
-func (t TradingService) GetOfferItem(ctx context.Context, offerItemKey model.OfferItemKey) (trading2.OfferItem, error) {
+func (t TradingService) GetOfferItem(ctx context.Context, offerItemKey tradingmodel.OfferItemKey) (tradingmodel.OfferItem, error) {
 
 	offerItem, err := t.tradingStore.GetOfferItem(ctx, offerItemKey)
 	if err != nil {

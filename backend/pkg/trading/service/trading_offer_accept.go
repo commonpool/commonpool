@@ -3,13 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/exceptions"
-	trading2 "github.com/commonpool/backend/pkg/trading"
+	tradingmodel "github.com/commonpool/backend/pkg/trading/model"
 )
 
-func (t TradingService) DeclineOffer(ctx context.Context, offerKey model.OfferKey) error {
+func (t TradingService) DeclineOffer(ctx context.Context, offerKey tradingmodel.OfferKey) error {
 
 	user, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
@@ -22,7 +21,7 @@ func (t TradingService) DeclineOffer(ctx context.Context, offerKey model.OfferKe
 		return err
 	}
 
-	if offer.Status != trading2.PendingOffer {
+	if offer.Status != tradingmodel.PendingOffer {
 		return fmt.Errorf("could not decline a offer that is not pending")
 	}
 
@@ -35,7 +34,7 @@ func (t TradingService) DeclineOffer(ctx context.Context, offerKey model.OfferKe
 		return exceptions.ErrForbidden
 	}
 
-	err = t.tradingStore.UpdateOfferStatus(offerKey, trading2.DeclinedOffer)
+	err = t.tradingStore.UpdateOfferStatus(offerKey, tradingmodel.DeclinedOffer)
 	if err != nil {
 		return err
 	}
@@ -44,7 +43,7 @@ func (t TradingService) DeclineOffer(ctx context.Context, offerKey model.OfferKe
 
 }
 
-func (t TradingService) AcceptOffer(ctx context.Context, offerKey model.OfferKey) error {
+func (t TradingService) AcceptOffer(ctx context.Context, offerKey tradingmodel.OfferKey) error {
 
 	loggedInUser, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
@@ -81,7 +80,7 @@ func (t TradingService) AcceptOffer(ctx context.Context, offerKey model.OfferKey
 		return exceptions.ErrUnauthorized
 	}
 
-	var offerItemsPendingGiverApproval []model.OfferItemKey
+	var offerItemsPendingGiverApproval []tradingmodel.OfferItemKey
 	if approvableOfferItemsOnGivingSide != nil {
 		for _, offerItemKey := range approvableOfferItemsOnGivingSide.Items {
 			offerItem := offerItems.GetOfferItem(offerItemKey)
@@ -91,7 +90,7 @@ func (t TradingService) AcceptOffer(ctx context.Context, offerKey model.OfferKey
 			offerItemsPendingGiverApproval = append(offerItemsPendingGiverApproval, offerItemKey)
 		}
 	}
-	var offerItemsPendingReceiverApproval []model.OfferItemKey
+	var offerItemsPendingReceiverApproval []tradingmodel.OfferItemKey
 	if approvableOfferItemsOnReceivingSide != nil {
 		for _, offerItemKey := range approvableOfferItemsOnReceivingSide.Items {
 			offerItem := offerItems.GetOfferItem(offerItemKey)
@@ -109,8 +108,8 @@ func (t TradingService) AcceptOffer(ctx context.Context, offerKey model.OfferKey
 	err = t.tradingStore.MarkOfferItemsAsAccepted(
 		ctx,
 		loggedInUserKey,
-		model.NewOfferItemKeys(offerItemsPendingGiverApproval),
-		model.NewOfferItemKeys(offerItemsPendingReceiverApproval))
+		tradingmodel.NewOfferItemKeys(offerItemsPendingGiverApproval),
+		tradingmodel.NewOfferItemKeys(offerItemsPendingReceiverApproval))
 
 	if err != nil {
 		return err
@@ -179,7 +178,7 @@ func (t TradingService) AcceptOffer(ctx context.Context, offerKey model.OfferKey
 	}
 
 	if offerItems.AllPartiesAccepted() {
-		err := t.tradingStore.UpdateOfferStatus(offerKey, trading2.AcceptedOffer)
+		err := t.tradingStore.UpdateOfferStatus(offerKey, tradingmodel.AcceptedOffer)
 		if err != nil {
 			return err
 		}

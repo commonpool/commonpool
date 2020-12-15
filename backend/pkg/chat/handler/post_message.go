@@ -1,9 +1,8 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/model"
-	"github.com/commonpool/backend/pkg/chat"
 	model2 "github.com/commonpool/backend/pkg/chat/handler/model"
+	chatmodel "github.com/commonpool/backend/pkg/chat/model"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/labstack/echo/v4"
 	uuid "github.com/satori/go.uuid"
@@ -38,7 +37,7 @@ func (chatHandler *ChatHandler) SendMessage(c echo.Context) error {
 
 	// retrieve the thread
 	channelId := c.Param("id")
-	channelKey := model.NewConversationKey(channelId)
+	channelKey := chatmodel.NewConversationKey(channelId)
 	// todo verify that user has permission to post on topic
 
 	loggedInUser, err := chatHandler.auth.GetLoggedInUser(ctx)
@@ -46,13 +45,13 @@ func (chatHandler *ChatHandler) SendMessage(c echo.Context) error {
 		return err
 	}
 
-	err = chatHandler.chatService.SendMessage(ctx, &chat.Message{
-		Key:            model.NewMessageKey(uuid.NewV4()),
+	err = chatHandler.chatService.SendMessage(ctx, &chatmodel.Message{
+		Key:            chatmodel.NewMessageKey(uuid.NewV4()),
 		ChannelKey:     channelKey,
-		MessageType:    chat.NormalMessage,
-		MessageSubType: chat.UserMessage,
-		SentBy: chat.MessageSender{
-			Type:     chat.UserMessageSender,
+		MessageType:    chatmodel.NormalMessage,
+		MessageSubType: chatmodel.UserMessage,
+		SentBy: chatmodel.MessageSender{
+			Type:     chatmodel.UserMessageSender,
 			UserKey:  loggedInUser.GetUserKey(),
 			Username: loggedInUser.GetUsername(),
 		},

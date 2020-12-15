@@ -2,17 +2,17 @@ package handler
 
 import (
 	"context"
-	"github.com/commonpool/backend/pkg/chat"
 	"github.com/commonpool/backend/pkg/chat/handler/model"
+	model2 "github.com/commonpool/backend/pkg/chat/model"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 )
 
 func (s *chatHandlerSuite) TestGetSubscriptions() {
 	s.NewContext(http.MethodGet, "/api/v1/chat/subscriptions", nil)
-	s.ChatService.GetSubscriptionsForUserFunc = func(ctx context.Context, take int, skip int) (*chat.ChannelSubscriptions, error) {
-		return &chat.ChannelSubscriptions{
-			Items: []chat.ChannelSubscription{},
+	s.ChatService.GetSubscriptionsForUserFunc = func(ctx context.Context, take int, skip int) (*model2.ChannelSubscriptions, error) {
+		return &model2.ChannelSubscriptions{
+			Items: []model2.ChannelSubscription{},
 		}, nil
 	}
 	s.ServeHTTP()

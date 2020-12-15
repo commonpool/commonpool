@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/model"
+	usermodel "github.com/commonpool/backend/pkg/user/model"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -21,7 +21,7 @@ import (
 func (h *Handler) GetUserInfo(c echo.Context) error {
 
 	userId := c.Param("id")
-	userKey := model.NewUserKey(userId)
+	userKey := usermodel.NewUserKey(userId)
 
 	user, err := h.authStore.GetByKey(userKey)
 

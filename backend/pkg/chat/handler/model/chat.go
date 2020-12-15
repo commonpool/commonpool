@@ -1,26 +1,26 @@
 package model
 
 import (
-	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/chat/model"
 	"time"
 )
 
 type Subscription struct {
-	ChannelID           string           `json:"channelId"`
-	UserID              string           `json:"userId"`
-	HasUnreadMessages   bool             `json:"hasUnreadMessages"`
-	CreatedAt           time.Time        `json:"createdAt"`
-	UpdatedAt           time.Time        `json:"updatedAt"`
-	LastMessageAt       time.Time        `json:"lastMessageAt"`
-	LastTimeRead        time.Time        `json:"lastTimeRead"`
-	LastMessageChars    string           `json:"lastMessageChars"`
-	LastMessageUserId   string           `json:"lastMessageUserId"`
-	LastMessageUserName string           `json:"lastMessageUsername"`
-	Name                string           `json:"name"`
-	Type                chat.ChannelType `json:"type"`
+	ChannelID           string            `json:"channelId"`
+	UserID              string            `json:"userId"`
+	HasUnreadMessages   bool              `json:"hasUnreadMessages"`
+	CreatedAt           time.Time         `json:"createdAt"`
+	UpdatedAt           time.Time         `json:"updatedAt"`
+	LastMessageAt       time.Time         `json:"lastMessageAt"`
+	LastTimeRead        time.Time         `json:"lastTimeRead"`
+	LastMessageChars    string            `json:"lastMessageChars"`
+	LastMessageUserId   string            `json:"lastMessageUserId"`
+	LastMessageUserName string            `json:"lastMessageUsername"`
+	Name                string            `json:"name"`
+	Type                model.ChannelType `json:"type"`
 }
 
-func MapSubscription(channel *chat.Channel, subscription *chat.ChannelSubscription) *Subscription {
+func MapSubscription(channel *model.Channel, subscription *model.ChannelSubscription) *Subscription {
 	return &Subscription{
 		ChannelID:           channel.Key.String(),
 		UserID:              subscription.UserKey.String(),
@@ -38,20 +38,20 @@ func MapSubscription(channel *chat.Channel, subscription *chat.ChannelSubscripti
 }
 
 type Message struct {
-	ID             string              `json:"id"`
-	ChannelID      string              `json:"channelId"`
-	MessageType    chat.MessageType    `json:"messageType"`
-	MessageSubType chat.MessageSubType `json:"messageSubType"`
-	SentById       string              `json:"sentById"`
-	SentByUsername string              `json:"sentByUsername"`
-	SentAt         time.Time           `json:"sentAt"`
-	Text           string              `json:"text"`
-	Blocks         []chat.Block        `json:"blocks"`
-	Attachments    []chat.Attachment   `json:"attachments"`
-	VisibleToUser  *string             `json:"visibleToUser"`
+	ID             string               `json:"id"`
+	ChannelID      string               `json:"channelId"`
+	MessageType    model.MessageType    `json:"messageType"`
+	MessageSubType model.MessageSubType `json:"messageSubType"`
+	SentById       string               `json:"sentById"`
+	SentByUsername string               `json:"sentByUsername"`
+	SentAt         time.Time            `json:"sentAt"`
+	Text           string               `json:"text"`
+	Blocks         []model.Block        `json:"blocks"`
+	Attachments    []model.Attachment   `json:"attachments"`
+	VisibleToUser  *string              `json:"visibleToUser"`
 }
 
-func MapMessage(message *chat.Message) *Message {
+func MapMessage(message *model.Message) *Message {
 	var visibleToUser *string = nil
 	if message.VisibleToUser != nil {
 		visibleToUserStr := message.VisibleToUser.String()
@@ -103,12 +103,12 @@ const (
 )
 
 type ElementState struct {
-	Type            chat.ElementType    `json:"type,omitempty"`
-	SelectedDate    *string             `json:"selectedDate,omitempty"`
-	SelectedTime    *string             `json:"selectedTime,omitempty"`
-	Value           *string             `json:"value,omitempty"`
-	SelectedOption  *chat.OptionObject  `json:"selectedOption,omitempty"`
-	SelectedOptions []chat.OptionObject `json:"selectedOptions,omitempty"`
+	Type            model.ElementType    `json:"type,omitempty"`
+	SelectedDate    *string              `json:"selectedDate,omitempty"`
+	SelectedTime    *string              `json:"selectedTime,omitempty"`
+	Value           *string              `json:"value,omitempty"`
+	SelectedOption  *model.OptionObject  `json:"selectedOption,omitempty"`
+	SelectedOptions []model.OptionObject `json:"selectedOptions,omitempty"`
 }
 
 type SubmitAction struct {

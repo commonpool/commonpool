@@ -8,6 +8,7 @@ import (
 	context "context"
 	model "github.com/commonpool/backend/model"
 	chat "github.com/commonpool/backend/pkg/chat"
+	model2 "github.com/commonpool/backend/pkg/chat/model"
 	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
 )
@@ -36,7 +37,7 @@ func (m *ChatStore) EXPECT() *ChatStoreMockRecorder {
 }
 
 // CreateChannel mocks base method
-func (m *ChatStore) CreateChannel(arg0 context.Context, arg1 *chat.Channel) error {
+func (m *ChatStore) CreateChannel(arg0 context.Context, arg1 *model2.Channel) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateChannel", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -50,10 +51,10 @@ func (mr *ChatStoreMockRecorder) CreateChannel(arg0, arg1 interface{}) *gomock.C
 }
 
 // CreateSubscription mocks base method
-func (m *ChatStore) CreateSubscription(arg0 context.Context, arg1 model.ChannelSubscriptionKey, arg2 string) (*chat.ChannelSubscription, error) {
+func (m *ChatStore) CreateSubscription(arg0 context.Context, arg1 model.ChannelSubscriptionKey, arg2 string) (*model2.ChannelSubscription, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateSubscription", arg0, arg1, arg2)
-	ret0, _ := ret[0].(*chat.ChannelSubscription)
+	ret0, _ := ret[0].(*model2.ChannelSubscription)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -79,10 +80,10 @@ func (mr *ChatStoreMockRecorder) DeleteSubscription(arg0, arg1 interface{}) *gom
 }
 
 // GetChannel mocks base method
-func (m *ChatStore) GetChannel(arg0 context.Context, arg1 model.ChannelKey) (*chat.Channel, error) {
+func (m *ChatStore) GetChannel(arg0 context.Context, arg1 model2.ChannelKey) (*model2.Channel, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetChannel", arg0, arg1)
-	ret0, _ := ret[0].(*chat.Channel)
+	ret0, _ := ret[0].(*model2.Channel)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -94,10 +95,10 @@ func (mr *ChatStoreMockRecorder) GetChannel(arg0, arg1 interface{}) *gomock.Call
 }
 
 // GetMessage mocks base method
-func (m *ChatStore) GetMessage(arg0 context.Context, arg1 model.MessageKey) (*chat.Message, error) {
+func (m *ChatStore) GetMessage(arg0 context.Context, arg1 model.MessageKey) (*model2.Message, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetMessage", arg0, arg1)
-	ret0, _ := ret[0].(*chat.Message)
+	ret0, _ := ret[0].(*model2.Message)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -124,10 +125,10 @@ func (mr *ChatStoreMockRecorder) GetMessages(arg0, arg1 interface{}) *gomock.Cal
 }
 
 // GetSubscription mocks base method
-func (m *ChatStore) GetSubscription(arg0 context.Context, arg1 *chat.GetSubscription) (*chat.ChannelSubscription, error) {
+func (m *ChatStore) GetSubscription(arg0 context.Context, arg1 *chat.GetSubscription) (*model2.ChannelSubscription, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSubscription", arg0, arg1)
-	ret0, _ := ret[0].(*chat.ChannelSubscription)
+	ret0, _ := ret[0].(*model2.ChannelSubscription)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -139,10 +140,10 @@ func (mr *ChatStoreMockRecorder) GetSubscription(arg0, arg1 interface{}) *gomock
 }
 
 // GetSubscriptionsForChannel mocks base method
-func (m *ChatStore) GetSubscriptionsForChannel(arg0 context.Context, arg1 model.ChannelKey) ([]chat.ChannelSubscription, error) {
+func (m *ChatStore) GetSubscriptionsForChannel(arg0 context.Context, arg1 model2.ChannelKey) ([]model2.ChannelSubscription, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSubscriptionsForChannel", arg0, arg1)
-	ret0, _ := ret[0].([]chat.ChannelSubscription)
+	ret0, _ := ret[0].([]model2.ChannelSubscription)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -154,10 +155,10 @@ func (mr *ChatStoreMockRecorder) GetSubscriptionsForChannel(arg0, arg1 interface
 }
 
 // GetSubscriptionsForUser mocks base method
-func (m *ChatStore) GetSubscriptionsForUser(arg0 context.Context, arg1 *chat.GetSubscriptions) (*chat.ChannelSubscriptions, error) {
+func (m *ChatStore) GetSubscriptionsForUser(arg0 context.Context, arg1 *chat.GetSubscriptions) (*model2.ChannelSubscriptions, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSubscriptionsForUser", arg0, arg1)
-	ret0, _ := ret[0].(*chat.ChannelSubscriptions)
+	ret0, _ := ret[0].(*model2.ChannelSubscriptions)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -169,10 +170,10 @@ func (mr *ChatStoreMockRecorder) GetSubscriptionsForUser(arg0, arg1 interface{})
 }
 
 // SaveMessage mocks base method
-func (m *ChatStore) SaveMessage(arg0 context.Context, arg1 *chat.SaveMessageRequest) (*chat.Message, error) {
+func (m *ChatStore) SaveMessage(arg0 context.Context, arg1 *chat.SaveMessageRequest) (*model2.Message, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SaveMessage", arg0, arg1)
-	ret0, _ := ret[0].(*chat.Message)
+	ret0, _ := ret[0].(*model2.Message)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

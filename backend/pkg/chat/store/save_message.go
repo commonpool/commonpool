@@ -3,12 +3,12 @@ package store
 import (
 	"context"
 	"encoding/json"
-	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/chat/model"
 	"github.com/commonpool/backend/pkg/utils"
 	"time"
 )
 
-func (cs *ChatStore) SaveMessage(ctx context.Context, request *chat.Message) error {
+func (cs *ChatStore) SaveMessage(ctx context.Context, request *model.Message) error {
 
 	var err error
 	sentAt := time.Now()
@@ -76,8 +76,8 @@ func (cs *ChatStore) SaveMessage(ctx context.Context, request *chat.Message) err
 	message := Message{
 		ID:             request.Key.GetUUID(),
 		ChannelID:      request.ChannelKey.String(),
-		MessageType:    chat.NormalMessage,
-		MessageSubType: chat.UserMessage,
+		MessageType:    model.NormalMessage,
+		MessageSubType: model.UserMessage,
 		SentById:       request.SentBy.UserKey.String(),
 		SentByUsername: request.SentBy.Username,
 		SentAt:         sentAt,

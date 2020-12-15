@@ -5,10 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/commonpool/backend/logging"
-	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/mq"
+	usermodel "github.com/commonpool/backend/pkg/user/model"
 	"github.com/commonpool/backend/pkg/utils"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
@@ -25,7 +25,7 @@ type Client struct {
 	amqpChannel         mq.Channel
 	send                chan []byte
 	id                  string
-	userKey             model.UserKey
+	userKey             usermodel.UserKey
 	queueName           *string
 	consumerKey         *string
 }

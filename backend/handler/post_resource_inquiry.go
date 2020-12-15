@@ -1,11 +1,12 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/chat"
 	model2 "github.com/commonpool/backend/pkg/chat/handler/model"
 	"github.com/commonpool/backend/pkg/handler"
+	resourcemodel "github.com/commonpool/backend/pkg/resource/model"
+	usermodel "github.com/commonpool/backend/pkg/user/model"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
@@ -31,9 +32,9 @@ func (h *Handler) InquireAboutResource(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	loggedInUserKey := model.NewUserKey(loggedInUser.Subject)
+	loggedInUserKey := usermodel.NewUserKey(loggedInUser.Subject)
 
-	resourceKey, err := model.ParseResourceKey(c.Param("id"))
+	resourceKey, err := resourcemodel.ParseResourceKey(c.Param("id"))
 	if err != nil {
 		return err
 	}

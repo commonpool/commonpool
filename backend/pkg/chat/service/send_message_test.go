@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/auth"
-	"github.com/commonpool/backend/pkg/chat"
+	model2 "github.com/commonpool/backend/pkg/chat/model"
 	"github.com/commonpool/backend/pkg/mq"
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
@@ -17,24 +17,24 @@ func (s *serviceTestSuite) TestSendMessage() {
 	ctx := context.TODO()
 
 	auth.SetContextAuthenticatedUser(ctx, "username", "user", "user@email.com")
-	channelKey := model.NewChannelKey("channel-id")
+	channelKey := model2.NewChannelKey("channel-id")
 	messageKey := model.NewMessageKey(uuid.FromStringOrNil("1370bb5e-4310-4d79-95f7-3923ba3f552a"))
 	timestamp := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
 
-	message := &chat.Message{
+	message := &model2.Message{
 		Key:            messageKey,
 		ChannelKey:     channelKey,
-		MessageType:    chat.NormalMessage,
-		MessageSubType: chat.UserMessage,
-		SentBy: chat.MessageSender{
-			Type:     chat.UserMessageSender,
+		MessageType:    model2.NormalMessage,
+		MessageSubType: model2.UserMessage,
+		SentBy: model2.MessageSender{
+			Type:     model2.UserMessageSender,
 			UserKey:  model.NewUserKey("user"),
 			Username: "username",
 		},
 		SentAt:        timestamp,
 		Text:          "Hello",
-		Blocks:        []chat.Block{},
-		Attachments:   []chat.Attachment{},
+		Blocks:        []model2.Block{},
+		Attachments:   []model2.Attachment{},
 		VisibleToUser: nil,
 	}
 
@@ -50,7 +50,7 @@ func (s *serviceTestSuite) TestSendMessage() {
 
 	expectedEvent := mq.Message{
 		Headers: mq.NewArgs().
-			WithChannelKey(channelKey).
+			With(mq.ChannelIdArg, channelKey.String()).
 			WithEventType(mq.NewChatMessage),
 		ContentType:     "application/json",
 		ContentEncoding: "",

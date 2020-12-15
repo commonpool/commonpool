@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/handler"
 	resource2 "github.com/commonpool/backend/pkg/resource"
+	resourcemodel "github.com/commonpool/backend/pkg/resource/model"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -24,7 +24,7 @@ func (h *Handler) GetResource(c echo.Context) error {
 
 	ctx, _ := handler.GetEchoContext(c, "GetResource")
 
-	resourceKey, err := model.ParseResourceKey(c.Param("id"))
+	resourceKey, err := resourcemodel.ParseResourceKey(c.Param("id"))
 	if err != nil {
 		return err
 	}

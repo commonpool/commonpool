@@ -2,11 +2,11 @@ package service
 
 import (
 	"context"
-	"github.com/commonpool/backend/model"
-	trading2 "github.com/commonpool/backend/pkg/trading"
+	model2 "github.com/commonpool/backend/pkg/trading/model"
+	usermodel "github.com/commonpool/backend/pkg/user/model"
 )
 
-func (t TradingService) GetTradingHistory(ctx context.Context, userIDs *model.UserKeys) ([]trading2.HistoryEntry, error) {
+func (t TradingService) GetTradingHistory(ctx context.Context, userIDs *usermodel.UserKeys) ([]model2.HistoryEntry, error) {
 
 	tradingHistory, err := t.tradingStore.GetTradingHistory(ctx, userIDs)
 	if err != nil {

@@ -27,6 +27,7 @@ import (
 	service4 "github.com/commonpool/backend/pkg/transaction/service"
 	store3 "github.com/commonpool/backend/pkg/transaction/store"
 	"github.com/commonpool/backend/pkg/user"
+	"github.com/commonpool/backend/pkg/user/model"
 	store6 "github.com/commonpool/backend/pkg/user/store"
 	"github.com/commonpool/backend/router"
 	"github.com/labstack/echo/v4"
@@ -130,8 +131,8 @@ func main() {
 
 	h.Register(v1)
 
-	var users []user.User
-	err = db.Model(user.User{}).Find(&users).Error
+	var users []model.User
+	err = db.Model(model.User{}).Find(&users).Error
 	if err != nil {
 		l.Error("could not find users", zap.Error(err))
 		panic(err)

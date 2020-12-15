@@ -3,39 +3,41 @@ package web
 import (
 	"fmt"
 	"github.com/commonpool/backend/model"
-	trading2 "github.com/commonpool/backend/pkg/trading"
+	groupmodel "github.com/commonpool/backend/pkg/group/model"
+	tradingmodel "github.com/commonpool/backend/pkg/trading/model"
+	usermodel "github.com/commonpool/backend/pkg/user/model"
 	"time"
 )
 
 type Offer struct {
-	ID             string               `json:"id"`
-	CreatedAt      time.Time            `json:"createdAt"`
-	CompletedAt    *time.Time           `json:"completedAt"`
-	Status         trading2.OfferStatus `json:"status"`
-	AuthorID       string               `json:"authorId"`
-	AuthorUsername string               `json:"authorUsername"`
-	Items          []*OfferItem         `json:"items"`
-	Message        string               `json:"message"`
+	ID             string                   `json:"id"`
+	CreatedAt      time.Time                `json:"createdAt"`
+	CompletedAt    *time.Time               `json:"completedAt"`
+	Status         tradingmodel.OfferStatus `json:"status"`
+	AuthorID       string                   `json:"authorId"`
+	AuthorUsername string                   `json:"authorUsername"`
+	Items          []*OfferItem             `json:"items"`
+	Message        string                   `json:"message"`
 }
 
 type OfferItem struct {
-	ID                          string                 `json:"id"`
-	From                        *OfferItemTarget       `json:"from"`
-	To                          *OfferItemTarget       `json:"to"`
-	Type                        trading2.OfferItemType `json:"type"`
-	ResourceId                  *string                `json:"resourceId"`
-	Duration                    *int64                 `json:"duration"`
-	Amount                      *int64                 `json:"amount"`
-	ReceiverApproved            bool                   `json:"receiverApproved"`
-	GiverApproved               bool                   `json:"giverApproved"`
-	ReceivingApprovers          []string               `json:"receivingApprovers"`
-	GivingApprovers             []string               `json:"givingApprovers"`
-	ServiceGivenConfirmation    bool                   `json:"serviceGivenConfirmation"`
-	ServiceReceivedConfirmation bool                   `json:"serviceReceivedConfirmation"`
-	ItemTaken                   bool                   `json:"itemTaken"`
-	ItemGiven                   bool                   `json:"itemGiven"`
-	ItemReturnedBack            bool                   `json:"itemReturnedBack"`
-	ItemReceivedBack            bool                   `json:"itemReceivedBack"`
+	ID                          string                     `json:"id"`
+	From                        *OfferItemTarget           `json:"from"`
+	To                          *OfferItemTarget           `json:"to"`
+	Type                        tradingmodel.OfferItemType `json:"type"`
+	ResourceId                  *string                    `json:"resourceId"`
+	Duration                    *int64                     `json:"duration"`
+	Amount                      *int64                     `json:"amount"`
+	ReceiverApproved            bool                       `json:"receiverApproved"`
+	GiverApproved               bool                       `json:"giverApproved"`
+	ReceivingApprovers          []string                   `json:"receivingApprovers"`
+	GivingApprovers             []string                   `json:"givingApprovers"`
+	ServiceGivenConfirmation    bool                       `json:"serviceGivenConfirmation"`
+	ServiceReceivedConfirmation bool                       `json:"serviceReceivedConfirmation"`
+	ItemTaken                   bool                       `json:"itemTaken"`
+	ItemGiven                   bool                       `json:"itemGiven"`
+	ItemReturnedBack            bool                       `json:"itemReturnedBack"`
+	ItemReceivedBack            bool                       `json:"itemReceivedBack"`
 }
 
 type GetOfferResponse struct {
@@ -63,14 +65,14 @@ type OfferItemTarget struct {
 
 func MapWebOfferItemTarget(target OfferItemTarget) (*model.Target, error) {
 	if target.Type == model.UserTarget {
-		userKey := model.NewUserKey(*target.UserID)
+		userKey := usermodel.NewUserKey(*target.UserID)
 		return &model.Target{
 			UserKey:  &userKey,
 			GroupKey: nil,
 			Type:     model.UserTarget,
 		}, nil
 	} else if target.Type == model.GroupTarget {
-		groupKey, err := model.ParseGroupKey(*target.GroupID)
+		groupKey, err := groupmodel.ParseGroupKey(*target.GroupID)
 		if err != nil {
 			return nil, err
 		}
@@ -111,7 +113,7 @@ func MapOfferItemTarget(target *model.Target) (*OfferItemTarget, error) {
 
 func (t OfferItemTarget) Parse() (*model.Target, error) {
 	if t.Type == model.GroupTarget {
-		groupKey, err := model.ParseGroupKey(*t.GroupID)
+		groupKey, err := groupmodel.ParseGroupKey(*t.GroupID)
 		if err != nil {
 			return nil, err
 		}
@@ -121,7 +123,7 @@ func (t OfferItemTarget) Parse() (*model.Target, error) {
 			Type:     model.GroupTarget,
 		}, nil
 	} else if t.Type == model.UserTarget {
-		userKey := model.NewUserKey(*t.UserID)
+		userKey := usermodel.NewUserKey(*t.UserID)
 		return &model.Target{
 			UserKey:  &userKey,
 			GroupKey: nil,
@@ -169,18 +171,18 @@ func NewUserTarget(user string) *OfferItemTarget {
 }
 
 type SendOfferPayloadItem struct {
-	Type       trading2.OfferItemType `json:"type"`
-	To         OfferItemTarget        `json:"to" validate:"required,uuid"`
-	From       *OfferItemTarget       `json:"from" validate:"required,uuid"`
-	ResourceId *string                `json:"resourceId" validate:"required,uuid"`
-	Duration   *string                `json:"duration"`
-	Amount     *string                `json:"amount"`
+	Type       tradingmodel.OfferItemType `json:"type"`
+	To         OfferItemTarget            `json:"to" validate:"required,uuid"`
+	From       *OfferItemTarget           `json:"from" validate:"required,uuid"`
+	ResourceId *string                    `json:"resourceId" validate:"required,uuid"`
+	Duration   *string                    `json:"duration"`
+	Amount     *string                    `json:"amount"`
 }
 
 func NewResourceTransferItem(to *OfferItemTarget, resourceId string) *SendOfferPayloadItem {
 	return &SendOfferPayloadItem{
 		To:         *to,
-		Type:       trading2.ResourceTransfer,
+		Type:       tradingmodel.ResourceTransfer,
 		ResourceId: &resourceId,
 	}
 }
@@ -190,7 +192,7 @@ func NewCreditTransferItem(from *OfferItemTarget, to *OfferItemTarget, time time
 	return &SendOfferPayloadItem{
 		From:   from,
 		To:     *to,
-		Type:   trading2.CreditTransfer,
+		Type:   tradingmodel.CreditTransfer,
 		Amount: &seconds,
 	}
 }

@@ -7,7 +7,9 @@ import (
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/exceptions"
 	graph2 "github.com/commonpool/backend/pkg/graph"
+	groupmodel "github.com/commonpool/backend/pkg/group/model"
 	"github.com/commonpool/backend/pkg/resource"
+	resourcemodel "github.com/commonpool/backend/pkg/resource/model"
 	"github.com/commonpool/backend/pkg/shared/store"
 	transaction2 "github.com/commonpool/backend/pkg/transaction"
 	"github.com/mitchellh/mapstructure"
@@ -31,7 +33,7 @@ func NewResourceStore(graphDriver graph2.Driver, transactionService transaction2
 	}
 }
 
-func (rs *ResourceStore) GetByKeys(ctx ctx.Context, resourceKeys *model.ResourceKeys) (*resource.GetResourceByKeysResponse, error) {
+func (rs *ResourceStore) GetByKeys(ctx ctx.Context, resourceKeys *resourcemodel.ResourceKeys) (*resource.GetResourceByKeysResponse, error) {
 
 	graphSession, err := rs.graphDriver.GetSession()
 	if err != nil {
@@ -41,7 +43,7 @@ func (rs *ResourceStore) GetByKeys(ctx ctx.Context, resourceKeys *model.Resource
 	return rs.getByKeys(ctx, graphSession, resourceKeys)
 }
 
-func (rs *ResourceStore) getByKeys(ctx ctx.Context, session neo4j.Session, resourceKeys *model.ResourceKeys) (*resource.GetResourceByKeysResponse, error) {
+func (rs *ResourceStore) getByKeys(ctx ctx.Context, session neo4j.Session, resourceKeys *resourcemodel.ResourceKeys) (*resource.GetResourceByKeysResponse, error) {
 
 	getResult, err := session.Run(`
 		MATCH (resource:Resource) 
@@ -72,10 +74,10 @@ func (rs *ResourceStore) getByKeys(ctx ctx.Context, session neo4j.Session, resou
 		return nil, getResult.Err()
 	}
 
-	var resources []*resource.Resource
+	var resources []*resourcemodel.Resource
 
-	sharings := resource.NewEmptyResourceSharings()
-	claims := resource.NewEmptyClaims()
+	sharings := resourcemodel.NewEmptyResourceSharings()
+	claims := resourcemodel.NewEmptyClaims()
 
 	for getResult.Next() {
 		r, err := rs.mapGraphResourceRecord(getResult.Record(), "resource")
@@ -93,41 +95,41 @@ func (rs *ResourceStore) getByKeys(ctx ctx.Context, session neo4j.Session, resou
 		if err != nil {
 			return nil, err
 		}
-		claims.AppendAll(createClaimsForTargets(r.Key, resource.OwnershipClaim, ownerTargets))
+		claims.AppendAll(createClaimsForTargets(r.Key, resourcemodel.OwnershipClaim, ownerTargets))
 
 		managerTargets, err := store.MapTargets(getResult.Record(), "managers")
 		if err != nil {
 			return nil, err
 		}
-		claims.AppendAll(createClaimsForTargets(r.Key, resource.ManagerClaim, managerTargets))
+		claims.AppendAll(createClaimsForTargets(r.Key, resourcemodel.ManagerClaim, managerTargets))
 
 		viewerTargets, err := store.MapTargets(getResult.Record(), "viewers")
 		if err != nil {
 			return nil, err
 		}
-		claims.AppendAll(createClaimsForTargets(r.Key, resource.ViewerClaim, viewerTargets))
+		claims.AppendAll(createClaimsForTargets(r.Key, resourcemodel.ViewerClaim, viewerTargets))
 
 		resources = append(resources, r)
 	}
 
 	return &resource.GetResourceByKeysResponse{
 		Sharings:  sharings,
-		Resources: resource.NewResources(resources),
+		Resources: resourcemodel.NewResources(resources),
 		Claims:    claims,
 	}, nil
 
 }
 
-func createClaimsForTargets(resourceKey model.ResourceKey, claimType resource.ClaimType, targets *model.Targets) *resource.Claims {
-	var claims []*resource.Claim
+func createClaimsForTargets(resourceKey resourcemodel.ResourceKey, claimType resourcemodel.ClaimType, targets *model.Targets) *resourcemodel.Claims {
+	var claims []*resourcemodel.Claim
 	for _, target := range targets.Items {
-		claims = append(claims, &resource.Claim{
+		claims = append(claims, &resourcemodel.Claim{
 			ResourceKey: resourceKey,
 			ClaimType:   claimType,
 			For:         target,
 		})
 	}
-	return resource.NewClaims(claims)
+	return resourcemodel.NewClaims(claims)
 }
 
 // GetByKey Gets a resource by key
@@ -145,7 +147,7 @@ func (rs *ResourceStore) GetByKey(ctx ctx.Context, getResourceByKeyQuery *resour
 func (rs *ResourceStore) getByKey(ctx ctx.Context, session neo4j.Session, getResourceByKeyQuery *resource.GetResourceByKeyQuery) (*resource.GetResourceByKeyResponse, error) {
 
 	key := getResourceByKeyQuery.ResourceKey
-	response, err := rs.GetByKeys(ctx, model.NewResourceKeys([]model.ResourceKey{key}))
+	response, err := rs.GetByKeys(ctx, resourcemodel.NewResourceKeys([]resourcemodel.ResourceKey{key}))
 	if err != nil {
 		return nil, err
 	}
@@ -302,7 +304,7 @@ func (rs *ResourceStore) Create(createResourceQuery *resource.CreateResourceQuer
 		groupIdsIntfs := groupIdsField.([]interface{})
 		for _, groupIdIntf := range groupIdsIntfs {
 			groupId := groupIdIntf.(string)
-			groupKey, err := model.ParseGroupKey(groupId)
+			groupKey, err := groupmodel.ParseGroupKey(groupId)
 			if err != nil {
 				return &resource.CreateResourceResponse{
 					Error: err,
@@ -319,7 +321,7 @@ func (rs *ResourceStore) Create(createResourceQuery *resource.CreateResourceQuer
 
 }
 
-func (rs *ResourceStore) mapGraphResourceRecord(record neo4j.Record, key string) (*resource.Resource, error) {
+func (rs *ResourceStore) mapGraphResourceRecord(record neo4j.Record, key string) (*resourcemodel.Resource, error) {
 	resourceRecord, _ := record.Get(key)
 	node := resourceRecord.(neo4j.Node)
 	return MapResourceNode(node)
@@ -329,7 +331,7 @@ func IsResourceNode(node neo4j.Node) bool {
 	return graph2.NodeHasLabel(node, "Resource")
 }
 
-func MapResourceNode(node neo4j.Node) (*resource.Resource, error) {
+func MapResourceNode(node neo4j.Node) (*resourcemodel.Resource, error) {
 	var graphResource = Resource{}
 	err := mapstructure.Decode(node.Props(), &graphResource)
 	if err != nil {
@@ -342,34 +344,34 @@ func MapResourceNode(node neo4j.Node) (*resource.Resource, error) {
 	return mappedResource, nil
 }
 
-func (rs *ResourceStore) mapGraphSharingRecord(record neo4j.Record, resourceFieldKey string, groupIdsFieldKey string) (*resource.Sharings, error) {
+func (rs *ResourceStore) mapGraphSharingRecord(record neo4j.Record, resourceFieldKey string, groupIdsFieldKey string) (*resourcemodel.Sharings, error) {
 	resourceField, _ := record.Get(resourceFieldKey)
 	resourceNode := resourceField.(neo4j.Node)
 	resourceId := resourceNode.Props()["id"].(string)
-	resourceKey, err := model.ParseResourceKey(resourceId)
+	resourceKey, err := resourcemodel.ParseResourceKey(resourceId)
 	if err != nil {
 		return nil, err
 	}
 
 	groupIdsField, _ := record.Get(groupIdsFieldKey)
 	if groupIdsField == nil {
-		return resource.NewEmptyResourceSharings(), nil
+		return resourcemodel.NewEmptyResourceSharings(), nil
 	}
 	groupIds := groupIdsField.([]interface{})
-	var sharings []*resource.Sharing
+	var sharings []*resourcemodel.Sharing
 	for _, groupId := range groupIds {
-		groupKey, err := model.ParseGroupKey(groupId.(string))
+		groupKey, err := groupmodel.ParseGroupKey(groupId.(string))
 		if err != nil {
 			return nil, err
 		}
-		sharing := &resource.Sharing{
+		sharing := &resourcemodel.Sharing{
 			ResourceKey: resourceKey,
 			GroupKey:    groupKey,
 		}
 		sharings = append(sharings, sharing)
 	}
 
-	return resource.NewResourceSharings(sharings), nil
+	return resourcemodel.NewResourceSharings(sharings), nil
 }
 
 // Update updates a resource
@@ -468,7 +470,7 @@ func (rs *ResourceStore) Update(request *resource.UpdateResourceQuery) *resource
 	deletedSharingIntfs := deletedSharingField.([]interface{})
 	for _, deletedSharingIntf := range deletedSharingIntfs {
 		groupId := deletedSharingIntf.(string)
-		groupKey, err := model.ParseGroupKey(groupId)
+		groupKey, err := groupmodel.ParseGroupKey(groupId)
 		if err != nil {
 			return &resource.UpdateResourceResponse{
 				Error: err,
@@ -486,7 +488,7 @@ func (rs *ResourceStore) Update(request *resource.UpdateResourceQuery) *resource
 	createdSharingIntfs := createdSharingsField.([]interface{})
 	for _, createdSharingIntf := range createdSharingIntfs {
 		groupId := createdSharingIntf.(string)
-		groupKey, err := model.ParseGroupKey(groupId)
+		groupKey, err := groupmodel.ParseGroupKey(groupId)
 		if err != nil {
 			return &resource.UpdateResourceResponse{
 				Error: err,
@@ -615,7 +617,7 @@ LIMIT $take
 		}
 	}
 
-	var resources []*resource.Resource
+	var resources []*resourcemodel.Resource
 
 	for searchResult.Next() {
 
@@ -632,8 +634,8 @@ LIMIT $take
 	}
 
 	return &resource.SearchResourcesResponse{
-		Resources:  resource.NewResources(resources),
-		Sharings:   resource.NewEmptyResourceSharings(),
+		Resources:  resourcemodel.NewResources(resources),
+		Sharings:   resourcemodel.NewEmptyResourceSharings(),
 		Skip:       request.Skip,
 		Take:       request.Take,
 		TotalCount: int(totalCount),

@@ -2,11 +2,12 @@ package handler
 
 import (
 	"fmt"
-	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/exceptions"
+	groupmodel "github.com/commonpool/backend/pkg/group/model"
 	"github.com/commonpool/backend/pkg/handler"
 	resource2 "github.com/commonpool/backend/pkg/resource"
+	resourcemodel "github.com/commonpool/backend/pkg/resource/model"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
@@ -44,7 +45,7 @@ func (h *Handler) UpdateResource(c echo.Context) error {
 	}
 
 	// Gets the resource id
-	resourceKey, err := model.ParseResourceKey(c.Param("id"))
+	resourceKey, err := resourcemodel.ParseResourceKey(c.Param("id"))
 	if err != nil {
 		return err
 	}
@@ -89,9 +90,9 @@ func (h *Handler) UpdateResource(c echo.Context) error {
 	resToUpdate.ValueInHoursTo = req.Resource.ValueInHoursTo
 
 	// get shared with keys
-	var groupKeys []model.GroupKey
+	var groupKeys []groupmodel.GroupKey
 	for _, sharing := range req.Resource.SharedWith {
-		groupKey, err := model.ParseGroupKey(sharing.GroupID)
+		groupKey, err := groupmodel.ParseGroupKey(sharing.GroupID)
 		if err != nil {
 			message := "UpdateResource: could not parse groupKey"
 			c.Logger().Error(err, message)
@@ -101,7 +102,7 @@ func (h *Handler) UpdateResource(c echo.Context) error {
 	}
 
 	// saving changes
-	updateResourceQuery := resource2.NewUpdateResourceQuery(resToUpdate, model.NewGroupKeys(groupKeys))
+	updateResourceQuery := resource2.NewUpdateResourceQuery(resToUpdate, groupmodel.NewGroupKeys(groupKeys))
 	updateResourceResponse := h.resourceStore.Update(updateResourceQuery)
 	if updateResourceResponse.Error != nil {
 		return updateResourceResponse.Error

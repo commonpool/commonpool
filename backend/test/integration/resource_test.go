@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/commonpool/backend/pkg/auth"
-	resource2 "github.com/commonpool/backend/pkg/resource"
+	"github.com/commonpool/backend/pkg/resource/model"
 	"github.com/commonpool/backend/web"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -23,8 +23,8 @@ func CreateResource(t *testing.T, ctx context.Context, userSession *auth.UserSes
 		Resource: web.CreateResourcePayload{
 			Summary:          resourceName,
 			Description:      resourceName,
-			Type:             resource2.Offer,
-			SubType:          resource2.ObjectResource,
+			Type:             model.Offer,
+			SubType:          model.ObjectResource,
 			ValueInHoursFrom: 0,
 			ValueInHoursTo:   0,
 			SharedWith:       []web.InputResourceSharing{},
@@ -50,10 +50,10 @@ func CreateResource(t *testing.T, ctx context.Context, userSession *auth.UserSes
 		if option.Resource.ValueInHoursFrom != 0 {
 			payload.Resource.ValueInHoursFrom = option.Resource.ValueInHoursFrom
 		}
-		if option.Resource.Type != resource2.Offer {
+		if option.Resource.Type != model.Offer {
 			payload.Resource.Type = option.Resource.Type
 		}
-		if option.Resource.SubType != "" && option.Resource.SubType != resource2.ObjectResource {
+		if option.Resource.SubType != "" && option.Resource.SubType != model.ObjectResource {
 			payload.Resource.SubType = option.Resource.SubType
 		}
 	}
@@ -65,7 +65,7 @@ func CreateResource(t *testing.T, ctx context.Context, userSession *auth.UserSes
 	return response, ReadResponse(t, recorder, response)
 }
 
-func SearchResources(t *testing.T, ctx context.Context, userSession *auth.UserSession, take int, skip int, query string, resourceType resource2.Type, sharedWithGroup *string) (*web.SearchResourcesResponse, *http.Response) {
+func SearchResources(t *testing.T, ctx context.Context, userSession *auth.UserSession, take int, skip int, query string, resourceType model.Type, sharedWithGroup *string) (*web.SearchResourcesResponse, *http.Response) {
 	c, recorder := NewRequest(ctx, userSession, http.MethodGet, "/api/v1/resources", nil)
 	c.QueryParams()["take"] = []string{strconv.Itoa(take)}
 	c.QueryParams()["skip"] = []string{strconv.Itoa(skip)}
@@ -112,7 +112,7 @@ func TestUserCanCreateResource(t *testing.T) {
 		Resource: web.CreateResourcePayload{
 			Summary:          "Summary",
 			Description:      "Description",
-			Type:             resource2.Offer,
+			Type:             model.Offer,
 			ValueInHoursFrom: 1,
 			ValueInHoursTo:   3,
 			SharedWith:       []web.InputResourceSharing{},
@@ -123,7 +123,7 @@ func TestUserCanCreateResource(t *testing.T) {
 
 	assert.Equal(t, "Summary", resp.Resource.Summary)
 	assert.Equal(t, "Description", resp.Resource.Description)
-	assert.Equal(t, resource2.Offer, resp.Resource.Type)
+	assert.Equal(t, model.Offer, resp.Resource.Type)
 	assert.Equal(t, 1, resp.Resource.ValueInHoursFrom)
 	assert.Equal(t, 3, resp.Resource.ValueInHoursTo)
 
@@ -143,7 +143,7 @@ func TestUserCanSearchResources(t *testing.T) {
 		},
 	})
 
-	res, httpRes := SearchResources(t, ctx, user1, 10, 0, "Blabbers", resource2.Offer, nil)
+	res, httpRes := SearchResources(t, ctx, user1, 10, 0, "Blabbers", model.Offer, nil)
 	assert.Equal(t, http.StatusOK, httpRes.StatusCode)
 
 	assert.Equal(t, 10, res.Take)
@@ -168,7 +168,7 @@ func TestUserCanSearchResourcesWhenNoMatch(t *testing.T) {
 		},
 	})
 
-	res, httpRes := SearchResources(t, ctx, user1, 10, 0, "ResourceNoMatchQuery", resource2.Offer, nil)
+	res, httpRes := SearchResources(t, ctx, user1, 10, 0, "ResourceNoMatchQuery", model.Offer, nil)
 	assert.Equal(t, http.StatusOK, httpRes.StatusCode)
 
 	assert.Equal(t, 10, res.Take)
@@ -197,7 +197,7 @@ func TestUserCanSearchResourcesWithSkip(t *testing.T) {
 		},
 	})
 
-	res, httpRes := SearchResources(t, ctx, user1, 10, 1, "ResourceSkip", resource2.Offer, nil)
+	res, httpRes := SearchResources(t, ctx, user1, 10, 1, "ResourceSkip", model.Offer, nil)
 	assert.Equal(t, http.StatusOK, httpRes.StatusCode)
 
 	assert.Equal(t, 10, res.Take)
@@ -240,7 +240,7 @@ func TestUserCanSearchResourcesSharedWithGroup(t *testing.T) {
 		},
 	})
 
-	res, httpRes := SearchResources(t, ctx, user1, 10, 0, "SharedWithGroup", resource2.Offer, &group1.ID)
+	res, httpRes := SearchResources(t, ctx, user1, 10, 0, "SharedWithGroup", model.Offer, &group1.ID)
 	assert.Equal(t, http.StatusOK, httpRes.StatusCode)
 
 	assert.Equal(t, 10, res.Take)
@@ -278,8 +278,8 @@ func TestUserCanSearchResourcesSharedWithMultipleGroups(t *testing.T) {
 	createResource2, createResource2Http := CreateResource(t, ctx, user1, &web.CreateResourceRequest{
 		Resource: web.CreateResourcePayload{
 			Summary: "B-4ccf1c0f-d791-437b-becd-8c4592d3bc1d",
-			Type:    resource2.Offer,
-			SubType: resource2.ObjectResource,
+			Type:    model.Offer,
+			SubType: model.ObjectResource,
 			SharedWith: []web.InputResourceSharing{
 				{
 					GroupID: group2.ID,
@@ -289,7 +289,7 @@ func TestUserCanSearchResourcesSharedWithMultipleGroups(t *testing.T) {
 	})
 	assert.Equal(t, http.StatusCreated, createResource2Http.StatusCode)
 
-	searchResource1, searchResources1Http := SearchResources(t, ctx, user1, 10, 0, "4ccf1c0f-d791-437b-becd-8c4592d3bc1d", resource2.Offer, &group1.ID)
+	searchResource1, searchResources1Http := SearchResources(t, ctx, user1, 10, 0, "4ccf1c0f-d791-437b-becd-8c4592d3bc1d", model.Offer, &group1.ID)
 	assert.Equal(t, http.StatusOK, searchResources1Http.StatusCode)
 	assert.Equal(t, 10, searchResource1.Take)
 	assert.Equal(t, 0, searchResource1.Skip)
@@ -297,7 +297,7 @@ func TestUserCanSearchResourcesSharedWithMultipleGroups(t *testing.T) {
 	assert.Equal(t, 1, searchResource1.TotalCount)
 	assert.Equal(t, createResource1.Resource.Id, searchResource1.Resources[0].Id)
 
-	searchResource2, searchResources2Http := SearchResources(t, ctx, user1, 10, 0, "4ccf1c0f-d791-437b-becd-8c4592d3bc1d", resource2.Offer, &group2.ID)
+	searchResource2, searchResources2Http := SearchResources(t, ctx, user1, 10, 0, "4ccf1c0f-d791-437b-becd-8c4592d3bc1d", model.Offer, &group2.ID)
 	assert.Equal(t, http.StatusOK, searchResources2Http.StatusCode)
 	assert.Equal(t, 10, searchResource2.Take)
 	assert.Equal(t, 0, searchResource2.Skip)
@@ -374,8 +374,8 @@ func TestUserCanUpdateResourceSharings(t *testing.T) {
 		Resource: web.CreateResourcePayload{
 			Summary:          "Snippers Boop",
 			Description:      "Description",
-			Type:             resource2.Offer,
-			SubType:          resource2.ObjectResource,
+			Type:             model.Offer,
+			SubType:          model.ObjectResource,
 			ValueInHoursFrom: 1,
 			ValueInHoursTo:   3,
 			SharedWith: []web.InputResourceSharing{

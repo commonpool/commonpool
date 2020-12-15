@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/chat"
+	chatmodel "github.com/commonpool/backend/pkg/chat/model"
 	"github.com/commonpool/backend/pkg/mq"
 	uuid "github.com/satori/go.uuid"
 	"time"
@@ -18,13 +18,13 @@ func (c ChatService) SendConversationMessage(ctx context.Context, request *chat.
 	}
 
 	channelKey := createdChannel.Channel.GetKey()
-	message := &chat.Message{
-		Key:            model.NewMessageKey(uuid.NewV4()),
+	message := &chatmodel.Message{
+		Key:            chatmodel.NewMessageKey(uuid.NewV4()),
 		ChannelKey:     channelKey,
-		MessageType:    chat.NormalMessage,
-		MessageSubType: chat.UserMessage,
-		SentBy: chat.MessageSender{
-			Type:     chat.UserMessageSender,
+		MessageType:    chatmodel.NormalMessage,
+		MessageSubType: chatmodel.UserMessage,
+		SentBy: chatmodel.MessageSender{
+			Type:     chatmodel.UserMessageSender,
 			UserKey:  request.FromUserKey,
 			Username: request.FromUserName,
 		},

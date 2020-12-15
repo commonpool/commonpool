@@ -2,30 +2,32 @@ package trading
 
 import (
 	"context"
-	"github.com/commonpool/backend/model"
+	resourcemodel "github.com/commonpool/backend/pkg/resource/model"
+	tradingmodel "github.com/commonpool/backend/pkg/trading/model"
+	usermodel "github.com/commonpool/backend/pkg/user/model"
 )
 
 type Store interface {
-	SaveOffer(offer *Offer, offerItems *OfferItems) error
-	GetOffer(key model.OfferKey) (*Offer, error)
-	GetOfferItemsForOffer(key model.OfferKey) (*OfferItems, error)
-	GetOfferItem(ctx context.Context, key model.OfferItemKey) (OfferItem, error)
-	GetOffersForUser(userKey model.UserKey) (*GetOffersResult, error)
-	UpdateOfferItem(ctx context.Context, offerItem OfferItem) error
-	UpdateOfferStatus(key model.OfferKey, offer OfferStatus) error
-	GetTradingHistory(ctx context.Context, ids *model.UserKeys) ([]HistoryEntry, error)
-	FindApproversForOffer(offerKey model.OfferKey) (*OfferApprovers, error)
-	FindApproversForOffers(offerKeys *model.OfferKeys) (*OffersApprovers, error)
-	FindApproversForCandidateOffer(offer *Offer, offerItems *OfferItems) (*model.UserKeys, error)
-	FindReceivingApproversForOfferItem(offerItemKey model.OfferItemKey) (*model.UserKeys, error)
-	FindGivingApproversForOfferItem(offerItemKey model.OfferItemKey) (*model.UserKeys, error)
-	MarkOfferItemsAsAccepted(ctx context.Context, approvedBy model.UserKey, approvedByGiver *model.OfferItemKeys, approvedByReceiver *model.OfferItemKeys) error
+	SaveOffer(offer *tradingmodel.Offer, offerItems *tradingmodel.OfferItems) error
+	GetOffer(key tradingmodel.OfferKey) (*tradingmodel.Offer, error)
+	GetOfferItemsForOffer(key tradingmodel.OfferKey) (*tradingmodel.OfferItems, error)
+	GetOfferItem(ctx context.Context, key tradingmodel.OfferItemKey) (tradingmodel.OfferItem, error)
+	GetOffersForUser(userKey usermodel.UserKey) (*GetOffersResult, error)
+	UpdateOfferItem(ctx context.Context, offerItem tradingmodel.OfferItem) error
+	UpdateOfferStatus(key tradingmodel.OfferKey, offer tradingmodel.OfferStatus) error
+	GetTradingHistory(ctx context.Context, ids *usermodel.UserKeys) ([]tradingmodel.HistoryEntry, error)
+	FindApproversForOffer(offerKey tradingmodel.OfferKey) (*tradingmodel.OfferApprovers, error)
+	FindApproversForOffers(offerKeys *tradingmodel.OfferKeys) (*tradingmodel.OffersApprovers, error)
+	FindApproversForCandidateOffer(offer *tradingmodel.Offer, offerItems *tradingmodel.OfferItems) (*usermodel.UserKeys, error)
+	FindReceivingApproversForOfferItem(offerItemKey tradingmodel.OfferItemKey) (*usermodel.UserKeys, error)
+	FindGivingApproversForOfferItem(offerItemKey tradingmodel.OfferItemKey) (*usermodel.UserKeys, error)
+	MarkOfferItemsAsAccepted(ctx context.Context, approvedBy usermodel.UserKey, approvedByGiver *tradingmodel.OfferItemKeys, approvedByReceiver *tradingmodel.OfferItemKeys) error
 }
 
 type GetOffersQuery struct {
-	ResourceKey *model.ResourceKey
-	Status      *OfferStatus
-	UserKeys    []model.UserKey
+	ResourceKey *resourcemodel.ResourceKey
+	Status      *tradingmodel.OfferStatus
+	UserKeys    []usermodel.UserKey
 }
 
 type GetOffersResult struct {
@@ -33,17 +35,17 @@ type GetOffersResult struct {
 }
 
 type GetOffersResultItem struct {
-	Offer      *Offer
-	OfferItems *OfferItems
+	Offer      *tradingmodel.Offer
+	OfferItems *tradingmodel.OfferItems
 }
 
-func (r *GetOffersResult) GetOfferKeys() *model.OfferKeys {
-	var offerKeys []model.OfferKey
+func (r *GetOffersResult) GetOfferKeys() *tradingmodel.OfferKeys {
+	var offerKeys []tradingmodel.OfferKey
 	for _, item := range r.Items {
 		offerKeys = append(offerKeys, item.Offer.Key)
 	}
 	if offerKeys == nil {
-		offerKeys = []model.OfferKey{}
+		offerKeys = []tradingmodel.OfferKey{}
 	}
-	return model.NewOfferKeys(offerKeys)
+	return tradingmodel.NewOfferKeys(offerKeys)
 }
