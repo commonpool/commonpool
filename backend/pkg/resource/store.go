@@ -9,10 +9,10 @@ import (
 type Store interface {
 	GetByKey(ctx context.Context, getResourceByKeyQuery *GetResourceByKeyQuery) (*GetResourceByKeyResponse, error)
 	GetByKeys(ctx context.Context, resourceKeys *resourcemodel.ResourceKeys) (*GetResourceByKeysResponse, error)
-	Search(ctx context.Context, searchResourcesQuery *SearchResourcesQuery) *SearchResourcesResponse
-	Delete(deleteResourceQuery *DeleteResourceQuery) *DeleteResourceResponse
-	Create(createResourceQuery *CreateResourceQuery) *CreateResourceResponse
-	Update(updateResourceQuery *UpdateResourceQuery) *UpdateResourceResponse
+	Search(ctx context.Context, searchResourcesQuery *SearchResourcesQuery) (*SearchResourcesResponse, error)
+	Delete(ctx context.Context, resourceKey resourcemodel.ResourceKey) error
+	Create(ctx context.Context, createResourceQuery *CreateResourceQuery) error
+	Update(ctx context.Context, updateResourceQuery *UpdateResourceQuery) error
 }
 
 type GetResourceByKeysQuery struct {
@@ -47,7 +47,6 @@ type SearchResourcesResponse struct {
 	TotalCount int
 	Skip       int
 	Take       int
-	Error      error
 }
 
 type GetResourceByKeyQuery struct {
@@ -72,14 +71,6 @@ type GetResourceByKeysResponse struct {
 	Claims    *resourcemodel.Claims
 }
 
-type DeleteResourceQuery struct {
-	ResourceKey resourcemodel.ResourceKey
-}
-
-type DeleteResourceResponse struct {
-	Error error
-}
-
 type CreateResourceQuery struct {
 	Resource   *resourcemodel.Resource
 	SharedWith *groupmodel.GroupKeys
@@ -92,10 +83,6 @@ func NewCreateResourceQuery(resource *resourcemodel.Resource, sharedWith *groupm
 	}
 }
 
-type CreateResourceResponse struct {
-	Error error
-}
-
 type UpdateResourceQuery struct {
 	Resource   *resourcemodel.Resource
 	SharedWith *groupmodel.GroupKeys
@@ -105,15 +92,5 @@ func NewUpdateResourceQuery(resource *resourcemodel.Resource, sharedWith *groupm
 	return &UpdateResourceQuery{
 		Resource:   resource,
 		SharedWith: sharedWith,
-	}
-}
-
-type UpdateResourceResponse struct {
-	Error error
-}
-
-func NewUpdateResourceResponse(err error) *UpdateResourceResponse {
-	return &UpdateResourceResponse{
-		Error: err,
 	}
 }

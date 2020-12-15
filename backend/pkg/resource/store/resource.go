@@ -15,6 +15,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
 	"go.uber.org/zap"
+	"golang.org/x/net/context"
 	"strings"
 	"time"
 )
@@ -166,17 +167,15 @@ func (rs *ResourceStore) getByKey(ctx ctx.Context, session neo4j.Session, getRes
 }
 
 // Delete deletes a resource
-func (rs *ResourceStore) Delete(deleteResourceQuery *resource.DeleteResourceQuery) *resource.DeleteResourceResponse {
+func (rs *ResourceStore) Delete(ctx context.Context, resourceKey resourcemodel.ResourceKey) error {
 
 	graphSession, err := rs.graphDriver.GetSession()
 	if err != nil {
-		return &resource.DeleteResourceResponse{
-			Error: err,
-		}
+		return err
 	}
 
 	graphSession.Run(`MATCH (r:Resource {id:$id}) DETACH DELETE`, map[string]interface{}{
-		"id": deleteResourceQuery.ResourceKey.String(),
+		"id": resourceKey.String(),
 	})
 
 	now := time.Now()
@@ -187,37 +186,29 @@ func (rs *ResourceStore) Delete(deleteResourceQuery *resource.DeleteResourceQuer
 			}
 			RETURN r`,
 		map[string]interface{}{
-			"id":        deleteResourceQuery.ResourceKey.String(),
+			"id":        resourceKey.String(),
 			"deletedAt": now,
 		})
 	if err != nil {
-		return &resource.DeleteResourceResponse{
-			Error: err,
-		}
+		return err
 	}
 	if deleteResult.Err() != nil {
-		return &resource.DeleteResourceResponse{
-			Error: deleteResult.Err(),
-		}
+		return err
 	}
 	if !deleteResult.Next() {
-		return &resource.DeleteResourceResponse{
-			Error: exceptions.ErrResourceNotFound,
-		}
+		return err
 	}
 
-	return &resource.DeleteResourceResponse{}
+	return nil
 
 }
 
 // Create creates a resource
-func (rs *ResourceStore) Create(createResourceQuery *resource.CreateResourceQuery) *resource.CreateResourceResponse {
+func (rs *ResourceStore) Create(ctx context.Context, createResourceQuery *resource.CreateResourceQuery) error {
 
 	graphSession, err := rs.graphDriver.GetSession()
 	if err != nil {
-		return &resource.CreateResourceResponse{
-			Error: err,
-		}
+		return err
 	}
 
 	resourceKey := createResourceQuery.Resource.GetKey()
@@ -281,20 +272,15 @@ func (rs *ResourceStore) Create(createResourceQuery *resource.CreateResourceQuer
 	createResult, err := graphSession.Run(cypher, params)
 
 	if err != nil {
-		return &resource.CreateResourceResponse{
-			Error: err,
-		}
+		return err
 	}
 	if createResult.Err() != nil {
-		return &resource.CreateResourceResponse{
-			Error: createResult.Err(),
-		}
+		return err
 	}
 
 	if !createResult.Next() {
-		return &resource.CreateResourceResponse{
-			Error: fmt.Errorf("unexpected result count"),
-		}
+		return fmt.Errorf("unexpected result count")
+
 	}
 
 	record := createResult.Record()
@@ -306,18 +292,14 @@ func (rs *ResourceStore) Create(createResourceQuery *resource.CreateResourceQuer
 			groupId := groupIdIntf.(string)
 			groupKey, err := groupmodel.ParseGroupKey(groupId)
 			if err != nil {
-				return &resource.CreateResourceResponse{
-					Error: err,
-				}
+				return err
 			}
 			_, err = rs.transactionService.UserSharedResourceWithGroup(groupKey, createResourceQuery.Resource.Key)
-			return &resource.CreateResourceResponse{
-				Error: err,
-			}
+			return err
 		}
 	}
 
-	return &resource.CreateResourceResponse{}
+	return nil
 
 }
 
@@ -375,13 +357,11 @@ func (rs *ResourceStore) mapGraphSharingRecord(record neo4j.Record, resourceFiel
 }
 
 // Update updates a resource
-func (rs *ResourceStore) Update(request *resource.UpdateResourceQuery) *resource.UpdateResourceResponse {
+func (rs *ResourceStore) Update(ctx context.Context, request *resource.UpdateResourceQuery) error {
 
 	session, err := rs.graphDriver.GetSession()
 	if err != nil {
-		return &resource.UpdateResourceResponse{
-			Error: err,
-		}
+		return err
 	}
 	defer session.Close()
 
@@ -449,21 +429,15 @@ func (rs *ResourceStore) Update(request *resource.UpdateResourceQuery) *resource
 		})
 
 	if err != nil {
-		return &resource.UpdateResourceResponse{
-			Error: err,
-		}
+		return err
 	}
 
 	if updateResult.Err() != nil {
-		return &resource.UpdateResourceResponse{
-			Error: updateResult.Err(),
-		}
+		return updateResult.Err()
 	}
 
 	if !updateResult.Next() {
-		return &resource.UpdateResourceResponse{
-			Error: exceptions.ErrResourceNotFound,
-		}
+		return exceptions.ErrResourceNotFound
 	}
 
 	deletedSharingField, _ := updateResult.Record().Get("deletedSharingGroupIds")
@@ -472,15 +446,11 @@ func (rs *ResourceStore) Update(request *resource.UpdateResourceQuery) *resource
 		groupId := deletedSharingIntf.(string)
 		groupKey, err := groupmodel.ParseGroupKey(groupId)
 		if err != nil {
-			return &resource.UpdateResourceResponse{
-				Error: err,
-			}
+			return err
 		}
 		_, err = rs.transactionService.UserRemovedResourceFromGroup(groupKey, request.Resource.Key)
 		if err != nil {
-			return &resource.UpdateResourceResponse{
-				Error: err,
-			}
+			return err
 		}
 	}
 
@@ -490,33 +460,27 @@ func (rs *ResourceStore) Update(request *resource.UpdateResourceQuery) *resource
 		groupId := createdSharingIntf.(string)
 		groupKey, err := groupmodel.ParseGroupKey(groupId)
 		if err != nil {
-			return &resource.UpdateResourceResponse{
-				Error: err,
-			}
+			return err
 		}
 		_, err = rs.transactionService.UserSharedResourceWithGroup(groupKey, request.Resource.Key)
 		if err != nil {
-			return &resource.UpdateResourceResponse{
-				Error: err,
-			}
+			return err
 		}
 	}
 
-	return resource.NewUpdateResourceResponse(nil)
+	return nil
 
 }
 
 // Search search for resources
-func (rs *ResourceStore) Search(context ctx.Context, request *resource.SearchResourcesQuery) *resource.SearchResourcesResponse {
+func (rs *ResourceStore) Search(context ctx.Context, request *resource.SearchResourcesQuery) (*resource.SearchResourcesResponse, error) {
 
 	l := logging.WithContext(context)
 
 	session, err := rs.graphDriver.GetSession()
 	if err != nil {
 		l.Error("could not get graph session", zap.Error(err))
-		return &resource.SearchResourcesResponse{
-			Error: err,
-		}
+		return nil, err
 	}
 	defer session.Close()
 
@@ -575,16 +539,12 @@ RETURN count(r) as totalCount
 	countResult, err := session.Run(countCypher, propertyValues)
 	if err != nil {
 		l.Error("could not execute count query", zap.Error(err))
-		return &resource.SearchResourcesResponse{
-			Error: err,
-		}
+		return nil, err
 	}
 
 	if countResult.Err() != nil {
 		l.Error("could not execute count query", zap.Error(countResult.Err()))
-		return &resource.SearchResourcesResponse{
-			Error: countResult.Err(),
-		}
+		return nil, err
 	}
 
 	countResult.Next()
@@ -605,16 +565,12 @@ LIMIT $take
 
 	if err != nil {
 		l.Error("could not execute search query", zap.Error(err))
-		return &resource.SearchResourcesResponse{
-			Error: err,
-		}
+		return nil, err
 	}
 
 	if searchResult.Err() != nil {
 		l.Error("could not execute search query", zap.Error(searchResult.Err()))
-		return &resource.SearchResourcesResponse{
-			Error: searchResult.Err(),
-		}
+		return nil, err
 	}
 
 	var resources []*resourcemodel.Resource
@@ -624,9 +580,7 @@ LIMIT $take
 		res, err := rs.mapGraphResourceRecord(searchResult.Record(), "r")
 		if err != nil {
 			l.Error("could not map resource record", zap.Error(err))
-			return &resource.SearchResourcesResponse{
-				Error: err,
-			}
+			return nil, err
 		}
 
 		resources = append(resources, res)
@@ -639,6 +593,6 @@ LIMIT $take
 		Skip:       request.Skip,
 		Take:       request.Take,
 		TotalCount: int(totalCount),
-	}
+	}, nil
 
 }

@@ -4,33 +4,35 @@ import (
 	"context"
 	"fmt"
 	_ "github.com/commonpool/backend/docs"
-	"github.com/commonpool/backend/handler"
 	"github.com/commonpool/backend/logging"
 	"github.com/commonpool/backend/pkg/auth"
-	"github.com/commonpool/backend/pkg/chat"
+	authhandler "github.com/commonpool/backend/pkg/auth/handler"
 	chathandler "github.com/commonpool/backend/pkg/chat/handler"
 	chatservice "github.com/commonpool/backend/pkg/chat/service"
 	chatstore "github.com/commonpool/backend/pkg/chat/store"
+	"github.com/commonpool/backend/pkg/chatback"
 	"github.com/commonpool/backend/pkg/config"
 	db2 "github.com/commonpool/backend/pkg/db"
-	graph2 "github.com/commonpool/backend/pkg/graph"
-	group2 "github.com/commonpool/backend/pkg/group"
-	service2 "github.com/commonpool/backend/pkg/group/service"
-	store4 "github.com/commonpool/backend/pkg/group/store"
+	"github.com/commonpool/backend/pkg/graph"
+	grouphandler "github.com/commonpool/backend/pkg/group/handler"
+	groupservice "github.com/commonpool/backend/pkg/group/service"
+	groupstore "github.com/commonpool/backend/pkg/group/store"
 	handler2 "github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/mq"
-	resource2 "github.com/commonpool/backend/pkg/resource"
-	store5 "github.com/commonpool/backend/pkg/resource/store"
-	trading2 "github.com/commonpool/backend/pkg/trading"
-	service3 "github.com/commonpool/backend/pkg/trading/service"
-	store2 "github.com/commonpool/backend/pkg/trading/store"
-	service4 "github.com/commonpool/backend/pkg/transaction/service"
-	store3 "github.com/commonpool/backend/pkg/transaction/store"
-	"github.com/commonpool/backend/pkg/user"
-	"github.com/commonpool/backend/pkg/user/model"
-	store6 "github.com/commonpool/backend/pkg/user/store"
+	"github.com/commonpool/backend/pkg/realtime"
+	resourcehandler "github.com/commonpool/backend/pkg/resource/handler"
+	"github.com/commonpool/backend/pkg/resource/service"
+	resourcestore "github.com/commonpool/backend/pkg/resource/store"
+	"github.com/commonpool/backend/pkg/session"
+	tradingservice "github.com/commonpool/backend/pkg/trading/service"
+	tradingstore "github.com/commonpool/backend/pkg/trading/store"
+	transactionservice "github.com/commonpool/backend/pkg/transaction/service"
+	transactionstore "github.com/commonpool/backend/pkg/transaction/store"
+	userhandler "github.com/commonpool/backend/pkg/user/handler"
+	usermodel "github.com/commonpool/backend/pkg/user/model"
+	userservice "github.com/commonpool/backend/pkg/user/service"
+	userstore "github.com/commonpool/backend/pkg/user/store"
 	"github.com/commonpool/backend/router"
-	"github.com/labstack/echo/v4"
 	echoSwagger "github.com/swaggo/echo-swagger"
 	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
@@ -41,20 +43,6 @@ import (
 	"os/signal"
 	"time"
 )
-
-var (
-	d             *gorm.DB
-	resourceStore resource2.Store
-	authStore     user.Store
-	cs            chat.Store
-	ts            trading2.Store
-	gs            group2.Store
-	e             *echo.Echo
-)
-
-/*
-{"neo4j":"FOLLOWER","system":"FOLLOWER","bla":"LEADER"}
-*/
 
 // @title commonpool api
 // @version 1.0
@@ -78,61 +66,70 @@ func main() {
 		log.Fatal(err, "cannot crate amqp client")
 	}
 
-	err = graph2.InitGraphDatabase(ctx, appConfig)
+	err = graph.InitGraphDatabase(ctx, appConfig)
 	if err != nil {
 		l.Error("could not initialize graph database", zap.Error(err))
 		panic(err)
 	}
 
-	driver, err := graph2.NewNeo4jDriver(appConfig, appConfig.Neo4jDatabase)
+	driver, err := graph.NewNeo4jDriver(appConfig, appConfig.Neo4jDatabase)
 	if err != nil {
 		l.Error("could not create neo4j driver", zap.Error(err))
 		panic(err)
 	}
 
-	r := router.NewRouter()
-
-	r.GET("/api/swagger/*", echoSwagger.WrapHandler)
-
 	db := getDb(appConfig)
 	db2.AutoMigrate(db)
 
-	transactionStore := store3.NewTransactionStore(db)
-	transactionService := service4.NewTransactionService(transactionStore)
-	resourceStore = store5.NewResourceStore(driver, transactionService)
-	authStore = store6.NewAuthStore(db, driver)
-	chatStore := chatstore.NewChatStore(db, authStore, amqpCli)
-	tradingStore := store2.NewTradingStore(driver)
-	groupStore := store4.NewGroupStore(driver)
+	transactionStore := transactionstore.NewTransactionStore(db)
+	transactionService := transactionservice.NewTransactionService(transactionStore)
 
-	chatService := chatservice.NewChatService(authStore, groupStore, resourceStore, amqpCli, chatStore)
-	groupService := service2.NewGroupService(groupStore, amqpCli, chatService, authStore)
-	tradingService := service3.NewTradingService(tradingStore, resourceStore, authStore, chatService, groupService, transactionService)
+	userStore := userstore.NewUserStore(db, driver)
+	resourceStore := resourcestore.NewResourceStore(driver, transactionService)
+	groupStore := groupstore.NewGroupStore(driver)
+	chatStore := chatstore.NewChatStore(db, userStore, amqpCli)
+	tradingStore := tradingstore.NewTradingStore(driver)
+
+	chatService := chatservice.NewChatService(userStore, groupStore, resourceStore, amqpCli, chatStore)
+	groupService := groupservice.NewGroupService(groupStore, amqpCli, chatService, userStore)
+	userService := userservice.NewUserService(userStore)
+	resourceService := service.NewResourceService(resourceStore)
+	tradingService := tradingservice.NewTradingService(tradingStore, resourceStore, userStore, chatService, groupService, transactionService)
+
+	r := router.NewRouter()
+	r.HTTPErrorHandler = handler2.HttpErrorHandler
+	r.GET("/api/swagger/*", echoSwagger.WrapHandler)
 
 	v1 := r.Group("/api/v1")
-	authorization := auth.NewAuth(v1, appConfig, "/api/v1", authStore)
 
-	r.HTTPErrorHandler = handler2.HttpErrorHandler
+	authorization := auth.NewAuth(v1, appConfig, "/api/v1", userStore)
 
-	chatHandler := chathandler.NewChatHandler(chatService, appConfig, authorization)
+	authHandler := authhandler.NewHandler(authorization)
+	authHandler.Register(v1)
+
+	sessionHandler := session.NewHandler(authorization)
+	sessionHandler.Register(v1)
+
+	chatHandler := chathandler.NewHandler(chatService, appConfig, authorization)
 	chatHandler.Register(v1)
 
-	h := handler.NewHandler(
-		resourceStore,
-		authStore,
-		chatStore,
-		tradingStore,
-		authorization,
-		amqpCli,
-		*appConfig,
-		chatService,
-		tradingService,
-		groupService)
+	groupHandler := grouphandler.NewHandler(groupService, userService, authorization)
+	groupHandler.Register(v1)
 
-	h.Register(v1)
+	resourceHandler := resourcehandler.NewHandler(resourceService, groupService, userService, authorization)
+	resourceHandler.Register(v1)
 
-	var users []model.User
-	err = db.Model(model.User{}).Find(&users).Error
+	chatbackHandler := chatback.NewHandler(tradingService, authorization)
+	chatbackHandler.Register(v1)
+
+	userHandler := userhandler.NewHandler(userService, authorization)
+	userHandler.Register(v1)
+
+	realtimeHandler := realtime.NewRealtimeHandler(amqpCli, chatService, authorization)
+	realtimeHandler.Register(v1)
+
+	var users []usermodel.User
+	err = db.Model(usermodel.User{}).Find(&users).Error
 	if err != nil {
 		l.Error("could not find users", zap.Error(err))
 		panic(err)

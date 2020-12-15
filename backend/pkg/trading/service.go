@@ -20,4 +20,9 @@ type Service interface {
 	GetTradingHistory(ctx context.Context, userIDs *usermodel.UserKeys) ([]tradingmodel.HistoryEntry, error)
 	SendOffer(ctx context.Context, groupKey groupmodel.GroupKey, offerItems *tradingmodel.OfferItems, message string) (*tradingmodel.Offer, *tradingmodel.OfferItems, error)
 	FindTargetsForOfferItem(ctx ctx.Context, groupKey groupmodel.GroupKey, itemType tradingmodel.OfferItemType, from *model.Target, to *model.Target) (*model.Targets, error)
+	GetOffersForUser(key usermodel.UserKey) (*GetOffersResult, error)
+	FindApproversForOffers(offers *tradingmodel.OfferKeys) (*tradingmodel.OffersApprovers, error)
+	GetOffer(offerKey tradingmodel.OfferKey) (*tradingmodel.Offer, error)
+	GetOfferItemsForOffer(offerKey tradingmodel.OfferKey) (*tradingmodel.OfferItems, error)
+	FindApproversForOffer(offerKey tradingmodel.OfferKey) (*tradingmodel.OfferApprovers, error)
 }

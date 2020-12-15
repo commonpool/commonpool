@@ -13,7 +13,7 @@ type ChatHandler struct {
 	auth        auth.Authenticator
 }
 
-func NewChatHandler(
+func NewHandler(
 	chatService chat.Service,
 	appConfig *config.AppConfig,
 	auth auth.Authenticator) *ChatHandler {

@@ -72,7 +72,7 @@ func (c ChatService) createSubscriptionsAndMqBindingsForUserConversation(ctx con
 		return nil, err
 	}
 
-	users, err := c.us.GetByKeys(ctx, userKeys.Items)
+	users, err := c.us.GetByKeys(ctx, userKeys)
 	if err != nil {
 		return nil, err
 	}

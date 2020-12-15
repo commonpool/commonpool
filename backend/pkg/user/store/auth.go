@@ -20,14 +20,14 @@ type UserStore struct {
 
 var _ user.Store = &UserStore{}
 
-func NewAuthStore(db *gorm.DB, graphDriver graph2.Driver) *UserStore {
+func NewUserStore(db *gorm.DB, graphDriver graph2.Driver) *UserStore {
 	return &UserStore{
 		db:          db,
 		graphDriver: graphDriver,
 	}
 }
 
-func (us *UserStore) GetByKeys(ctx context.Context, keys []usermodel.UserKey) (*user.Users, error) {
+func (us *UserStore) GetByKeys(ctx context.Context, keys *usermodel.UserKeys) (*user.Users, error) {
 
 	session, err := us.graphDriver.GetSession()
 	if err != nil {
@@ -35,7 +35,7 @@ func (us *UserStore) GetByKeys(ctx context.Context, keys []usermodel.UserKey) (*
 	}
 	defer session.Close()
 
-	return us.getByKeys(session, usermodel.NewUserKeys(keys))
+	return us.getByKeys(session, keys)
 }
 
 func (us *UserStore) Upsert(key usermodel.UserKey, email string, username string) error {
@@ -191,7 +191,7 @@ func (us *UserStore) GetUsername(key usermodel.UserKey) (string, error) {
 	return u.Username, err
 }
 
-func (us *UserStore) Find(query user.Query) ([]*usermodel.User, error) {
+func (us *UserStore) Find(query user.Query) (*user.Users, error) {
 
 	session, err := us.graphDriver.GetSession()
 	if err != nil {
@@ -241,7 +241,7 @@ func (us *UserStore) Find(query user.Query) ([]*usermodel.User, error) {
 		users = append(users, MapUserNode(field.(neo4j.Node)))
 	}
 
-	return users, err
+	return user.NewUsers(users), err
 }
 func IsUserNode(node neo4j.Node) bool {
 	return graph2.NodeHasLabel(node, "User")

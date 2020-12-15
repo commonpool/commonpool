@@ -78,7 +78,7 @@ func TestMain(m *testing.M) {
 	TransactionStore = transactionstore.NewTransactionStore(Db)
 	TransactionService = transactionservice.NewTransactionService(TransactionStore)
 	ResourceStore = *resourcestore.NewResourceStore(Driver, TransactionService)
-	AuthStore = *userstore.NewAuthStore(Db, Driver)
+	AuthStore = *userstore.NewUserStore(Db, Driver)
 	ChatStore = *chatstore.NewChatStore(Db, &AuthStore, AmqpClient)
 	TradingStore = *tradingstore.NewTradingStore(Driver)
 	GroupStore = *groupstore.NewGroupStore(Driver)
@@ -89,16 +89,11 @@ func TestMain(m *testing.M) {
 	db.AutoMigrate(Db)
 
 	a = handler.NewHandler(
-		&ResourceStore,
 		&AuthStore,
-		&ChatStore,
-		TradingStore,
 		Authorizer,
 		AmqpClient,
-		*appConfig,
 		ChatService,
-		TradingService,
-		GroupService)
+		TradingService)
 
 	cleanDb()
 

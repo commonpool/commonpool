@@ -71,6 +71,28 @@ func NewEmptyTargets() *Targets {
 	}
 }
 
+func (t *Targets) GetUserKeys() *usermodel.UserKeys {
+	var userKeys []usermodel.UserKey
+	for _, target := range t.Items {
+		if !target.IsForUser() {
+			continue
+		}
+		userKeys = append(userKeys, target.GetUserKey())
+	}
+	return usermodel.NewUserKeys(userKeys)
+}
+
+func (t *Targets) GetGroupKeys() *groupmodel.GroupKeys {
+	var groupKeys []groupmodel.GroupKey
+	for _, target := range t.Items {
+		if !target.IsForGroup() {
+			continue
+		}
+		groupKeys = append(groupKeys, target.GetGroupKey())
+	}
+	return groupmodel.NewGroupKeys(groupKeys)
+}
+
 type TargetType string
 
 const (

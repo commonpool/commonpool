@@ -5,8 +5,8 @@ package mock
 
 import (
 	"context"
-	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/auth"
+	"github.com/commonpool/backend/pkg/user/model"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"sync"

@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/chat"
 	model2 "github.com/commonpool/backend/pkg/chat/model"
 	group2 "github.com/commonpool/backend/pkg/group"
@@ -14,7 +13,6 @@ import (
 	transaction2 "github.com/commonpool/backend/pkg/transaction"
 	"github.com/commonpool/backend/pkg/user"
 	usermodel "github.com/commonpool/backend/pkg/user/model"
-	ctx "golang.org/x/net/context"
 	"time"
 )
 
@@ -157,43 +155,28 @@ func (t TradingService) buildOfferCompletedMessage(ctx context.Context, items *t
 
 }
 
-func (t TradingService) FindTargetsForOfferItem(
-	ctx ctx.Context,
-	groupKey groupmodel.GroupKey,
-	itemType tradingmodel.OfferItemType,
-	from *model.Target,
-	to *model.Target) (*model.Targets, error) {
+func (t TradingService) checkIfAllItemsCompleted(ctx context.Context, loggerInUser usermodel.UserReference, offerItem tradingmodel.OfferItem) error {
 
-	membershipStatus := groupmodel.ApprovedMembershipStatus
-	membershipsForGroup, err := t.groupService.GetGroupMemberships(ctx, &group2.GetMembershipsForGroupRequest{
-		GroupKey:         groupKey,
-		MembershipStatus: &membershipStatus,
-	})
+	offer, err := t.tradingStore.GetOffer(offerItem.GetOfferKey())
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	group, err := t.groupService.GetGroup(ctx, &group2.GetGroupRequest{
-		Key: groupKey,
-	})
+	offerItems, err := t.tradingStore.GetOfferItemsForOffer(offer.Key)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	var targets []*model.Target
-
-	groupTarget := model.NewGroupTarget(group.Group.Key)
-
-	if to == nil || !to.Equals(groupTarget) {
-		targets = append(targets, groupTarget)
+	approvers, err := t.tradingStore.FindApproversForOffer(offer.Key)
+	if err != nil {
+		return err
 	}
 
-	for _, membership := range membershipsForGroup.Memberships.Items {
-		userTarget := model.NewUserTarget(membership.GetUserKey())
-		if to == nil || !to.Equals(userTarget) {
-			targets = append(targets, userTarget)
-		}
+	allUsersInOffer, err := t.us.GetByKeys(ctx, approvers.AllUserKeys())
+	if err != nil {
+		return err
 	}
 
-	return model.NewTargets(targets), nil
+	return t.checkOfferCompleted(ctx, offer.GroupKey, offer.Key, offerItems, loggerInUser, allUsersInOffer)
+
 }

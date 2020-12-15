@@ -3,16 +3,15 @@ package user
 import (
 	"context"
 	groupmodel "github.com/commonpool/backend/pkg/group/model"
-	model2 "github.com/commonpool/backend/pkg/user/model"
 	usermodel "github.com/commonpool/backend/pkg/user/model"
 )
 
 type Store interface {
-	GetByKey(key usermodel.UserKey) (*model2.User, error)
-	GetByKeys(ctx context.Context, keys []usermodel.UserKey) (*Users, error)
+	GetByKey(key usermodel.UserKey) (*usermodel.User, error)
+	GetByKeys(ctx context.Context, keys *usermodel.UserKeys) (*Users, error)
 	Upsert(key usermodel.UserKey, email string, username string) error
 	GetUsername(key usermodel.UserKey) (string, error)
-	Find(query Query) ([]*model2.User, error)
+	Find(query Query) (*Users, error)
 }
 
 type Query struct {
