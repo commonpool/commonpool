@@ -4,11 +4,29 @@ import (
 	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/trading"
-	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"github.com/satori/go.uuid"
 	"net/http"
 )
+
+type SendOfferRequest struct {
+	Offer SendOfferPayload `json:"offer" validate:"required"`
+}
+
+type SendOfferPayload struct {
+	Items   []SendOfferPayloadItem `json:"items" validate:"min=1"`
+	GroupID string                 `json:"groupId" validate:"uuid"`
+	Message string                 `json:"message"`
+}
+
+type SendOfferPayloadItem struct {
+	Type       trading.OfferItemType `json:"type"`
+	To         OfferItemTarget       `json:"to" validate:"required,uuid"`
+	From       *OfferItemTarget      `json:"from" validate:"required,uuid"`
+	ResourceId *string               `json:"resourceId" validate:"required,uuid"`
+	Duration   *string               `json:"duration"`
+	Amount     *string               `json:"amount"`
+}
 
 func (h *TradingHandler) HandleSendOffer(c echo.Context) error {
 
@@ -16,7 +34,7 @@ func (h *TradingHandler) HandleSendOffer(c echo.Context) error {
 
 	var err error
 
-	req := web.SendOfferRequest{}
+	req := SendOfferRequest{}
 	if err = c.Bind(&req); err != nil {
 		return err
 	}
@@ -55,7 +73,7 @@ func (h *TradingHandler) HandleSendOffer(c echo.Context) error {
 		return err
 	}
 
-	return c.JSON(http.StatusCreated, &web.GetOfferResponse{
+	return c.JSON(http.StatusCreated, &OfferResponse{
 		Offer: webOffer,
 	})
 

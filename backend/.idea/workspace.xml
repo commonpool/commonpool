@@ -31,25 +31,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b50bce1a-5445-4a69-8265-74993e439f0e" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/pkg/group/handler/handler.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/group/handler/membership.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/trading/handler/offer_item.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pkg/trading/handler/offer_item_target.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/group/handler/delete_membership.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/handler/delete_membership.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/group/handler/get_group.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/handler/get_group.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/group/handler/get_group_invite_picker.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/handler/get_group_invite_picker.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/group/handler/get_group_memberships.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/handler/get_group_memberships.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/group/handler/get_membership.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/handler/get_membership.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/group/handler/get_user_memberships.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/handler/get_user_memberships.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/group/handler/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/handler/group.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/group/handler/group_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/handler/handler_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/group/handler/helpers.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/handler/helpers.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/group/handler/post_group.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/handler/post_group.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/group/handler/post_membership.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/handler/post_membership.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/server/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/server/server.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/trading/handler/get_offer_target_picker.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/handler/get_offer_target_picker.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/integration/group_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/test/integration/group_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/integration/helpers_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/test/integration/helpers_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/group.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/trading/handler/get_offers.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/handler/get_offers.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/trading/handler/helpers.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/handler/helpers.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/trading/handler/post_offer.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/handler/post_offer.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/integration/trading_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/test/integration/trading_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/offer.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/handler/offer.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -95,11 +84,11 @@
   </component>
   <component name="RecentsManager">
     <key name="GoMoveDeclarationDialog.RECENT_KEY">
+      <recent name="$PROJECT_DIR$/pkg/trading/handler" />
       <recent name="$PROJECT_DIR$/pkg/group/handler" />
       <recent name="$PROJECT_DIR$/pkg/chatback" />
       <recent name="$PROJECT_DIR$/pkg/chat/chathandler" />
       <recent name="$PROJECT_DIR$/pkg/trading/model" />
-      <recent name="$PROJECT_DIR$/pkg/realtime" />
     </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/pkg/trading/model" />
@@ -107,11 +96,11 @@
       <recent name="$PROJECT_DIR$/k8s" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/pkg/trading/handler" />
+      <recent name="$PROJECT_DIR$/pkg/trading" />
       <recent name="$PROJECT_DIR$/pkg/group/handler" />
       <recent name="$PROJECT_DIR$/pkg/group" />
       <recent name="$PROJECT_DIR$/pkg/chat/chathandler" />
-      <recent name="$PROJECT_DIR$/pkg/chat" />
-      <recent name="$PROJECT_DIR$/pkg/server" />
     </key>
   </component>
   <component name="RunManager" selected="Go Build.go build backend main.go">
@@ -408,7 +397,21 @@
       <option name="project" value="LOCAL" />
       <updated>1608112353485</updated>
     </task>
-    <option name="localTasksCounter" value="27" />
+    <task id="LOCAL-00027" summary="work">
+      <created>1608112820140</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1608112820140</updated>
+    </task>
+    <task id="LOCAL-00028" summary="work">
+      <created>1608112925581</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1608112925581</updated>
+    </task>
+    <option name="localTasksCounter" value="29" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

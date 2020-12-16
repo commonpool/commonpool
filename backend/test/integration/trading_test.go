@@ -6,6 +6,7 @@ import (
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/trading"
+	"github.com/commonpool/backend/pkg/trading/handler"
 	"github.com/commonpool/backend/web"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -13,13 +14,13 @@ import (
 	"time"
 )
 
-func SubmitOffer(t *testing.T, ctx context.Context, userSession *auth.UserSession, request *web.SendOfferRequest) (*web.GetOfferResponse, *http.Response, error) {
+func SubmitOffer(t *testing.T, ctx context.Context, userSession *auth.UserSession, request *handler.SendOfferRequest) (*handler.OfferResponse, *http.Response, error) {
 	c, recorder := NewRequest(ctx, userSession, http.MethodPost, "/api/v1/offers", request)
 	err := a.HandleSendOffer(c)
 	if err != nil {
 		return nil, nil, err
 	}
-	response := &web.GetOfferResponse{}
+	response := &handler.OfferResponse{}
 	t.Log(recorder.Body.String())
 	return response, ReadResponse(t, recorder, response), nil
 }
@@ -79,11 +80,11 @@ func TestUserCanSubmitOfferBetweenUsers(t *testing.T) {
 		},
 	})
 
-	offerResp, httpOfferResp, err := SubmitOffer(t, ctx, user1, &web.SendOfferRequest{
-		Offer: web.SendOfferPayload{
-			Items: []web.SendOfferPayloadItem{
-				*web.NewResourceTransferItem(web.NewUserTarget(user2.Subject), resp.Resource.Id),
-				*web.NewCreditTransferItem(web.NewUserTarget(user1.Subject), web.NewUserTarget(user1.Subject), time.Hour*2),
+	offerResp, httpOfferResp, err := SubmitOffer(t, ctx, user1, &handler.SendOfferRequest{
+		Offer: handler.SendOfferPayload{
+			Items: []handler.SendOfferPayloadItem{
+				*handler.NewResourceTransferItem(handler.NewUserTarget(user2.Subject), resp.Resource.Id),
+				*handler.NewCreditTransferItem(handler.NewUserTarget(user1.Subject), handler.NewUserTarget(user1.Subject), time.Hour*2),
 			},
 			Message: "",
 			GroupID: group.ID,
@@ -120,11 +121,11 @@ func TestUserCanSubmitOfferBetweenUsersAndGroup(t *testing.T) {
 		},
 	})
 
-	offerResp, httpOfferResp, err := SubmitOffer(t, ctx, user1, &web.SendOfferRequest{
-		Offer: web.SendOfferPayload{
-			Items: []web.SendOfferPayloadItem{
-				*web.NewResourceTransferItem(web.NewUserTarget(user2.Subject), resp.Resource.Id),
-				*web.NewCreditTransferItem(web.NewUserTarget(user2.Subject), web.NewGroupTarget(group.ID), time.Hour*1),
+	offerResp, httpOfferResp, err := SubmitOffer(t, ctx, user1, &handler.SendOfferRequest{
+		Offer: handler.SendOfferPayload{
+			Items: []handler.SendOfferPayloadItem{
+				*handler.NewResourceTransferItem(handler.NewUserTarget(user2.Subject), resp.Resource.Id),
+				*handler.NewCreditTransferItem(handler.NewUserTarget(user2.Subject), handler.NewGroupTarget(group.ID), time.Hour*1),
 			},
 			Message: "",
 			GroupID: group.ID,
@@ -164,12 +165,12 @@ func TestUserCanSubmitOfferBetweenGroupAndMultipleUsers(t *testing.T) {
 		},
 	})
 
-	offerResp, httpOfferResp, err := SubmitOffer(t, ctx, user1, &web.SendOfferRequest{
-		Offer: web.SendOfferPayload{
-			Items: []web.SendOfferPayloadItem{
-				*web.NewResourceTransferItem(web.NewUserTarget(user2.Subject), resp.Resource.Id),
-				*web.NewCreditTransferItem(web.NewUserTarget(user2.Subject), web.NewUserTarget(user1.Subject), time.Hour*1),
-				*web.NewCreditTransferItem(web.NewUserTarget(user2.Subject), web.NewGroupTarget(group.ID), time.Hour*1),
+	offerResp, httpOfferResp, err := SubmitOffer(t, ctx, user1, &handler.SendOfferRequest{
+		Offer: handler.SendOfferPayload{
+			Items: []handler.SendOfferPayloadItem{
+				*handler.NewResourceTransferItem(handler.NewUserTarget(user2.Subject), resp.Resource.Id),
+				*handler.NewCreditTransferItem(handler.NewUserTarget(user2.Subject), handler.NewUserTarget(user1.Subject), time.Hour*1),
+				*handler.NewCreditTransferItem(handler.NewUserTarget(user2.Subject), handler.NewGroupTarget(group.ID), time.Hour*1),
 			},
 			Message: "",
 			GroupID: group.ID,
@@ -209,11 +210,11 @@ func TestUsersCanAcceptOfferBetweenUsers(t *testing.T) {
 		},
 	})
 
-	offerResp, _, err := SubmitOffer(t, ctx, user1, &web.SendOfferRequest{
-		Offer: web.SendOfferPayload{
-			Items: []web.SendOfferPayloadItem{
-				*web.NewResourceTransferItem(web.NewUserTarget(user2.Subject), resp.Resource.Id),
-				*web.NewCreditTransferItem(web.NewUserTarget(user2.Subject), web.NewUserTarget(user1.Subject), time.Hour*2),
+	offerResp, _, err := SubmitOffer(t, ctx, user1, &handler.SendOfferRequest{
+		Offer: handler.SendOfferPayload{
+			Items: []handler.SendOfferPayloadItem{
+				*handler.NewResourceTransferItem(handler.NewUserTarget(user2.Subject), resp.Resource.Id),
+				*handler.NewCreditTransferItem(handler.NewUserTarget(user2.Subject), handler.NewUserTarget(user1.Subject), time.Hour*2),
 			},
 			Message: "Howdy :)",
 			GroupID: group.ID,
@@ -268,11 +269,11 @@ func TestUserCannotCreateOfferForResourceNotSharedWithGroup(t *testing.T) {
 		},
 	})
 
-	_, _, err := SubmitOffer(t, ctx, user1, &web.SendOfferRequest{
-		Offer: web.SendOfferPayload{
-			Items: []web.SendOfferPayloadItem{
-				*web.NewResourceTransferItem(web.NewUserTarget(user2.Subject), resource.Resource.Id),
-				*web.NewCreditTransferItem(web.NewUserTarget(user2.Subject), web.NewUserTarget(user1.Subject), time.Hour*2),
+	_, _, err := SubmitOffer(t, ctx, user1, &handler.SendOfferRequest{
+		Offer: handler.SendOfferPayload{
+			Items: []handler.SendOfferPayloadItem{
+				*handler.NewResourceTransferItem(handler.NewUserTarget(user2.Subject), resource.Resource.Id),
+				*handler.NewCreditTransferItem(handler.NewUserTarget(user2.Subject), handler.NewUserTarget(user1.Subject), time.Hour*2),
 			},
 			GroupID: group1.ID,
 			Message: "Howdy :)",
@@ -308,11 +309,11 @@ func TestCannotCreateResourceTransferItemForResourceAlreadyOwned(t *testing.T) {
 		},
 	})
 
-	_, _, err := SubmitOffer(t, ctx, user1, &web.SendOfferRequest{
-		Offer: web.SendOfferPayload{
-			Items: []web.SendOfferPayloadItem{
-				*web.NewResourceTransferItem(web.NewUserTarget(user2.Subject), resource.Resource.Id),
-				*web.NewCreditTransferItem(web.NewUserTarget(user2.Subject), web.NewUserTarget(user1.Subject), time.Hour*2),
+	_, _, err := SubmitOffer(t, ctx, user1, &handler.SendOfferRequest{
+		Offer: handler.SendOfferPayload{
+			Items: []handler.SendOfferPayloadItem{
+				*handler.NewResourceTransferItem(handler.NewUserTarget(user2.Subject), resource.Resource.Id),
+				*handler.NewCreditTransferItem(handler.NewUserTarget(user2.Subject), handler.NewUserTarget(user1.Subject), time.Hour*2),
 			},
 			GroupID: group.ID,
 			Message: "Howdy :)",
@@ -348,11 +349,11 @@ func TestUsersCanDeclineOffer(t *testing.T) {
 		},
 	})
 
-	createOffer, createOfferHttp, err := SubmitOffer(t, ctx, user1, &web.SendOfferRequest{
-		Offer: web.SendOfferPayload{
-			Items: []web.SendOfferPayloadItem{
-				*web.NewResourceTransferItem(web.NewUserTarget(user2.Subject), resp.Resource.Id),
-				*web.NewCreditTransferItem(web.NewUserTarget(user2.Subject), web.NewUserTarget(user1.Subject), time.Hour*2),
+	createOffer, createOfferHttp, err := SubmitOffer(t, ctx, user1, &handler.SendOfferRequest{
+		Offer: handler.SendOfferPayload{
+			Items: []handler.SendOfferPayloadItem{
+				*handler.NewResourceTransferItem(handler.NewUserTarget(user2.Subject), resp.Resource.Id),
+				*handler.NewCreditTransferItem(handler.NewUserTarget(user2.Subject), handler.NewUserTarget(user1.Subject), time.Hour*2),
 			},
 			Message: "Howdy :)",
 			GroupID: group.ID,
@@ -406,11 +407,11 @@ func TestSendingOfferShouldCreateChatChannelBetweenUsers(t *testing.T) {
 		},
 	})
 
-	_, submitOfferHttp, err := SubmitOffer(t, ctx, user1, &web.SendOfferRequest{
-		Offer: web.SendOfferPayload{
-			Items: []web.SendOfferPayloadItem{
-				*web.NewResourceTransferItem(web.NewUserTarget(user2.Subject), resp.Resource.Id),
-				*web.NewCreditTransferItem(web.NewUserTarget(user2.Subject), web.NewUserTarget(user1.Subject), time.Hour*2),
+	_, submitOfferHttp, err := SubmitOffer(t, ctx, user1, &handler.SendOfferRequest{
+		Offer: handler.SendOfferPayload{
+			Items: []handler.SendOfferPayloadItem{
+				*handler.NewResourceTransferItem(handler.NewUserTarget(user2.Subject), resp.Resource.Id),
+				*handler.NewCreditTransferItem(handler.NewUserTarget(user2.Subject), handler.NewUserTarget(user1.Subject), time.Hour*2),
 			},
 			Message: "Howdy :)",
 			GroupID: group.ID,
@@ -466,13 +467,13 @@ func TestSendingOfferBetweenMultiplePeopleShouldCreateChatChannelBetweenUsers(t 
 		},
 	})
 
-	_, submitOfferHttp, err := SubmitOffer(t, ctx, user1, &web.SendOfferRequest{
-		Offer: web.SendOfferPayload{
-			Items: []web.SendOfferPayloadItem{
-				*web.NewResourceTransferItem(web.NewUserTarget(user2.Subject), res1.Resource.Id),
-				*web.NewCreditTransferItem(web.NewUserTarget(user2.Subject), web.NewUserTarget(user1.Subject), time.Hour*2),
-				*web.NewResourceTransferItem(web.NewUserTarget(user1.Subject), res2.Resource.Id),
-				*web.NewCreditTransferItem(web.NewUserTarget(user3.Subject), web.NewUserTarget(user2.Subject), time.Hour*2),
+	_, submitOfferHttp, err := SubmitOffer(t, ctx, user1, &handler.SendOfferRequest{
+		Offer: handler.SendOfferPayload{
+			Items: []handler.SendOfferPayloadItem{
+				*handler.NewResourceTransferItem(handler.NewUserTarget(user2.Subject), res1.Resource.Id),
+				*handler.NewCreditTransferItem(handler.NewUserTarget(user2.Subject), handler.NewUserTarget(user1.Subject), time.Hour*2),
+				*handler.NewResourceTransferItem(handler.NewUserTarget(user1.Subject), res2.Resource.Id),
+				*handler.NewCreditTransferItem(handler.NewUserTarget(user3.Subject), handler.NewUserTarget(user2.Subject), time.Hour*2),
 			},
 			Message: "Howdy :)",
 			GroupID: group.ID,
@@ -513,11 +514,11 @@ func TestCanGetTradingHistory(t *testing.T) {
 	resource1, _ := CreateResource(t, ctx, user1)
 	resource2, _ := CreateResource(t, ctx, user2)
 
-	offer1, offer1Http, _ := SubmitOffer(t, ctx, user1, &web.SendOfferRequest{
-		Offer: web.SendOfferPayload{
-			Items: []web.SendOfferPayloadItem{
-				*web.NewResourceTransferItem(web.NewUserTarget(user1.Subject), resource1.Resource.Id),
-				*web.NewCreditTransferItem(web.NewUserTarget(user2.Subject), web.NewUserTarget(user1.Subject), time.Hour*2),
+	offer1, offer1Http, _ := SubmitOffer(t, ctx, user1, &handler.SendOfferRequest{
+		Offer: handler.SendOfferPayload{
+			Items: []handler.SendOfferPayloadItem{
+				*handler.NewResourceTransferItem(handler.NewUserTarget(user1.Subject), resource1.Resource.Id),
+				*handler.NewCreditTransferItem(handler.NewUserTarget(user2.Subject), handler.NewUserTarget(user1.Subject), time.Hour*2),
 			},
 			Message: "Howdy :)",
 		},
@@ -527,11 +528,11 @@ func TestCanGetTradingHistory(t *testing.T) {
 	assert.NoError(t, UsersAcceptOffer(t, ctx, offer1.Offer, []*auth.UserSession{user1, user2}))
 	assert.NoError(t, UsersConfirmResourceTransferred(t, ctx, offer1.Offer, []*auth.UserSession{user1, user2}))
 
-	offer2, offer2Http, _ := SubmitOffer(t, ctx, user1, &web.SendOfferRequest{
-		Offer: web.SendOfferPayload{
-			Items: []web.SendOfferPayloadItem{
-				*web.NewResourceTransferItem(web.NewUserTarget(user2.Subject), resource2.Resource.Id),
-				*web.NewCreditTransferItem(web.NewUserTarget(user2.Subject), web.NewUserTarget(user1.Subject), time.Hour*2),
+	offer2, offer2Http, _ := SubmitOffer(t, ctx, user1, &handler.SendOfferRequest{
+		Offer: handler.SendOfferPayload{
+			Items: []handler.SendOfferPayloadItem{
+				*handler.NewResourceTransferItem(handler.NewUserTarget(user2.Subject), resource2.Resource.Id),
+				*handler.NewCreditTransferItem(handler.NewUserTarget(user2.Subject), handler.NewUserTarget(user1.Subject), time.Hour*2),
 			},
 			Message: "Howdy :)",
 		},
@@ -599,7 +600,7 @@ func TestCanGetTradingHistory(t *testing.T) {
 //
 // }
 
-func UsersConfirmResourceTransferred(t *testing.T, ctx context.Context, offer *web.Offer, users []*auth.UserSession) error {
+func UsersConfirmResourceTransferred(t *testing.T, ctx context.Context, offer *handler.Offer, users []*auth.UserSession) error {
 	for _, offerItem := range offer.Items {
 
 		if offerItem.Type != trading.ResourceTransfer {
@@ -627,7 +628,7 @@ func UsersConfirmResourceTransferred(t *testing.T, ctx context.Context, offer *w
 	return nil
 }
 
-func UsersAcceptOffer(t *testing.T, ctx context.Context, offer *web.Offer, users []*auth.UserSession) error {
+func UsersAcceptOffer(t *testing.T, ctx context.Context, offer *handler.Offer, users []*auth.UserSession) error {
 
 	usersAccepted := map[model.UserKey]bool{}
 

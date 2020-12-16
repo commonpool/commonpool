@@ -3,10 +3,13 @@ package handler
 import (
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/handler"
-	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
+
+type GetOffersResponse struct {
+	Offers []Offer `json:"offers"`
+}
 
 func (h *TradingHandler) HandleGetOffers(c echo.Context) error {
 
@@ -28,7 +31,7 @@ func (h *TradingHandler) HandleGetOffers(c echo.Context) error {
 		return err
 	}
 
-	var webOffers []web.Offer
+	var webOffers []Offer
 	for _, offerForUser := range offersForUser.Items {
 
 		approversForOffer, err := approversForOffers.GetApproversForOffer(offerForUser.Offer.Key)
@@ -45,7 +48,7 @@ func (h *TradingHandler) HandleGetOffers(c echo.Context) error {
 
 	}
 
-	return c.JSON(http.StatusOK, web.GetOffersResponse{
+	return c.JSON(http.StatusOK, GetOffersResponse{
 		Offers: webOffers,
 	})
 
