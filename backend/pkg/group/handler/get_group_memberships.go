@@ -1,12 +1,26 @@
 package handler
 
 import (
-	group2 "github.com/commonpool/backend/pkg/group"
+	"github.com/commonpool/backend/pkg/auth"
+	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
-	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
+
+type GetGroupMembershipsResponse struct {
+	Memberships []Membership `json:"memberships"`
+}
+
+func NewGetGroupMembershipsResponse(memberships *group.Memberships, groupNames group.Names, userNames auth.UserNames) GetUserMembershipsResponse {
+	responseMemberships := make([]Membership, len(memberships.Items))
+	for i, membership := range memberships.Items {
+		responseMemberships[i] = NewMembership(membership, groupNames, userNames)
+	}
+	return GetUserMembershipsResponse{
+		Memberships: responseMemberships,
+	}
+}
 
 // GetGroup godoc
 // @Summary Gets a group memberships
@@ -20,31 +34,31 @@ import (
 // @Success 200 {object} web.GetGroupMembershipsResponse
 // @Failure 400 {object} utils.Error
 // @Router /groups/:id/memberships [get]
-func (h *GroupHandler) GetGroupMemberships(c echo.Context) error {
+func (h *Handler) GetGroupMemberships(c echo.Context) error {
 
 	ctx, _ := handler.GetEchoContext(c, "GetGroupMemberships")
 
-	var membershipStatus = group2.AnyMembershipStatus()
+	var membershipStatus = group.AnyMembershipStatus()
 	statusStr := c.QueryParam("status")
 	if statusStr != "" {
-		ms, err := group2.ParseMembershipStatus(statusStr)
+		ms, err := group.ParseMembershipStatus(statusStr)
 		if err != nil {
 			return err
 		}
 		membershipStatus = &ms
 	}
 
-	groupKey, err := group2.ParseGroupKey(c.Param("id"))
+	groupKey, err := group.ParseGroupKey(c.Param("id"))
 	if err != nil {
 		return err
 	}
 
-	_, err = h.groupService.GetGroup(ctx, group2.NewGetGroupRequest(groupKey))
+	_, err = h.groupService.GetGroup(ctx, group.NewGetGroupRequest(groupKey))
 	if err != nil {
 		return err
 	}
 
-	getGroupMemberships, err := h.groupService.GetGroupMemberships(ctx, group2.NewGetMembershipsForGroupRequest(groupKey, membershipStatus))
+	getGroupMemberships, err := h.groupService.GetGroupMemberships(ctx, group.NewGetMembershipsForGroupRequest(groupKey, membershipStatus))
 	if err != nil {
 		return err
 	}
@@ -59,7 +73,7 @@ func (h *GroupHandler) GetGroupMemberships(c echo.Context) error {
 		return err
 	}
 
-	response := web.NewGetUserMembershipsResponse(getGroupMemberships.Memberships, groupNames, userNames)
+	response := NewGetGroupMembershipsResponse(getGroupMemberships.Memberships, groupNames, userNames)
 	return c.JSON(http.StatusOK, response)
 
 }

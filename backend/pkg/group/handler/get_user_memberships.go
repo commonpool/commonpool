@@ -5,10 +5,23 @@ import (
 	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
 	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
-	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
+
+type GetUserMembershipsResponse struct {
+	Memberships []Membership `json:"memberships"`
+}
+
+func NewGetUserMembershipsResponse(memberships *group.Memberships, groupNames group.Names, userNames auth.UserNames) GetUserMembershipsResponse {
+	responseMemberships := make([]Membership, len(memberships.Items))
+	for i, membership := range memberships.Items {
+		responseMemberships[i] = NewMembership(membership, groupNames, userNames)
+	}
+	return GetUserMembershipsResponse{
+		Memberships: responseMemberships,
+	}
+}
 
 // GetUserMemberships godoc
 // @Summary Gets memberships for a given user
@@ -22,7 +35,7 @@ import (
 // @Success 200 {object} web.GetUserMembershipsResponse
 // @Failure 400 {object} utils.Error
 // @Router /memberships [get]
-func (h *GroupHandler) GetUserMemberships(c echo.Context) error {
+func (h *Handler) GetUserMemberships(c echo.Context) error {
 
 	ctx, _ := handler.GetEchoContext(c, "GetUserMemberships")
 
@@ -62,7 +75,7 @@ func (h *GroupHandler) GetUserMemberships(c echo.Context) error {
 		return err
 	}
 
-	response := web.NewGetUserMembershipsResponse(memberships.Memberships, groupNames, userNames)
+	response := NewGetUserMembershipsResponse(memberships.Memberships, groupNames, userNames)
 	return c.JSON(http.StatusOK, response)
 
 }

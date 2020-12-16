@@ -5,12 +5,26 @@ import (
 	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
 	handler3 "github.com/commonpool/backend/pkg/resource/handler"
-	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"github.com/satori/go.uuid"
 	"net/http"
 	"strings"
 )
+
+type CreateGroupRequest struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
+type CreateGroupResponse struct {
+	Group *Group `json:"group"`
+}
+
+func NewCreateGroupResponse(group *group.Group) CreateGroupResponse {
+	return CreateGroupResponse{
+		Group: NewGroup(group),
+	}
+}
 
 // CreateGroup godoc
 // @Summary Creates a group
@@ -23,11 +37,11 @@ import (
 // @Success 200 {object} web.CreateGroupResponse
 // @Failure 400 {object} utils.Error
 // @Router /groups [post]
-func (h *GroupHandler) CreateGroup(c echo.Context) error {
+func (h *Handler) CreateGroup(c echo.Context) error {
 
 	ctx, _ := handler.GetEchoContext(c, "CreateGroup")
 
-	req := web.CreateGroupRequest{}
+	req := CreateGroupRequest{}
 	if err := c.Bind(&req); err != nil {
 		return err
 	}
@@ -46,7 +60,7 @@ func (h *GroupHandler) CreateGroup(c echo.Context) error {
 		return err
 	}
 
-	var response = web.NewCreateGroupResponse(createGroupResponse.Group)
+	var response = NewCreateGroupResponse(createGroupResponse.Group)
 	return c.JSON(http.StatusCreated, response)
 
 }

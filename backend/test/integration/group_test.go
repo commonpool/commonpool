@@ -8,58 +8,58 @@ import (
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/exceptions"
 	group2 "github.com/commonpool/backend/pkg/group"
-	"github.com/commonpool/backend/web"
+	"github.com/commonpool/backend/pkg/group/handler"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
 	"time"
 )
 
-func CreateGroup(t *testing.T, ctx context.Context, userSession *auth.UserSession, request *web.CreateGroupRequest) (*web.CreateGroupResponse, *http.Response, error) {
+func CreateGroup(t *testing.T, ctx context.Context, userSession *auth.UserSession, request *handler.CreateGroupRequest) (*handler.CreateGroupResponse, *http.Response, error) {
 	c, recorder := NewRequest(ctx, userSession, http.MethodGet, "/api/v1/groups", request)
 	err := a.CreateGroup(c)
 	if err != nil {
 		return nil, nil, err
 	}
-	response := &web.CreateGroupResponse{}
+	response := &handler.CreateGroupResponse{}
 	t.Log(recorder.Body.String())
 	return response, ReadResponse(t, recorder, response), nil
 }
 
-func CreateOrAcceptInvitation(t *testing.T, ctx context.Context, userSession *auth.UserSession, request *web.CreateOrAcceptInvitationRequest) (*web.CreateOrAcceptInvitationResponse, *http.Response, error) {
+func CreateOrAcceptInvitation(t *testing.T, ctx context.Context, userSession *auth.UserSession, request *handler.CreateOrAcceptInvitationRequest) (*handler.CreateOrAcceptInvitationResponse, *http.Response, error) {
 	c, recorder := NewRequest(ctx, userSession, http.MethodGet, "/api/v1/groups", request)
 	err := a.CreateOrAcceptMembership(c)
 	if err != nil {
 		return nil, nil, err
 	}
-	response := &web.CreateOrAcceptInvitationResponse{}
+	response := &handler.CreateOrAcceptInvitationResponse{}
 	t.Log(recorder.Body.String())
 	return response, ReadResponse(t, recorder, response), nil
 }
 
-func DeclineOrCancelInvitation(t *testing.T, ctx context.Context, userSession *auth.UserSession, request *web.CancelOrDeclineInvitationRequest) (*web.CancelOrDeclineInvitationResponse, *http.Response) {
+func DeclineOrCancelInvitation(t *testing.T, ctx context.Context, userSession *auth.UserSession, request *handler.CancelOrDeclineInvitationRequest) (*handler.CancelOrDeclineInvitationResponse, *http.Response) {
 	c, recorder := NewRequest(ctx, userSession, http.MethodGet, "/api/v1/groups", request)
 	assert.NoError(t, a.CancelOrDeclineInvitation(c))
-	response := &web.CancelOrDeclineInvitationResponse{}
+	response := &handler.CancelOrDeclineInvitationResponse{}
 	t.Log(recorder.Body.String())
 	return response, ReadResponse(t, recorder, response)
 }
 
-func GetUsersForInvitePicker(t *testing.T, ctx context.Context, groupId model.GroupKey, take int, skip int, userSession *auth.UserSession) (*web.GetUsersForGroupInvitePickerResponse, *http.Response) {
+func GetUsersForInvitePicker(t *testing.T, ctx context.Context, groupId model.GroupKey, take int, skip int, userSession *auth.UserSession) (*handler.GetUsersForGroupInvitePickerResponse, *http.Response) {
 	groupIdStr := groupId.ID.String()
 	c, recorder := NewRequest(ctx, userSession, http.MethodGet, fmt.Sprintf(`/api/v1/groups/%s/invite-member-picker?take=%d&skip=%d`, groupIdStr, take, skip), nil)
 	c.SetParamNames("id")
 	c.SetParamValues(groupIdStr)
 	assert.NoError(t, a.GetUsersForGroupInvitePicker(c))
-	response := &web.GetUsersForGroupInvitePickerResponse{}
+	response := &handler.GetUsersForGroupInvitePickerResponse{}
 	t.Log(recorder.Body.String())
 	return response, ReadResponse(t, recorder, response)
 }
 
-func GetLoggedInUserMemberships(t *testing.T, ctx context.Context, userSession *auth.UserSession) (*web.GetUserMembershipsResponse, *http.Response) {
+func GetLoggedInUserMemberships(t *testing.T, ctx context.Context, userSession *auth.UserSession) (*handler.GetUserMembershipsResponse, *http.Response) {
 	c, recorder := NewRequest(ctx, userSession, http.MethodGet, `/api/v1/my-memberships`, nil)
 	assert.NoError(t, a.GetLoggedInUserMemberships(c))
-	response := &web.GetUserMembershipsResponse{}
+	response := &handler.GetUserMembershipsResponse{}
 	t.Log(recorder.Body.String())
 	return response, ReadResponse(t, recorder, response)
 
@@ -72,7 +72,7 @@ func TestCreateGroup(t *testing.T) {
 	defer delUser1()
 
 	ctx := context.Background()
-	response, httpResponse, err := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
+	response, httpResponse, err := CreateGroup(t, ctx, user1, &handler.CreateGroupRequest{
 		Name:        "sample",
 		Description: "description",
 	})
@@ -91,7 +91,7 @@ func TestCreateGroupUnauthenticatedShouldFailWithUnauthorized(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-	_, _, err := CreateGroup(t, ctx, nil, &web.CreateGroupRequest{
+	_, _, err := CreateGroup(t, ctx, nil, &handler.CreateGroupRequest{
 		Name:        "sample",
 		Description: "description",
 	})
@@ -109,7 +109,7 @@ func TestCreateGroupEmptyName(t *testing.T) {
 	defer delUser1()
 
 	ctx := context.Background()
-	_, httpResponse, err := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
+	_, httpResponse, err := CreateGroup(t, ctx, user1, &handler.CreateGroupRequest{
 		Name:        "",
 		Description: "description",
 	})
@@ -126,7 +126,7 @@ func TestCreateGroupEmptyDescriptionShouldNotFail(t *testing.T) {
 	defer delUser1()
 
 	ctx := context.Background()
-	_, httpResponse, err := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
+	_, httpResponse, err := CreateGroup(t, ctx, user1, &handler.CreateGroupRequest{
 		Name:        "A Blibbers",
 		Description: "",
 	})
@@ -143,7 +143,7 @@ func TestCreateGroupShouldCreateOwnerMembership(t *testing.T) {
 	defer delUser1()
 
 	ctx := context.Background()
-	createGroup, createGroupHttp, err := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
+	createGroup, createGroupHttp, err := CreateGroup(t, ctx, user1, &handler.CreateGroupRequest{
 		Name:        "sample",
 		Description: "description",
 	})
@@ -186,7 +186,7 @@ func TestCreatingGroupShouldSubscribeOwnerToChanel(t *testing.T) {
 	delivery, err := amqpChan.Consume(ctx, "test", "", false, false, false, false, nil)
 	assert.NoError(t, err)
 
-	_, _, err = CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
+	_, _, err = CreateGroup(t, ctx, user1, &handler.CreateGroupRequest{
 		Name:        "sample",
 		Description: "description",
 	})
@@ -215,7 +215,7 @@ func TestOwnerShouldBeAbleToInviteUser(t *testing.T) {
 	defer delUser2()
 
 	ctx := context.Background()
-	grp, _, err := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
+	grp, _, err := CreateGroup(t, ctx, user1, &handler.CreateGroupRequest{
 		Name:        "sample",
 		Description: "description",
 	})
@@ -223,7 +223,7 @@ func TestOwnerShouldBeAbleToInviteUser(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	res, httpRes, err := CreateOrAcceptInvitation(t, ctx, user1, &web.CreateOrAcceptInvitationRequest{
+	res, httpRes, err := CreateOrAcceptInvitation(t, ctx, user1, &handler.CreateOrAcceptInvitationRequest{
 		UserID:  user2.Subject,
 		GroupID: grp.Group.ID,
 	})
@@ -251,7 +251,7 @@ func TestInviteeShouldBeAbleToAcceptInvitationFromOwner(t *testing.T) {
 	defer delUser2()
 
 	ctx := context.Background()
-	createGroup, createGroupHttp, err := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
+	createGroup, createGroupHttp, err := CreateGroup(t, ctx, user1, &handler.CreateGroupRequest{
 		Name:        "sample",
 		Description: "description",
 	})
@@ -260,7 +260,7 @@ func TestInviteeShouldBeAbleToAcceptInvitationFromOwner(t *testing.T) {
 	}
 	assert.Equal(t, http.StatusCreated, createGroupHttp.StatusCode)
 
-	res, httpRes, err := CreateOrAcceptInvitation(t, ctx, user1, &web.CreateOrAcceptInvitationRequest{
+	res, httpRes, err := CreateOrAcceptInvitation(t, ctx, user1, &handler.CreateOrAcceptInvitationRequest{
 		UserID:  user2.Subject,
 		GroupID: createGroup.Group.ID,
 	})
@@ -269,7 +269,7 @@ func TestInviteeShouldBeAbleToAcceptInvitationFromOwner(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	res, httpRes, err = CreateOrAcceptInvitation(t, ctx, user2, &web.CreateOrAcceptInvitationRequest{
+	res, httpRes, err = CreateOrAcceptInvitation(t, ctx, user2, &handler.CreateOrAcceptInvitationRequest{
 		UserID:  user2.Subject,
 		GroupID: createGroup.Group.ID,
 	})
@@ -298,7 +298,7 @@ func TestInviteeShouldBeAbleToDeclineInvitationFromOwner(t *testing.T) {
 	defer delUser2()
 
 	ctx := context.Background()
-	createGroup, createGroupHttp, err := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
+	createGroup, createGroupHttp, err := CreateGroup(t, ctx, user1, &handler.CreateGroupRequest{
 		Name:        "sample",
 		Description: "description",
 	})
@@ -307,7 +307,7 @@ func TestInviteeShouldBeAbleToDeclineInvitationFromOwner(t *testing.T) {
 	}
 	assert.Equal(t, http.StatusCreated, createGroupHttp.StatusCode)
 
-	_, acceptInvitationHttp, err := CreateOrAcceptInvitation(t, ctx, user1, &web.CreateOrAcceptInvitationRequest{
+	_, acceptInvitationHttp, err := CreateOrAcceptInvitation(t, ctx, user1, &handler.CreateOrAcceptInvitationRequest{
 		UserID:  user2.Subject,
 		GroupID: createGroup.Group.ID,
 	})
@@ -318,7 +318,7 @@ func TestInviteeShouldBeAbleToDeclineInvitationFromOwner(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, acceptInvitationHttp.StatusCode)
 
-	_, declineInvitationHttp := DeclineOrCancelInvitation(t, ctx, user2, &web.CancelOrDeclineInvitationRequest{
+	_, declineInvitationHttp := DeclineOrCancelInvitation(t, ctx, user2, &handler.CancelOrDeclineInvitationRequest{
 		UserID:  user2.Subject,
 		GroupID: createGroup.Group.ID,
 	})
@@ -339,7 +339,7 @@ func TestOwnerShouldBeAbleToDeclineInvitationFromOwner(t *testing.T) {
 	defer delUser2()
 
 	ctx := context.Background()
-	createGroup, createGroupHttp, err := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
+	createGroup, createGroupHttp, err := CreateGroup(t, ctx, user1, &handler.CreateGroupRequest{
 		Name:        "sample",
 		Description: "description",
 	})
@@ -347,7 +347,7 @@ func TestOwnerShouldBeAbleToDeclineInvitationFromOwner(t *testing.T) {
 		t.Fatal(err)
 	}
 	assert.Equal(t, http.StatusCreated, createGroupHttp.StatusCode)
-	_, _, err = CreateOrAcceptInvitation(t, ctx, user2, &web.CreateOrAcceptInvitationRequest{
+	_, _, err = CreateOrAcceptInvitation(t, ctx, user2, &handler.CreateOrAcceptInvitationRequest{
 		UserID:  user2.Subject,
 		GroupID: createGroup.Group.ID,
 	})
@@ -356,7 +356,7 @@ func TestOwnerShouldBeAbleToDeclineInvitationFromOwner(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, httpRes := DeclineOrCancelInvitation(t, ctx, user1, &web.CancelOrDeclineInvitationRequest{
+	_, httpRes := DeclineOrCancelInvitation(t, ctx, user1, &handler.CancelOrDeclineInvitationRequest{
 		UserID:  user2.Subject,
 		GroupID: createGroup.Group.ID,
 	})
@@ -379,14 +379,14 @@ func TestRandomUserShouldNotBeAbleToAcceptInvitation(t *testing.T) {
 	defer delUser2()
 
 	ctx := context.Background()
-	grp, _, err := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
+	grp, _, err := CreateGroup(t, ctx, user1, &handler.CreateGroupRequest{
 		Name:        "sample",
 		Description: "description",
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, _, err = CreateOrAcceptInvitation(t, ctx, user1, &web.CreateOrAcceptInvitationRequest{
+	_, _, err = CreateOrAcceptInvitation(t, ctx, user1, &handler.CreateOrAcceptInvitationRequest{
 		UserID:  user2.Subject,
 		GroupID: grp.Group.ID,
 	})
@@ -395,7 +395,7 @@ func TestRandomUserShouldNotBeAbleToAcceptInvitation(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, _, err = CreateOrAcceptInvitation(t, ctx, user3, &web.CreateOrAcceptInvitationRequest{
+	_, _, err = CreateOrAcceptInvitation(t, ctx, user3, &handler.CreateOrAcceptInvitationRequest{
 		UserID:  user2.Subject,
 		GroupID: grp.Group.ID,
 	})
@@ -418,14 +418,14 @@ func TestPersonShouldBeAbleToRequestBeingInvitedInGroup(t *testing.T) {
 	defer delUser2()
 
 	ctx := context.Background()
-	grp, _, err := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
+	grp, _, err := CreateGroup(t, ctx, user1, &handler.CreateGroupRequest{
 		Name:        "sample",
 		Description: "description",
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	res, httpRes, err := CreateOrAcceptInvitation(t, ctx, user2, &web.CreateOrAcceptInvitationRequest{
+	res, httpRes, err := CreateOrAcceptInvitation(t, ctx, user2, &handler.CreateOrAcceptInvitationRequest{
 		UserID:  user2.Subject,
 		GroupID: grp.Group.ID,
 	})
@@ -454,14 +454,14 @@ func TestOwnerShouldBeAbleToAcceptInvitationRequest(t *testing.T) {
 	defer delUser2()
 
 	ctx := context.Background()
-	grp, _, err := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
+	grp, _, err := CreateGroup(t, ctx, user1, &handler.CreateGroupRequest{
 		Name:        "sample",
 		Description: "description",
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	res, httpRes, err := CreateOrAcceptInvitation(t, ctx, user2, &web.CreateOrAcceptInvitationRequest{
+	res, httpRes, err := CreateOrAcceptInvitation(t, ctx, user2, &handler.CreateOrAcceptInvitationRequest{
 		UserID:  user2.Subject,
 		GroupID: grp.Group.ID,
 	})
@@ -470,7 +470,7 @@ func TestOwnerShouldBeAbleToAcceptInvitationRequest(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	res, httpRes, err = CreateOrAcceptInvitation(t, ctx, user1, &web.CreateOrAcceptInvitationRequest{
+	res, httpRes, err = CreateOrAcceptInvitation(t, ctx, user1, &handler.CreateOrAcceptInvitationRequest{
 		UserID:  user2.Subject,
 		GroupID: grp.Group.ID,
 	})
@@ -505,14 +505,14 @@ func TestGroupShouldReceiveMessageWhenUserJoined(t *testing.T) {
 	x2 := ListenOnUserExchange(t, ctx, user2.GetUserKey())
 	defer x2.Close()
 
-	grp, _, err := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
+	grp, _, err := CreateGroup(t, ctx, user1, &handler.CreateGroupRequest{
 		Name:        "sample",
 		Description: "description",
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, _, err = CreateOrAcceptInvitation(t, ctx, user2, &web.CreateOrAcceptInvitationRequest{
+	_, _, err = CreateOrAcceptInvitation(t, ctx, user2, &handler.CreateOrAcceptInvitationRequest{
 		UserID:  user2.Subject,
 		GroupID: grp.Group.ID,
 	})
@@ -521,7 +521,7 @@ func TestGroupShouldReceiveMessageWhenUserJoined(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, _, err = CreateOrAcceptInvitation(t, ctx, user1, &web.CreateOrAcceptInvitationRequest{
+	_, _, err = CreateOrAcceptInvitation(t, ctx, user1, &handler.CreateOrAcceptInvitationRequest{
 		UserID:  user2.Subject,
 		GroupID: grp.Group.ID,
 	})
@@ -603,63 +603,63 @@ func TestGetUsersForInvitePickerShouldNotReturnDuplicates(t *testing.T) {
 
 	ctx := context.Background()
 
-	_, _, err := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
+	_, _, err := CreateGroup(t, ctx, user1, &handler.CreateGroupRequest{
 		Name:        "sample",
 		Description: "description",
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, _, err = CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
+	_, _, err = CreateGroup(t, ctx, user1, &handler.CreateGroupRequest{
 		Name:        "sample",
 		Description: "description",
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, _, err = CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
+	_, _, err = CreateGroup(t, ctx, user1, &handler.CreateGroupRequest{
 		Name:        "sample",
 		Description: "description",
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, _, err = CreateGroup(t, ctx, user2, &web.CreateGroupRequest{
+	_, _, err = CreateGroup(t, ctx, user2, &handler.CreateGroupRequest{
 		Name:        "sample",
 		Description: "description",
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, _, err = CreateGroup(t, ctx, user2, &web.CreateGroupRequest{
+	_, _, err = CreateGroup(t, ctx, user2, &handler.CreateGroupRequest{
 		Name:        "sample",
 		Description: "description",
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, _, err = CreateGroup(t, ctx, user2, &web.CreateGroupRequest{
+	_, _, err = CreateGroup(t, ctx, user2, &handler.CreateGroupRequest{
 		Name:        "sample",
 		Description: "description",
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, _, err = CreateGroup(t, ctx, user3, &web.CreateGroupRequest{
+	_, _, err = CreateGroup(t, ctx, user3, &handler.CreateGroupRequest{
 		Name:        "sample",
 		Description: "description",
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, _, err = CreateGroup(t, ctx, user3, &web.CreateGroupRequest{
+	_, _, err = CreateGroup(t, ctx, user3, &handler.CreateGroupRequest{
 		Name:        "sample",
 		Description: "description",
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	grp, _, err := CreateGroup(t, ctx, user3, &web.CreateGroupRequest{
+	grp, _, err := CreateGroup(t, ctx, user3, &handler.CreateGroupRequest{
 		Name:        "sample",
 		Description: "description",
 	})
@@ -694,7 +694,7 @@ func TestGetLoggedInUserMembershipsWithGroup(t *testing.T) {
 	defer delUser1()
 
 	ctx := context.Background()
-	createGroup, _, err := CreateGroup(t, ctx, user1, &web.CreateGroupRequest{
+	createGroup, _, err := CreateGroup(t, ctx, user1, &handler.CreateGroupRequest{
 		Name:        "sample",
 		Description: "description",
 	})

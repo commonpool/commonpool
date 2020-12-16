@@ -3,7 +3,6 @@ package handler
 import (
 	"encoding/json"
 
-	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -35,8 +34,8 @@ func TestCreateGroup(t *testing.T) {
 
 }
 
-func createGroup(t *testing.T, name string, description string) web.CreateGroupResponse {
-	request := web.CreateGroupRequest{
+func createGroup(t *testing.T, name string, description string) CreateGroupResponse {
+	request := CreateGroupRequest{
 		Name:        name,
 		Description: description,
 	}
@@ -50,29 +49,29 @@ func createGroup(t *testing.T, name string, description string) web.CreateGroupR
 
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusCreated, rec.Code)
-	response := web.CreateGroupResponse{}
+	response := CreateGroupResponse{}
 	assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &response))
 	return response
 }
 
-func getGroup(t *testing.T, id string) web.GetGroupResponse {
+func getGroup(t *testing.T, id string) GetGroupResponse {
 	_, _, rec, c := handler.newRequest(echo.POST, "/api/v1/groups/"+id, nil)
 	c.SetParamNames("id")
 	c.SetParamValues(id)
 	err := handler.h.GetGroup(c)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, rec.Code)
-	response := web.GetGroupResponse{}
+	response := GetGroupResponse{}
 	assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &response))
 	return response
 }
 
-func getLoggedInUserMemberships(t *testing.T) web.GetUserMembershipsResponse {
+func getLoggedInUserMemberships(t *testing.T) GetUserMembershipsResponse {
 	_, _, rec, c := handler.newRequest(echo.POST, "/api/v1/my/memberships", nil)
 	err := handler.h.GetLoggedInUserMemberships(c)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, rec.Code)
-	response := web.GetUserMembershipsResponse{}
+	response := GetUserMembershipsResponse{}
 	assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &response))
 	return response
 }

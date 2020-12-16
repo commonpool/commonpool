@@ -8,7 +8,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func (h *GroupHandler) getUserNamesForMemberships(ctx context.Context, memberships *group.Memberships) (auth.UserNames, error) {
+func (h *Handler) getUserNamesForMemberships(ctx context.Context, memberships *group.Memberships) (auth.UserNames, error) {
 
 	ctx, l := handler.GetCtx(ctx, "getUserNamesForMemberships")
 
@@ -28,7 +28,7 @@ func (h *GroupHandler) getUserNamesForMemberships(ctx context.Context, membershi
 	return userNames, nil
 }
 
-func (h *GroupHandler) getGroupNamesForMemberships(ctx context.Context, memberships *group.Memberships) (group.Names, error) {
+func (h *Handler) getGroupNamesForMemberships(ctx context.Context, memberships *group.Memberships) (group.Names, error) {
 
 	ctx, l := handler.GetCtx(ctx, "getGroupNamesForMemberships")
 

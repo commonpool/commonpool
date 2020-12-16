@@ -4,11 +4,15 @@ import (
 	group2 "github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
 	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
-	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 	"net/http"
 )
+
+type CancelOrDeclineInvitationRequest struct {
+	UserID  string `json:"userId"`
+	GroupID string `json:"groupId"`
+}
 
 // CancelOrDeclineInvitation godoc
 // @Summary declines a group invitation
@@ -20,11 +24,11 @@ import (
 // @Success 202 {object} web.CancelOrDeclineInvitationResponse
 // @Failure 400 {object} utils.Error
 // @Router /memberships [delete]
-func (h *GroupHandler) CancelOrDeclineInvitation(c echo.Context) error {
+func (h *Handler) CancelOrDeclineInvitation(c echo.Context) error {
 
 	ctx, l := handler.GetEchoContext(c, "CancelOrDeclineInvitation")
 
-	req := web.CancelOrDeclineInvitationRequest{}
+	req := CancelOrDeclineInvitationRequest{}
 	if err := c.Bind(&req); err != nil {
 		return err
 	}

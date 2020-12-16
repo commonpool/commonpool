@@ -3,7 +3,7 @@ package integration
 import (
 	"context"
 	"github.com/commonpool/backend/pkg/auth"
-	"github.com/commonpool/backend/web"
+	"github.com/commonpool/backend/pkg/group/handler"
 	"net/http"
 	"strconv"
 	"testing"
@@ -54,10 +54,10 @@ func testUser(t *testing.T) (*auth.UserSession, func()) {
 
 var groupCounter = 0
 
-func testGroup(t *testing.T, owner *auth.UserSession, members ...*auth.UserSession) *web.Group {
+func testGroup(t *testing.T, owner *auth.UserSession, members ...*auth.UserSession) *handler.Group {
 	ctx := context.Background()
 	groupCounter++
-	response, httpResponse, err := CreateGroup(t, ctx, owner, &web.CreateGroupRequest{
+	response, httpResponse, err := CreateGroup(t, ctx, owner, &handler.CreateGroupRequest{
 		Name:        "group-" + strconv.Itoa(groupCounter),
 		Description: "group-" + strconv.Itoa(groupCounter),
 	})
@@ -69,11 +69,11 @@ func testGroup(t *testing.T, owner *auth.UserSession, members ...*auth.UserSessi
 	}
 
 	for _, member := range members {
-		CreateOrAcceptInvitation(t, ctx, owner, &web.CreateOrAcceptInvitationRequest{
+		CreateOrAcceptInvitation(t, ctx, owner, &handler.CreateOrAcceptInvitationRequest{
 			UserID:  member.Subject,
 			GroupID: response.Group.ID,
 		})
-		CreateOrAcceptInvitation(t, ctx, member, &web.CreateOrAcceptInvitationRequest{
+		CreateOrAcceptInvitation(t, ctx, member, &handler.CreateOrAcceptInvitationRequest{
 			UserID:  member.Subject,
 			GroupID: response.Group.ID,
 		})

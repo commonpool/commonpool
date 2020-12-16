@@ -1,13 +1,28 @@
 package handler
 
 import (
-	group2 "github.com/commonpool/backend/pkg/group"
+	"github.com/commonpool/backend/pkg/auth"
+	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
 	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
-	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
+
+type CreateOrAcceptInvitationRequest struct {
+	UserID  string `json:"userId"`
+	GroupID string `json:"groupId"`
+}
+
+type CreateOrAcceptInvitationResponse struct {
+	Membership Membership `json:"membership"`
+}
+
+func NewCreateOrAcceptInvitationResponse(membership *group.Membership, groupNames group.Names, userNames auth.UserNames) *CreateOrAcceptInvitationResponse {
+	return &CreateOrAcceptInvitationResponse{
+		Membership: NewMembership(membership, groupNames, userNames),
+	}
+}
 
 // CreateOrAcceptMembership godoc
 // @Summary Accept a group invitation
@@ -19,28 +34,28 @@ import (
 // @Success 200 {object} web.CreateOrAcceptInvitationResponse
 // @Failure 400 {object} utils.Error
 // @Router /groups/memberships [post]
-func (h *GroupHandler) CreateOrAcceptMembership(c echo.Context) error {
+func (h *Handler) CreateOrAcceptMembership(c echo.Context) error {
 
 	ctx, _ := handler.GetEchoContext(c, "CreateOrAcceptInvitation")
 
-	req := web.CreateOrAcceptInvitationRequest{}
+	req := CreateOrAcceptInvitationRequest{}
 	if err := c.Bind(&req); err != nil {
 		return err
 	}
 
-	groupKey, err := group2.ParseGroupKey(req.GroupID)
+	groupKey, err := group.ParseGroupKey(req.GroupID)
 	if err != nil {
 		return err
 	}
 	userKey := usermodel.NewUserKey(req.UserID)
 
-	membershipKey := group2.NewMembershipKey(groupKey, userKey)
-	acceptInvitationResponse, err := h.groupService.CreateOrAcceptInvitation(ctx, group2.NewAcceptInvitationRequest(membershipKey))
+	membershipKey := group.NewMembershipKey(groupKey, userKey)
+	acceptInvitationResponse, err := h.groupService.CreateOrAcceptInvitation(ctx, group.NewAcceptInvitationRequest(membershipKey))
 	if err != nil {
 		return err
 	}
 
-	memberships := group2.NewMemberships([]*group2.Membership{acceptInvitationResponse.Membership})
+	memberships := group.NewMemberships([]*group.Membership{acceptInvitationResponse.Membership})
 
 	userNames, err := h.getUserNamesForMemberships(ctx, memberships)
 	if err != nil {
@@ -52,7 +67,7 @@ func (h *GroupHandler) CreateOrAcceptMembership(c echo.Context) error {
 		return err
 	}
 
-	response := web.NewCreateOrAcceptInvitationResponse(acceptInvitationResponse.Membership, groupNames, userNames)
+	response := NewCreateOrAcceptInvitationResponse(acceptInvitationResponse.Membership, groupNames, userNames)
 	return c.JSON(http.StatusOK, response)
 
 }

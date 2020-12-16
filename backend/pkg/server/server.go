@@ -61,7 +61,7 @@ type Server struct {
 	AuthHandler        *authhandler.AuthHandler
 	SessionHandler     *session.Handler
 	ChatHandler        *chathandler.Handler
-	GroupHandler       *grouphandler.GroupHandler
+	GroupHandler       *grouphandler.Handler
 	ResourceHandler    *resourcehandler.ResourceHandler
 	UserHandler        *userhandler.UserHandler
 	RealTimeHandler    *realtime.Handler

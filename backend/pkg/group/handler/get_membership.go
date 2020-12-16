@@ -1,13 +1,23 @@
 package handler
 
 import (
-	group2 "github.com/commonpool/backend/pkg/group"
+	"github.com/commonpool/backend/pkg/auth"
+	group "github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
-	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
-	"github.com/commonpool/backend/web"
+	"github.com/commonpool/backend/pkg/user/usermodel"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
+
+type GetMembershipResponse struct {
+	Membership Membership `json:"membership"`
+}
+
+func NewGetMembershipResponse(membership *group.Membership, groupNames group.Names, userNames auth.UserNames) *GetMembershipResponse {
+	return &GetMembershipResponse{
+		Membership: NewMembership(membership, groupNames, userNames),
+	}
+}
 
 // GetMembership godoc
 // @Summary Gets the membership for a given user and group
@@ -21,23 +31,23 @@ import (
 // @Success 200 {object} web.GetMembershipResponse
 // @Failure 400 {object} utils.Error
 // @Router /groups/:groupId/memberships/:userId [get]
-func (h *GroupHandler) GetMembership(c echo.Context) error {
+func (h *Handler) GetMembership(c echo.Context) error {
 
 	ctx, _ := handler.GetEchoContext(c, "GetMembership")
 
 	userKey := usermodel.NewUserKey(c.Param("userId"))
 
-	groupKey, err := group2.ParseGroupKey(c.Param("id"))
+	groupKey, err := group.ParseGroupKey(c.Param("id"))
 	if err != nil {
 		return err
 	}
 
-	getMemberships, err := h.groupService.GetMembership(ctx, group2.NewGetMembershipRequest(group2.NewMembershipKey(groupKey, userKey)))
+	getMemberships, err := h.groupService.GetMembership(ctx, group.NewGetMembershipRequest(group.NewMembershipKey(groupKey, userKey)))
 	if err != nil {
 		return err
 	}
 
-	var memberships = group2.NewMemberships([]*group2.Membership{getMemberships.Membership})
+	var memberships = group.NewMemberships([]*group.Membership{getMemberships.Membership})
 
 	groupNames, err := h.getGroupNamesForMemberships(ctx, memberships)
 	if err != nil {
@@ -49,7 +59,7 @@ func (h *GroupHandler) GetMembership(c echo.Context) error {
 		return err
 	}
 
-	response := web.NewGetMembershipResponse(getMemberships.Membership, groupNames, userNames)
+	response := NewGetMembershipResponse(getMemberships.Membership, groupNames, userNames)
 	return c.JSON(http.StatusOK, response)
 
 }
