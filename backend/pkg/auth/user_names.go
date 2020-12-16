@@ -2,7 +2,7 @@ package auth
 
 import (
 	"fmt"
-	usermodel "github.com/commonpool/backend/pkg/user/model"
+	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 )
 
 type UserNames map[usermodel.UserKey]string

@@ -3,7 +3,7 @@ package store
 import (
 	"context"
 	"github.com/commonpool/backend/pkg/chat"
-	"github.com/commonpool/backend/pkg/chat/model"
+	"github.com/commonpool/backend/pkg/chat/chatmodel"
 )
 
 func (cs *ChatStore) GetMessages(ctx context.Context, request *chat.GetMessages) (*chat.GetMessagesResponse, error) {
@@ -28,7 +28,7 @@ func (cs *ChatStore) GetMessages(ctx context.Context, request *chat.GetMessages)
 	messageCount := len(messages)
 	if messageCount > 0 {
 		lastMessageTs := messages[0].SentAt
-		err = cs.db.Model(&model.ChannelSubscription{}).
+		err = cs.db.Model(&chatmodel.ChannelSubscription{}).
 			Where("channel_id = ? AND user_id = ?",
 				request.Channel.String(),
 				request.UserKey.String(),
@@ -44,7 +44,7 @@ func (cs *ChatStore) GetMessages(ctx context.Context, request *chat.GetMessages)
 		messages = messages[:messageCount-1]
 	}
 
-	var mappedMessages []model.Message
+	var mappedMessages []chatmodel.Message
 	for _, message := range messages {
 		mappedMessage, err := mapMessage(ctx, &message)
 		if err != nil {
@@ -53,7 +53,7 @@ func (cs *ChatStore) GetMessages(ctx context.Context, request *chat.GetMessages)
 		mappedMessages = append(mappedMessages, *mappedMessage)
 	}
 
-	messageLst := model.NewMessages(mappedMessages)
+	messageLst := chatmodel.NewMessages(mappedMessages)
 
 	return &chat.GetMessagesResponse{
 		Messages: messageLst,

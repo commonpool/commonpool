@@ -6,7 +6,7 @@ import (
 	groupmodel "github.com/commonpool/backend/pkg/group/model"
 	resourcemodel "github.com/commonpool/backend/pkg/resource/model"
 	tradingmodel "github.com/commonpool/backend/pkg/trading/model"
-	usermodel "github.com/commonpool/backend/pkg/user/model"
+	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"time"

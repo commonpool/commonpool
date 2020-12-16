@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/commonpool/backend/pkg/exceptions"
 	exceptions2 "github.com/commonpool/backend/pkg/user"
-	usermodel "github.com/commonpool/backend/pkg/user/model"
+	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"github.com/labstack/echo/v4"
 )
 

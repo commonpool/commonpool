@@ -2,7 +2,7 @@ package user
 
 import (
 	"context"
-	usermodel "github.com/commonpool/backend/pkg/user/model"
+	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 )
 
 type Service interface {

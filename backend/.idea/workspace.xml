@@ -31,43 +31,82 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b50bce1a-5445-4a69-8265-74993e439f0e" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/pkg/resource/model/target.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/resource/model/target_type.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pkg/resource/model/targets.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mocks/chat_store.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/model/target.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mock/auth_mock.go" beforeDir="false" afterPath="$PROJECT_DIR$/mock/auth_mock.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mock/authenticator.go" beforeDir="false" afterPath="$PROJECT_DIR$/mock/authenticator.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mock/chat_service.go" beforeDir="false" afterPath="$PROJECT_DIR$/mock/chat_service.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/auth/auth.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/auth/auth.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/auth/oidc_authenticator.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/auth/oidc_authenticator.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/auth/user_names.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/auth/user_names.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/auth/user_session.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/auth/user_session.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/chat/handler/handler_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/chat/handler/handler_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/chat/handler/post_interaction.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/chat/handler/post_interaction.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/chat/model/channel_key.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/chat/model/channel_key.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/chat/model/channel_subscription.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/chat/model/channel_subscription.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/chat/model/channel_subscription_key.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/chat/model/channel_subscription_key.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/chat/model/message.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/chat/model/message.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/chat/model/message_sender.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/chat/model/message_sender.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/chat/model/messages.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/chat/model/messages.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pkg/chat/service.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/chat/service.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pkg/chat/service/chat.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/chat/service/chat.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/chat/service/get_group_link.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/chat/service/get_resource_link.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/chat/service/get_user_link.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/chat/service/notify_user_interested_about_resource.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/chat/service/notify_user_interested_about_resource.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/group/model/group_key.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/model/group_key.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/resource/model/claim.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/resource/model/claim.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/chat/service/chat_convo_channel_get_create.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/chat/service/chat_convo_channel_get_create.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/chat/service/create_user_exchange.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/chat/service/create_user_exchange.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/chat/service/get_conversation_channel_key.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/chat/service/get_conversation_channel_key.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/chat/service/get_user_exchange_name.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/chat/service/get_user_exchange_name.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/chat/store.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/chat/store.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/chat/store/channel_subscription.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/chat/store/channel_subscription.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/chat/store/chat.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/chat/store/chat.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/group/handler/delete_membership.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/handler/delete_membership.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/group/handler/get_membership.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/handler/get_membership.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/group/handler/get_user_memberships.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/handler/get_user_memberships.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/group/handler/post_membership.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/handler/post_membership.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/group/model/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/model/group.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/group/model/membership.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/model/membership.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/group/model/membership_key.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/model/membership_key.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/group/store.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/store.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/group/store/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/store/group.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/group/store/models_membership.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/group/store/models_membership.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/handler/echo.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/handler/echo.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/realtime/client.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/realtime/client.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/resource/handler/get_resources.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/resource/handler/get_resources.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/resource/handler/resource.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/resource/handler/resource.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pkg/resource/model/claims.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/resource/model/claims.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/resource/model/resource_key.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/resource/model/resource_key.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/resource/store/resource.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/resource/store/resource.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/resource/model/resource.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/resource/model/resource.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/resource/model/target.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/resource/model/target.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/resource/model/targets.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/resource/model/targets.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pkg/server/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/server/server.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pkg/shared/store/model.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/shared/store/model.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/trading/handler/get_offer_target_picker.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/handler/get_offer_target_picker.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pkg/trading/handler/helpers.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/handler/helpers.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/trading/model/credit_transfer_item.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/model/credit_transfer_item.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/trading/model/offer_item.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/model/offer_item.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/trading/model/offer_item_base.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/model/offer_item_base.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/trading/model/models.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/model/models.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/trading/model/offer.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/model/offer.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/trading/model/offer_approvers.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/model/offer_approvers.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/trading/model/offer_decision_key.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/model/offer_decision_key.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/trading/model/offer_items.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/model/offer_items.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pkg/trading/service.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/service.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/trading/service/accept_offer.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/service/accept_offer.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/trading/service/find_offer_item_targets.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/service/find_offer_item_targets.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/trading/service/get_history.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/service/get_history.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/trading/service/get_user_offers.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/service/get_user_offers.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pkg/trading/service/submit_offer.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/service/submit_offer.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pkg/trading/service/trading.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/service/trading.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/trading/store.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/store.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pkg/trading/store/trading.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/trading/store/trading.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/transaction/model_entry.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/transaction/model_entry.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pkg/transaction/service.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/transaction/service.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pkg/transaction/service/transaction.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/transaction/service/transaction.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/transaction/store.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/transaction/store.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pkg/transaction/store/transaction.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/transaction/store/transaction.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pkg/user/model/user_key.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/user/model/user_key.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/web/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/web/group.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/user/handler/get_user.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/user/handler/get_user.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/user/model/user.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/user/usermodel/user.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/user/model/user_key.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/user/usermodel/user_key.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/user/model/user_keys.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/user/usermodel/user_keys.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/user/model/user_reference.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/user/usermodel/user_reference.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/user/service.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/user/service.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/user/service/user_service.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/user/service/user_service.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/user/store.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/user/store.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/user/store/auth.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/user/store/auth.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pkg/user/users.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/user/users.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/router/router.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/server/router.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/router/validator.go" beforeDir="false" afterPath="$PROJECT_DIR$/pkg/validation/validator.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/integration/utils_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/test/integration/utils_test.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/web/offer.go" beforeDir="false" afterPath="$PROJECT_DIR$/web/offer.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -126,14 +165,14 @@
       <recent name="$PROJECT_DIR$/k8s" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/pkg/server" />
+      <recent name="$PROJECT_DIR$/pkg/validation" />
       <recent name="$PROJECT_DIR$/pkg/resource/model" />
       <recent name="$PROJECT_DIR$/pkg/trading/model" />
       <recent name="$PROJECT_DIR$/pkg/session" />
-      <recent name="$PROJECT_DIR$/pkg/realtime" />
-      <recent name="$PROJECT_DIR$/pkg/user/handler" />
     </key>
   </component>
-  <component name="RunManager" selected="Go Test.go test pkg">
+  <component name="RunManager" selected="Go Test.go test handler">
     <configuration name="go build backend main.go" type="GoApplicationRunConfiguration" factoryName="Go Application" nameIsGenerated="true">
       <module name="backend" />
       <working_directory value="$PROJECT_DIR$" />
@@ -155,18 +194,6 @@
       <directory value="$PROJECT_DIR$" />
       <method v="2" />
     </configuration>
-    <configuration name="TestPostMessage in github.com/commonpool/backend/pkg/chat/handler (1)" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
-      <module name="backend" />
-      <working_directory value="$PROJECT_DIR$/pkg/chat/handler" />
-      <parameters value=" -testify.m ^TestPostMessage$" />
-      <framework value="gotest" />
-      <kind value="PACKAGE" />
-      <package value="github.com/commonpool/backend/pkg/chat/handler" />
-      <directory value="$PROJECT_DIR$/pkg/chat" />
-      <filePath value="$PROJECT_DIR$" />
-      <pattern value="^\Qgithub.com\E$/^\Qcommonpool\E$/^\Qbackend\E$/^\Qpkg\E$/^\Qchat\E$/^\Qhandler\E$/^\QTestChatHandler\E$/^\QTestPostMessage\E$" />
-      <method v="2" />
-    </configuration>
     <configuration name="TestPostMessage in github.com/commonpool/backend/pkg/chat/handler (2)" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="backend" />
       <working_directory value="$PROJECT_DIR$/pkg/chat/handler" />
@@ -186,6 +213,16 @@
       <kind value="DIRECTORY" />
       <package value="github.com/commonpool/backend" />
       <directory value="$PROJECT_DIR$/pkg/chat" />
+      <filePath value="$PROJECT_DIR$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="go test handler" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="backend" />
+      <working_directory value="$PROJECT_DIR$/pkg/chat/handler" />
+      <framework value="gotest" />
+      <kind value="DIRECTORY" />
+      <package value="github.com/commonpool/backend" />
+      <directory value="$PROJECT_DIR$/pkg/chat/handler" />
       <filePath value="$PROJECT_DIR$" />
       <method v="2" />
     </configuration>
@@ -223,18 +260,18 @@
     <list>
       <item itemvalue="Go Build.go build backend main.go" />
       <item itemvalue="Go Test.go test chat" />
-      <item itemvalue="Go Test.TestPostMessage in github.com/commonpool/backend/pkg/chat/handler (1)" />
       <item itemvalue="Go Test.TestPostMessage in github.com/commonpool/backend/pkg/chat/handler (2)" />
       <item itemvalue="Go Test.go test integration" />
       <item itemvalue="Go Test.go test pkg" />
+      <item itemvalue="Go Test.go test handler" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Go Test.go test handler" />
         <item itemvalue="Go Test.go test pkg" />
         <item itemvalue="Go Test.go test integration" />
         <item itemvalue="Go Test.go test chat" />
         <item itemvalue="Go Test.TestPostMessage in github.com/commonpool/backend/pkg/chat/handler (2)" />
-        <item itemvalue="Go Test.TestPostMessage in github.com/commonpool/backend/pkg/chat/handler (1)" />
       </list>
     </recent_temporary>
   </component>
@@ -408,7 +445,14 @@
       <option name="project" value="LOCAL" />
       <updated>1608041986152</updated>
     </task>
-    <option name="localTasksCounter" value="24" />
+    <task id="LOCAL-00024" summary="work">
+      <created>1608043758222</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1608043758222</updated>
+    </task>
+    <option name="localTasksCounter" value="25" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

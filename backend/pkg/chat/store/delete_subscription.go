@@ -2,7 +2,7 @@ package store
 
 import (
 	"context"
-	chatmodel "github.com/commonpool/backend/pkg/chat/model"
+	chatmodel "github.com/commonpool/backend/pkg/chat/chatmodel"
 )
 
 func (cs *ChatStore) DeleteSubscription(ctx context.Context, key chatmodel.ChannelSubscriptionKey) error {

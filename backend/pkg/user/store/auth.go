@@ -6,23 +6,20 @@ import (
 	"github.com/commonpool/backend/pkg/exceptions"
 	graph2 "github.com/commonpool/backend/pkg/graph"
 	"github.com/commonpool/backend/pkg/user"
-	usermodel "github.com/commonpool/backend/pkg/user/model"
+	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"github.com/labstack/gommon/log"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
-	"gorm.io/gorm"
 	"strings"
 )
 
 type UserStore struct {
-	db          *gorm.DB
 	graphDriver graph2.Driver
 }
 
 var _ user.Store = &UserStore{}
 
-func NewUserStore(db *gorm.DB, graphDriver graph2.Driver) *UserStore {
+func NewUserStore(graphDriver graph2.Driver) *UserStore {
 	return &UserStore{
-		db:          db,
 		graphDriver: graphDriver,
 	}
 }

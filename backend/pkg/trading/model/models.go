@@ -2,7 +2,7 @@ package model
 
 import (
 	resourcemodel "github.com/commonpool/backend/pkg/resource/model"
-	usermodel "github.com/commonpool/backend/pkg/user/model"
+	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"time"
 )
 

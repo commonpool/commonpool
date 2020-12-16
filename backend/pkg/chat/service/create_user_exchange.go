@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	usermodel "github.com/commonpool/backend/pkg/user/model"
+	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 )
 
 // CreateUserExchange will create the AMQP exchange to receive user messages

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/commonpool/backend/pkg/chat"
-	model2 "github.com/commonpool/backend/pkg/chat/model"
+	model2 "github.com/commonpool/backend/pkg/chat/chatmodel"
 	group2 "github.com/commonpool/backend/pkg/group"
 	groupmodel "github.com/commonpool/backend/pkg/group/model"
 	"github.com/commonpool/backend/pkg/resource"
@@ -12,7 +12,7 @@ import (
 	tradingmodel "github.com/commonpool/backend/pkg/trading/model"
 	transaction2 "github.com/commonpool/backend/pkg/transaction"
 	"github.com/commonpool/backend/pkg/user"
-	usermodel "github.com/commonpool/backend/pkg/user/model"
+	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"time"
 )
 

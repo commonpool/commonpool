@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/auth"
-	model2 "github.com/commonpool/backend/pkg/chat/model"
+	model2 "github.com/commonpool/backend/pkg/chat/chatmodel"
 	"github.com/commonpool/backend/pkg/mq"
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"

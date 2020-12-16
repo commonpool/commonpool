@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/commonpool/backend/logging"
 	"github.com/commonpool/backend/pkg/exceptions"
-	"github.com/commonpool/backend/router"
+	"github.com/commonpool/backend/pkg/validation"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
@@ -49,7 +49,7 @@ var HttpErrorHandler = func(err error, c echo.Context) {
 			})
 		}
 
-		translated := validationError.Translate(router.DefaultTranslator)
+		translated := validationError.Translate(validation.DefaultTranslator)
 
 		response := &exceptions.ErrorResponse{
 			Message:    validationError.Error(),

@@ -3,7 +3,7 @@ package user
 import (
 	"context"
 	groupmodel "github.com/commonpool/backend/pkg/group/model"
-	usermodel "github.com/commonpool/backend/pkg/user/model"
+	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 )
 
 type Store interface {

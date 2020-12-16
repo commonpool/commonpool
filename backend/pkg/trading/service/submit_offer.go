@@ -4,22 +4,21 @@ import (
 	"fmt"
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/chat"
-	chatmodel "github.com/commonpool/backend/pkg/chat/model"
+	chatmodel "github.com/commonpool/backend/pkg/chat/chatmodel"
 	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/pkg/group/model"
 	groupmodel "github.com/commonpool/backend/pkg/group/model"
 	"github.com/commonpool/backend/pkg/resource"
 	resourcemodel "github.com/commonpool/backend/pkg/resource/model"
-	model2 "github.com/commonpool/backend/pkg/trading/model"
 	tradingmodel "github.com/commonpool/backend/pkg/trading/model"
-	usermodel "github.com/commonpool/backend/pkg/user/model"
+	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
 	"strings"
 	"time"
 )
 
-func (t TradingService) SendOffer(ctx context.Context, groupKey model.GroupKey, offerItems *model2.OfferItems, message string) (*model2.Offer, *model2.OfferItems, error) {
+func (t TradingService) SendOffer(ctx context.Context, groupKey model.GroupKey, offerItems *tradingmodel.OfferItems, message string) (*tradingmodel.Offer, *tradingmodel.OfferItems, error) {
 
 	userSession, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
@@ -66,8 +65,8 @@ func (t TradingService) SendOffer(ctx context.Context, groupKey model.GroupKey, 
 		return nil, nil, err
 	}
 
-	offerKey := model2.NewOfferKey(uuid.NewV4())
-	offer := model2.NewOffer(offerKey, groupKey, userSession.GetUserKey(), message, nil)
+	offerKey := tradingmodel.NewOfferKey(uuid.NewV4())
+	offer := tradingmodel.NewOffer(offerKey, groupKey, userSession.GetUserKey(), message, nil)
 
 	err = t.tradingStore.SaveOffer(offer, offerItems)
 	if err != nil {

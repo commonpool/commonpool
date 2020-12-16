@@ -2,7 +2,7 @@ package user
 
 import (
 	"fmt"
-	usermodel "github.com/commonpool/backend/pkg/user/model"
+	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 )
 
 type Users struct {

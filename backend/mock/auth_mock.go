@@ -6,7 +6,7 @@ package mock
 import (
 	"context"
 	"github.com/commonpool/backend/pkg/user"
-	"github.com/commonpool/backend/pkg/user/model"
+	"github.com/commonpool/backend/pkg/user/usermodel"
 	"sync"
 )
 
@@ -23,16 +23,16 @@ var _ user.Store = &UserStore{}
 //             FindFunc: func(query user.Query) (*user.Users, error) {
 // 	               panic("mock out the Find method")
 //             },
-//             GetByKeyFunc: func(key model.UserKey) (*model.User, error) {
+//             GetByKeyFunc: func(key usermodel.UserKey) (*usermodel.User, error) {
 // 	               panic("mock out the GetByKey method")
 //             },
-//             GetByKeysFunc: func(ctx context.Context, keys *model.UserKeys) (*user.Users, error) {
+//             GetByKeysFunc: func(ctx context.Context, keys *usermodel.UserKeys) (*user.Users, error) {
 // 	               panic("mock out the GetByKeys method")
 //             },
-//             GetUsernameFunc: func(key model.UserKey) (string, error) {
+//             GetUsernameFunc: func(key usermodel.UserKey) (string, error) {
 // 	               panic("mock out the GetUsername method")
 //             },
-//             UpsertFunc: func(key model.UserKey, email string, username string) error {
+//             UpsertFunc: func(key usermodel.UserKey, email string, username string) error {
 // 	               panic("mock out the Upsert method")
 //             },
 //         }
@@ -46,16 +46,16 @@ type UserStore struct {
 	FindFunc func(query user.Query) (*user.Users, error)
 
 	// GetByKeyFunc mocks the GetByKey method.
-	GetByKeyFunc func(key model.UserKey) (*model.User, error)
+	GetByKeyFunc func(key usermodel.UserKey) (*usermodel.User, error)
 
 	// GetByKeysFunc mocks the GetByKeys method.
-	GetByKeysFunc func(ctx context.Context, keys *model.UserKeys) (*user.Users, error)
+	GetByKeysFunc func(ctx context.Context, keys *usermodel.UserKeys) (*user.Users, error)
 
 	// GetUsernameFunc mocks the GetUsername method.
-	GetUsernameFunc func(key model.UserKey) (string, error)
+	GetUsernameFunc func(key usermodel.UserKey) (string, error)
 
 	// UpsertFunc mocks the Upsert method.
-	UpsertFunc func(key model.UserKey, email string, username string) error
+	UpsertFunc func(key usermodel.UserKey, email string, username string) error
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -67,24 +67,24 @@ type UserStore struct {
 		// GetByKey holds details about calls to the GetByKey method.
 		GetByKey []struct {
 			// Key is the key argument value.
-			Key model.UserKey
+			Key usermodel.UserKey
 		}
 		// GetByKeys holds details about calls to the GetByKeys method.
 		GetByKeys []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// Keys is the keys argument value.
-			Keys *model.UserKeys
+			Keys *usermodel.UserKeys
 		}
 		// GetUsername holds details about calls to the GetUsername method.
 		GetUsername []struct {
 			// Key is the key argument value.
-			Key model.UserKey
+			Key usermodel.UserKey
 		}
 		// Upsert holds details about calls to the Upsert method.
 		Upsert []struct {
 			// Key is the key argument value.
-			Key model.UserKey
+			Key usermodel.UserKey
 			// Email is the email argument value.
 			Email string
 			// Username is the username argument value.
@@ -130,12 +130,12 @@ func (mock *UserStore) FindCalls() []struct {
 }
 
 // GetByKey calls GetByKeyFunc.
-func (mock *UserStore) GetByKey(key model.UserKey) (*model.User, error) {
+func (mock *UserStore) GetByKey(key usermodel.UserKey) (*usermodel.User, error) {
 	if mock.GetByKeyFunc == nil {
 		panic("UserStore.GetByKeyFunc: method is nil but Store.GetByKey was just called")
 	}
 	callInfo := struct {
-		Key model.UserKey
+		Key usermodel.UserKey
 	}{
 		Key: key,
 	}
@@ -149,10 +149,10 @@ func (mock *UserStore) GetByKey(key model.UserKey) (*model.User, error) {
 // Check the length with:
 //     len(mockedStore.GetByKeyCalls())
 func (mock *UserStore) GetByKeyCalls() []struct {
-	Key model.UserKey
+	Key usermodel.UserKey
 } {
 	var calls []struct {
-		Key model.UserKey
+		Key usermodel.UserKey
 	}
 	mock.lockGetByKey.RLock()
 	calls = mock.calls.GetByKey
@@ -161,13 +161,13 @@ func (mock *UserStore) GetByKeyCalls() []struct {
 }
 
 // GetByKeys calls GetByKeysFunc.
-func (mock *UserStore) GetByKeys(ctx context.Context, keys *model.UserKeys) (*user.Users, error) {
+func (mock *UserStore) GetByKeys(ctx context.Context, keys *usermodel.UserKeys) (*user.Users, error) {
 	if mock.GetByKeysFunc == nil {
 		panic("UserStore.GetByKeysFunc: method is nil but Store.GetByKeys was just called")
 	}
 	callInfo := struct {
 		Ctx  context.Context
-		Keys *model.UserKeys
+		Keys *usermodel.UserKeys
 	}{
 		Ctx:  ctx,
 		Keys: keys,
@@ -183,11 +183,11 @@ func (mock *UserStore) GetByKeys(ctx context.Context, keys *model.UserKeys) (*us
 //     len(mockedStore.GetByKeysCalls())
 func (mock *UserStore) GetByKeysCalls() []struct {
 	Ctx  context.Context
-	Keys *model.UserKeys
+	Keys *usermodel.UserKeys
 } {
 	var calls []struct {
 		Ctx  context.Context
-		Keys *model.UserKeys
+		Keys *usermodel.UserKeys
 	}
 	mock.lockGetByKeys.RLock()
 	calls = mock.calls.GetByKeys
@@ -196,12 +196,12 @@ func (mock *UserStore) GetByKeysCalls() []struct {
 }
 
 // GetUsername calls GetUsernameFunc.
-func (mock *UserStore) GetUsername(key model.UserKey) (string, error) {
+func (mock *UserStore) GetUsername(key usermodel.UserKey) (string, error) {
 	if mock.GetUsernameFunc == nil {
 		panic("UserStore.GetUsernameFunc: method is nil but Store.GetUsername was just called")
 	}
 	callInfo := struct {
-		Key model.UserKey
+		Key usermodel.UserKey
 	}{
 		Key: key,
 	}
@@ -215,10 +215,10 @@ func (mock *UserStore) GetUsername(key model.UserKey) (string, error) {
 // Check the length with:
 //     len(mockedStore.GetUsernameCalls())
 func (mock *UserStore) GetUsernameCalls() []struct {
-	Key model.UserKey
+	Key usermodel.UserKey
 } {
 	var calls []struct {
-		Key model.UserKey
+		Key usermodel.UserKey
 	}
 	mock.lockGetUsername.RLock()
 	calls = mock.calls.GetUsername
@@ -227,12 +227,12 @@ func (mock *UserStore) GetUsernameCalls() []struct {
 }
 
 // Upsert calls UpsertFunc.
-func (mock *UserStore) Upsert(key model.UserKey, email string, username string) error {
+func (mock *UserStore) Upsert(key usermodel.UserKey, email string, username string) error {
 	if mock.UpsertFunc == nil {
 		panic("UserStore.UpsertFunc: method is nil but Store.Upsert was just called")
 	}
 	callInfo := struct {
-		Key      model.UserKey
+		Key      usermodel.UserKey
 		Email    string
 		Username string
 	}{
@@ -250,12 +250,12 @@ func (mock *UserStore) Upsert(key model.UserKey, email string, username string) 
 // Check the length with:
 //     len(mockedStore.UpsertCalls())
 func (mock *UserStore) UpsertCalls() []struct {
-	Key      model.UserKey
+	Key      usermodel.UserKey
 	Email    string
 	Username string
 } {
 	var calls []struct {
-		Key      model.UserKey
+		Key      usermodel.UserKey
 		Email    string
 		Username string
 	}

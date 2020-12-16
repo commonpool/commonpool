@@ -2,7 +2,7 @@ package handler
 
 import (
 	"github.com/commonpool/backend/pkg/resource/handler"
-	usermodel "github.com/commonpool/backend/pkg/user/model"
+	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"net/http"

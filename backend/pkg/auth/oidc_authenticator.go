@@ -7,7 +7,7 @@ import (
 	"github.com/commonpool/backend/logging"
 	"github.com/commonpool/backend/pkg/config"
 	"github.com/commonpool/backend/pkg/user"
-	usermodel "github.com/commonpool/backend/pkg/user/model"
+	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"github.com/commonpool/backend/pkg/utils"
 	"github.com/coreos/go-oidc"
 	"github.com/labstack/echo/v4"

@@ -2,7 +2,7 @@ package chatback
 
 import (
 	"github.com/commonpool/backend/pkg/auth"
-	model2 "github.com/commonpool/backend/pkg/chat/handler/model"
+	model2 "github.com/commonpool/backend/pkg/chat/chathandler/model"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/trading"
 	tradingmodel "github.com/commonpool/backend/pkg/trading/model"

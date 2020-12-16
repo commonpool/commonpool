@@ -4,7 +4,7 @@ import (
 	"github.com/commonpool/backend/model"
 	groupmodel "github.com/commonpool/backend/pkg/group/model"
 	resourcemodel "github.com/commonpool/backend/pkg/resource/model"
-	usermodel "github.com/commonpool/backend/pkg/user/model"
+	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"time"
 )
 

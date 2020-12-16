@@ -2,7 +2,7 @@ package model
 
 import (
 	model2 "github.com/commonpool/backend/pkg/group/model"
-	"github.com/commonpool/backend/pkg/user/model"
+	"github.com/commonpool/backend/pkg/user/usermodel"
 )
 
 type Targets struct {
@@ -23,15 +23,15 @@ func NewEmptyTargets() *Targets {
 	}
 }
 
-func (t *Targets) GetUserKeys() *model.UserKeys {
-	var userKeys []model.UserKey
+func (t *Targets) GetUserKeys() *usermodel.UserKeys {
+	var userKeys []usermodel.UserKey
 	for _, target := range t.Items {
 		if !target.IsForUser() {
 			continue
 		}
 		userKeys = append(userKeys, target.GetUserKey())
 	}
-	return model.NewUserKeys(userKeys)
+	return usermodel.NewUserKeys(userKeys)
 }
 
 func (t *Targets) GetGroupKeys() *model2.GroupKeys {

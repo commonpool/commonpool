@@ -1,7 +1,7 @@
 package model
 
 import (
-	usermodel "github.com/commonpool/backend/pkg/user/model"
+	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"go.uber.org/zap/zapcore"
 )
 

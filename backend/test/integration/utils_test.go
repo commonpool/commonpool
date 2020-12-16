@@ -7,7 +7,7 @@ import (
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/mq"
-	"github.com/commonpool/backend/router"
+	"github.com/commonpool/backend/pkg/server"
 	"github.com/labstack/echo/v4"
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
@@ -23,7 +23,7 @@ var requestMu = sync.Mutex{}
 
 func NewRequest(ctx context.Context, session *auth.UserSession, method, target string, req interface{}) (echo.Context, *httptest.ResponseRecorder) {
 	requestMu.Lock()
-	e := router.NewRouter()
+	e := server.NewRouter()
 	httpRequest := httptest.NewRequest(method, target, read(req))
 	httpRequest = httpRequest.WithContext(ctx)
 	httpRequest.Header.Set("Content-Type", "application/json")

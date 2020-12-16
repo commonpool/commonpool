@@ -2,8 +2,8 @@ package chat
 
 import (
 	"context"
-	chatmodel "github.com/commonpool/backend/pkg/chat/model"
-	usermodel "github.com/commonpool/backend/pkg/user/model"
+	chatmodel "github.com/commonpool/backend/pkg/chat/chatmodel"
+	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"time"
 )
 

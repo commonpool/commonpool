@@ -1,7 +1,7 @@
 package handler
 
 import (
-	model2 "github.com/commonpool/backend/pkg/chat/handler/model"
+	model2 "github.com/commonpool/backend/pkg/chat/chathandler/model"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )

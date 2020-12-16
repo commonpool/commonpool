@@ -2,7 +2,7 @@ package model
 
 import (
 	"fmt"
-	usermodel "github.com/commonpool/backend/pkg/user/model"
+	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 )
 
 type OfferApprovers struct {

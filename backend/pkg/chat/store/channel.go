@@ -1,21 +1,21 @@
 package store
 
 import (
-	"github.com/commonpool/backend/pkg/chat/model"
+	"github.com/commonpool/backend/pkg/chat/chatmodel"
 	"time"
 )
 
 type Channel struct {
 	ID        string `gorm:"primaryKey"`
 	Title     string
-	Type      model.ChannelType
+	Type      chatmodel.ChannelType
 	CreatedAt time.Time
 	DeletedAt *time.Time `sql:"index"`
 }
 
-func (channel *Channel) Map() *model.Channel {
-	return &model.Channel{
-		Key:       model.NewChannelKey(channel.ID),
+func (channel *Channel) Map() *chatmodel.Channel {
+	return &chatmodel.Channel{
+		Key:       chatmodel.NewChannelKey(channel.ID),
 		Title:     channel.Title,
 		Type:      channel.Type,
 		CreatedAt: channel.CreatedAt,
@@ -23,7 +23,7 @@ func (channel *Channel) Map() *model.Channel {
 	}
 }
 
-func MapChannel(c *model.Channel) *Channel {
+func MapChannel(c *chatmodel.Channel) *Channel {
 	return &Channel{
 		ID:        c.Key.ID,
 		Title:     c.Title,

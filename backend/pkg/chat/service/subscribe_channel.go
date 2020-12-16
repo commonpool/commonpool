@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	chatmodel "github.com/commonpool/backend/pkg/chat/model"
+	chatmodel "github.com/commonpool/backend/pkg/chat/chatmodel"
 	"github.com/commonpool/backend/pkg/mq"
 )
 

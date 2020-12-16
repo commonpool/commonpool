@@ -3,7 +3,7 @@ package store
 import (
 	"fmt"
 	groupmodel "github.com/commonpool/backend/pkg/group/model"
-	usermodel "github.com/commonpool/backend/pkg/user/model"
+	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"github.com/mitchellh/mapstructure"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
 )

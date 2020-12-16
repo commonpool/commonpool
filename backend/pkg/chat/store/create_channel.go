@@ -2,10 +2,10 @@ package store
 
 import (
 	"context"
-	"github.com/commonpool/backend/pkg/chat/model"
+	"github.com/commonpool/backend/pkg/chat/chatmodel"
 )
 
-func (cs *ChatStore) CreateChannel(ctx context.Context, channel *model.Channel) error {
+func (cs *ChatStore) CreateChannel(ctx context.Context, channel *chatmodel.Channel) error {
 	dbChannel := MapChannel(channel)
 	return cs.db.WithContext(ctx).Create(dbChannel).Error
 }

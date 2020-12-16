@@ -2,9 +2,9 @@ package chat
 
 import (
 	ctx "context"
-	chatmodel "github.com/commonpool/backend/pkg/chat/model"
+	chatmodel "github.com/commonpool/backend/pkg/chat/chatmodel"
 	groupmodel "github.com/commonpool/backend/pkg/group/model"
-	usermodel "github.com/commonpool/backend/pkg/user/model"
+	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"golang.org/x/net/context"
 	"time"
 )

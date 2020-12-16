@@ -2,7 +2,7 @@ package auth
 
 import (
 	"context"
-	usermodel "github.com/commonpool/backend/pkg/user/model"
+	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )

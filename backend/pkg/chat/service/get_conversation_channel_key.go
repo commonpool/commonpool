@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 	"fmt"
-	model2 "github.com/commonpool/backend/pkg/chat/model"
-	usermodel "github.com/commonpool/backend/pkg/user/model"
+	model2 "github.com/commonpool/backend/pkg/chat/chatmodel"
+	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"github.com/commonpool/backend/pkg/utils"
 	"sort"
 	"strings"

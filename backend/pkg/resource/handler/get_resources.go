@@ -5,7 +5,7 @@ import (
 	"github.com/commonpool/backend/pkg/handler"
 	resource2 "github.com/commonpool/backend/pkg/resource"
 	model3 "github.com/commonpool/backend/pkg/resource/model"
-	usermodel "github.com/commonpool/backend/pkg/user/model"
+	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"github.com/commonpool/backend/pkg/utils"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"

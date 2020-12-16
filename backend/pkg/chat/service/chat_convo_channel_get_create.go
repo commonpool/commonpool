@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 	"github.com/commonpool/backend/pkg/chat"
-	chatmodel "github.com/commonpool/backend/pkg/chat/model"
+	chatmodel "github.com/commonpool/backend/pkg/chat/chatmodel"
 	"github.com/commonpool/backend/pkg/mq"
 	"github.com/commonpool/backend/pkg/user"
-	usermodel "github.com/commonpool/backend/pkg/user/model"
+	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"sort"
 	"strings"
 )
@@ -72,7 +72,7 @@ func (c ChatService) createSubscriptionsAndMqBindingsForUserConversation(ctx con
 		return nil, err
 	}
 
-	users, err := c.us.GetByKeys(ctx, userKeys)
+	users, err := c.userStore.GetByKeys(ctx, userKeys)
 	if err != nil {
 		return nil, err
 	}

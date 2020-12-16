@@ -2,11 +2,11 @@ package service
 
 import (
 	"context"
-	"github.com/commonpool/backend/pkg/chat/model"
+	"github.com/commonpool/backend/pkg/chat/chatmodel"
 	"github.com/commonpool/backend/pkg/mq"
 )
 
-func (c ChatService) SendMessage(ctx context.Context, message *model.Message) error {
+func (c ChatService) SendMessage(ctx context.Context, message *chatmodel.Message) error {
 
 	err := c.chatStore.SaveMessage(ctx, message)
 

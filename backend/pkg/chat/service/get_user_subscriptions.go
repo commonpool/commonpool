@@ -4,10 +4,10 @@ import (
 	"context"
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/chat"
-	"github.com/commonpool/backend/pkg/chat/model"
+	"github.com/commonpool/backend/pkg/chat/chatmodel"
 )
 
-func (c ChatService) GetSubscriptionsForUser(ctx context.Context, take int, skip int) (*model.ChannelSubscriptions, error) {
+func (c ChatService) GetSubscriptionsForUser(ctx context.Context, take int, skip int) (*chatmodel.ChannelSubscriptions, error) {
 
 	loggedInUser, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
@@ -25,5 +25,5 @@ func (c ChatService) GetSubscriptionsForUser(ctx context.Context, take int, skip
 		return nil, err
 	}
 
-	return model.NewChannelSubscriptions(subs.Items), nil
+	return chatmodel.NewChannelSubscriptions(subs.Items), nil
 }

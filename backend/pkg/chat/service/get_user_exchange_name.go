@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	usermodel "github.com/commonpool/backend/pkg/user/model"
+	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 )
 
 // GetUserExchangeName will return the name of the exchange for a user key
