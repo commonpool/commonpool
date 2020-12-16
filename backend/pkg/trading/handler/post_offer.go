@@ -3,7 +3,7 @@ package handler
 import (
 	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
-	tradingmodel "github.com/commonpool/backend/pkg/trading/model"
+	"github.com/commonpool/backend/pkg/trading"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"github.com/satori/go.uuid"
@@ -25,9 +25,9 @@ func (h *TradingHandler) HandleSendOffer(c echo.Context) error {
 		return err
 	}
 
-	var tradingOfferItems []tradingmodel.OfferItem
+	var tradingOfferItems []trading.OfferItem
 	for _, tradingOfferItem := range req.Offer.Items {
-		itemKey := tradingmodel.NewOfferItemKey(uuid.NewV4())
+		itemKey := trading.NewOfferItemKey(uuid.NewV4())
 		tradingOfferItem, err := mapNewOfferItem(tradingOfferItem, itemKey)
 		if err != nil {
 			return err
@@ -40,7 +40,7 @@ func (h *TradingHandler) HandleSendOffer(c echo.Context) error {
 		return err
 	}
 
-	offer, offerItems, err := h.tradingService.SendOffer(ctx, groupKey, tradingmodel.NewOfferItems(tradingOfferItems), "")
+	offer, offerItems, err := h.tradingService.SendOffer(ctx, groupKey, trading.NewOfferItems(tradingOfferItems), "")
 	if err != nil {
 		return err
 	}

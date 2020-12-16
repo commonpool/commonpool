@@ -5,7 +5,7 @@ import (
 	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/pkg/group"
 	resourcemodel "github.com/commonpool/backend/pkg/resource/model"
-	tradingmodel "github.com/commonpool/backend/pkg/trading/model"
+	"github.com/commonpool/backend/pkg/trading"
 	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
@@ -38,7 +38,7 @@ func parseTargetFromQueryParams(c echo.Context, typeQueryParam string, valueQuer
 	return nil, nil
 }
 
-func mapWebOfferItem(offerItem tradingmodel.OfferItem, approvers *tradingmodel.OfferApprovers) (*web.OfferItem, error) {
+func mapWebOfferItem(offerItem trading.OfferItem, approvers *trading.OfferApprovers) (*web.OfferItem, error) {
 
 	fromApprovers, hasFromApprovers := approvers.UsersAbleToGiveItem[offerItem.GetKey()]
 	toApprovers, hasToApprovers := approvers.UsersAbleToReceiveItem[offerItem.GetKey()]
@@ -52,7 +52,7 @@ func mapWebOfferItem(offerItem tradingmodel.OfferItem, approvers *tradingmodel.O
 
 	if offerItem.IsCreditTransfer() {
 
-		creditTransfer := offerItem.(*tradingmodel.CreditTransferItem)
+		creditTransfer := offerItem.(*trading.CreditTransferItem)
 
 		from, err := web.MapOfferItemTarget(creditTransfer.From)
 		if err != nil {
@@ -68,7 +68,7 @@ func mapWebOfferItem(offerItem tradingmodel.OfferItem, approvers *tradingmodel.O
 			ID:                 creditTransfer.Key.String(),
 			From:               from,
 			To:                 to,
-			Type:               tradingmodel.CreditTransfer,
+			Type:               trading.CreditTransfer,
 			ReceivingApprovers: toApprovers.Strings(),
 			GivingApprovers:    fromApprovers.Strings(),
 			GiverApproved:      creditTransfer.GiverAccepted,
@@ -78,7 +78,7 @@ func mapWebOfferItem(offerItem tradingmodel.OfferItem, approvers *tradingmodel.O
 
 	} else if offerItem.IsBorrowingResource() {
 
-		borrowResource := offerItem.(*tradingmodel.BorrowResourceItem)
+		borrowResource := offerItem.(*trading.BorrowResourceItem)
 
 		to, err := web.MapOfferItemTarget(borrowResource.To)
 		if err != nil {
@@ -92,7 +92,7 @@ func mapWebOfferItem(offerItem tradingmodel.OfferItem, approvers *tradingmodel.O
 			To:                 to,
 			ResourceId:         &resourceId,
 			Duration:           &duration,
-			Type:               tradingmodel.BorrowResource,
+			Type:               trading.BorrowResource,
 			ReceivingApprovers: toApprovers.Strings(),
 			GivingApprovers:    fromApprovers.Strings(),
 			GiverApproved:      borrowResource.GiverAccepted,
@@ -105,7 +105,7 @@ func mapWebOfferItem(offerItem tradingmodel.OfferItem, approvers *tradingmodel.O
 
 	} else if offerItem.IsResourceTransfer() {
 
-		resourceTransfer := offerItem.(*tradingmodel.ResourceTransferItem)
+		resourceTransfer := offerItem.(*trading.ResourceTransferItem)
 
 		to, err := web.MapOfferItemTarget(resourceTransfer.To)
 		if err != nil {
@@ -117,7 +117,7 @@ func mapWebOfferItem(offerItem tradingmodel.OfferItem, approvers *tradingmodel.O
 			ID:                 resourceTransfer.Key.String(),
 			To:                 to,
 			ResourceId:         &resourceId,
-			Type:               tradingmodel.ResourceTransfer,
+			Type:               trading.ResourceTransfer,
 			ReceivingApprovers: toApprovers.Strings(),
 			GivingApprovers:    fromApprovers.Strings(),
 			GiverApproved:      resourceTransfer.GiverAccepted,
@@ -128,7 +128,7 @@ func mapWebOfferItem(offerItem tradingmodel.OfferItem, approvers *tradingmodel.O
 
 	} else if offerItem.IsServiceProviding() {
 
-		serviceProvision := offerItem.(*tradingmodel.ProvideServiceItem)
+		serviceProvision := offerItem.(*trading.ProvideServiceItem)
 
 		to, err := web.MapOfferItemTarget(serviceProvision.To)
 		if err != nil {
@@ -142,7 +142,7 @@ func mapWebOfferItem(offerItem tradingmodel.OfferItem, approvers *tradingmodel.O
 			To:                          to,
 			ResourceId:                  &resourceId,
 			Duration:                    &duration,
-			Type:                        tradingmodel.ProvideService,
+			Type:                        trading.ProvideService,
 			ReceivingApprovers:          toApprovers.Strings(),
 			GivingApprovers:             fromApprovers.Strings(),
 			GiverApproved:               serviceProvision.GiverAccepted,
@@ -156,7 +156,7 @@ func mapWebOfferItem(offerItem tradingmodel.OfferItem, approvers *tradingmodel.O
 
 }
 
-func (h *TradingHandler) getWebOffer(offerKey tradingmodel.OfferKey) (*web.GetOfferResponse, error) {
+func (h *TradingHandler) getWebOffer(offerKey trading.OfferKey) (*web.GetOfferResponse, error) {
 
 	offer, err := h.tradingService.GetOffer(offerKey)
 	if err != nil {
@@ -185,7 +185,7 @@ func (h *TradingHandler) getWebOffer(offerKey tradingmodel.OfferKey) (*web.GetOf
 	return &response, nil
 }
 
-func (h *TradingHandler) mapToWebOffer(offer *tradingmodel.Offer, items *tradingmodel.OfferItems, approvers *tradingmodel.OfferApprovers) (*web.Offer, error) {
+func (h *TradingHandler) mapToWebOffer(offer *trading.Offer, items *trading.OfferItems, approvers *trading.OfferApprovers) (*web.Offer, error) {
 
 	authorUsername, err := h.userService.GetUsername(offer.GetAuthorKey())
 	if err != nil {
@@ -217,23 +217,23 @@ func (h *TradingHandler) mapToWebOffer(offer *tradingmodel.Offer, items *trading
 	return &webOffer, nil
 }
 
-func mapNewOfferItem(tradingOfferItem web.SendOfferPayloadItem, itemKey tradingmodel.OfferItemKey) (tradingmodel.OfferItem, error) {
+func mapNewOfferItem(tradingOfferItem web.SendOfferPayloadItem, itemKey trading.OfferItemKey) (trading.OfferItem, error) {
 
 	itemType := tradingOfferItem.Type
 
-	if itemType == tradingmodel.CreditTransfer {
+	if itemType == trading.CreditTransfer {
 
 		return mapCreateCreditTransferItem(tradingOfferItem, itemKey)
 
-	} else if itemType == tradingmodel.ResourceTransfer {
+	} else if itemType == trading.ResourceTransfer {
 
 		return mapCreateResourceTransferItem(tradingOfferItem, itemKey)
 
-	} else if itemType == tradingmodel.ProvideService {
+	} else if itemType == trading.ProvideService {
 
 		return mapCreateProvideServiceItem(tradingOfferItem, itemKey)
 
-	} else if itemType == tradingmodel.BorrowResource {
+	} else if itemType == trading.BorrowResource {
 
 		return mapCreateBorrowItem(tradingOfferItem, itemKey)
 
@@ -244,7 +244,7 @@ func mapNewOfferItem(tradingOfferItem web.SendOfferPayloadItem, itemKey tradingm
 	}
 }
 
-func mapCreateBorrowItem(tradingOfferItem web.SendOfferPayloadItem, itemKey tradingmodel.OfferItemKey) (*tradingmodel.BorrowResourceItem, error) {
+func mapCreateBorrowItem(tradingOfferItem web.SendOfferPayloadItem, itemKey trading.OfferItemKey) (*trading.BorrowResourceItem, error) {
 	to, err := web.MapWebOfferItemTarget(tradingOfferItem.To)
 	if err != nil {
 		return nil, err
@@ -260,9 +260,9 @@ func mapCreateBorrowItem(tradingOfferItem web.SendOfferPayloadItem, itemKey trad
 		return nil, err
 	}
 
-	return &tradingmodel.BorrowResourceItem{
-		OfferItemBase: tradingmodel.OfferItemBase{
-			Type: tradingmodel.BorrowResource,
+	return &trading.BorrowResourceItem{
+		OfferItemBase: trading.OfferItemBase{
+			Type: trading.BorrowResource,
 			Key:  itemKey,
 			To:   to,
 		},
@@ -271,7 +271,7 @@ func mapCreateBorrowItem(tradingOfferItem web.SendOfferPayloadItem, itemKey trad
 	}, nil
 }
 
-func mapCreateProvideServiceItem(tradingOfferItem web.SendOfferPayloadItem, itemKey tradingmodel.OfferItemKey) (*tradingmodel.ProvideServiceItem, error) {
+func mapCreateProvideServiceItem(tradingOfferItem web.SendOfferPayloadItem, itemKey trading.OfferItemKey) (*trading.ProvideServiceItem, error) {
 	to, err := web.MapWebOfferItemTarget(tradingOfferItem.To)
 	if err != nil {
 		return nil, err
@@ -287,9 +287,9 @@ func mapCreateProvideServiceItem(tradingOfferItem web.SendOfferPayloadItem, item
 		return nil, err
 	}
 
-	return &tradingmodel.ProvideServiceItem{
-		OfferItemBase: tradingmodel.OfferItemBase{
-			Type: tradingmodel.ProvideService,
+	return &trading.ProvideServiceItem{
+		OfferItemBase: trading.OfferItemBase{
+			Type: trading.ProvideService,
 			Key:  itemKey,
 			To:   to,
 		},
@@ -298,7 +298,7 @@ func mapCreateProvideServiceItem(tradingOfferItem web.SendOfferPayloadItem, item
 	}, nil
 }
 
-func mapCreateResourceTransferItem(tradingOfferItem web.SendOfferPayloadItem, itemKey tradingmodel.OfferItemKey) (*tradingmodel.ResourceTransferItem, error) {
+func mapCreateResourceTransferItem(tradingOfferItem web.SendOfferPayloadItem, itemKey trading.OfferItemKey) (*trading.ResourceTransferItem, error) {
 
 	to, err := web.MapWebOfferItemTarget(tradingOfferItem.To)
 	if err != nil {
@@ -310,9 +310,9 @@ func mapCreateResourceTransferItem(tradingOfferItem web.SendOfferPayloadItem, it
 		return nil, err
 	}
 
-	return &tradingmodel.ResourceTransferItem{
-		OfferItemBase: tradingmodel.OfferItemBase{
-			Type: tradingmodel.ResourceTransfer,
+	return &trading.ResourceTransferItem{
+		OfferItemBase: trading.OfferItemBase{
+			Type: trading.ResourceTransfer,
 			Key:  itemKey,
 			To:   to,
 		},
@@ -320,7 +320,7 @@ func mapCreateResourceTransferItem(tradingOfferItem web.SendOfferPayloadItem, it
 	}, nil
 }
 
-func mapCreateCreditTransferItem(tradingOfferItem web.SendOfferPayloadItem, itemKey tradingmodel.OfferItemKey) (*tradingmodel.CreditTransferItem, error) {
+func mapCreateCreditTransferItem(tradingOfferItem web.SendOfferPayloadItem, itemKey trading.OfferItemKey) (*trading.CreditTransferItem, error) {
 	to, err := web.MapWebOfferItemTarget(tradingOfferItem.To)
 	if err != nil {
 		return nil, err
@@ -336,9 +336,9 @@ func mapCreateCreditTransferItem(tradingOfferItem web.SendOfferPayloadItem, item
 		return nil, err
 	}
 
-	return &tradingmodel.CreditTransferItem{
-		OfferItemBase: tradingmodel.OfferItemBase{
-			Type: tradingmodel.CreditTransfer,
+	return &trading.CreditTransferItem{
+		OfferItemBase: trading.OfferItemBase{
+			Type: trading.CreditTransfer,
 			Key:  itemKey,
 			To:   to,
 		},

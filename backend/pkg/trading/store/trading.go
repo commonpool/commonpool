@@ -11,7 +11,6 @@ import (
 	resourcestore "github.com/commonpool/backend/pkg/resource/store"
 	sharedstore "github.com/commonpool/backend/pkg/shared/store"
 	"github.com/commonpool/backend/pkg/trading"
-	tradingmodel "github.com/commonpool/backend/pkg/trading/model"
 	store2 "github.com/commonpool/backend/pkg/user/store"
 	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
@@ -57,8 +56,8 @@ func NewTradingStore(graphDriver graph2.Driver) *TradingStore {
 func (t TradingStore) MarkOfferItemsAsAccepted(
 	ctx context.Context,
 	approvedBy usermodel.UserKey,
-	approvedByGiver *tradingmodel.OfferItemKeys,
-	approvedByReceiver *tradingmodel.OfferItemKeys) error {
+	approvedByGiver *trading.OfferItemKeys,
+	approvedByReceiver *trading.OfferItemKeys) error {
 
 	session, err := t.graphDriver.GetSession()
 	if err != nil {
@@ -116,7 +115,7 @@ func (t TradingStore) MarkOfferItemsAsAccepted(
 	return nil
 }
 
-func (t TradingStore) FindReceivingApproversForOfferItem(offerItemKey tradingmodel.OfferItemKey) (*usermodel.UserKeys, error) {
+func (t TradingStore) FindReceivingApproversForOfferItem(offerItemKey trading.OfferItemKey) (*usermodel.UserKeys, error) {
 
 	session, err := t.graphDriver.GetSession()
 	if err != nil {
@@ -168,7 +167,7 @@ func (t TradingStore) FindReceivingApproversForOfferItem(offerItemKey tradingmod
 	return usermodel.NewUserKeys(userKeys), nil
 }
 
-func (t TradingStore) FindGivingApproversForOfferItem(offerItemKey tradingmodel.OfferItemKey) (*usermodel.UserKeys, error) {
+func (t TradingStore) FindGivingApproversForOfferItem(offerItemKey trading.OfferItemKey) (*usermodel.UserKeys, error) {
 
 	session, err := t.graphDriver.GetSession()
 	if err != nil {
@@ -239,7 +238,7 @@ func (t TradingStore) FindGivingApproversForOfferItem(offerItemKey tradingmodel.
 	return usermodel.NewUserKeys(userKeys), nil
 }
 
-func (t TradingStore) FindApproversForCandidateOffer(offer *tradingmodel.Offer, offerItems *tradingmodel.OfferItems) (*usermodel.UserKeys, error) {
+func (t TradingStore) FindApproversForCandidateOffer(offer *trading.Offer, offerItems *trading.OfferItems) (*usermodel.UserKeys, error) {
 
 	session, err := t.graphDriver.GetSession()
 	if err != nil {
@@ -297,7 +296,7 @@ func (t TradingStore) FindApproversForCandidateOffer(offer *tradingmodel.Offer, 
 	return usermodel.NewUserKeys(uks), nil
 }
 
-func (t TradingStore) FindApproversForOffers(offerKeys *tradingmodel.OfferKeys) (*tradingmodel.OffersApprovers, error) {
+func (t TradingStore) FindApproversForOffers(offerKeys *trading.OfferKeys) (*trading.OffersApprovers, error) {
 
 	session, err := t.graphDriver.GetSession()
 	if err != nil {
@@ -368,20 +367,20 @@ func (t TradingStore) FindApproversForOffers(offerKeys *tradingmodel.OfferKeys) 
 		return nil, result.Err()
 	}
 
-	var approversForOffer []*tradingmodel.OfferApprovers
+	var approversForOffer []*trading.OfferApprovers
 
 	for result.Next() {
 
-		fromUserApproversMap := map[usermodel.UserKey][]tradingmodel.OfferItemKey{}
-		toUserApproversMap := map[usermodel.UserKey][]tradingmodel.OfferItemKey{}
-		fromItemApproversMap := map[tradingmodel.OfferItemKey][]usermodel.UserKey{}
-		toItemApproversMap := map[tradingmodel.OfferItemKey][]usermodel.UserKey{}
+		fromUserApproversMap := map[usermodel.UserKey][]trading.OfferItemKey{}
+		toUserApproversMap := map[usermodel.UserKey][]trading.OfferItemKey{}
+		fromItemApproversMap := map[trading.OfferItemKey][]usermodel.UserKey{}
+		toItemApproversMap := map[trading.OfferItemKey][]usermodel.UserKey{}
 
 		record := result.Record()
 
 		offerIdField, _ := record.Get("offerId")
 		offerId := offerIdField.(string)
-		offerKey, err := tradingmodel.ParseOfferKey(offerId)
+		offerKey, err := trading.ParseOfferKey(offerId)
 		if err != nil {
 			return nil, err
 		}
@@ -396,7 +395,7 @@ func (t TradingStore) FindApproversForOffers(offerKeys *tradingmodel.OfferKeys) 
 			offerItemField := fieldMap["offerItem"]
 			offerItemNode := offerItemField.(neo4j.Node)
 			offerItemId := offerItemNode.Props()["id"].(string)
-			offerItemKey, err := tradingmodel.ParseOfferItemKey(offerItemId)
+			offerItemKey, err := trading.ParseOfferItemKey(offerItemId)
 			if err != nil {
 				return nil, err
 			}
@@ -425,25 +424,25 @@ func (t TradingStore) FindApproversForOffers(offerKeys *tradingmodel.OfferKeys) 
 
 		}
 
-		userFromApprovers := map[usermodel.UserKey][]tradingmodel.OfferItemKey{}
+		userFromApprovers := map[usermodel.UserKey][]trading.OfferItemKey{}
 		for userKey, offerItemKeys := range fromUserApproversMap {
 			if _, ok := userFromApprovers[userKey]; !ok {
-				userFromApprovers[userKey] = []tradingmodel.OfferItemKey{}
+				userFromApprovers[userKey] = []trading.OfferItemKey{}
 			}
 			for _, offerItemKey := range offerItemKeys {
 				userFromApprovers[userKey] = append(userFromApprovers[userKey], offerItemKey)
 			}
 		}
-		userToApprovers := map[usermodel.UserKey][]tradingmodel.OfferItemKey{}
+		userToApprovers := map[usermodel.UserKey][]trading.OfferItemKey{}
 		for userKey, offerItemKeys := range toUserApproversMap {
 			if _, ok := userToApprovers[userKey]; !ok {
-				userToApprovers[userKey] = []tradingmodel.OfferItemKey{}
+				userToApprovers[userKey] = []trading.OfferItemKey{}
 			}
 			for _, offerItemKey := range offerItemKeys {
 				userToApprovers[userKey] = append(userToApprovers[userKey], offerItemKey)
 			}
 		}
-		itemFromApprovers := map[tradingmodel.OfferItemKey][]usermodel.UserKey{}
+		itemFromApprovers := map[trading.OfferItemKey][]usermodel.UserKey{}
 		for offerItemKey, userKeys := range fromItemApproversMap {
 			if _, ok := itemFromApprovers[offerItemKey]; !ok {
 				itemFromApprovers[offerItemKey] = []usermodel.UserKey{}
@@ -452,7 +451,7 @@ func (t TradingStore) FindApproversForOffers(offerKeys *tradingmodel.OfferKeys) 
 				itemFromApprovers[offerItemKey] = append(itemFromApprovers[offerItemKey], userKey)
 			}
 		}
-		itemToApprovers := map[tradingmodel.OfferItemKey][]usermodel.UserKey{}
+		itemToApprovers := map[trading.OfferItemKey][]usermodel.UserKey{}
 		for offerItemKey, userKeys := range toItemApproversMap {
 			if _, ok := itemToApprovers[offerItemKey]; !ok {
 				itemToApprovers[offerItemKey] = []usermodel.UserKey{}
@@ -462,27 +461,27 @@ func (t TradingStore) FindApproversForOffers(offerKeys *tradingmodel.OfferKeys) 
 			}
 		}
 
-		userFromApproversMap := map[usermodel.UserKey]*tradingmodel.OfferItemKeys{}
+		userFromApproversMap := map[usermodel.UserKey]*trading.OfferItemKeys{}
 		for userKey, offerItemKeys := range userFromApprovers {
-			userFromApproversMap[userKey] = tradingmodel.NewOfferItemKeys(offerItemKeys)
+			userFromApproversMap[userKey] = trading.NewOfferItemKeys(offerItemKeys)
 		}
 
-		userToApproversMap := map[usermodel.UserKey]*tradingmodel.OfferItemKeys{}
+		userToApproversMap := map[usermodel.UserKey]*trading.OfferItemKeys{}
 		for userKey, offerItemKeys := range userToApprovers {
-			userToApproversMap[userKey] = tradingmodel.NewOfferItemKeys(offerItemKeys)
+			userToApproversMap[userKey] = trading.NewOfferItemKeys(offerItemKeys)
 		}
 
-		itemFromApproversMap := map[tradingmodel.OfferItemKey]*usermodel.UserKeys{}
+		itemFromApproversMap := map[trading.OfferItemKey]*usermodel.UserKeys{}
 		for offerItemKey, userKeys := range itemFromApprovers {
 			itemFromApproversMap[offerItemKey] = usermodel.NewUserKeys(userKeys)
 		}
 
-		itemToApproversMap := map[tradingmodel.OfferItemKey]*usermodel.UserKeys{}
+		itemToApproversMap := map[trading.OfferItemKey]*usermodel.UserKeys{}
 		for offerItemKey, userKeys := range itemToApprovers {
 			itemToApproversMap[offerItemKey] = usermodel.NewUserKeys(userKeys)
 		}
 
-		offerApprovers := &tradingmodel.OfferApprovers{
+		offerApprovers := &trading.OfferApprovers{
 			OfferKey:                  offerKey,
 			OfferItemsUsersCanGive:    userFromApproversMap,
 			OfferItemsUsersCanReceive: userToApproversMap,
@@ -494,15 +493,15 @@ func (t TradingStore) FindApproversForOffers(offerKeys *tradingmodel.OfferKeys) 
 
 	}
 
-	offersApprovers := tradingmodel.NewOffersApprovers(approversForOffer)
+	offersApprovers := trading.NewOffersApprovers(approversForOffer)
 
 	return offersApprovers, nil
 
 }
 
-func (t TradingStore) FindApproversForOffer(offerKey tradingmodel.OfferKey) (*tradingmodel.OfferApprovers, error) {
+func (t TradingStore) FindApproversForOffer(offerKey trading.OfferKey) (*trading.OfferApprovers, error) {
 
-	approvers, err := t.FindApproversForOffers(tradingmodel.NewOfferKeys([]tradingmodel.OfferKey{offerKey}))
+	approvers, err := t.FindApproversForOffers(trading.NewOfferKeys([]trading.OfferKey{offerKey}))
 	if err != nil {
 		return nil, err
 	}
@@ -516,7 +515,7 @@ func (t TradingStore) FindApproversForOffer(offerKey tradingmodel.OfferKey) (*tr
 
 }
 
-func (t TradingStore) SaveOffer(offer *tradingmodel.Offer, offerItems *tradingmodel.OfferItems) error {
+func (t TradingStore) SaveOffer(offer *trading.Offer, offerItems *trading.OfferItems) error {
 
 	var matchClauses []string
 	var createClauses []string
@@ -604,7 +603,7 @@ func (t TradingStore) SaveOffer(offer *tradingmodel.Offer, offerItems *tradingmo
 		// add the type-specific params to the param map
 		if offerItem.IsCreditTransfer() {
 
-			creditTransfer := offerItem.(*tradingmodel.CreditTransferItem)
+			creditTransfer := offerItem.(*trading.CreditTransferItem)
 			createClauses = append(createClauses, "("+offerItemRef+`:OfferItem 
 				{
 					id:                        $`+offerItemRef+`_id,
@@ -649,7 +648,7 @@ func (t TradingStore) SaveOffer(offer *tradingmodel.Offer, offerItems *tradingmo
 
 		} else if offerItem.IsServiceProviding() {
 
-			provideService := offerItem.(*tradingmodel.ProvideServiceItem)
+			provideService := offerItem.(*trading.ProvideServiceItem)
 
 			createClauses = append(createClauses, "("+offerItemRef+`:OfferItem {
 					id:                  $`+offerItemRef+`_id,
@@ -664,7 +663,7 @@ func (t TradingStore) SaveOffer(offer *tradingmodel.Offer, offerItems *tradingmo
 				})-[:IsPartOf]->(offer)`)
 
 			params[offerItemRef+"_id"] = provideService.Key.String()
-			params[offerItemRef+"_type"] = string(tradingmodel.ProvideService)
+			params[offerItemRef+"_type"] = string(trading.ProvideService)
 			params[offerItemRef+"_duration"] = int(provideService.Duration.Seconds())
 			params[offerItemRef+"_from_approved"] = provideService.GiverAccepted
 			params[offerItemRef+"_to_approved"] = provideService.ReceiverAccepted
@@ -690,7 +689,7 @@ func (t TradingStore) SaveOffer(offer *tradingmodel.Offer, offerItems *tradingmo
 
 		} else if offerItem.IsBorrowingResource() {
 
-			borrowResource := offerItem.(*tradingmodel.BorrowResourceItem)
+			borrowResource := offerItem.(*trading.BorrowResourceItem)
 
 			createClauses = append(createClauses, "("+offerItemRef+`:OfferItem {
 					id:                  $`+offerItemRef+`_id,
@@ -708,7 +707,7 @@ func (t TradingStore) SaveOffer(offer *tradingmodel.Offer, offerItems *tradingmo
 				})-[:IsPartOf]->(offer)`)
 
 			params[offerItemRef+"_id"] = borrowResource.Key.String()
-			params[offerItemRef+"_type"] = string(tradingmodel.BorrowResource)
+			params[offerItemRef+"_type"] = string(trading.BorrowResource)
 			params[offerItemRef+"_duration"] = int(borrowResource.Duration.Seconds())
 			params[offerItemRef+"_from_approved"] = borrowResource.GiverAccepted
 			params[offerItemRef+"_to_approved"] = borrowResource.ReceiverAccepted
@@ -737,7 +736,7 @@ func (t TradingStore) SaveOffer(offer *tradingmodel.Offer, offerItems *tradingmo
 
 		} else if offerItem.IsResourceTransfer() {
 
-			resourceTransfer := offerItem.(*tradingmodel.ResourceTransferItem)
+			resourceTransfer := offerItem.(*trading.ResourceTransferItem)
 
 			createClauses = append(createClauses, "("+offerItemRef+`:OfferItem {
 					id:                  $`+offerItemRef+`_id,
@@ -752,7 +751,7 @@ func (t TradingStore) SaveOffer(offer *tradingmodel.Offer, offerItems *tradingmo
 				})-[:IsPartOf]->(offer)`)
 
 			params[offerItemRef+"_id"] = resourceTransfer.Key.String()
-			params[offerItemRef+"_type"] = string(tradingmodel.ResourceTransfer)
+			params[offerItemRef+"_type"] = string(trading.ResourceTransfer)
 			params[offerItemRef+"_from_approved"] = resourceTransfer.GiverAccepted
 			params[offerItemRef+"_to_approved"] = resourceTransfer.ReceiverAccepted
 			params[offerItemRef+"_given"] = resourceTransfer.ItemGiven
@@ -807,43 +806,43 @@ func (t TradingStore) SaveOffer(offer *tradingmodel.Offer, offerItems *tradingmo
 
 }
 
-func statusToString(offerStatus tradingmodel.OfferStatus) (string, error) {
-	if offerStatus == tradingmodel.CompletedOffer {
+func statusToString(offerStatus trading.OfferStatus) (string, error) {
+	if offerStatus == trading.CompletedOffer {
 		return "completed", nil
-	} else if offerStatus == tradingmodel.DeclinedOffer {
+	} else if offerStatus == trading.DeclinedOffer {
 		return "declined", nil
-	} else if offerStatus == tradingmodel.AcceptedOffer {
+	} else if offerStatus == trading.AcceptedOffer {
 		return "accepted", nil
-	} else if offerStatus == tradingmodel.CanceledOffer {
+	} else if offerStatus == trading.CanceledOffer {
 		return "canceled", nil
-	} else if offerStatus == tradingmodel.ExpiredOffer {
+	} else if offerStatus == trading.ExpiredOffer {
 		return "expired", nil
-	} else if offerStatus == tradingmodel.PendingOffer {
+	} else if offerStatus == trading.PendingOffer {
 		return "pending", nil
 	} else {
 		return "", fmt.Errorf("unknown offer status type")
 	}
 }
 
-func stringToStatus(offerStatus string) (tradingmodel.OfferStatus, error) {
+func stringToStatus(offerStatus string) (trading.OfferStatus, error) {
 	if offerStatus == "completed" {
-		return tradingmodel.CompletedOffer, nil
+		return trading.CompletedOffer, nil
 	} else if offerStatus == "declined" {
-		return tradingmodel.DeclinedOffer, nil
+		return trading.DeclinedOffer, nil
 	} else if offerStatus == "accepted" {
-		return tradingmodel.AcceptedOffer, nil
+		return trading.AcceptedOffer, nil
 	} else if offerStatus == "canceled" {
-		return tradingmodel.CanceledOffer, nil
+		return trading.CanceledOffer, nil
 	} else if offerStatus == "expired" {
-		return tradingmodel.ExpiredOffer, nil
+		return trading.ExpiredOffer, nil
 	} else if offerStatus == "pending" {
-		return tradingmodel.PendingOffer, nil
+		return trading.PendingOffer, nil
 	} else {
-		return tradingmodel.CanceledOffer, fmt.Errorf("unknown offer status type")
+		return trading.CanceledOffer, fmt.Errorf("unknown offer status type")
 	}
 }
 
-func (t TradingStore) UpdateOfferStatus(key tradingmodel.OfferKey, status tradingmodel.OfferStatus) error {
+func (t TradingStore) UpdateOfferStatus(key trading.OfferKey, status trading.OfferStatus) error {
 	session, err := t.graphDriver.GetSession()
 	if err != nil {
 		return err
@@ -867,16 +866,16 @@ func (t TradingStore) UpdateOfferStatus(key tradingmodel.OfferKey, status tradin
 		UpdatedAtKey + ": $updated_at",
 	}
 
-	if status == tradingmodel.AcceptedOffer {
+	if status == trading.AcceptedOffer {
 		cypherUpdates = append(cypherUpdates, AcceptedAtKey+": $accepted_at")
 		params[AcceptedAtKey] = now
-	} else if status == tradingmodel.DeclinedOffer {
+	} else if status == trading.DeclinedOffer {
 		cypherUpdates = append(cypherUpdates, DeclinedAtKey+": $declined_at")
 		params[DeclinedAtKey] = now
-	} else if status == tradingmodel.CanceledOffer {
+	} else if status == trading.CanceledOffer {
 		cypherUpdates = append(cypherUpdates, CanceledAtKey+": $canceled_at")
 		params[CanceledAtKey] = now
-	} else if status == tradingmodel.CompletedOffer {
+	} else if status == trading.CompletedOffer {
 		cypherUpdates = append(cypherUpdates, CompletedAtKey+": $completed_at")
 		params[CompletedAtKey] = now
 	}
@@ -894,7 +893,7 @@ func (t TradingStore) UpdateOfferStatus(key tradingmodel.OfferKey, status tradin
 	return nil
 }
 
-func (t TradingStore) GetOfferItem(ctx context.Context, key tradingmodel.OfferItemKey) (tradingmodel.OfferItem, error) {
+func (t TradingStore) GetOfferItem(ctx context.Context, key trading.OfferItemKey) (trading.OfferItem, error) {
 
 	session, err := t.graphDriver.GetSession()
 	if err != nil {
@@ -923,7 +922,7 @@ func (t TradingStore) GetOfferItem(ctx context.Context, key tradingmodel.OfferIt
 
 	offerIdField, _ := result.Record().Get("offerId")
 	offerId := offerIdField.(string)
-	offerKey, err := tradingmodel.ParseOfferKey(offerId)
+	offerKey, err := trading.ParseOfferKey(offerId)
 	if err != nil {
 		return nil, err
 	}
@@ -941,7 +940,7 @@ func (t TradingStore) GetOfferItem(ctx context.Context, key tradingmodel.OfferIt
 
 }
 
-func MapOfferItem(offerKey tradingmodel.OfferKey, offerItemNode neo4j.Node, fromNode neo4j.Node, toNode neo4j.Node) (tradingmodel.OfferItem, error) {
+func MapOfferItem(offerKey trading.OfferKey, offerItemNode neo4j.Node, fromNode neo4j.Node, toNode neo4j.Node) (trading.OfferItem, error) {
 
 	offerItemType := offerItemNode.Props()["type"].(string)
 	var fromResource *resourcemodel.Resource
@@ -973,13 +972,13 @@ func MapOfferItem(offerKey tradingmodel.OfferKey, offerItemNode neo4j.Node, from
 	}
 
 	offerItemId := offerItemNode.Props()["id"].(string)
-	offerItemKey, err := tradingmodel.ParseOfferItemKey(offerItemId)
+	offerItemKey, err := trading.ParseOfferItemKey(offerItemId)
 	if err != nil {
 		return nil, err
 	}
 
-	offerItemBase := tradingmodel.OfferItemBase{
-		Type:             tradingmodel.OfferItemType(offerItemType),
+	offerItemBase := trading.OfferItemBase{
+		Type:             trading.OfferItemType(offerItemType),
 		Key:              offerItemKey,
 		OfferKey:         offerKey,
 		To:               toTarget,
@@ -989,7 +988,7 @@ func MapOfferItem(offerKey tradingmodel.OfferKey, offerItemNode neo4j.Node, from
 		UpdatedAt:        offerItemNode.Props()[UpdatedAtKey].(time.Time),
 	}
 
-	if offerItemType == string(tradingmodel.CreditTransfer) {
+	if offerItemType == string(trading.CreditTransfer) {
 
 		if toTarget == nil {
 			return nil, fmt.Errorf("result should have a 'To' user/group")
@@ -1004,14 +1003,14 @@ func MapOfferItem(offerKey tradingmodel.OfferKey, offerItemNode neo4j.Node, from
 			return nil, fmt.Errorf("result should have an 'amount' prop")
 		}
 
-		return &tradingmodel.CreditTransferItem{
+		return &trading.CreditTransferItem{
 			OfferItemBase:      offerItemBase,
 			From:               fromTarget,
 			Amount:             time.Duration(int64(time.Second) * amount.(int64)),
 			CreditsTransferred: offerItemNode.Props()[CreditsTransferredKey].(bool),
 		}, nil
 
-	} else if offerItemType == string(tradingmodel.ProvideService) {
+	} else if offerItemType == string(trading.ProvideService) {
 
 		if fromResource == nil {
 			return nil, fmt.Errorf("result should have a 'From' resource")
@@ -1026,7 +1025,7 @@ func MapOfferItem(offerKey tradingmodel.OfferKey, offerItemNode neo4j.Node, from
 			return nil, fmt.Errorf("result should have a 'duration' prop")
 		}
 
-		return &tradingmodel.ProvideServiceItem{
+		return &trading.ProvideServiceItem{
 			OfferItemBase:               offerItemBase,
 			ResourceKey:                 fromResource.Key,
 			Duration:                    time.Duration(int64(time.Second) * duration.(int64)),
@@ -1034,7 +1033,7 @@ func MapOfferItem(offerKey tradingmodel.OfferKey, offerItemNode neo4j.Node, from
 			ServiceGivenConfirmation:    offerItemNode.Props()[GivenKey].(bool),
 		}, nil
 
-	} else if offerItemType == string(tradingmodel.BorrowResource) {
+	} else if offerItemType == string(trading.BorrowResource) {
 
 		if fromResource == nil {
 			return nil, fmt.Errorf("result should have a 'From' resource")
@@ -1049,7 +1048,7 @@ func MapOfferItem(offerKey tradingmodel.OfferKey, offerItemNode neo4j.Node, from
 			return nil, fmt.Errorf("result should have a 'duration' prop")
 		}
 
-		return &tradingmodel.BorrowResourceItem{
+		return &trading.BorrowResourceItem{
 			OfferItemBase:    offerItemBase,
 			ResourceKey:      fromResource.Key,
 			Duration:         time.Duration(int64(time.Second) * duration.(int64)),
@@ -1059,7 +1058,7 @@ func MapOfferItem(offerKey tradingmodel.OfferKey, offerItemNode neo4j.Node, from
 			ItemReceivedBack: offerItemNode.Props()[ReceivedBacKey].(bool),
 		}, nil
 
-	} else if offerItemType == string(tradingmodel.ResourceTransfer) {
+	} else if offerItemType == string(trading.ResourceTransfer) {
 
 		if fromResource == nil {
 			return nil, fmt.Errorf("result should have a 'From' resource")
@@ -1069,7 +1068,7 @@ func MapOfferItem(offerKey tradingmodel.OfferKey, offerItemNode neo4j.Node, from
 			return nil, fmt.Errorf("result should have a 'To' user/group")
 		}
 
-		return &tradingmodel.ResourceTransferItem{
+		return &trading.ResourceTransferItem{
 			OfferItemBase: offerItemBase,
 			ResourceKey:   fromResource.Key,
 			ItemReceived:  offerItemNode.Props()[ReceivedKey].(bool),
@@ -1082,7 +1081,7 @@ func MapOfferItem(offerKey tradingmodel.OfferKey, offerItemNode neo4j.Node, from
 
 }
 
-func (t TradingStore) UpdateOfferItem(ctx context.Context, offerItem tradingmodel.OfferItem) error {
+func (t TradingStore) UpdateOfferItem(ctx context.Context, offerItem trading.OfferItem) error {
 	session, err := t.graphDriver.GetSession()
 	if err != nil {
 		return err
@@ -1093,7 +1092,7 @@ func (t TradingStore) UpdateOfferItem(ctx context.Context, offerItem tradingmode
 
 	if offerItem.IsServiceProviding() {
 
-		service := offerItem.(*tradingmodel.ProvideServiceItem)
+		service := offerItem.(*trading.ProvideServiceItem)
 		result, err = session.Run(`
 		MATCH (o:OfferItem {id:$id})
 		SET o += {
@@ -1114,7 +1113,7 @@ func (t TradingStore) UpdateOfferItem(ctx context.Context, offerItem tradingmode
 
 	} else if offerItem.IsCreditTransfer() {
 
-		creditTransfer := offerItem.(*tradingmodel.CreditTransferItem)
+		creditTransfer := offerItem.(*trading.CreditTransferItem)
 		result, err = session.Run(`
 			MATCH (o:OfferItem {id:$id})
 			SET o += {
@@ -1133,7 +1132,7 @@ func (t TradingStore) UpdateOfferItem(ctx context.Context, offerItem tradingmode
 			})
 
 	} else if offerItem.IsBorrowingResource() {
-		resourceBorrow := offerItem.(*tradingmodel.BorrowResourceItem)
+		resourceBorrow := offerItem.(*trading.BorrowResourceItem)
 		result, err = session.Run(`
 			MATCH (o:OfferItem {id:$id})
 			SET o += {
@@ -1159,7 +1158,7 @@ func (t TradingStore) UpdateOfferItem(ctx context.Context, offerItem tradingmode
 
 	} else if offerItem.IsResourceTransfer() {
 
-		service := offerItem.(*tradingmodel.ResourceTransferItem)
+		service := offerItem.(*trading.ResourceTransferItem)
 		result, err = session.Run(`
 		MATCH (o:OfferItem {id:$id})
 		SET o += {
@@ -1192,7 +1191,7 @@ func (t TradingStore) UpdateOfferItem(ctx context.Context, offerItem tradingmode
 	return nil
 }
 
-func (t TradingStore) ConfirmItemGiven(ctx context.Context, key tradingmodel.OfferItemKey) error {
+func (t TradingStore) ConfirmItemGiven(ctx context.Context, key trading.OfferItemKey) error {
 	session, err := t.graphDriver.GetSession()
 	if err != nil {
 		return err
@@ -1219,7 +1218,7 @@ func (t TradingStore) ConfirmItemGiven(ctx context.Context, key tradingmodel.Off
 	return nil
 }
 
-func (t TradingStore) GetOffer(key tradingmodel.OfferKey) (*tradingmodel.Offer, error) {
+func (t TradingStore) GetOffer(key trading.OfferKey) (*trading.Offer, error) {
 
 	session, err := t.graphDriver.GetSession()
 	if err != nil {
@@ -1253,10 +1252,10 @@ func (t TradingStore) GetOffer(key tradingmodel.OfferKey) (*tradingmodel.Offer, 
 
 }
 
-func MapOfferNode(node neo4j.Node, createdByKey usermodel.UserKey) (*tradingmodel.Offer, error) {
+func MapOfferNode(node neo4j.Node, createdByKey usermodel.UserKey) (*trading.Offer, error) {
 
 	offerId := node.Props()["id"].(string)
-	offerKey, err := tradingmodel.ParseOfferKey(offerId)
+	offerKey, err := trading.ParseOfferKey(offerId)
 	if err != nil {
 		return nil, err
 	}
@@ -1266,7 +1265,7 @@ func MapOfferNode(node neo4j.Node, createdByKey usermodel.UserKey) (*tradingmode
 		return nil, err
 	}
 
-	return &tradingmodel.Offer{
+	return &trading.Offer{
 		Key:          offerKey,
 		CreatedByKey: createdByKey,
 		Status:       status,
@@ -1275,7 +1274,7 @@ func MapOfferNode(node neo4j.Node, createdByKey usermodel.UserKey) (*tradingmode
 
 }
 
-func (t TradingStore) GetOfferItemsForOffer(key tradingmodel.OfferKey) (*tradingmodel.OfferItems, error) {
+func (t TradingStore) GetOfferItemsForOffer(key trading.OfferKey) (*trading.OfferItems, error) {
 
 	session, err := t.graphDriver.GetSession()
 	if err != nil {
@@ -1298,12 +1297,12 @@ func (t TradingStore) GetOfferItemsForOffer(key tradingmodel.OfferKey) (*trading
 		return nil, result.Err()
 	}
 
-	var offerItems []tradingmodel.OfferItem
+	var offerItems []trading.OfferItem
 	for result.Next() {
 
 		offerIdField, _ := result.Record().Get("offerId")
 		offerId := offerIdField.(string)
-		offerKey, err := tradingmodel.ParseOfferKey(offerId)
+		offerKey, err := trading.ParseOfferKey(offerId)
 		if err != nil {
 			return nil, err
 		}
@@ -1326,7 +1325,7 @@ func (t TradingStore) GetOfferItemsForOffer(key tradingmodel.OfferKey) (*trading
 
 	}
 
-	return tradingmodel.NewOfferItems(offerItems), nil
+	return trading.NewOfferItems(offerItems), nil
 
 }
 
@@ -1409,7 +1408,7 @@ func (t TradingStore) GetOffersForUser(userKey usermodel.UserKey) (*trading.GetO
 		offerItemsContainerField, _ := record.Get("offerItems")
 		offerItemsContainerSlice := offerItemsContainerField.([]interface{})
 
-		var offerItems []tradingmodel.OfferItem
+		var offerItems []trading.OfferItem
 		for _, offerItemContainerIntf := range offerItemsContainerSlice {
 
 			offerItemContainer := offerItemContainerIntf.(map[string]interface{})
@@ -1427,7 +1426,7 @@ func (t TradingStore) GetOffersForUser(userKey usermodel.UserKey) (*trading.GetO
 
 		resultItems = append(resultItems, &trading.GetOffersResultItem{
 			Offer:      offer,
-			OfferItems: tradingmodel.NewOfferItems(offerItems),
+			OfferItems: trading.NewOfferItems(offerItems),
 		})
 
 	}
@@ -1438,6 +1437,6 @@ func (t TradingStore) GetOffersForUser(userKey usermodel.UserKey) (*trading.GetO
 
 }
 
-func (t TradingStore) GetTradingHistory(ctx context.Context, ids *usermodel.UserKeys) ([]tradingmodel.HistoryEntry, error) {
+func (t TradingStore) GetTradingHistory(ctx context.Context, ids *usermodel.UserKeys) ([]trading.HistoryEntry, error) {
 	panic("implement me")
 }

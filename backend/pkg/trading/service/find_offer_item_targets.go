@@ -3,14 +3,14 @@ package service
 import (
 	group2 "github.com/commonpool/backend/pkg/group"
 	model3 "github.com/commonpool/backend/pkg/resource/model"
-	model2 "github.com/commonpool/backend/pkg/trading/model"
+	"github.com/commonpool/backend/pkg/trading"
 	"golang.org/x/net/context"
 )
 
 func (t TradingService) FindTargetsForOfferItem(
 	ctx context.Context,
 	groupKey group2.GroupKey,
-	itemType model2.OfferItemType,
+	itemType trading.OfferItemType,
 	from *model3.Target,
 	to *model3.Target) (*model3.Targets, error) {
 

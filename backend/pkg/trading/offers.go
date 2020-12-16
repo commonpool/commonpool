@@ -1,4 +1,4 @@
-package model
+package trading
 
 type Offers struct {
 	Items []*Offer

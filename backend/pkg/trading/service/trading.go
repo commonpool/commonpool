@@ -7,7 +7,6 @@ import (
 	group2 "github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/resource"
 	trading2 "github.com/commonpool/backend/pkg/trading"
-	tradingmodel "github.com/commonpool/backend/pkg/trading/model"
 	transaction2 "github.com/commonpool/backend/pkg/transaction"
 	"github.com/commonpool/backend/pkg/user"
 	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
@@ -45,36 +44,36 @@ func NewTradingService(
 func (t TradingService) checkOfferCompleted(
 	ctx context.Context,
 	groupKey group2.GroupKey,
-	offerKey tradingmodel.OfferKey,
-	offerItems *tradingmodel.OfferItems,
+	offerKey trading2.OfferKey,
+	offerItems *trading2.OfferItems,
 	userConfirmingItem usermodel.UserReference,
 	usersInOffer *user.Users) error {
 
 	if offerItems.AllPartiesAccepted() && offerItems.AllUserActionsCompleted() {
 		for _, offerItem := range offerItems.Items {
 			if offerItem.IsCreditTransfer() {
-				creditTransfer := offerItem.(*tradingmodel.CreditTransferItem)
+				creditTransfer := offerItem.(*trading2.CreditTransferItem)
 				_, err := t.transactionService.TimeCreditsExchanged(groupKey, creditTransfer.From, creditTransfer.To, creditTransfer.Amount)
 				if err != nil {
 					return err
 				}
 			}
 			if offerItem.IsServiceProviding() {
-				serviceProvision := offerItem.(*tradingmodel.ProvideServiceItem)
+				serviceProvision := offerItem.(*trading2.ProvideServiceItem)
 				_, err := t.transactionService.ServiceWasProvided(groupKey, serviceProvision.ResourceKey, serviceProvision.Duration)
 				if err != nil {
 					return err
 				}
 			}
 			if offerItem.IsBorrowingResource() {
-				borrowResource := offerItem.(*tradingmodel.BorrowResourceItem)
+				borrowResource := offerItem.(*trading2.BorrowResourceItem)
 				_, err := t.transactionService.ResourceWasBorrowed(groupKey, borrowResource.ResourceKey, borrowResource.To, borrowResource.Duration)
 				if err != nil {
 					return err
 				}
 			}
 			if offerItem.IsResourceTransfer() {
-				transfer := offerItem.(*tradingmodel.ResourceTransferItem)
+				transfer := offerItem.(*trading2.ResourceTransferItem)
 				_, err := t.transactionService.ResourceWasTaken(groupKey, transfer.ResourceKey, transfer.To)
 				if err != nil {
 					return err
@@ -82,7 +81,7 @@ func (t TradingService) checkOfferCompleted(
 			}
 		}
 
-		err := t.tradingStore.UpdateOfferStatus(offerKey, tradingmodel.CompletedOffer)
+		err := t.tradingStore.UpdateOfferStatus(offerKey, trading2.CompletedOffer)
 		if err != nil {
 			return err
 		}
@@ -105,7 +104,7 @@ func (t TradingService) checkOfferCompleted(
 	return nil
 }
 
-func (t TradingService) buildOfferCompletedMessage(ctx context.Context, items *tradingmodel.OfferItems, users *user.Users) ([]chat.Block, string, error) {
+func (t TradingService) buildOfferCompletedMessage(ctx context.Context, items *trading2.OfferItems, users *user.Users) ([]chat.Block, string, error) {
 
 	var blocks []chat.Block
 
@@ -119,7 +118,7 @@ func (t TradingService) buildOfferCompletedMessage(ctx context.Context, items *t
 
 		if offerItem.IsCreditTransfer() {
 
-			creditTransfer := offerItem.(*tradingmodel.CreditTransferItem)
+			creditTransfer := offerItem.(*trading2.CreditTransferItem)
 
 			var toLink = ""
 			var fromLink = ""
@@ -153,7 +152,7 @@ func (t TradingService) buildOfferCompletedMessage(ctx context.Context, items *t
 
 }
 
-func (t TradingService) checkIfAllItemsCompleted(ctx context.Context, loggerInUser usermodel.UserReference, offerItem tradingmodel.OfferItem) error {
+func (t TradingService) checkIfAllItemsCompleted(ctx context.Context, loggerInUser usermodel.UserReference, offerItem trading2.OfferItem) error {
 
 	offer, err := t.tradingStore.GetOffer(offerItem.GetOfferKey())
 	if err != nil {

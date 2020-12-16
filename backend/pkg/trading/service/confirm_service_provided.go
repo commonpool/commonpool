@@ -4,10 +4,10 @@ import (
 	"context"
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/exceptions"
-	"github.com/commonpool/backend/pkg/trading/model"
+	"github.com/commonpool/backend/pkg/trading"
 )
 
-func (t TradingService) ConfirmServiceProvided(ctx context.Context, confirmedItemKey model.OfferItemKey) error {
+func (t TradingService) ConfirmServiceProvided(ctx context.Context, confirmedItemKey trading.OfferItemKey) error {
 
 	loggedInUser, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
@@ -24,7 +24,7 @@ func (t TradingService) ConfirmServiceProvided(ctx context.Context, confirmedIte
 		return exceptions.ErrWrongOfferItemType
 	}
 
-	serviceProvided := offerItem.(*model.ProvideServiceItem)
+	serviceProvided := offerItem.(*trading.ProvideServiceItem)
 
 	receivingApprovers, err := t.tradingStore.FindReceivingApproversForOfferItem(offerItem.GetKey())
 	if err != nil {

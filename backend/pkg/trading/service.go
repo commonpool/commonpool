@@ -4,25 +4,24 @@ import (
 	ctx "context"
 	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/resource/model"
-	tradingmodel "github.com/commonpool/backend/pkg/trading/model"
 	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"golang.org/x/net/context"
 )
 
 type Service interface {
-	GetOfferItem(ctx context.Context, offerItemKey tradingmodel.OfferItemKey) (tradingmodel.OfferItem, error)
-	ConfirmServiceProvided(ctx context.Context, offerItemKey tradingmodel.OfferItemKey) error
-	ConfirmResourceTransferred(ctx context.Context, confirmedItemKey tradingmodel.OfferItemKey) error
-	ConfirmResourceBorrowed(ctx context.Context, confirmedItemKey tradingmodel.OfferItemKey) error
-	ConfirmBorrowedResourceReturned(ctx context.Context, confirmedItemKey tradingmodel.OfferItemKey) error
-	AcceptOffer(ctx ctx.Context, offerKey tradingmodel.OfferKey) error
-	DeclineOffer(ctx ctx.Context, offerKey tradingmodel.OfferKey) error
-	GetTradingHistory(ctx context.Context, userIDs *usermodel.UserKeys) ([]tradingmodel.HistoryEntry, error)
-	SendOffer(ctx context.Context, groupKey group.GroupKey, offerItems *tradingmodel.OfferItems, message string) (*tradingmodel.Offer, *tradingmodel.OfferItems, error)
-	FindTargetsForOfferItem(ctx ctx.Context, groupKey group.GroupKey, itemType tradingmodel.OfferItemType, from *model.Target, to *model.Target) (*model.Targets, error)
+	GetOfferItem(ctx context.Context, offerItemKey OfferItemKey) (OfferItem, error)
+	ConfirmServiceProvided(ctx context.Context, offerItemKey OfferItemKey) error
+	ConfirmResourceTransferred(ctx context.Context, confirmedItemKey OfferItemKey) error
+	ConfirmResourceBorrowed(ctx context.Context, confirmedItemKey OfferItemKey) error
+	ConfirmBorrowedResourceReturned(ctx context.Context, confirmedItemKey OfferItemKey) error
+	AcceptOffer(ctx ctx.Context, offerKey OfferKey) error
+	DeclineOffer(ctx ctx.Context, offerKey OfferKey) error
+	GetTradingHistory(ctx context.Context, userIDs *usermodel.UserKeys) ([]HistoryEntry, error)
+	SendOffer(ctx context.Context, groupKey group.GroupKey, offerItems *OfferItems, message string) (*Offer, *OfferItems, error)
+	FindTargetsForOfferItem(ctx ctx.Context, groupKey group.GroupKey, itemType OfferItemType, from *model.Target, to *model.Target) (*model.Targets, error)
 	GetOffersForUser(key usermodel.UserKey) (*GetOffersResult, error)
-	FindApproversForOffers(offers *tradingmodel.OfferKeys) (*tradingmodel.OffersApprovers, error)
-	GetOffer(offerKey tradingmodel.OfferKey) (*tradingmodel.Offer, error)
-	GetOfferItemsForOffer(offerKey tradingmodel.OfferKey) (*tradingmodel.OfferItems, error)
-	FindApproversForOffer(offerKey tradingmodel.OfferKey) (*tradingmodel.OfferApprovers, error)
+	FindApproversForOffers(offers *OfferKeys) (*OffersApprovers, error)
+	GetOffer(offerKey OfferKey) (*Offer, error)
+	GetOfferItemsForOffer(offerKey OfferKey) (*OfferItems, error)
+	FindApproversForOffer(offerKey OfferKey) (*OfferApprovers, error)
 }

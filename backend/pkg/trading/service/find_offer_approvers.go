@@ -1,7 +1,9 @@
 package service
 
-import "github.com/commonpool/backend/pkg/trading/model"
+import (
+	"github.com/commonpool/backend/pkg/trading"
+)
 
-func (t TradingService) FindApproversForOffer(offerKey model.OfferKey) (*model.OfferApprovers, error) {
+func (t TradingService) FindApproversForOffer(offerKey trading.OfferKey) (*trading.OfferApprovers, error) {
 	return t.tradingStore.FindApproversForOffer(offerKey)
 }

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/auth"
-	model2 "github.com/commonpool/backend/pkg/trading/model"
+	"github.com/commonpool/backend/pkg/trading"
 	"github.com/commonpool/backend/web"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -232,14 +232,14 @@ func TestUsersCanAcceptOfferBetweenUsers(t *testing.T) {
 
 	offer, err := TradingStore.GetOffer(key)
 	assert.NoError(t, err)
-	assert.Equal(t, model2.PendingOffer, offer.Status)
+	assert.Equal(t, trading.PendingOffer, offer.Status)
 
 	httpResp = AcceptOffer(t, ctx, user1, key)
 	assert.Equal(t, http.StatusOK, httpResp.StatusCode)
 
 	offer, err = TradingStore.GetOffer(key)
 	assert.NoError(t, err)
-	assert.Equal(t, model2.AcceptedOffer, offer.Status)
+	assert.Equal(t, trading.AcceptedOffer, offer.Status)
 
 }
 
@@ -372,14 +372,14 @@ func TestUsersCanDeclineOffer(t *testing.T) {
 
 	offer, err := TradingStore.GetOffer(offerKey)
 	assert.NoError(t, err)
-	assert.Equal(t, model2.PendingOffer, offer.Status)
+	assert.Equal(t, trading.PendingOffer, offer.Status)
 
 	declineOffer := DeclineOffer(t, ctx, user1, offerKey)
 	AssertStatusNoContent(t, declineOffer)
 
 	offer, err = TradingStore.GetOffer(offerKey)
 	assert.NoError(t, err)
-	assert.Equal(t, model2.DeclinedOffer, offer.Status)
+	assert.Equal(t, trading.DeclinedOffer, offer.Status)
 
 }
 
@@ -602,7 +602,7 @@ func TestCanGetTradingHistory(t *testing.T) {
 func UsersConfirmResourceTransferred(t *testing.T, ctx context.Context, offer *web.Offer, users []*auth.UserSession) error {
 	for _, offerItem := range offer.Items {
 
-		if offerItem.Type != model2.ResourceTransfer {
+		if offerItem.Type != trading.ResourceTransfer {
 			continue
 		}
 

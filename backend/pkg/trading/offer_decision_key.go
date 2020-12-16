@@ -1,4 +1,4 @@
-package model
+package trading
 
 import (
 	usermodel "github.com/commonpool/backend/pkg/user/usermodel"

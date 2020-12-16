@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/exceptions"
-	"github.com/commonpool/backend/pkg/trading/model"
+	"github.com/commonpool/backend/pkg/trading"
 )
 
-func (t TradingService) AcceptOffer(ctx context.Context, offerKey model.OfferKey) error {
+func (t TradingService) AcceptOffer(ctx context.Context, offerKey trading.OfferKey) error {
 
 	loggedInUser, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
@@ -45,7 +45,7 @@ func (t TradingService) AcceptOffer(ctx context.Context, offerKey model.OfferKey
 		return exceptions.ErrUnauthorized
 	}
 
-	var offerItemsPendingGiverApproval []model.OfferItemKey
+	var offerItemsPendingGiverApproval []trading.OfferItemKey
 	if approvableOfferItemsOnGivingSide != nil {
 		for _, offerItemKey := range approvableOfferItemsOnGivingSide.Items {
 			offerItem := offerItems.GetOfferItem(offerItemKey)
@@ -55,7 +55,7 @@ func (t TradingService) AcceptOffer(ctx context.Context, offerKey model.OfferKey
 			offerItemsPendingGiverApproval = append(offerItemsPendingGiverApproval, offerItemKey)
 		}
 	}
-	var offerItemsPendingReceiverApproval []model.OfferItemKey
+	var offerItemsPendingReceiverApproval []trading.OfferItemKey
 	if approvableOfferItemsOnReceivingSide != nil {
 		for _, offerItemKey := range approvableOfferItemsOnReceivingSide.Items {
 			offerItem := offerItems.GetOfferItem(offerItemKey)
@@ -73,8 +73,8 @@ func (t TradingService) AcceptOffer(ctx context.Context, offerKey model.OfferKey
 	err = t.tradingStore.MarkOfferItemsAsAccepted(
 		ctx,
 		loggedInUserKey,
-		model.NewOfferItemKeys(offerItemsPendingGiverApproval),
-		model.NewOfferItemKeys(offerItemsPendingReceiverApproval))
+		trading.NewOfferItemKeys(offerItemsPendingGiverApproval),
+		trading.NewOfferItemKeys(offerItemsPendingReceiverApproval))
 
 	if err != nil {
 		return err
@@ -143,7 +143,7 @@ func (t TradingService) AcceptOffer(ctx context.Context, offerKey model.OfferKey
 	}
 
 	if offerItems.AllPartiesAccepted() {
-		err := t.tradingStore.UpdateOfferStatus(offerKey, model.AcceptedOffer)
+		err := t.tradingStore.UpdateOfferStatus(offerKey, trading.AcceptedOffer)
 		if err != nil {
 			return err
 		}

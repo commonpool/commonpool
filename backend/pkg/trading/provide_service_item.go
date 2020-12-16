@@ -1,4 +1,4 @@
-package model
+package trading
 
 import (
 	resourcemodel "github.com/commonpool/backend/pkg/resource/model"

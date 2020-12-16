@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/exceptions"
-	"github.com/commonpool/backend/pkg/trading/model"
+	"github.com/commonpool/backend/pkg/trading"
 )
 
-func (t TradingService) DeclineOffer(ctx context.Context, offerKey model.OfferKey) error {
+func (t TradingService) DeclineOffer(ctx context.Context, offerKey trading.OfferKey) error {
 
 	user, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
@@ -21,7 +21,7 @@ func (t TradingService) DeclineOffer(ctx context.Context, offerKey model.OfferKe
 		return err
 	}
 
-	if offer.Status != model.PendingOffer {
+	if offer.Status != trading.PendingOffer {
 		return fmt.Errorf("could not decline a offer that is not pending")
 	}
 
@@ -34,7 +34,7 @@ func (t TradingService) DeclineOffer(ctx context.Context, offerKey model.OfferKe
 		return exceptions.ErrForbidden
 	}
 
-	err = t.tradingStore.UpdateOfferStatus(offerKey, model.DeclinedOffer)
+	err = t.tradingStore.UpdateOfferStatus(offerKey, trading.DeclinedOffer)
 	if err != nil {
 		return err
 	}
