@@ -1,7 +1,7 @@
 package model
 
 import (
-	model2 "github.com/commonpool/backend/pkg/group/model"
+	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/user/usermodel"
 )
 
@@ -34,13 +34,13 @@ func (t *Targets) GetUserKeys() *usermodel.UserKeys {
 	return usermodel.NewUserKeys(userKeys)
 }
 
-func (t *Targets) GetGroupKeys() *model2.GroupKeys {
-	var groupKeys []model2.GroupKey
+func (t *Targets) GetGroupKeys() *group.GroupKeys {
+	var groupKeys []group.GroupKey
 	for _, target := range t.Items {
 		if !target.IsForGroup() {
 			continue
 		}
 		groupKeys = append(groupKeys, target.GetGroupKey())
 	}
-	return model2.NewGroupKeys(groupKeys)
+	return group.NewGroupKeys(groupKeys)
 }

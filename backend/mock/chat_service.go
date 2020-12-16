@@ -6,7 +6,6 @@ package mock
 import (
 	"context"
 	"github.com/commonpool/backend/pkg/chat"
-	"github.com/commonpool/backend/pkg/chat/chatmodel"
 	"github.com/commonpool/backend/pkg/user/usermodel"
 	"sync"
 	"time"
@@ -69,7 +68,7 @@ var _ chat.Service = &ChatService{}
 //     }
 type ChatService struct {
 	// CreateChannelFunc mocks the CreateChannel method.
-	CreateChannelFunc func(ctx context.Context, channelKey chatmodel.ChannelKey, channelType chatmodel.ChannelType) (*chatmodel.Channel, error)
+	CreateChannelFunc func(ctx context.Context, channelKey chat.ChannelKey, channelType chat.ChannelType) (*chat.Channel, error)
 
 	// CreateUserExchangeFunc mocks the CreateUserExchange method.
 	CreateUserExchangeFunc func(ctx context.Context, userKey usermodel.UserKey) (string, error)
@@ -78,16 +77,16 @@ type ChatService struct {
 	DeleteGroupChannelFunc func(ctx context.Context, request *chat.DeleteGroupChannel) (*chat.DeleteGroupChannelResponse, error)
 
 	// GetChannelFunc mocks the GetChannel method.
-	GetChannelFunc func(ctx context.Context, channelKey chatmodel.ChannelKey) (*chatmodel.Channel, error)
+	GetChannelFunc func(ctx context.Context, channelKey chat.ChannelKey) (*chat.Channel, error)
 
 	// GetMessageFunc mocks the GetMessage method.
-	GetMessageFunc func(ctx context.Context, messageKey chatmodel.MessageKey) (*chatmodel.Message, error)
+	GetMessageFunc func(ctx context.Context, messageKey chat.MessageKey) (*chat.Message, error)
 
 	// GetMessagesFunc mocks the GetMessages method.
-	GetMessagesFunc func(ctx context.Context, channel chatmodel.ChannelKey, before time.Time, take int) (*chat.GetMessagesResponse, error)
+	GetMessagesFunc func(ctx context.Context, channel chat.ChannelKey, before time.Time, take int) (*chat.GetMessagesResponse, error)
 
 	// GetSubscriptionsForUserFunc mocks the GetSubscriptionsForUser method.
-	GetSubscriptionsForUserFunc func(ctx context.Context, take int, skip int) (*chatmodel.ChannelSubscriptions, error)
+	GetSubscriptionsForUserFunc func(ctx context.Context, take int, skip int) (*chat.ChannelSubscriptions, error)
 
 	// GetUserExchangeNameFunc mocks the GetUserExchangeName method.
 	GetUserExchangeNameFunc func(ctx context.Context, userKey usermodel.UserKey) string
@@ -99,13 +98,13 @@ type ChatService struct {
 	SendGroupMessageFunc func(ctx context.Context, request *chat.SendGroupMessage) (*chat.SendGroupMessageResponse, error)
 
 	// SendMessageFunc mocks the SendMessage method.
-	SendMessageFunc func(ctx context.Context, message *chatmodel.Message) error
+	SendMessageFunc func(ctx context.Context, message *chat.Message) error
 
 	// SubscribeToChannelFunc mocks the SubscribeToChannel method.
-	SubscribeToChannelFunc func(ctx context.Context, channelSubscriptionKey chatmodel.ChannelSubscriptionKey, name string) (*chatmodel.ChannelSubscription, error)
+	SubscribeToChannelFunc func(ctx context.Context, channelSubscriptionKey chat.ChannelSubscriptionKey, name string) (*chat.ChannelSubscription, error)
 
 	// UnsubscribeFromChannelFunc mocks the UnsubscribeFromChannel method.
-	UnsubscribeFromChannelFunc func(ctx context.Context, channelSubscriptionKey chatmodel.ChannelSubscriptionKey) error
+	UnsubscribeFromChannelFunc func(ctx context.Context, channelSubscriptionKey chat.ChannelSubscriptionKey) error
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -114,9 +113,9 @@ type ChatService struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// ChannelKey is the channelKey argument value.
-			ChannelKey chatmodel.ChannelKey
+			ChannelKey chat.ChannelKey
 			// ChannelType is the channelType argument value.
-			ChannelType chatmodel.ChannelType
+			ChannelType chat.ChannelType
 		}
 		// CreateUserExchange holds details about calls to the CreateUserExchange method.
 		CreateUserExchange []struct {
@@ -137,21 +136,21 @@ type ChatService struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// ChannelKey is the channelKey argument value.
-			ChannelKey chatmodel.ChannelKey
+			ChannelKey chat.ChannelKey
 		}
 		// GetMessage holds details about calls to the GetMessage method.
 		GetMessage []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// MessageKey is the messageKey argument value.
-			MessageKey chatmodel.MessageKey
+			MessageKey chat.MessageKey
 		}
 		// GetMessages holds details about calls to the GetMessages method.
 		GetMessages []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// Channel is the channel argument value.
-			Channel chatmodel.ChannelKey
+			Channel chat.ChannelKey
 			// Before is the before argument value.
 			Before time.Time
 			// Take is the take argument value.
@@ -192,14 +191,14 @@ type ChatService struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// Message is the message argument value.
-			Message *chatmodel.Message
+			Message *chat.Message
 		}
 		// SubscribeToChannel holds details about calls to the SubscribeToChannel method.
 		SubscribeToChannel []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// ChannelSubscriptionKey is the channelSubscriptionKey argument value.
-			ChannelSubscriptionKey chatmodel.ChannelSubscriptionKey
+			ChannelSubscriptionKey chat.ChannelSubscriptionKey
 			// Name is the name argument value.
 			Name string
 		}
@@ -208,7 +207,7 @@ type ChatService struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// ChannelSubscriptionKey is the channelSubscriptionKey argument value.
-			ChannelSubscriptionKey chatmodel.ChannelSubscriptionKey
+			ChannelSubscriptionKey chat.ChannelSubscriptionKey
 		}
 	}
 	lockCreateChannel           sync.RWMutex
@@ -227,14 +226,14 @@ type ChatService struct {
 }
 
 // CreateChannel calls CreateChannelFunc.
-func (mock *ChatService) CreateChannel(ctx context.Context, channelKey chatmodel.ChannelKey, channelType chatmodel.ChannelType) (*chatmodel.Channel, error) {
+func (mock *ChatService) CreateChannel(ctx context.Context, channelKey chat.ChannelKey, channelType chat.ChannelType) (*chat.Channel, error) {
 	if mock.CreateChannelFunc == nil {
 		panic("ChatService.CreateChannelFunc: method is nil but Service.CreateChannel was just called")
 	}
 	callInfo := struct {
 		Ctx         context.Context
-		ChannelKey  chatmodel.ChannelKey
-		ChannelType chatmodel.ChannelType
+		ChannelKey  chat.ChannelKey
+		ChannelType chat.ChannelType
 	}{
 		Ctx:         ctx,
 		ChannelKey:  channelKey,
@@ -251,13 +250,13 @@ func (mock *ChatService) CreateChannel(ctx context.Context, channelKey chatmodel
 //     len(mockedService.CreateChannelCalls())
 func (mock *ChatService) CreateChannelCalls() []struct {
 	Ctx         context.Context
-	ChannelKey  chatmodel.ChannelKey
-	ChannelType chatmodel.ChannelType
+	ChannelKey  chat.ChannelKey
+	ChannelType chat.ChannelType
 } {
 	var calls []struct {
 		Ctx         context.Context
-		ChannelKey  chatmodel.ChannelKey
-		ChannelType chatmodel.ChannelType
+		ChannelKey  chat.ChannelKey
+		ChannelType chat.ChannelType
 	}
 	mock.lockCreateChannel.RLock()
 	calls = mock.calls.CreateChannel
@@ -336,13 +335,13 @@ func (mock *ChatService) DeleteGroupChannelCalls() []struct {
 }
 
 // GetChannel calls GetChannelFunc.
-func (mock *ChatService) GetChannel(ctx context.Context, channelKey chatmodel.ChannelKey) (*chatmodel.Channel, error) {
+func (mock *ChatService) GetChannel(ctx context.Context, channelKey chat.ChannelKey) (*chat.Channel, error) {
 	if mock.GetChannelFunc == nil {
 		panic("ChatService.GetChannelFunc: method is nil but Service.GetChannel was just called")
 	}
 	callInfo := struct {
 		Ctx        context.Context
-		ChannelKey chatmodel.ChannelKey
+		ChannelKey chat.ChannelKey
 	}{
 		Ctx:        ctx,
 		ChannelKey: channelKey,
@@ -358,11 +357,11 @@ func (mock *ChatService) GetChannel(ctx context.Context, channelKey chatmodel.Ch
 //     len(mockedService.GetChannelCalls())
 func (mock *ChatService) GetChannelCalls() []struct {
 	Ctx        context.Context
-	ChannelKey chatmodel.ChannelKey
+	ChannelKey chat.ChannelKey
 } {
 	var calls []struct {
 		Ctx        context.Context
-		ChannelKey chatmodel.ChannelKey
+		ChannelKey chat.ChannelKey
 	}
 	mock.lockGetChannel.RLock()
 	calls = mock.calls.GetChannel
@@ -371,13 +370,13 @@ func (mock *ChatService) GetChannelCalls() []struct {
 }
 
 // GetMessage calls GetMessageFunc.
-func (mock *ChatService) GetMessage(ctx context.Context, messageKey chatmodel.MessageKey) (*chatmodel.Message, error) {
+func (mock *ChatService) GetMessage(ctx context.Context, messageKey chat.MessageKey) (*chat.Message, error) {
 	if mock.GetMessageFunc == nil {
 		panic("ChatService.GetMessageFunc: method is nil but Service.GetMessage was just called")
 	}
 	callInfo := struct {
 		Ctx        context.Context
-		MessageKey chatmodel.MessageKey
+		MessageKey chat.MessageKey
 	}{
 		Ctx:        ctx,
 		MessageKey: messageKey,
@@ -393,11 +392,11 @@ func (mock *ChatService) GetMessage(ctx context.Context, messageKey chatmodel.Me
 //     len(mockedService.GetMessageCalls())
 func (mock *ChatService) GetMessageCalls() []struct {
 	Ctx        context.Context
-	MessageKey chatmodel.MessageKey
+	MessageKey chat.MessageKey
 } {
 	var calls []struct {
 		Ctx        context.Context
-		MessageKey chatmodel.MessageKey
+		MessageKey chat.MessageKey
 	}
 	mock.lockGetMessage.RLock()
 	calls = mock.calls.GetMessage
@@ -406,13 +405,13 @@ func (mock *ChatService) GetMessageCalls() []struct {
 }
 
 // GetMessages calls GetMessagesFunc.
-func (mock *ChatService) GetMessages(ctx context.Context, channel chatmodel.ChannelKey, before time.Time, take int) (*chat.GetMessagesResponse, error) {
+func (mock *ChatService) GetMessages(ctx context.Context, channel chat.ChannelKey, before time.Time, take int) (*chat.GetMessagesResponse, error) {
 	if mock.GetMessagesFunc == nil {
 		panic("ChatService.GetMessagesFunc: method is nil but Service.GetMessages was just called")
 	}
 	callInfo := struct {
 		Ctx     context.Context
-		Channel chatmodel.ChannelKey
+		Channel chat.ChannelKey
 		Before  time.Time
 		Take    int
 	}{
@@ -432,13 +431,13 @@ func (mock *ChatService) GetMessages(ctx context.Context, channel chatmodel.Chan
 //     len(mockedService.GetMessagesCalls())
 func (mock *ChatService) GetMessagesCalls() []struct {
 	Ctx     context.Context
-	Channel chatmodel.ChannelKey
+	Channel chat.ChannelKey
 	Before  time.Time
 	Take    int
 } {
 	var calls []struct {
 		Ctx     context.Context
-		Channel chatmodel.ChannelKey
+		Channel chat.ChannelKey
 		Before  time.Time
 		Take    int
 	}
@@ -449,7 +448,7 @@ func (mock *ChatService) GetMessagesCalls() []struct {
 }
 
 // GetSubscriptionsForUser calls GetSubscriptionsForUserFunc.
-func (mock *ChatService) GetSubscriptionsForUser(ctx context.Context, take int, skip int) (*chatmodel.ChannelSubscriptions, error) {
+func (mock *ChatService) GetSubscriptionsForUser(ctx context.Context, take int, skip int) (*chat.ChannelSubscriptions, error) {
 	if mock.GetSubscriptionsForUserFunc == nil {
 		panic("ChatService.GetSubscriptionsForUserFunc: method is nil but Service.GetSubscriptionsForUser was just called")
 	}
@@ -593,13 +592,13 @@ func (mock *ChatService) SendGroupMessageCalls() []struct {
 }
 
 // SendMessage calls SendMessageFunc.
-func (mock *ChatService) SendMessage(ctx context.Context, message *chatmodel.Message) error {
+func (mock *ChatService) SendMessage(ctx context.Context, message *chat.Message) error {
 	if mock.SendMessageFunc == nil {
 		panic("ChatService.SendMessageFunc: method is nil but Service.SendMessage was just called")
 	}
 	callInfo := struct {
 		Ctx     context.Context
-		Message *chatmodel.Message
+		Message *chat.Message
 	}{
 		Ctx:     ctx,
 		Message: message,
@@ -615,11 +614,11 @@ func (mock *ChatService) SendMessage(ctx context.Context, message *chatmodel.Mes
 //     len(mockedService.SendMessageCalls())
 func (mock *ChatService) SendMessageCalls() []struct {
 	Ctx     context.Context
-	Message *chatmodel.Message
+	Message *chat.Message
 } {
 	var calls []struct {
 		Ctx     context.Context
-		Message *chatmodel.Message
+		Message *chat.Message
 	}
 	mock.lockSendMessage.RLock()
 	calls = mock.calls.SendMessage
@@ -628,13 +627,13 @@ func (mock *ChatService) SendMessageCalls() []struct {
 }
 
 // SubscribeToChannel calls SubscribeToChannelFunc.
-func (mock *ChatService) SubscribeToChannel(ctx context.Context, channelSubscriptionKey chatmodel.ChannelSubscriptionKey, name string) (*chatmodel.ChannelSubscription, error) {
+func (mock *ChatService) SubscribeToChannel(ctx context.Context, channelSubscriptionKey chat.ChannelSubscriptionKey, name string) (*chat.ChannelSubscription, error) {
 	if mock.SubscribeToChannelFunc == nil {
 		panic("ChatService.SubscribeToChannelFunc: method is nil but Service.SubscribeToChannel was just called")
 	}
 	callInfo := struct {
 		Ctx                    context.Context
-		ChannelSubscriptionKey chatmodel.ChannelSubscriptionKey
+		ChannelSubscriptionKey chat.ChannelSubscriptionKey
 		Name                   string
 	}{
 		Ctx:                    ctx,
@@ -652,12 +651,12 @@ func (mock *ChatService) SubscribeToChannel(ctx context.Context, channelSubscrip
 //     len(mockedService.SubscribeToChannelCalls())
 func (mock *ChatService) SubscribeToChannelCalls() []struct {
 	Ctx                    context.Context
-	ChannelSubscriptionKey chatmodel.ChannelSubscriptionKey
+	ChannelSubscriptionKey chat.ChannelSubscriptionKey
 	Name                   string
 } {
 	var calls []struct {
 		Ctx                    context.Context
-		ChannelSubscriptionKey chatmodel.ChannelSubscriptionKey
+		ChannelSubscriptionKey chat.ChannelSubscriptionKey
 		Name                   string
 	}
 	mock.lockSubscribeToChannel.RLock()
@@ -667,13 +666,13 @@ func (mock *ChatService) SubscribeToChannelCalls() []struct {
 }
 
 // UnsubscribeFromChannel calls UnsubscribeFromChannelFunc.
-func (mock *ChatService) UnsubscribeFromChannel(ctx context.Context, channelSubscriptionKey chatmodel.ChannelSubscriptionKey) error {
+func (mock *ChatService) UnsubscribeFromChannel(ctx context.Context, channelSubscriptionKey chat.ChannelSubscriptionKey) error {
 	if mock.UnsubscribeFromChannelFunc == nil {
 		panic("ChatService.UnsubscribeFromChannelFunc: method is nil but Service.UnsubscribeFromChannel was just called")
 	}
 	callInfo := struct {
 		Ctx                    context.Context
-		ChannelSubscriptionKey chatmodel.ChannelSubscriptionKey
+		ChannelSubscriptionKey chat.ChannelSubscriptionKey
 	}{
 		Ctx:                    ctx,
 		ChannelSubscriptionKey: channelSubscriptionKey,
@@ -689,11 +688,11 @@ func (mock *ChatService) UnsubscribeFromChannel(ctx context.Context, channelSubs
 //     len(mockedService.UnsubscribeFromChannelCalls())
 func (mock *ChatService) UnsubscribeFromChannelCalls() []struct {
 	Ctx                    context.Context
-	ChannelSubscriptionKey chatmodel.ChannelSubscriptionKey
+	ChannelSubscriptionKey chat.ChannelSubscriptionKey
 } {
 	var calls []struct {
 		Ctx                    context.Context
-		ChannelSubscriptionKey chatmodel.ChannelSubscriptionKey
+		ChannelSubscriptionKey chat.ChannelSubscriptionKey
 	}
 	mock.lockUnsubscribeFromChannel.RLock()
 	calls = mock.calls.UnsubscribeFromChannel

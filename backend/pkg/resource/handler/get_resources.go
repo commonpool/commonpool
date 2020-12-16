@@ -1,7 +1,7 @@
 package handler
 
 import (
-	groupmodel "github.com/commonpool/backend/pkg/group/model"
+	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
 	resource2 "github.com/commonpool/backend/pkg/resource"
 	model3 "github.com/commonpool/backend/pkg/resource/model"
@@ -57,10 +57,10 @@ func (h *ResourceHandler) SearchResources(c echo.Context) error {
 
 	createdBy := c.QueryParam("created_by")
 
-	var groupKey *groupmodel.GroupKey
+	var groupKey *group.GroupKey
 	groupStr := c.QueryParam("group_id")
 	if groupStr != "" {
-		groupKey2, err := groupmodel.ParseGroupKey(groupStr)
+		groupKey2, err := group.ParseGroupKey(groupStr)
 		if err != nil {
 			return err
 		}
@@ -78,7 +78,7 @@ func (h *ResourceHandler) SearchResources(c echo.Context) error {
 		return err
 	}
 
-	groupMap := map[groupmodel.GroupKey]*groupmodel.Group{}
+	groupMap := map[group.GroupKey]*group.Group{}
 	for _, g := range getGroupsResponse.Items {
 		groupMap[g.GetKey()] = g
 	}
@@ -102,13 +102,13 @@ func (h *ResourceHandler) SearchResources(c echo.Context) error {
 			return err
 		}
 
-		var groups []*groupmodel.Group
+		var groups []*group.Group
 		sharings := resources.Sharings.GetSharingsForResource(item.GetKey())
 		for _, groupKey := range sharings.GetAllGroupKeys().Items {
 			groups = append(groups, groupMap[groupKey])
 		}
 
-		resourcesResponse[i] = NewResourceResponse(item, createdBy.Username, createdBy.ID, groupmodel.NewGroups(groups))
+		resourcesResponse[i] = NewResourceResponse(item, createdBy.Username, createdBy.ID, group.NewGroups(groups))
 	}
 
 	// return

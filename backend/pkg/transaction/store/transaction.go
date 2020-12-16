@@ -2,7 +2,7 @@ package store
 
 import (
 	"github.com/commonpool/backend/model"
-	groupmodel "github.com/commonpool/backend/pkg/group/model"
+	"github.com/commonpool/backend/pkg/group"
 	resourcemodel "github.com/commonpool/backend/pkg/resource/model"
 	"github.com/commonpool/backend/pkg/transaction"
 	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
@@ -95,7 +95,7 @@ func (t TransactionStore) GetEntry(transactionKey model.TransactionEntryKey) (*t
 	return mapDbTransactionEntry(&transactionEntry)
 }
 
-func (t TransactionStore) GetEntriesForGroupAndUsers(groupKey groupmodel.GroupKey, userKeys *usermodel.UserKeys) (*transaction.Entries, error) {
+func (t TransactionStore) GetEntriesForGroupAndUsers(groupKey group.GroupKey, userKeys *usermodel.UserKeys) (*transaction.Entries, error) {
 
 	sql := "(group_id = ? OR recipient_id = ? OR from_id = ?)"
 	var params []interface{}
@@ -169,7 +169,7 @@ func mapDbTransactionEntry(dbTransactionEntry *TransactionEntry) (*transaction.E
 	return &transaction.Entry{
 		Key:         model.NewTransactionEntryKey(dbTransactionEntry.ID),
 		Type:        dbTransactionEntry.Type,
-		GroupKey:    groupmodel.NewGroupKey(dbTransactionEntry.GroupID),
+		GroupKey:    group.NewGroupKey(dbTransactionEntry.GroupID),
 		ResourceKey: resourceKey,
 		Duration:    dbTransactionEntry.Duration,
 		Recipient:   recipient,
@@ -185,7 +185,7 @@ func mapTarget(targetType *resourcemodel.TargetType, targetId *string) (*resourc
 		if targetType.IsUser() {
 			target = resourcemodel.NewUserTarget(usermodel.NewUserKey(*targetId))
 		} else if targetType.IsGroup() {
-			groupKey, err := groupmodel.ParseGroupKey(*targetId)
+			groupKey, err := group.ParseGroupKey(*targetId)
 			if err != nil {
 				return nil, err
 			}

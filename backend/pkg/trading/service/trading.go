@@ -4,9 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/commonpool/backend/pkg/chat"
-	model2 "github.com/commonpool/backend/pkg/chat/chatmodel"
 	group2 "github.com/commonpool/backend/pkg/group"
-	groupmodel "github.com/commonpool/backend/pkg/group/model"
 	"github.com/commonpool/backend/pkg/resource"
 	trading2 "github.com/commonpool/backend/pkg/trading"
 	tradingmodel "github.com/commonpool/backend/pkg/trading/model"
@@ -46,7 +44,7 @@ func NewTradingService(
 
 func (t TradingService) checkOfferCompleted(
 	ctx context.Context,
-	groupKey groupmodel.GroupKey,
+	groupKey group2.GroupKey,
 	offerKey tradingmodel.OfferKey,
 	offerItems *tradingmodel.OfferItems,
 	userConfirmingItem usermodel.UserReference,
@@ -100,20 +98,20 @@ func (t TradingService) checkOfferCompleted(
 			usersInOffer.GetUserKeys(),
 			fmt.Sprintf(mainText),
 			blocks,
-			[]model2.Attachment{},
+			[]chat.Attachment{},
 			nil,
 		))
 	}
 	return nil
 }
 
-func (t TradingService) buildOfferCompletedMessage(ctx context.Context, items *tradingmodel.OfferItems, users *user.Users) ([]model2.Block, string, error) {
+func (t TradingService) buildOfferCompletedMessage(ctx context.Context, items *tradingmodel.OfferItems, users *user.Users) ([]chat.Block, string, error) {
 
-	var blocks []model2.Block
+	var blocks []chat.Block
 
 	mainText := ":champagne: Alright! everybody confirmed having received and given their stuff."
-	blocks = append(blocks, *model2.NewHeaderBlock(
-		model2.NewMarkdownObject(mainText),
+	blocks = append(blocks, *chat.NewHeaderBlock(
+		chat.NewMarkdownObject(mainText),
 		nil,
 	))
 
@@ -138,8 +136,8 @@ func (t TradingService) buildOfferCompletedMessage(ctx context.Context, items *t
 				fromLink = creditTransfer.From.GetUserKey().GetFrontendLink()
 			}
 
-			blocks = append(blocks, *model2.NewSectionBlock(
-				model2.NewMarkdownObject(fmt.Sprintf("%s received `%s` timebank credits from %s",
+			blocks = append(blocks, *chat.NewSectionBlock(
+				chat.NewMarkdownObject(fmt.Sprintf("%s received `%s` timebank credits from %s",
 					toLink,
 					creditTransfer.Amount.Truncate(time.Minute*1).String(),
 					fromLink,

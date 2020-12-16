@@ -1,14 +1,16 @@
 package model
 
-import groupmodel "github.com/commonpool/backend/pkg/group/model"
+import (
+	"github.com/commonpool/backend/pkg/group"
+)
 
 type ResourceSharingKey struct {
-	GroupKey    groupmodel.GroupKey
+	GroupKey    group.GroupKey
 	ResourceKey ResourceKey
 }
 
 //goland:noinspection GoUnusedExportedFunction
-func NewResourceSharingKey(resourceKey ResourceKey, groupKey groupmodel.GroupKey) ResourceSharingKey {
+func NewResourceSharingKey(resourceKey ResourceKey, groupKey group.GroupKey) ResourceSharingKey {
 	return ResourceSharingKey{
 		GroupKey:    groupKey,
 		ResourceKey: resourceKey,

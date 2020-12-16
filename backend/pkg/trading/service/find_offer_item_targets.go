@@ -2,7 +2,6 @@ package service
 
 import (
 	group2 "github.com/commonpool/backend/pkg/group"
-	"github.com/commonpool/backend/pkg/group/model"
 	model3 "github.com/commonpool/backend/pkg/resource/model"
 	model2 "github.com/commonpool/backend/pkg/trading/model"
 	"golang.org/x/net/context"
@@ -10,12 +9,12 @@ import (
 
 func (t TradingService) FindTargetsForOfferItem(
 	ctx context.Context,
-	groupKey model.GroupKey,
+	groupKey group2.GroupKey,
 	itemType model2.OfferItemType,
 	from *model3.Target,
 	to *model3.Target) (*model3.Targets, error) {
 
-	membershipStatus := model.ApprovedMembershipStatus
+	membershipStatus := group2.ApprovedMembershipStatus
 	membershipsForGroup, err := t.groupService.GetGroupMemberships(ctx, &group2.GetMembershipsForGroupRequest{
 		GroupKey:         groupKey,
 		MembershipStatus: &membershipStatus,

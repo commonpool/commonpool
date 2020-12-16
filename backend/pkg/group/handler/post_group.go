@@ -3,7 +3,6 @@ package handler
 import (
 	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/pkg/group"
-	groupmodel "github.com/commonpool/backend/pkg/group/model"
 	"github.com/commonpool/backend/pkg/handler"
 	handler3 "github.com/commonpool/backend/pkg/resource/handler"
 	"github.com/commonpool/backend/web"
@@ -40,7 +39,7 @@ func (h *GroupHandler) CreateGroup(c echo.Context) error {
 		return handler3.NewErrResponse(c, exceptions.ErrValidation("name is required"))
 	}
 
-	var groupKey = groupmodel.NewGroupKey(uuid.NewV4())
+	var groupKey = group.NewGroupKey(uuid.NewV4())
 
 	createGroupResponse, err := h.groupService.CreateGroup(ctx, group.NewCreateGroupRequest(groupKey, req.Name, req.Description))
 	if err != nil {

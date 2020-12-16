@@ -1,7 +1,7 @@
 package handler
 
 import (
-	groupmodel "github.com/commonpool/backend/pkg/group/model"
+	"github.com/commonpool/backend/pkg/group"
 	handler2 "github.com/commonpool/backend/pkg/resource/handler"
 	"github.com/commonpool/backend/pkg/user"
 	"github.com/commonpool/backend/pkg/utils"
@@ -34,7 +34,7 @@ func (h *GroupHandler) GetUsersForGroupInvitePicker(c echo.Context) error {
 
 	qry := c.QueryParam("query")
 
-	groupKey, err := groupmodel.ParseGroupKey(c.Param("id"))
+	groupKey, err := group.ParseGroupKey(c.Param("id"))
 	if err != nil {
 		return handler2.NewErrResponse(c, err)
 	}

@@ -3,7 +3,6 @@ package handler
 import (
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/group"
-	groupmodel "github.com/commonpool/backend/pkg/group/model"
 	"github.com/commonpool/backend/pkg/handler"
 	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"github.com/commonpool/backend/web"
@@ -27,10 +26,10 @@ func (h *GroupHandler) GetUserMemberships(c echo.Context) error {
 
 	ctx, _ := handler.GetEchoContext(c, "GetUserMemberships")
 
-	var membershipStatus = groupmodel.AnyMembershipStatus()
+	var membershipStatus = group.AnyMembershipStatus()
 	statusStr := c.QueryParam("status")
 	if statusStr != "" {
-		ms, err := groupmodel.ParseMembershipStatus(statusStr)
+		ms, err := group.ParseMembershipStatus(statusStr)
 		if err != nil {
 			return err
 		}

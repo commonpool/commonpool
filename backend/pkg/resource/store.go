@@ -2,7 +2,7 @@ package resource
 
 import (
 	"context"
-	groupmodel "github.com/commonpool/backend/pkg/group/model"
+	"github.com/commonpool/backend/pkg/group"
 	resourcemodel "github.com/commonpool/backend/pkg/resource/model"
 )
 
@@ -26,10 +26,10 @@ type SearchResourcesQuery struct {
 	Skip            int
 	Take            int
 	CreatedBy       string
-	SharedWithGroup *groupmodel.GroupKey
+	SharedWithGroup *group.GroupKey
 }
 
-func NewSearchResourcesQuery(query *string, resourceType *resourcemodel.Type, resourceSubType *resourcemodel.SubType, skip int, take int, createdBy string, sharedWithGroup *groupmodel.GroupKey) *SearchResourcesQuery {
+func NewSearchResourcesQuery(query *string, resourceType *resourcemodel.Type, resourceSubType *resourcemodel.SubType, skip int, take int, createdBy string, sharedWithGroup *group.GroupKey) *SearchResourcesQuery {
 	return &SearchResourcesQuery{
 		Type:            resourceType,
 		SubType:         resourceSubType,
@@ -73,10 +73,10 @@ type GetResourceByKeysResponse struct {
 
 type CreateResourceQuery struct {
 	Resource   *resourcemodel.Resource
-	SharedWith *groupmodel.GroupKeys
+	SharedWith *group.GroupKeys
 }
 
-func NewCreateResourceQuery(resource *resourcemodel.Resource, sharedWith *groupmodel.GroupKeys) *CreateResourceQuery {
+func NewCreateResourceQuery(resource *resourcemodel.Resource, sharedWith *group.GroupKeys) *CreateResourceQuery {
 	return &CreateResourceQuery{
 		Resource:   resource,
 		SharedWith: sharedWith,
@@ -85,10 +85,10 @@ func NewCreateResourceQuery(resource *resourcemodel.Resource, sharedWith *groupm
 
 type UpdateResourceQuery struct {
 	Resource   *resourcemodel.Resource
-	SharedWith *groupmodel.GroupKeys
+	SharedWith *group.GroupKeys
 }
 
-func NewUpdateResourceQuery(resource *resourcemodel.Resource, sharedWith *groupmodel.GroupKeys) *UpdateResourceQuery {
+func NewUpdateResourceQuery(resource *resourcemodel.Resource, sharedWith *group.GroupKeys) *UpdateResourceQuery {
 	return &UpdateResourceQuery{
 		Resource:   resource,
 		SharedWith: sharedWith,

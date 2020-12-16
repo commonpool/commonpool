@@ -3,7 +3,6 @@ package handler
 import (
 	"github.com/commonpool/backend/pkg/exceptions"
 	group2 "github.com/commonpool/backend/pkg/group"
-	groupmodel "github.com/commonpool/backend/pkg/group/model"
 	"github.com/commonpool/backend/pkg/handler"
 	model3 "github.com/commonpool/backend/pkg/resource/model"
 	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
@@ -13,11 +12,11 @@ import (
 	"net/http"
 )
 
-func (h *ResourceHandler) ensureResourceIsSharedWithGroupsTheUserIsActiveMemberOf(c echo.Context, loggedInUserKey usermodel.UserKey, sharedWithGroups *groupmodel.GroupKeys) (error, bool) {
+func (h *ResourceHandler) ensureResourceIsSharedWithGroupsTheUserIsActiveMemberOf(c echo.Context, loggedInUserKey usermodel.UserKey, sharedWithGroups *group2.GroupKeys) (error, bool) {
 
 	ctx, l := handler.GetEchoContext(c, "ensureResourceIsSharedWithGroupsTheUserIsActiveMemberOf")
 
-	var membershipStatus = groupmodel.ApprovedMembershipStatus
+	var membershipStatus = group2.ApprovedMembershipStatus
 
 	userMemberships, err := h.groupService.GetUserMemberships(ctx, group2.NewGetMembershipsForUserRequest(loggedInUserKey, &membershipStatus))
 	if err != nil {
@@ -35,20 +34,20 @@ func (h *ResourceHandler) ensureResourceIsSharedWithGroupsTheUserIsActiveMemberO
 	return nil, false
 }
 
-func (h *ResourceHandler) parseGroupKeys(c echo.Context, sharedWith []web.InputResourceSharing) (*groupmodel.GroupKeys, error, bool) {
-	sharedWithGroupKeys := make([]groupmodel.GroupKey, len(sharedWith))
+func (h *ResourceHandler) parseGroupKeys(c echo.Context, sharedWith []web.InputResourceSharing) (*group2.GroupKeys, error, bool) {
+	sharedWithGroupKeys := make([]group2.GroupKey, len(sharedWith))
 	for i := range sharedWith {
 		groupKeyStr := sharedWith[i].GroupID
-		groupKey, err := groupmodel.ParseGroupKey(groupKeyStr)
+		groupKey, err := group2.ParseGroupKey(groupKeyStr)
 		if err != nil {
 			return nil, c.String(http.StatusBadRequest, "invalid group key : "+groupKeyStr), true
 		}
 		sharedWithGroupKeys[i] = groupKey
 	}
-	return groupmodel.NewGroupKeys(sharedWithGroupKeys), nil, false
+	return group2.NewGroupKeys(sharedWithGroupKeys), nil, false
 }
 
-func NewResourceResponse(res *model3.Resource, creatorUsername string, creatorId string, sharedWithGroups *groupmodel.Groups) web.Resource {
+func NewResourceResponse(res *model3.Resource, creatorUsername string, creatorId string, sharedWithGroups *group2.Groups) web.Resource {
 
 	//goland:noinspection GoPreferNilSlice
 	var sharings = []web.OutputResourceSharing{}

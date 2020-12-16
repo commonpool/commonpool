@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"github.com/commonpool/backend/pkg/chat"
-	chatmodel "github.com/commonpool/backend/pkg/chat/chatmodel"
 	"github.com/commonpool/backend/pkg/mq"
 	"github.com/commonpool/backend/pkg/user"
 	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
@@ -31,10 +30,10 @@ func (c ChatService) getOrCreateConversationChannel(ctx context.Context, userKey
 
 		var title = ""
 
-		newChannel := &chatmodel.Channel{
+		newChannel := &chat.Channel{
 			Key:   channelKey,
 			Title: title,
-			Type:  chatmodel.ConversationChannel,
+			Type:  chat.ConversationChannel,
 		}
 
 		err := c.chatStore.CreateChannel(ctx, newChannel)
@@ -65,7 +64,7 @@ func (c ChatService) getOrCreateConversationChannel(ctx context.Context, userKey
 
 }
 
-func (c ChatService) createSubscriptionsAndMqBindingsForUserConversation(ctx context.Context, userKeys *usermodel.UserKeys) ([]chatmodel.ChannelSubscription, error) {
+func (c ChatService) createSubscriptionsAndMqBindingsForUserConversation(ctx context.Context, userKeys *usermodel.UserKeys) ([]chat.ChannelSubscription, error) {
 
 	channelKey, err := c.GetConversationChannelKey(ctx, userKeys)
 	if err != nil {
@@ -77,7 +76,7 @@ func (c ChatService) createSubscriptionsAndMqBindingsForUserConversation(ctx con
 		return nil, err
 	}
 
-	var subscriptions []chatmodel.ChannelSubscription
+	var subscriptions []chat.ChannelSubscription
 	for _, u := range users.Items {
 		subscription, err := c.createSubscriptionAndMqBindingForUserConversation(ctx, u, users, channelKey)
 		if err != nil {
@@ -92,12 +91,12 @@ func (c ChatService) createSubscriptionAndMqBindingForUserConversation(
 	ctx context.Context,
 	user *usermodel.User,
 	conversationUsers *user.Users,
-	channelKey chatmodel.ChannelKey,
-) (*chatmodel.ChannelSubscription, error) {
+	channelKey chat.ChannelKey,
+) (*chat.ChannelSubscription, error) {
 
 	conversationName := c.getConversationNameForUser(ctx, conversationUsers, user)
 
-	channelSubscriptionKey := chatmodel.NewChannelSubscriptionKey(channelKey, user.GetUserKey())
+	channelSubscriptionKey := chat.NewChannelSubscriptionKey(channelKey, user.GetUserKey())
 	subscription, err := c.chatStore.CreateSubscription(ctx, channelSubscriptionKey, conversationName)
 	if err != nil {
 		return nil, err

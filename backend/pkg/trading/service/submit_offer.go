@@ -4,10 +4,8 @@ import (
 	"fmt"
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/chat"
-	chatmodel "github.com/commonpool/backend/pkg/chat/chatmodel"
 	"github.com/commonpool/backend/pkg/exceptions"
-	"github.com/commonpool/backend/pkg/group/model"
-	groupmodel "github.com/commonpool/backend/pkg/group/model"
+	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/resource"
 	resourcemodel "github.com/commonpool/backend/pkg/resource/model"
 	tradingmodel "github.com/commonpool/backend/pkg/trading/model"
@@ -18,7 +16,7 @@ import (
 	"time"
 )
 
-func (t TradingService) SendOffer(ctx context.Context, groupKey model.GroupKey, offerItems *tradingmodel.OfferItems, message string) (*tradingmodel.Offer, *tradingmodel.OfferItems, error) {
+func (t TradingService) SendOffer(ctx context.Context, groupKey group.GroupKey, offerItems *tradingmodel.OfferItems, message string) (*tradingmodel.Offer, *tradingmodel.OfferItems, error) {
 
 	userSession, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
@@ -94,19 +92,19 @@ func (t TradingService) SendOffer(ctx context.Context, groupKey model.GroupKey, 
 	return offer, offerItems, nil
 }
 
-func (t TradingService) findAppropriateChannelForOffer(offer *tradingmodel.Offer, offerItems *tradingmodel.OfferItems, approvers *usermodel.UserKeys) (chatmodel.ChannelKey, chatmodel.ChannelType, error) {
+func (t TradingService) findAppropriateChannelForOffer(offer *tradingmodel.Offer, offerItems *tradingmodel.OfferItems, approvers *usermodel.UserKeys) (chat.ChannelKey, chat.ChannelType, error) {
 	if !offerItems.GetGroupKeys().IsEmpty() {
-		channelKey := chatmodel.GetChannelKeyForGroup(offer.GroupKey)
-		return channelKey, chatmodel.GroupChannel, nil
+		channelKey := chat.GetChannelKeyForGroup(offer.GroupKey)
+		return channelKey, chat.GroupChannel, nil
 	}
-	channelKey, err := chatmodel.GetChannelKey(approvers)
+	channelKey, err := chat.GetChannelKey(approvers)
 	if err != nil {
-		return chatmodel.ChannelKey{}, 0, err
+		return chat.ChannelKey{}, 0, err
 	}
-	return channelKey, chatmodel.ConversationChannel, nil
+	return channelKey, chat.ConversationChannel, nil
 }
 
-func (t TradingService) assertResourcesAreViewableByGroup(resources *resource.GetResourceByKeysResponse, groupKey groupmodel.GroupKey) error {
+func (t TradingService) assertResourcesAreViewableByGroup(resources *resource.GetResourceByKeysResponse, groupKey group.GroupKey) error {
 	for _, item := range resources.Resources.Items {
 		if !resources.Claims.GroupHasClaim(groupKey, item.Key, resourcemodel.ViewerClaim) {
 			return exceptions.ErrResourceNotSharedWithGroup
@@ -190,8 +188,8 @@ func (t TradingService) sendCustomOfferMessage(ctx context.Context, fromUser *au
 		fromUser.GetUsername(),
 		userKeys,
 		message,
-		[]chatmodel.Block{},
-		[]chatmodel.Attachment{},
+		[]chat.Block{},
+		[]chat.Attachment{},
 		nil,
 	)
 
@@ -217,7 +215,7 @@ func (t TradingService) sendAcceptOrDeclineMessages(ctx context.Context, offerIt
 			approvers,
 			"New offer",
 			chatMessage,
-			[]chatmodel.Attachment{},
+			[]chat.Attachment{},
 			&userKey,
 		)
 		_, err := t.chatService.SendConversationMessage(ctx, sendMsgRequest)
@@ -229,11 +227,11 @@ func (t TradingService) sendAcceptOrDeclineMessages(ctx context.Context, offerIt
 	return nil
 }
 
-func (t TradingService) buildAcceptOrDeclineChatMessage(recipientUserKey usermodel.UserKey, offer *tradingmodel.Offer, offerItems *tradingmodel.OfferItems) []chatmodel.Block {
+func (t TradingService) buildAcceptOrDeclineChatMessage(recipientUserKey usermodel.UserKey, offer *tradingmodel.Offer, offerItems *tradingmodel.OfferItems) []chat.Block {
 
-	messageBlocks := []chatmodel.Block{
-		*chatmodel.NewHeaderBlock(
-			chatmodel.NewMarkdownObject(
+	messageBlocks := []chat.Block{
+		*chat.NewHeaderBlock(
+			chat.NewMarkdownObject(
 				fmt.Sprintf("%s is proposing an exchange", offer.GetAuthorKey().GetFrontendLink()),
 			), nil),
 	}
@@ -332,23 +330,23 @@ func (t TradingService) buildAcceptOrDeclineChatMessage(recipientUserKey usermod
 
 		}
 
-		messageBlocks = append(messageBlocks, *chatmodel.NewSectionBlock(chatmodel.NewMarkdownObject(message), nil, nil, nil))
+		messageBlocks = append(messageBlocks, *chat.NewSectionBlock(chat.NewMarkdownObject(message), nil, nil, nil))
 
 	}
 
-	primaryButtonStyle := chatmodel.Primary
-	dangerButtonStyle := chatmodel.Danger
+	primaryButtonStyle := chat.Primary
+	dangerButtonStyle := chat.Danger
 	acceptOfferActionId := "accept_offer"
 	declineOfferActionId := "decline_offer"
 	offerId := offer.GetKey().String()
 
-	messageBlocks = append(messageBlocks, *chatmodel.NewActionBlock([]chatmodel.BlockElement{
-		*chatmodel.NewButtonElement(chatmodel.NewPlainTextObject("Accept"), &primaryButtonStyle, &acceptOfferActionId, nil, &offerId, nil),
-		*chatmodel.NewButtonElement(chatmodel.NewPlainTextObject("Decline"), &dangerButtonStyle, &declineOfferActionId, nil, &offerId, nil),
+	messageBlocks = append(messageBlocks, *chat.NewActionBlock([]chat.BlockElement{
+		*chat.NewButtonElement(chat.NewPlainTextObject("Accept"), &primaryButtonStyle, &acceptOfferActionId, nil, &offerId, nil),
+		*chat.NewButtonElement(chat.NewPlainTextObject("Decline"), &dangerButtonStyle, &declineOfferActionId, nil, &offerId, nil),
 	}, nil))
 
-	linkBlock := chatmodel.NewSectionBlock(
-		chatmodel.NewMarkdownObject(
+	linkBlock := chat.NewSectionBlock(
+		chat.NewMarkdownObject(
 			fmt.Sprintf("[View offer details](/offers/%s)", offerId)),
 		nil,
 		nil,

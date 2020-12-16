@@ -2,7 +2,7 @@ package handler
 
 import (
 	"encoding/json"
-	"github.com/commonpool/backend/handler"
+
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"

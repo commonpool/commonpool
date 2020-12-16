@@ -2,7 +2,7 @@ package store
 
 import (
 	"fmt"
-	groupmodel "github.com/commonpool/backend/pkg/group/model"
+	"github.com/commonpool/backend/pkg/group"
 	store2 "github.com/commonpool/backend/pkg/group/store"
 	"github.com/commonpool/backend/pkg/resource/model"
 	"github.com/commonpool/backend/pkg/user/store"
@@ -41,7 +41,7 @@ func MapOfferItemTarget(node neo4j.Node) (*model.Target, error) {
 	}
 
 	if isGroup {
-		groupKey, err := groupmodel.ParseGroupKey(node.Props()["id"].(string))
+		groupKey, err := group.ParseGroupKey(node.Props()["id"].(string))
 		if err != nil {
 			return nil, err
 		}

@@ -1,14 +1,14 @@
 package model
 
 import (
-	groupmodel "github.com/commonpool/backend/pkg/group/model"
+	"github.com/commonpool/backend/pkg/group"
 	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"time"
 )
 
 type Offer struct {
 	Key            OfferKey
-	GroupKey       groupmodel.GroupKey
+	GroupKey       group.GroupKey
 	CreatedByKey   usermodel.UserKey
 	Status         OfferStatus
 	CreatedAt      time.Time
@@ -17,7 +17,7 @@ type Offer struct {
 	Message        string
 }
 
-func NewOffer(offerKey OfferKey, groupKey groupmodel.GroupKey, author usermodel.UserKey, message string, expiration *time.Time) *Offer {
+func NewOffer(offerKey OfferKey, groupKey group.GroupKey, author usermodel.UserKey, message string, expiration *time.Time) *Offer {
 	return &Offer{
 		Key:            offerKey,
 		GroupKey:       groupKey,

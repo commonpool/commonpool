@@ -2,7 +2,6 @@ package handler
 
 import (
 	group2 "github.com/commonpool/backend/pkg/group"
-	groupmodel "github.com/commonpool/backend/pkg/group/model"
 	"github.com/commonpool/backend/pkg/handler"
 	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"github.com/commonpool/backend/web"
@@ -30,13 +29,13 @@ func (h *GroupHandler) CancelOrDeclineInvitation(c echo.Context) error {
 		return err
 	}
 
-	groupKey, err := groupmodel.ParseGroupKey(req.GroupID)
+	groupKey, err := group2.ParseGroupKey(req.GroupID)
 	if err != nil {
 		return err
 	}
 	userKey := usermodel.NewUserKey(req.UserID)
 
-	membershipKey := groupmodel.NewMembershipKey(groupKey, userKey)
+	membershipKey := group2.NewMembershipKey(groupKey, userKey)
 
 	err = h.groupService.CancelOrDeclineInvitation(ctx, group2.NewDelineInvitationRequest(membershipKey))
 	if err != nil {

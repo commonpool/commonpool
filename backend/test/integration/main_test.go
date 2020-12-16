@@ -3,7 +3,7 @@ package integration
 import (
 	"context"
 	"fmt"
-	"github.com/commonpool/backend/handler"
+
 	"github.com/commonpool/backend/mock"
 	"github.com/commonpool/backend/pkg/auth"
 	chatservice "github.com/commonpool/backend/pkg/chat/service"
@@ -78,8 +78,8 @@ func TestMain(m *testing.M) {
 	TransactionStore = transactionstore.NewTransactionStore(Db)
 	TransactionService = transactionservice.NewTransactionService(TransactionStore)
 	ResourceStore = *resourcestore.NewResourceStore(Driver, TransactionService)
-	AuthStore = *userstore.NewUserStore(Db, Driver)
-	ChatStore = *chatstore.NewChatStore(Db, &AuthStore, AmqpClient)
+	AuthStore = *userstore.NewUserStore(Driver)
+	ChatStore = *chatstore.NewChatStore(Db)
 	TradingStore = *tradingstore.NewTradingStore(Driver)
 	GroupStore = *groupstore.NewGroupStore(Driver)
 	ChatService = *chatservice.NewChatService(&AuthStore, &GroupStore, &ResourceStore, AmqpClient, &ChatStore)

@@ -1,7 +1,7 @@
 package handler
 
 import (
-	model2 "github.com/commonpool/backend/pkg/chat/chathandler/model"
+	"github.com/commonpool/backend/pkg/chat/handler"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
@@ -34,7 +34,7 @@ func (h *ResourceHandler) InquireAboutResource(c echo.Context) error {
 	// return err
 	// }
 
-	req := model2.InquireAboutResourceRequest{}
+	req := handler.InquireAboutResourceRequest{}
 	if err := c.Bind(&req); err != nil {
 		return err
 	}

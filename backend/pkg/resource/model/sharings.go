@@ -1,7 +1,7 @@
 package model
 
 import (
-	groupmodel "github.com/commonpool/backend/pkg/group/model"
+	"github.com/commonpool/backend/pkg/group"
 )
 
 type Sharings struct {
@@ -38,16 +38,16 @@ func NewEmptyResourceSharings() *Sharings {
 	}
 }
 
-func (s *Sharings) GetAllGroupKeys() *groupmodel.GroupKeys {
-	groupMap := map[groupmodel.GroupKey]bool{}
-	var groupKeys []groupmodel.GroupKey
+func (s *Sharings) GetAllGroupKeys() *group.GroupKeys {
+	groupMap := map[group.GroupKey]bool{}
+	var groupKeys []group.GroupKey
 	for _, sharing := range s.Items() {
 		if !groupMap[sharing.GroupKey] {
 			groupMap[sharing.GroupKey] = true
 			groupKeys = append(groupKeys, sharing.GroupKey)
 		}
 	}
-	return groupmodel.NewGroupKeys(groupKeys)
+	return group.NewGroupKeys(groupKeys)
 }
 
 func (s *Sharings) GetSharingsForResource(key ResourceKey) *Sharings {

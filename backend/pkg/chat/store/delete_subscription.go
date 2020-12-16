@@ -2,12 +2,12 @@ package store
 
 import (
 	"context"
-	chatmodel "github.com/commonpool/backend/pkg/chat/chatmodel"
+	"github.com/commonpool/backend/pkg/chat"
 )
 
-func (cs *ChatStore) DeleteSubscription(ctx context.Context, key chatmodel.ChannelSubscriptionKey) error {
+func (cs *ChatStore) DeleteSubscription(ctx context.Context, key chat.ChannelSubscriptionKey) error {
 
-	err := cs.db.Delete(chatmodel.ChannelSubscription{},
+	err := cs.db.Delete(chat.ChannelSubscription{},
 		"user_id = ? and channel_id = ?",
 		key.UserKey.String(),
 		key.ChannelKey.String()).

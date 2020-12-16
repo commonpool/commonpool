@@ -7,10 +7,9 @@ import (
 	"github.com/commonpool/backend/pkg/auth"
 	authhandler "github.com/commonpool/backend/pkg/auth/handler"
 	"github.com/commonpool/backend/pkg/chat"
-	chathandler "github.com/commonpool/backend/pkg/chat/chathandler"
+	chathandler "github.com/commonpool/backend/pkg/chat/handler"
 	chatservice "github.com/commonpool/backend/pkg/chat/service"
 	chatstore "github.com/commonpool/backend/pkg/chat/store"
-	"github.com/commonpool/backend/pkg/chatback"
 	"github.com/commonpool/backend/pkg/config"
 	db2 "github.com/commonpool/backend/pkg/db"
 	"github.com/commonpool/backend/pkg/graph"
@@ -61,7 +60,7 @@ type Server struct {
 	TradingService     trading.Service
 	AuthHandler        *authhandler.AuthHandler
 	SessionHandler     *session.Handler
-	ChatHandler        *chathandler.ChatHandler
+	ChatHandler        *chathandler.Handler
 	GroupHandler       *grouphandler.GroupHandler
 	ResourceHandler    *resourcehandler.ResourceHandler
 	UserHandler        *userhandler.UserHandler
@@ -129,7 +128,7 @@ func NewServer() (*Server, error) {
 	sessionHandler := session.NewHandler(authorization)
 	sessionHandler.Register(v1)
 
-	chatHandler := chathandler.NewHandler(chatService, appConfig, authorization)
+	chatHandler := chathandler.NewHandler(chatService, tradingService, appConfig, authorization)
 	chatHandler.Register(v1)
 
 	groupHandler := grouphandler.NewHandler(groupService, userService, authorization)
@@ -137,9 +136,6 @@ func NewServer() (*Server, error) {
 
 	resourceHandler := resourcehandler.NewHandler(resourceService, groupService, userService, authorization)
 	resourceHandler.Register(v1)
-
-	chatbackHandler := chatback.NewHandler(tradingService, authorization)
-	chatbackHandler.Register(v1)
 
 	userHandler := userhandler.NewHandler(userService, authorization)
 	userHandler.Register(v1)

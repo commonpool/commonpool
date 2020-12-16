@@ -3,10 +3,10 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/auth"
-	model2 "github.com/commonpool/backend/pkg/chat/chatmodel"
+	"github.com/commonpool/backend/pkg/chat"
 	"github.com/commonpool/backend/pkg/mq"
+	"github.com/commonpool/backend/pkg/user/usermodel"
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -17,24 +17,24 @@ func (s *serviceTestSuite) TestSendMessage() {
 	ctx := context.TODO()
 
 	auth.SetContextAuthenticatedUser(ctx, "username", "user", "user@email.com")
-	channelKey := model2.NewChannelKey("channel-id")
-	messageKey := model.NewMessageKey(uuid.FromStringOrNil("1370bb5e-4310-4d79-95f7-3923ba3f552a"))
+	channelKey := chat.NewChannelKey("channel-id")
+	messageKey := chat.NewMessageKey(uuid.FromStringOrNil("1370bb5e-4310-4d79-95f7-3923ba3f552a"))
 	timestamp := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
 
-	message := &model2.Message{
+	message := &chat.Message{
 		Key:            messageKey,
 		ChannelKey:     channelKey,
-		MessageType:    model2.NormalMessage,
-		MessageSubType: model2.UserMessage,
-		SentBy: model2.MessageSender{
-			Type:     model2.UserMessageSender,
-			UserKey:  model.NewUserKey("user"),
+		MessageType:    chat.NormalMessage,
+		MessageSubType: chat.UserMessage,
+		SentBy: chat.MessageSender{
+			Type:     chat.UserMessageSender,
+			UserKey:  usermodel.NewUserKey("user"),
 			Username: "username",
 		},
 		SentAt:        timestamp,
 		Text:          "Hello",
-		Blocks:        []model2.Block{},
-		Attachments:   []model2.Attachment{},
+		Blocks:        []chat.Block{},
+		Attachments:   []chat.Attachment{},
 		VisibleToUser: nil,
 	}
 

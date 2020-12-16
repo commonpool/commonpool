@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/commonpool/backend/pkg/chat"
-	chatmodel "github.com/commonpool/backend/pkg/chat/chatmodel"
 	"github.com/commonpool/backend/pkg/mq"
 	uuid "github.com/satori/go.uuid"
 	"time"
@@ -12,15 +11,15 @@ import (
 
 func (c ChatService) SendGroupMessage(ctx context.Context, request *chat.SendGroupMessage) (*chat.SendGroupMessageResponse, error) {
 
-	channelKey := chatmodel.GetChannelKeyForGroup(request.GroupKey)
+	channelKey := chat.GetChannelKeyForGroup(request.GroupKey)
 
-	message := &chatmodel.Message{
-		Key:            chatmodel.NewMessageKey(uuid.NewV4()),
+	message := &chat.Message{
+		Key:            chat.NewMessageKey(uuid.NewV4()),
 		ChannelKey:     channelKey,
-		MessageType:    chatmodel.NormalMessage,
-		MessageSubType: chatmodel.UserMessage,
-		SentBy: chatmodel.MessageSender{
-			Type:     chatmodel.UserMessageSender,
+		MessageType:    chat.NormalMessage,
+		MessageSubType: chat.UserMessage,
+		SentBy: chat.MessageSender{
+			Type:     chat.UserMessageSender,
 			UserKey:  request.FromUserKey,
 			Username: request.FromUserName,
 		},

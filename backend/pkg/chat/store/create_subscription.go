@@ -2,10 +2,10 @@ package store
 
 import (
 	"context"
-	chatmodel "github.com/commonpool/backend/pkg/chat/chatmodel"
+	"github.com/commonpool/backend/pkg/chat"
 )
 
-func (cs *ChatStore) CreateSubscription(ctx context.Context, key chatmodel.ChannelSubscriptionKey, name string) (*chatmodel.ChannelSubscription, error) {
+func (cs *ChatStore) CreateSubscription(ctx context.Context, key chat.ChannelSubscriptionKey, name string) (*chat.ChannelSubscription, error) {
 
 	channelSubscription := ChannelSubscription{
 		ChannelID: key.ChannelKey.String(),

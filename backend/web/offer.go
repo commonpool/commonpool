@@ -2,7 +2,7 @@ package web
 
 import (
 	"fmt"
-	groupmodel "github.com/commonpool/backend/pkg/group/model"
+	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/resource/model"
 	tradingmodel "github.com/commonpool/backend/pkg/trading/model"
 	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
@@ -72,7 +72,7 @@ func MapWebOfferItemTarget(target OfferItemTarget) (*model.Target, error) {
 			Type:     model.UserTarget,
 		}, nil
 	} else if target.Type == model.GroupTarget {
-		groupKey, err := groupmodel.ParseGroupKey(*target.GroupID)
+		groupKey, err := group.ParseGroupKey(*target.GroupID)
 		if err != nil {
 			return nil, err
 		}
@@ -113,7 +113,7 @@ func MapOfferItemTarget(target *model.Target) (*OfferItemTarget, error) {
 
 func (t OfferItemTarget) Parse() (*model.Target, error) {
 	if t.Type == model.GroupTarget {
-		groupKey, err := groupmodel.ParseGroupKey(*t.GroupID)
+		groupKey, err := group.ParseGroupKey(*t.GroupID)
 		if err != nil {
 			return nil, err
 		}

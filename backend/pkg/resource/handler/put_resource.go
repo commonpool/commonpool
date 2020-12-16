@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/exceptions"
-	groupmodel "github.com/commonpool/backend/pkg/group/model"
+	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
 	resource "github.com/commonpool/backend/pkg/resource"
 	resourcemodel "github.com/commonpool/backend/pkg/resource/model"
@@ -90,9 +90,9 @@ func (h *ResourceHandler) UpdateResource(c echo.Context) error {
 	resToUpdate.ValueInHoursTo = req.Resource.ValueInHoursTo
 
 	// get shared with keys
-	var groupKeys []groupmodel.GroupKey
+	var groupKeys []group.GroupKey
 	for _, sharing := range req.Resource.SharedWith {
-		groupKey, err := groupmodel.ParseGroupKey(sharing.GroupID)
+		groupKey, err := group.ParseGroupKey(sharing.GroupID)
 		if err != nil {
 			message := "UpdateResource: could not parse groupKey"
 			c.Logger().Error(err, message)
@@ -101,7 +101,7 @@ func (h *ResourceHandler) UpdateResource(c echo.Context) error {
 		groupKeys = append(groupKeys, groupKey)
 	}
 
-	if err := h.resourceService.Update(ctx, resource.NewUpdateResourceQuery(resToUpdate, groupmodel.NewGroupKeys(groupKeys))); err != nil {
+	if err := h.resourceService.Update(ctx, resource.NewUpdateResourceQuery(resToUpdate, group.NewGroupKeys(groupKeys))); err != nil {
 		return err
 	}
 

@@ -2,7 +2,6 @@ package service
 
 import (
 	"github.com/commonpool/backend/pkg/chat"
-	chatmodel "github.com/commonpool/backend/pkg/chat/chatmodel"
 	"github.com/commonpool/backend/pkg/mq"
 	"github.com/commonpool/backend/pkg/user"
 )
@@ -25,7 +24,7 @@ var _ chat.Service = &ChatService{}
 
 // getChannelBindingHeaders returns the binding headers to link the websocket messages exchange and a given user exchange
 // The user will receive messages on his exchange if the message has a "channel_id" = "subscribed channel id" header
-func (c ChatService) getChannelBindingHeaders(channelSubscriptionKey chatmodel.ChannelSubscriptionKey) map[string]interface{} {
+func (c ChatService) getChannelBindingHeaders(channelSubscriptionKey chat.ChannelSubscriptionKey) map[string]interface{} {
 	return map[string]interface{}{
 		"event_type": "chat.message",
 		"channel_id": channelSubscriptionKey.ChannelKey.String(),

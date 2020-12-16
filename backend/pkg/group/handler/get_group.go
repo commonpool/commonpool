@@ -2,7 +2,6 @@ package handler
 
 import (
 	group2 "github.com/commonpool/backend/pkg/group"
-	groupmodel "github.com/commonpool/backend/pkg/group/model"
 	"github.com/commonpool/backend/pkg/handler"
 	handler3 "github.com/commonpool/backend/pkg/resource/handler"
 	"github.com/commonpool/backend/web"
@@ -28,7 +27,7 @@ func (h *GroupHandler) GetGroup(c echo.Context) error {
 
 	l.Debug("getting group")
 
-	groupKey, err := groupmodel.ParseGroupKey(c.Param("id"))
+	groupKey, err := group2.ParseGroupKey(c.Param("id"))
 	if err != nil {
 		l.Error("could not parse group key", zap.Error(err))
 		return handler3.NewErrResponse(c, err)

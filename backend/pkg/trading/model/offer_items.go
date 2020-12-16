@@ -1,7 +1,7 @@
 package model
 
 import (
-	groupmodel "github.com/commonpool/backend/pkg/group/model"
+	"github.com/commonpool/backend/pkg/group"
 	resourcemodel "github.com/commonpool/backend/pkg/resource/model"
 	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 )
@@ -92,8 +92,8 @@ func (i *OfferItems) GetUserKeys() *usermodel.UserKeys {
 	return usermodel.NewUserKeys(userKeys)
 }
 
-func (i *OfferItems) GetGroupKeys() *groupmodel.GroupKeys {
-	var groupKeys []groupmodel.GroupKey
+func (i *OfferItems) GetGroupKeys() *group.GroupKeys {
+	var groupKeys []group.GroupKey
 	for _, offerItem := range i.Items {
 		if offerItem.GetReceiverKey().IsForGroup() {
 			groupKeys = append(groupKeys, offerItem.GetReceiverKey().GetGroupKey())
@@ -105,7 +105,7 @@ func (i *OfferItems) GetGroupKeys() *groupmodel.GroupKeys {
 			}
 		}
 	}
-	return groupmodel.NewGroupKeys(groupKeys)
+	return group.NewGroupKeys(groupKeys)
 }
 
 func (i *OfferItems) IsEmpty() bool {

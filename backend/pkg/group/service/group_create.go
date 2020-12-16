@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/chat"
-	chatmodel "github.com/commonpool/backend/pkg/chat/chatmodel"
 	group "github.com/commonpool/backend/pkg/group"
 )
 
@@ -20,28 +19,26 @@ func (g GroupService) CreateGroup(ctx context.Context, request *group.CreateGrou
 		return nil, err
 	}
 
-	channelKey := chatmodel.GetChannelKeyForGroup(request.GroupKey)
-	channel, err := g.chatService.CreateChannel(ctx, channelKey, chatmodel.GroupChannel)
+	channelKey := chat.GetChannelKeyForGroup(request.GroupKey)
+	channel, err := g.chatService.CreateChannel(ctx, channelKey, chat.GroupChannel)
 	if err != nil {
 		return nil, err
 	}
 
-	channelSubscriptionKey := chatmodel.NewChannelSubscriptionKey(channel.GetKey(), userSession.GetUserKey())
-	channelSubscription, err := g.chatService.SubscribeToChannel(ctx, channelSubscriptionKey, grp.Name)
+	channelSubscriptionKey := chat.NewChannelSubscriptionKey(channel.GetKey(), userSession.GetUserKey())
+	_, err = g.chatService.SubscribeToChannel(ctx, channelSubscriptionKey, grp.Name)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = g.chatService.SendGroupMessage(ctx, chat.NewSendGroupMessage(grp.GetKey(), userSession.GetUserKey(), "Commonpool", "Bienvenue!", []chatmodel.Block{}, []chatmodel.Attachment{}, nil))
+	_, err = g.chatService.SendGroupMessage(ctx, chat.NewSendGroupMessage(grp.GetKey(), userSession.GetUserKey(), "Commonpool", "Bienvenue!", []chat.Block{}, []chat.Attachment{}, nil))
 	if err != nil {
 		return nil, err
 	}
 
 	return &group.CreateGroupResponse{
-		ChannelKey:      channel.GetKey(),
-		SubscriptionKey: channelSubscription.GetKey(),
-		Group:           grp,
-		Membership:      membership,
+		Group:      grp,
+		Membership: membership,
 	}, nil
 
 }

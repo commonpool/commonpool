@@ -2,7 +2,6 @@ package handler
 
 import (
 	group2 "github.com/commonpool/backend/pkg/group"
-	groupmodel "github.com/commonpool/backend/pkg/group/model"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
@@ -25,17 +24,17 @@ func (h *GroupHandler) GetGroupMemberships(c echo.Context) error {
 
 	ctx, _ := handler.GetEchoContext(c, "GetGroupMemberships")
 
-	var membershipStatus = groupmodel.AnyMembershipStatus()
+	var membershipStatus = group2.AnyMembershipStatus()
 	statusStr := c.QueryParam("status")
 	if statusStr != "" {
-		ms, err := groupmodel.ParseMembershipStatus(statusStr)
+		ms, err := group2.ParseMembershipStatus(statusStr)
 		if err != nil {
 			return err
 		}
 		membershipStatus = &ms
 	}
 
-	groupKey, err := groupmodel.ParseGroupKey(c.Param("id"))
+	groupKey, err := group2.ParseGroupKey(c.Param("id"))
 	if err != nil {
 		return err
 	}

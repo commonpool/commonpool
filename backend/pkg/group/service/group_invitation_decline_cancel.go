@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/chat"
-	chatmodel "github.com/commonpool/backend/pkg/chat/chatmodel"
 	group2 "github.com/commonpool/backend/pkg/group"
-	groupmodel "github.com/commonpool/backend/pkg/group/model"
 	"github.com/commonpool/backend/pkg/mq"
 )
 
@@ -40,7 +38,7 @@ func (g GroupService) CancelOrDeclineInvitation(ctx context.Context, request *gr
 	} else {
 		// group is declining invitation from user
 
-		adminMembershipKey := groupmodel.NewMembershipKey(membershipKey.GroupKey, userSession.GetUserKey())
+		adminMembershipKey := group2.NewMembershipKey(membershipKey.GroupKey, userSession.GetUserKey())
 		adminMembership, err := g.groupStore.GetMembership(ctx, adminMembershipKey)
 		if err != nil {
 			return err
@@ -68,9 +66,9 @@ func (g GroupService) CancelOrDeclineInvitation(ctx context.Context, request *gr
 			return err
 		}
 
-		channelKey := chatmodel.GetChannelKeyForGroup(membershipKey.GroupKey)
+		channelKey := chat.GetChannelKeyForGroup(membershipKey.GroupKey)
 
-		channelSubscriptionKey := chatmodel.NewChannelSubscriptionKey(channelKey, membershipKey.UserKey)
+		channelSubscriptionKey := chat.NewChannelSubscriptionKey(channelKey, membershipKey.UserKey)
 		err = g.chatService.UnsubscribeFromChannel(ctx, channelSubscriptionKey)
 		if err != nil {
 			return err
@@ -91,12 +89,12 @@ func (g GroupService) CancelOrDeclineInvitation(ctx context.Context, request *gr
 		}
 
 		text := fmt.Sprintf("%s has left #%s", usernameLeavingGroup, grp.Name)
-		message := chatmodel.NewContextBlock([]chatmodel.BlockElement{
-			chatmodel.NewMarkdownObject(text)},
+		message := chat.NewContextBlock([]chat.BlockElement{
+			chat.NewMarkdownObject(text)},
 			nil,
 		)
 
-		_, err = g.chatService.SendGroupMessage(ctx, chat.NewSendGroupMessage(request.MembershipKey.GroupKey, membershipKey.UserKey, usernameLeavingGroup, text, []chatmodel.Block{*message}, []chatmodel.Attachment{}, nil))
+		_, err = g.chatService.SendGroupMessage(ctx, chat.NewSendGroupMessage(request.MembershipKey.GroupKey, membershipKey.UserKey, usernameLeavingGroup, text, []chat.Block{*message}, []chat.Attachment{}, nil))
 		if err != nil {
 			return err
 		}

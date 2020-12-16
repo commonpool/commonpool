@@ -2,7 +2,7 @@ package trading
 
 import (
 	ctx "context"
-	groupmodel "github.com/commonpool/backend/pkg/group/model"
+	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/resource/model"
 	tradingmodel "github.com/commonpool/backend/pkg/trading/model"
 	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
@@ -18,8 +18,8 @@ type Service interface {
 	AcceptOffer(ctx ctx.Context, offerKey tradingmodel.OfferKey) error
 	DeclineOffer(ctx ctx.Context, offerKey tradingmodel.OfferKey) error
 	GetTradingHistory(ctx context.Context, userIDs *usermodel.UserKeys) ([]tradingmodel.HistoryEntry, error)
-	SendOffer(ctx context.Context, groupKey groupmodel.GroupKey, offerItems *tradingmodel.OfferItems, message string) (*tradingmodel.Offer, *tradingmodel.OfferItems, error)
-	FindTargetsForOfferItem(ctx ctx.Context, groupKey groupmodel.GroupKey, itemType tradingmodel.OfferItemType, from *model.Target, to *model.Target) (*model.Targets, error)
+	SendOffer(ctx context.Context, groupKey group.GroupKey, offerItems *tradingmodel.OfferItems, message string) (*tradingmodel.Offer, *tradingmodel.OfferItems, error)
+	FindTargetsForOfferItem(ctx ctx.Context, groupKey group.GroupKey, itemType tradingmodel.OfferItemType, from *model.Target, to *model.Target) (*model.Targets, error)
 	GetOffersForUser(key usermodel.UserKey) (*GetOffersResult, error)
 	FindApproversForOffers(offers *tradingmodel.OfferKeys) (*tradingmodel.OffersApprovers, error)
 	GetOffer(offerKey tradingmodel.OfferKey) (*tradingmodel.Offer, error)

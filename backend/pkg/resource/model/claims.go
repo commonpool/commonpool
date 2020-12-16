@@ -1,7 +1,7 @@
 package model
 
 import (
-	groupmodel "github.com/commonpool/backend/pkg/group/model"
+	"github.com/commonpool/backend/pkg/group"
 	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 )
 
@@ -38,7 +38,7 @@ func (c *Claims) UserHasClaim(userKey usermodel.UserKey, resourceKey ResourceKey
 	return false
 }
 
-func (c *Claims) GroupHasClaim(groupKey groupmodel.GroupKey, resourceKey ResourceKey, claimType ClaimType) bool {
+func (c *Claims) GroupHasClaim(groupKey group.GroupKey, resourceKey ResourceKey, claimType ClaimType) bool {
 	for _, claim := range c.Items {
 		if claim.ClaimType == claimType && claim.ResourceKey == resourceKey && claim.For.IsForGroup() && claim.For.GetGroupKey() == groupKey {
 			return true

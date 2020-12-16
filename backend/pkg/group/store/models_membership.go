@@ -2,7 +2,7 @@ package store
 
 import (
 	"fmt"
-	groupmodel "github.com/commonpool/backend/pkg/group/model"
+	"github.com/commonpool/backend/pkg/group"
 	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"github.com/mitchellh/mapstructure"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
@@ -18,7 +18,7 @@ type Membership struct {
 	UserConfirmed  bool   `mapstructure:"userConfirmed"`
 }
 
-func mapMembership(record neo4j.Record, key string) (*groupmodel.Membership, error) {
+func mapMembership(record neo4j.Record, key string) (*group.Membership, error) {
 
 	graphMembership := Membership{}
 	field, ok := record.Get(key)
@@ -31,15 +31,15 @@ func mapMembership(record neo4j.Record, key string) (*groupmodel.Membership, err
 		return nil, err
 	}
 
-	groupKey, err := groupmodel.ParseGroupKey(graphMembership.GroupId)
+	groupKey, err := group.ParseGroupKey(graphMembership.GroupId)
 	if err != nil {
 		return nil, err
 	}
 	userKey := usermodel.NewUserKey(graphMembership.UserId)
 
-	membershipKey := groupmodel.NewMembershipKey(groupKey, userKey)
+	membershipKey := group.NewMembershipKey(groupKey, userKey)
 
-	return &groupmodel.Membership{
+	return &group.Membership{
 		Key:            membershipKey,
 		IsMember:       graphMembership.IsMember,
 		IsAdmin:        graphMembership.IsAdmin,

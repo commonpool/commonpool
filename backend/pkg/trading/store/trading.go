@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/commonpool/backend/pkg/exceptions"
 	graph2 "github.com/commonpool/backend/pkg/graph"
-	groupmodel "github.com/commonpool/backend/pkg/group/model"
+	"github.com/commonpool/backend/pkg/group"
 	groupstore "github.com/commonpool/backend/pkg/group/store"
 	resourcemodel "github.com/commonpool/backend/pkg/resource/model"
 	resourcestore "github.com/commonpool/backend/pkg/resource/store"
@@ -523,7 +523,7 @@ func (t TradingStore) SaveOffer(offer *tradingmodel.Offer, offerItems *tradingmo
 	var params = map[string]interface{}{}
 
 	var userRefMap = map[usermodel.UserKey]string{}
-	var groupRefMap = map[groupmodel.GroupKey]string{}
+	var groupRefMap = map[group.GroupKey]string{}
 	var resourceRefMap = map[resourcemodel.ResourceKey]string{}
 
 	for i, userKey := range offerItems.GetUserKeys().Items {

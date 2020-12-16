@@ -6,7 +6,7 @@ import (
 	"github.com/commonpool/backend/logging"
 	"github.com/commonpool/backend/pkg/exceptions"
 	graph2 "github.com/commonpool/backend/pkg/graph"
-	groupmodel "github.com/commonpool/backend/pkg/group/model"
+	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/resource"
 	resourcemodel "github.com/commonpool/backend/pkg/resource/model"
 	"github.com/commonpool/backend/pkg/shared/store"
@@ -289,7 +289,7 @@ func (rs *ResourceStore) Create(ctx context.Context, createResourceQuery *resour
 		groupIdsIntfs := groupIdsField.([]interface{})
 		for _, groupIdIntf := range groupIdsIntfs {
 			groupId := groupIdIntf.(string)
-			groupKey, err := groupmodel.ParseGroupKey(groupId)
+			groupKey, err := group.ParseGroupKey(groupId)
 			if err != nil {
 				return err
 			}
@@ -341,7 +341,7 @@ func (rs *ResourceStore) mapGraphSharingRecord(record neo4j.Record, resourceFiel
 	groupIds := groupIdsField.([]interface{})
 	var sharings []*resourcemodel.Sharing
 	for _, groupId := range groupIds {
-		groupKey, err := groupmodel.ParseGroupKey(groupId.(string))
+		groupKey, err := group.ParseGroupKey(groupId.(string))
 		if err != nil {
 			return nil, err
 		}
@@ -443,7 +443,7 @@ func (rs *ResourceStore) Update(ctx context.Context, request *resource.UpdateRes
 	deletedSharingIntfs := deletedSharingField.([]interface{})
 	for _, deletedSharingIntf := range deletedSharingIntfs {
 		groupId := deletedSharingIntf.(string)
-		groupKey, err := groupmodel.ParseGroupKey(groupId)
+		groupKey, err := group.ParseGroupKey(groupId)
 		if err != nil {
 			return err
 		}
@@ -457,7 +457,7 @@ func (rs *ResourceStore) Update(ctx context.Context, request *resource.UpdateRes
 	createdSharingIntfs := createdSharingsField.([]interface{})
 	for _, createdSharingIntf := range createdSharingIntfs {
 		groupId := createdSharingIntf.(string)
-		groupKey, err := groupmodel.ParseGroupKey(groupId)
+		groupKey, err := group.ParseGroupKey(groupId)
 		if err != nil {
 			return err
 		}

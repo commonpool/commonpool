@@ -1,7 +1,7 @@
 package store
 
 import (
-	"github.com/commonpool/backend/pkg/chat/chatmodel"
+	"github.com/commonpool/backend/pkg/chat"
 	"github.com/satori/go.uuid"
 	"time"
 )
@@ -9,8 +9,8 @@ import (
 type Message struct {
 	ID             uuid.UUID `gorm:"type:uuid;primary_key"`
 	ChannelID      string
-	MessageType    chatmodel.MessageType
-	MessageSubType chatmodel.MessageSubType
+	MessageType    chat.MessageType
+	MessageSubType chat.MessageSubType
 	SentById       string
 	SentByUsername string
 	SentAt         time.Time

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/commonpool/backend/pkg/chat"
-	chatmodel "github.com/commonpool/backend/pkg/chat/chatmodel"
 	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"gorm.io/gorm"
 )
@@ -138,10 +137,10 @@ func NewChatStore(db *gorm.DB) *ChatStore {
 // 	return nil
 // }
 
-func mapMessage(ctx context.Context, message *Message) (*chatmodel.Message, error) {
+func mapMessage(ctx context.Context, message *Message) (*chat.Message, error) {
 
-	var blocks []chatmodel.Block
-	var attachments []chatmodel.Attachment
+	var blocks []chat.Block
+	var attachments []chat.Attachment
 	if err := json.Unmarshal([]byte(message.Blocks), &blocks); err != nil {
 		return nil, err
 	}
@@ -155,13 +154,13 @@ func mapMessage(ctx context.Context, message *Message) (*chatmodel.Message, erro
 		visibleToUser = &visibleToUserKey
 	}
 
-	returnMessage := &chatmodel.Message{
-		Key:            chatmodel.NewMessageKey(message.ID),
-		ChannelKey:     chatmodel.NewConversationKey(message.ChannelID),
+	returnMessage := &chat.Message{
+		Key:            chat.NewMessageKey(message.ID),
+		ChannelKey:     chat.NewConversationKey(message.ChannelID),
 		MessageType:    message.MessageType,
 		MessageSubType: message.MessageSubType,
-		SentBy: chatmodel.MessageSender{
-			Type:     chatmodel.UserMessageSender,
+		SentBy: chat.MessageSender{
+			Type:     chat.UserMessageSender,
 			UserKey:  usermodel.NewUserKey(message.SentById),
 			Username: message.SentByUsername,
 		},

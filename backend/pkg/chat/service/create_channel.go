@@ -2,11 +2,11 @@ package service
 
 import (
 	"context"
-	"github.com/commonpool/backend/pkg/chat/chatmodel"
+	"github.com/commonpool/backend/pkg/chat"
 )
 
-func (c ChatService) CreateChannel(ctx context.Context, channelKey chatmodel.ChannelKey, channelType chatmodel.ChannelType) (*chatmodel.Channel, error) {
-	channel := &chatmodel.Channel{
+func (c ChatService) CreateChannel(ctx context.Context, channelKey chat.ChannelKey, channelType chat.ChannelType) (*chat.Channel, error) {
+	channel := &chat.Channel{
 		Key:   channelKey,
 		Title: "",
 		Type:  channelType,

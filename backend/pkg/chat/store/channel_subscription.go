@@ -1,7 +1,7 @@
 package store
 
 import (
-	chatmodel "github.com/commonpool/backend/pkg/chat/chatmodel"
+	"github.com/commonpool/backend/pkg/chat"
 	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"time"
 )
@@ -20,9 +20,9 @@ type ChannelSubscription struct {
 	LastMessageUserName string
 }
 
-func (s *ChannelSubscription) Map() *chatmodel.ChannelSubscription {
-	return &chatmodel.ChannelSubscription{
-		ChannelKey:          chatmodel.NewChannelKey(s.ChannelID),
+func (s *ChannelSubscription) Map() *chat.ChannelSubscription {
+	return &chat.ChannelSubscription{
+		ChannelKey:          chat.NewChannelKey(s.ChannelID),
 		UserKey:             usermodel.NewUserKey(s.UserID),
 		Name:                s.Name,
 		CreatedAt:           s.CreatedAt,
@@ -36,7 +36,7 @@ func (s *ChannelSubscription) Map() *chatmodel.ChannelSubscription {
 	}
 }
 
-func MapChannelSubscription(s *chatmodel.ChannelSubscription) *ChannelSubscription {
+func MapChannelSubscription(s *chat.ChannelSubscription) *ChannelSubscription {
 	return &ChannelSubscription{
 		ChannelID:           s.ChannelKey.String(),
 		UserID:              s.UserKey.String(),

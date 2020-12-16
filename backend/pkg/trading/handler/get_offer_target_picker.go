@@ -1,7 +1,7 @@
 package handler
 
 import (
-	groupmodel "github.com/commonpool/backend/pkg/group/model"
+	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/resource/model"
 	model2 "github.com/commonpool/backend/pkg/trading/model"
@@ -14,7 +14,7 @@ func (h *TradingHandler) HandleOfferItemTargetPicker(c echo.Context) error {
 
 	ctx, _ := handler.GetEchoContext(c, "HandleOfferItemTargetPicker")
 
-	groupKey, err := groupmodel.ParseGroupKey(c.QueryParams().Get("group_id"))
+	groupKey, err := group.ParseGroupKey(c.QueryParams().Get("group_id"))
 	if err != nil {
 		return err
 	}

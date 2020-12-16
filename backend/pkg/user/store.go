@@ -2,7 +2,7 @@ package user
 
 import (
 	"context"
-	groupmodel "github.com/commonpool/backend/pkg/group/model"
+	"github.com/commonpool/backend/pkg/group"
 	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 )
 
@@ -18,5 +18,5 @@ type Query struct {
 	Query      string
 	Skip       int
 	Take       int
-	NotInGroup *groupmodel.GroupKey
+	NotInGroup *group.GroupKey
 }

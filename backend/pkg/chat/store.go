@@ -2,52 +2,51 @@ package chat
 
 import (
 	"context"
-	chatmodel "github.com/commonpool/backend/pkg/chat/chatmodel"
 	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"time"
 )
 
 type Store interface {
-	GetSubscriptionsForUser(ctx context.Context, request *GetSubscriptions) (*chatmodel.ChannelSubscriptions, error)
-	GetSubscriptionsForChannel(ctx context.Context, channelKey chatmodel.ChannelKey) ([]*chatmodel.ChannelSubscription, error)
-	GetSubscription(ctx context.Context, request *GetSubscription) (*chatmodel.ChannelSubscription, error)
-	GetMessage(ctx context.Context, messageKey chatmodel.MessageKey) (*chatmodel.Message, error)
+	GetSubscriptionsForUser(ctx context.Context, request *GetSubscriptions) (*ChannelSubscriptions, error)
+	GetSubscriptionsForChannel(ctx context.Context, channelKey ChannelKey) ([]*ChannelSubscription, error)
+	GetSubscription(ctx context.Context, request *GetSubscription) (*ChannelSubscription, error)
+	GetMessage(ctx context.Context, messageKey MessageKey) (*Message, error)
 	GetMessages(ctx context.Context, request *GetMessages) (*GetMessagesResponse, error)
-	SaveMessage(ctx context.Context, request *chatmodel.Message) error
-	GetChannel(ctx context.Context, channelKey chatmodel.ChannelKey) (*chatmodel.Channel, error)
-	CreateChannel(ctx context.Context, channel *chatmodel.Channel) error
-	CreateSubscription(ctx context.Context, key chatmodel.ChannelSubscriptionKey, name string) (*chatmodel.ChannelSubscription, error)
-	DeleteSubscription(ctx context.Context, key chatmodel.ChannelSubscriptionKey) error
+	SaveMessage(ctx context.Context, request *Message) error
+	GetChannel(ctx context.Context, channelKey ChannelKey) (*Channel, error)
+	CreateChannel(ctx context.Context, channel *Channel) error
+	CreateSubscription(ctx context.Context, key ChannelSubscriptionKey, name string) (*ChannelSubscription, error)
+	DeleteSubscription(ctx context.Context, key ChannelSubscriptionKey) error
 }
 
 type GetMessage struct {
-	MessageKey chatmodel.MessageKey
+	MessageKey MessageKey
 }
 
 type GetMessageResponse struct {
-	Message *chatmodel.Message
+	Message *Message
 }
 
 type GetChannel struct {
-	ChannelKey chatmodel.ChannelKey
+	ChannelKey ChannelKey
 }
 
 type GetChannelResponse struct {
-	Channel *chatmodel.Channel
+	Channel *Channel
 }
 
 type SaveMessageRequest struct {
-	ChannelKey    chatmodel.ChannelKey   `json:"channelKey"`
-	Text          string                 `json:"text"`
-	Attachments   []chatmodel.Attachment `json:"attachments"`
-	Blocks        []chatmodel.Block      `json:"blocks"`
-	FromUser      usermodel.UserKey      `json:"fromUser"`
-	FromUserName  string                 `json:"toUser"`
-	VisibleToUser *usermodel.UserKey     `json:"visibleToUser"`
+	ChannelKey    ChannelKey         `json:"channelKey"`
+	Text          string             `json:"text"`
+	Attachments   []Attachment       `json:"attachments"`
+	Blocks        []Block            `json:"blocks"`
+	FromUser      usermodel.UserKey  `json:"fromUser"`
+	FromUserName  string             `json:"toUser"`
+	VisibleToUser *usermodel.UserKey `json:"visibleToUser"`
 }
 
 type SaveMessageResponse struct {
-	Message *chatmodel.Message
+	Message *Message
 }
 
 type SendMessageToThreadResponse struct {
@@ -56,21 +55,21 @@ type SendMessageToThreadResponse struct {
 type GetMessages struct {
 	Take    int
 	Before  time.Time
-	Channel chatmodel.ChannelKey
+	Channel ChannelKey
 	UserKey usermodel.UserKey
 }
 
 type GetMessagesResponse struct {
-	Messages chatmodel.Messages
+	Messages Messages
 	HasMore  bool
 }
 
 type GetSubscription struct {
-	SubscriptionKey chatmodel.ChannelSubscriptionKey
+	SubscriptionKey ChannelSubscriptionKey
 }
 
 type GetSubscriptionResponse struct {
-	Subscription *chatmodel.ChannelSubscription
+	Subscription *ChannelSubscription
 }
 
 type GetSubscriptions struct {
@@ -88,5 +87,5 @@ func NewGetSubscriptions(userKey usermodel.UserKey, take int, skip int) *GetSubs
 }
 
 type GetSubscriptionsResponse struct {
-	Subscriptions chatmodel.ChannelSubscriptions
+	Subscriptions ChannelSubscriptions
 }
