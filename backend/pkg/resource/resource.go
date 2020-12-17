@@ -1,12 +1,12 @@
-package model
+package resource
 
 import (
-	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
+	"github.com/commonpool/backend/pkg/keys"
 	"time"
 )
 
 type Resource struct {
-	Key              ResourceKey
+	Key              keys.ResourceKey
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
 	DeletedAt        *time.Time
@@ -20,7 +20,7 @@ type Resource struct {
 }
 
 func NewResource(
-	key ResourceKey,
+	key keys.ResourceKey,
 	resourceType Type,
 	subType SubType,
 	createdBy string,
@@ -40,12 +40,12 @@ func NewResource(
 	}
 }
 
-func (r *Resource) GetKey() ResourceKey {
+func (r *Resource) GetKey() keys.ResourceKey {
 	return r.Key
 }
 
-func (r *Resource) GetOwnerKey() usermodel.UserKey {
-	return usermodel.NewUserKey(r.CreatedBy)
+func (r *Resource) GetOwnerKey() keys.UserKey {
+	return keys.NewUserKey(r.CreatedBy)
 }
 
 func (r *Resource) IsOffer() bool {

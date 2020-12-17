@@ -5,8 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/commonpool/backend/pkg/handler"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/mq"
-	"github.com/commonpool/backend/pkg/user/usermodel"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/gommon/log"
 	"go.uber.org/zap"
@@ -38,7 +38,7 @@ type Client struct {
 	amqpChannel         mq.Channel
 	send                chan []byte
 	id                  string
-	userKey             usermodel.UserKey
+	userKey             keys.UserKey
 	queueName           *string
 	consumerKey         *string
 }

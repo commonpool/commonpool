@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/mq"
-	"github.com/commonpool/backend/pkg/user/usermodel"
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -17,8 +17,8 @@ func (s *serviceTestSuite) TestSendMessage() {
 	ctx := context.TODO()
 
 	auth.SetContextAuthenticatedUser(ctx, "username", "user", "user@email.com")
-	channelKey := chat.NewChannelKey("channel-id")
-	messageKey := chat.NewMessageKey(uuid.FromStringOrNil("1370bb5e-4310-4d79-95f7-3923ba3f552a"))
+	channelKey := keys.NewChannelKey("channel-id")
+	messageKey := keys.NewMessageKey(uuid.FromStringOrNil("1370bb5e-4310-4d79-95f7-3923ba3f552a"))
 	timestamp := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
 
 	message := &chat.Message{
@@ -28,7 +28,7 @@ func (s *serviceTestSuite) TestSendMessage() {
 		MessageSubType: chat.UserMessage,
 		SentBy: chat.MessageSender{
 			Type:     chat.UserMessageSender,
-			UserKey:  usermodel.NewUserKey("user"),
+			UserKey:  keys.NewUserKey("user"),
 			Username: "username",
 		},
 		SentAt:        timestamp,

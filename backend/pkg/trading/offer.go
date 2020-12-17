@@ -1,15 +1,14 @@
 package trading
 
 import (
-	"github.com/commonpool/backend/pkg/group"
-	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
+	"github.com/commonpool/backend/pkg/keys"
 	"time"
 )
 
 type Offer struct {
 	Key            OfferKey
-	GroupKey       group.GroupKey
-	CreatedByKey   usermodel.UserKey
+	GroupKey       keys.GroupKey
+	CreatedByKey   keys.UserKey
 	Status         OfferStatus
 	CreatedAt      time.Time
 	ExpirationTime *time.Time
@@ -17,7 +16,7 @@ type Offer struct {
 	Message        string
 }
 
-func NewOffer(offerKey OfferKey, groupKey group.GroupKey, author usermodel.UserKey, message string, expiration *time.Time) *Offer {
+func NewOffer(offerKey OfferKey, groupKey keys.GroupKey, author keys.UserKey, message string, expiration *time.Time) *Offer {
 	return &Offer{
 		Key:            offerKey,
 		GroupKey:       groupKey,
@@ -33,7 +32,7 @@ func (o *Offer) GetKey() OfferKey {
 	return o.Key
 }
 
-func (o *Offer) GetAuthorKey() usermodel.UserKey {
+func (o *Offer) GetAuthorKey() keys.UserKey {
 	return o.CreatedByKey
 }
 

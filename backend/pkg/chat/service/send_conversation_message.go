@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/mq"
 	uuid "github.com/satori/go.uuid"
 	"time"
@@ -18,7 +19,7 @@ func (c ChatService) SendConversationMessage(ctx context.Context, request *chat.
 
 	channelKey := createdChannel.Channel.GetKey()
 	message := &chat.Message{
-		Key:            chat.NewMessageKey(uuid.NewV4()),
+		Key:            keys.NewMessageKey(uuid.NewV4()),
 		ChannelKey:     channelKey,
 		MessageType:    chat.NormalMessage,
 		MessageSubType: chat.UserMessage,

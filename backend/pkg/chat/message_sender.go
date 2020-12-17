@@ -1,11 +1,11 @@
 package chat
 
 import (
-	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
+	"github.com/commonpool/backend/pkg/keys"
 )
 
 type MessageSender struct {
 	Type     MessageSenderType
-	UserKey  usermodel.UserKey
+	UserKey  keys.UserKey
 	Username string
 }

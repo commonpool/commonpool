@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/pkg/chat"
 	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/pkg/handler"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/utils"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -41,7 +41,7 @@ func (h *Handler) GetMessages(c echo.Context) error {
 		return err
 	}
 
-	channelKey := chat.NewConversationKey(channelSrt)
+	channelKey := keys.NewConversationKey(channelSrt)
 
 	messages, err := h.chatService.GetMessages(ctx, channelKey, *before, take)
 	if err != nil {

@@ -4,7 +4,7 @@ import (
 	"github.com/commonpool/backend/pkg/auth"
 	group "github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
-	"github.com/commonpool/backend/pkg/user/usermodel"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
@@ -35,14 +35,14 @@ func (h *Handler) GetMembership(c echo.Context) error {
 
 	ctx, _ := handler.GetEchoContext(c, "GetMembership")
 
-	userKey := usermodel.NewUserKey(c.Param("userId"))
+	userKey := keys.NewUserKey(c.Param("userId"))
 
-	groupKey, err := group.ParseGroupKey(c.Param("id"))
+	groupKey, err := keys.ParseGroupKey(c.Param("id"))
 	if err != nil {
 		return err
 	}
 
-	getMemberships, err := h.groupService.GetMembership(ctx, group.NewGetMembershipRequest(group.NewMembershipKey(groupKey, userKey)))
+	getMemberships, err := h.groupService.GetMembership(ctx, group.NewGetMembershipRequest(keys.NewMembershipKey(groupKey, userKey)))
 	if err != nil {
 		return err
 	}

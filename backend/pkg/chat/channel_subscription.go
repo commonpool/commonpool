@@ -1,13 +1,13 @@
 package chat
 
 import (
-	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
+	"github.com/commonpool/backend/pkg/keys"
 	"time"
 )
 
 type ChannelSubscription struct {
-	ChannelKey          ChannelKey
-	UserKey             usermodel.UserKey
+	ChannelKey          keys.ChannelKey
+	UserKey             keys.UserKey
 	Name                string
 	CreatedAt           time.Time
 	UpdatedAt           time.Time
@@ -15,21 +15,21 @@ type ChannelSubscription struct {
 	LastMessageAt       time.Time
 	LastTimeRead        time.Time
 	LastMessageChars    string
-	LastMessageUserKey  usermodel.UserKey
+	LastMessageUserKey  keys.UserKey
 	LastMessageUserName string
 }
 
-func (s *ChannelSubscription) GetKey() ChannelSubscriptionKey {
-	return NewChannelSubscriptionKey(
+func (s *ChannelSubscription) GetKey() keys.ChannelSubscriptionKey {
+	return keys.NewChannelSubscriptionKey(
 		s.ChannelKey,
 		s.UserKey,
 	)
 }
 
-func (s *ChannelSubscription) GetChannelKey() ChannelKey {
+func (s *ChannelSubscription) GetChannelKey() keys.ChannelKey {
 	return s.GetKey().ChannelKey
 }
 
-func (s *ChannelSubscription) GetUserKey() usermodel.UserKey {
+func (s *ChannelSubscription) GetUserKey() keys.UserKey {
 	return s.GetKey().UserKey
 }

@@ -1,4 +1,4 @@
-package group
+package keys
 
 type GroupKeys struct {
 	Items []GroupKey

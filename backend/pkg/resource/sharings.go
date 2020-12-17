@@ -1,11 +1,11 @@
-package model
+package resource
 
 import (
-	"github.com/commonpool/backend/pkg/group"
+	"github.com/commonpool/backend/pkg/keys"
 )
 
 type Sharings struct {
-	sharingMap map[ResourceKey][]*Sharing
+	sharingMap map[keys.ResourceKey][]*Sharing
 }
 
 func (s *Sharings) AppendAll(appendSharings *Sharings) {
@@ -21,7 +21,7 @@ func (s *Sharings) AppendAll(appendSharings *Sharings) {
 }
 
 func NewResourceSharings(sharings []*Sharing) *Sharings {
-	var result = map[ResourceKey][]*Sharing{}
+	var result = map[keys.ResourceKey][]*Sharing{}
 	for _, sharing := range sharings {
 		_, ok := result[sharing.ResourceKey]
 		if !ok {
@@ -34,23 +34,23 @@ func NewResourceSharings(sharings []*Sharing) *Sharings {
 
 func NewEmptyResourceSharings() *Sharings {
 	return &Sharings{
-		sharingMap: map[ResourceKey][]*Sharing{},
+		sharingMap: map[keys.ResourceKey][]*Sharing{},
 	}
 }
 
-func (s *Sharings) GetAllGroupKeys() *group.GroupKeys {
-	groupMap := map[group.GroupKey]bool{}
-	var groupKeys []group.GroupKey
+func (s *Sharings) GetAllGroupKeys() *keys.GroupKeys {
+	groupMap := map[keys.GroupKey]bool{}
+	var groupKeys []keys.GroupKey
 	for _, sharing := range s.Items() {
 		if !groupMap[sharing.GroupKey] {
 			groupMap[sharing.GroupKey] = true
 			groupKeys = append(groupKeys, sharing.GroupKey)
 		}
 	}
-	return group.NewGroupKeys(groupKeys)
+	return keys.NewGroupKeys(groupKeys)
 }
 
-func (s *Sharings) GetSharingsForResource(key ResourceKey) *Sharings {
+func (s *Sharings) GetSharingsForResource(key keys.ResourceKey) *Sharings {
 	list, ok := s.sharingMap[key]
 	if !ok {
 		return NewResourceSharings([]*Sharing{})

@@ -1,12 +1,12 @@
 package group
 
 import (
-	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
+	"github.com/commonpool/backend/pkg/keys"
 	"time"
 )
 
 type Membership struct {
-	Key            MembershipKey
+	Key            keys.MembershipKey
 	IsMember       bool
 	IsAdmin        bool
 	IsOwner        bool
@@ -16,14 +16,14 @@ type Membership struct {
 	IsDeactivated  bool
 }
 
-func (m *Membership) GetGroupKey() GroupKey {
+func (m *Membership) GetGroupKey() keys.GroupKey {
 	return m.Key.GroupKey
 }
 
-func (m *Membership) GetUserKey() usermodel.UserKey {
+func (m *Membership) GetUserKey() keys.UserKey {
 	return m.Key.UserKey
 }
 
-func (m *Membership) GetKey() MembershipKey {
-	return NewMembershipKey(m.GetGroupKey(), m.GetUserKey())
+func (m *Membership) GetKey() keys.MembershipKey {
+	return keys.NewMembershipKey(m.GetGroupKey(), m.GetUserKey())
 }

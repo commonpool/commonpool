@@ -2,13 +2,14 @@ package group
 
 import (
 	"context"
+	"github.com/commonpool/backend/pkg/keys"
 )
 
 type Service interface {
 	CreateGroup(ctx context.Context, request *CreateGroupRequest) (*CreateGroupResponse, error)
 	GetGroup(ctx context.Context, request *GetGroupRequest) (*GetGroupResult, error)
 	GetGroups(ctx context.Context, request *GetGroupsRequest) (*GetGroupsResult, error)
-	GetGroupsByKeys(ctx context.Context, groupKeys *GroupKeys) (*Groups, error)
+	GetGroupsByKeys(ctx context.Context, groupKeys *keys.GroupKeys) (*Groups, error)
 	GetMembership(ctx context.Context, request *GetMembershipRequest) (*GetMembershipResponse, error)
 	GetUserMemberships(ctx context.Context, request *GetMembershipsForUserRequest) (*GetMembershipsForUserResponse, error)
 	GetGroupMemberships(ctx context.Context, request *GetMembershipsForGroupRequest) (*GetMembershipsForGroupResponse, error)
@@ -17,10 +18,10 @@ type Service interface {
 }
 
 type CreateOrAcceptInvitationRequest struct {
-	MembershipKey MembershipKey
+	MembershipKey keys.MembershipKey
 }
 
-func NewAcceptInvitationRequest(membershipKey MembershipKey) *CreateOrAcceptInvitationRequest {
+func NewAcceptInvitationRequest(membershipKey keys.MembershipKey) *CreateOrAcceptInvitationRequest {
 	return &CreateOrAcceptInvitationRequest{
 		MembershipKey: membershipKey,
 	}
@@ -31,15 +32,18 @@ type CreateOrAcceptInvitationResponse struct {
 }
 
 type CancelOrDeclineInvitationRequest struct {
-	MembershipKey MembershipKey
+	MembershipKey keys.MembershipKey
 }
 
-func NewDelineInvitationRequest(membershipKey MembershipKey) *CancelOrDeclineInvitationRequest {
+func NewDelineInvitationRequest(membershipKey keys.MembershipKey) *CancelOrDeclineInvitationRequest {
 	return &CancelOrDeclineInvitationRequest{
 		MembershipKey: membershipKey,
 	}
 }
 
-type LeaveGroupRequest struct {
-	MembershipKey MembershipKey
+type FindUsersForGroupInvitePickerQuery struct {
+	Query    string
+	Skip     int
+	Take     int
+	GroupKey keys.GroupKey
 }

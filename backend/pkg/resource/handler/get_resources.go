@@ -3,9 +3,8 @@ package handler
 import (
 	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
+	"github.com/commonpool/backend/pkg/keys"
 	resource2 "github.com/commonpool/backend/pkg/resource"
-	model3 "github.com/commonpool/backend/pkg/resource/model"
-	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"github.com/commonpool/backend/pkg/utils"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
@@ -45,22 +44,22 @@ func (h *ResourceHandler) SearchResources(c echo.Context) error {
 
 	searchQuery := strings.TrimSpace(c.QueryParam("query"))
 
-	resourceType, err := model3.ParseResourceType(c.QueryParam("type"))
+	resourceType, err := resource2.ParseResourceType(c.QueryParam("type"))
 	if err != nil {
 		return err
 	}
 
-	resourceSubType, err := model3.ParseResourceSubType(c.QueryParam("sub_type"))
+	resourceSubType, err := resource2.ParseResourceSubType(c.QueryParam("sub_type"))
 	if err != nil {
 		return err
 	}
 
 	createdBy := c.QueryParam("created_by")
 
-	var groupKey *group.GroupKey
+	var groupKey *keys.GroupKey
 	groupStr := c.QueryParam("group_id")
 	if groupStr != "" {
-		groupKey2, err := group.ParseGroupKey(groupStr)
+		groupKey2, err := keys.ParseGroupKey(groupStr)
 		if err != nil {
 			return err
 		}
@@ -78,17 +77,17 @@ func (h *ResourceHandler) SearchResources(c echo.Context) error {
 		return err
 	}
 
-	groupMap := map[group.GroupKey]*group.Group{}
+	groupMap := map[keys.GroupKey]*group.Group{}
 	for _, g := range getGroupsResponse.Items {
 		groupMap[g.GetKey()] = g
 	}
 
-	var createdByKeys []usermodel.UserKey
+	var createdByKeys []keys.UserKey
 	for _, item := range resources.Resources.Items {
 		createdByKeys = append(createdByKeys, item.GetOwnerKey())
 	}
 
-	createdByUsers, err := h.userService.GetByKeys(ctx, usermodel.NewUserKeys(createdByKeys))
+	createdByUsers, err := h.userService.GetByKeys(ctx, keys.NewUserKeys(createdByKeys))
 	if err != nil {
 		return err
 	}
@@ -97,7 +96,7 @@ func (h *ResourceHandler) SearchResources(c echo.Context) error {
 	var resourcesResponse = make([]web.Resource, len(resourceItems))
 	for i, item := range resourceItems {
 
-		createdBy, err := createdByUsers.GetUser(usermodel.NewUserKey(item.CreatedBy))
+		createdBy, err := createdByUsers.GetUser(keys.NewUserKey(item.CreatedBy))
 		if err != nil {
 			return err
 		}

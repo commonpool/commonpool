@@ -2,6 +2,7 @@ package store
 
 import (
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/keys"
 	"time"
 )
 
@@ -15,7 +16,7 @@ type Channel struct {
 
 func (channel *Channel) Map() *chat.Channel {
 	return &chat.Channel{
-		Key:       chat.NewChannelKey(channel.ID),
+		Key:       keys.NewChannelKey(channel.ID),
 		Title:     channel.Title,
 		Type:      channel.Type,
 		CreatedAt: channel.CreatedAt,

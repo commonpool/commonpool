@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/pkg/group"
+	"github.com/commonpool/backend/pkg/keys"
 	handler2 "github.com/commonpool/backend/pkg/resource/handler"
 	"github.com/commonpool/backend/pkg/user"
 	"github.com/commonpool/backend/pkg/utils"
@@ -40,7 +40,7 @@ func (h *Handler) GetUsersForGroupInvitePicker(c echo.Context) error {
 
 	qry := c.QueryParam("query")
 
-	groupKey, err := group.ParseGroupKey(c.Param("id"))
+	groupKey, err := keys.ParseGroupKey(c.Param("id"))
 	if err != nil {
 		return handler2.NewErrResponse(c, err)
 	}

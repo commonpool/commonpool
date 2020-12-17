@@ -4,6 +4,7 @@ import (
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
@@ -48,7 +49,7 @@ func (h *Handler) GetGroupMemberships(c echo.Context) error {
 		membershipStatus = &ms
 	}
 
-	groupKey, err := group.ParseGroupKey(c.Param("id"))
+	groupKey, err := keys.ParseGroupKey(c.Param("id"))
 	if err != nil {
 		return err
 	}

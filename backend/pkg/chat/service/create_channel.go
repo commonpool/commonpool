@@ -3,9 +3,10 @@ package service
 import (
 	"context"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/keys"
 )
 
-func (c ChatService) CreateChannel(ctx context.Context, channelKey chat.ChannelKey, channelType chat.ChannelType) (*chat.Channel, error) {
+func (c ChatService) CreateChannel(ctx context.Context, channelKey keys.ChannelKey, channelType chat.ChannelType) (*chat.Channel, error) {
 	channel := &chat.Channel{
 		Key:   channelKey,
 		Title: "",

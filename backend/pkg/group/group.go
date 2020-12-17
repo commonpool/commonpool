@@ -1,22 +1,22 @@
 package group
 
 import (
-	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
+	"github.com/commonpool/backend/pkg/keys"
 	"time"
 )
 
 type Group struct {
-	Key         GroupKey
-	CreatedBy   usermodel.UserKey
+	Key         keys.GroupKey
+	CreatedBy   keys.UserKey
 	CreatedAt   time.Time
 	Name        string
 	Description string
 }
 
-func (o *Group) GetKey() GroupKey {
+func (o *Group) GetKey() keys.GroupKey {
 	return o.Key
 }
 
-func (o *Group) GetCreatedByKey() usermodel.UserKey {
+func (o *Group) GetCreatedByKey() keys.UserKey {
 	return o.CreatedBy
 }

@@ -2,33 +2,32 @@ package chat
 
 import (
 	ctx "context"
-	"github.com/commonpool/backend/pkg/group"
-	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
+	"github.com/commonpool/backend/pkg/keys"
 	"golang.org/x/net/context"
 	"time"
 )
 
 type Service interface {
-	GetMessages(ctx context.Context, channel ChannelKey, before time.Time, take int) (*GetMessagesResponse, error)
+	GetMessages(ctx context.Context, channel keys.ChannelKey, before time.Time, take int) (*GetMessagesResponse, error)
 	GetSubscriptionsForUser(ctx context.Context, take int, skip int) (*ChannelSubscriptions, error)
-	GetChannel(ctx context.Context, channelKey ChannelKey) (*Channel, error)
-	GetMessage(ctx context.Context, messageKey MessageKey) (*Message, error)
-	CreateChannel(ctx ctx.Context, channelKey ChannelKey, channelType ChannelType) (*Channel, error)
-	SubscribeToChannel(ctx ctx.Context, channelSubscriptionKey ChannelSubscriptionKey, name string) (*ChannelSubscription, error)
-	UnsubscribeFromChannel(ctx context.Context, channelSubscriptionKey ChannelSubscriptionKey) error
+	GetChannel(ctx context.Context, channelKey keys.ChannelKey) (*Channel, error)
+	GetMessage(ctx context.Context, messageKey keys.MessageKey) (*Message, error)
+	CreateChannel(ctx ctx.Context, channelKey keys.ChannelKey, channelType ChannelType) (*Channel, error)
+	SubscribeToChannel(ctx ctx.Context, channelSubscriptionKey keys.ChannelSubscriptionKey, name string) (*ChannelSubscription, error)
+	UnsubscribeFromChannel(ctx context.Context, channelSubscriptionKey keys.ChannelSubscriptionKey) error
 	DeleteGroupChannel(ctx ctx.Context, request *DeleteGroupChannel) (*DeleteGroupChannelResponse, error)
 	SendConversationMessage(ctx ctx.Context, request *SendConversationMessage) (*SendConversationMessageResponse, error)
 	SendMessage(ctx context.Context, message *Message) error
 	SendGroupMessage(ctx ctx.Context, request *SendGroupMessage) (*SendGroupMessageResponse, error)
-	CreateUserExchange(ctx context.Context, userKey usermodel.UserKey) (string, error)
-	GetUserExchangeName(ctx context.Context, userKey usermodel.UserKey) string
+	CreateUserExchange(ctx context.Context, userKey keys.UserKey) (string, error)
+	GetUserExchangeName(ctx context.Context, userKey keys.UserKey) string
 }
 type GetOrCreateConversationChannelResponse struct {
 	Channel *Channel
 }
 
 type DeleteGroupChannel struct {
-	GroupKey group.GroupKey
+	GroupKey keys.GroupKey
 }
 
 type DeleteGroupChannelResponse struct {
@@ -36,13 +35,13 @@ type DeleteGroupChannelResponse struct {
 }
 
 type SendConversationMessage struct {
-	FromUserKey          usermodel.UserKey
+	FromUserKey          keys.UserKey
 	FromUserName         string
-	ToUserKeys           *usermodel.UserKeys
+	ToUserKeys           *keys.UserKeys
 	Text                 string
 	Blocks               []Block
 	Attachments          []Attachment
-	OnlyVisibleToUserKey *usermodel.UserKey
+	OnlyVisibleToUserKey *keys.UserKey
 }
 
 type SendConversationMessageResponse struct {
@@ -50,13 +49,13 @@ type SendConversationMessageResponse struct {
 }
 
 func NewSendConversationMessage(
-	fromUserKey usermodel.UserKey,
+	fromUserKey keys.UserKey,
 	fromUserName string,
-	toUserKeys *usermodel.UserKeys,
+	toUserKeys *keys.UserKeys,
 	text string,
 	blocks []Block,
 	attachments []Attachment,
-	onlyVisibleToUserKey *usermodel.UserKey) *SendConversationMessage {
+	onlyVisibleToUserKey *keys.UserKey) *SendConversationMessage {
 	return &SendConversationMessage{
 		FromUserKey:          fromUserKey,
 		FromUserName:         fromUserName,
@@ -69,20 +68,20 @@ func NewSendConversationMessage(
 }
 
 type SendGroupMessage struct {
-	GroupKey             group.GroupKey
-	FromUserKey          usermodel.UserKey
+	GroupKey             keys.GroupKey
+	FromUserKey          keys.UserKey
 	FromUserName         string
 	Text                 string
 	Blocks               []Block
 	Attachments          []Attachment
-	OnlyVisibleToUserKey *usermodel.UserKey
+	OnlyVisibleToUserKey *keys.UserKey
 }
 
 type SendGroupMessageResponse struct {
 	Channel *Channel
 }
 
-func NewSendGroupMessage(groupKey group.GroupKey, fromUserKey usermodel.UserKey, fromUserName string, text string, blocks []Block, attachments []Attachment, onlyVisibleToUserKey *usermodel.UserKey) *SendGroupMessage {
+func NewSendGroupMessage(groupKey keys.GroupKey, fromUserKey keys.UserKey, fromUserName string, text string, blocks []Block, attachments []Attachment, onlyVisibleToUserKey *keys.UserKey) *SendGroupMessage {
 	return &SendGroupMessage{
 		GroupKey:             groupKey,
 		FromUserKey:          fromUserKey,

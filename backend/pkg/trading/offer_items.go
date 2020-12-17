@@ -1,9 +1,8 @@
 package trading
 
 import (
-	"github.com/commonpool/backend/pkg/group"
-	resourcemodel "github.com/commonpool/backend/pkg/resource/model"
-	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
+	"github.com/commonpool/backend/pkg/keys"
+	"github.com/commonpool/backend/pkg/resource"
 )
 
 type OfferItems struct {
@@ -45,7 +44,7 @@ func (i *OfferItems) GetOfferItem(key OfferItemKey) OfferItem {
 	return nil
 }
 
-func (i *OfferItems) GetOfferItemsReceivedByUser(userKey usermodel.UserKey) *OfferItems {
+func (i *OfferItems) GetOfferItemsReceivedByUser(userKey keys.UserKey) *OfferItems {
 	var offerItems []OfferItem
 	for _, offerItem := range i.Items {
 		if offerItem.GetReceiverKey().IsForUser() && offerItem.GetReceiverKey().GetUserKey() == userKey {
@@ -59,8 +58,8 @@ func (i *OfferItems) ItemCount() int {
 	return len(i.Items)
 }
 
-func (i *OfferItems) GetResourceKeys() *resourcemodel.ResourceKeys {
-	var resourceKeys []resourcemodel.ResourceKey
+func (i *OfferItems) GetResourceKeys() *resource.ResourceKeys {
+	var resourceKeys []keys.ResourceKey
 	for _, item := range i.Items {
 		if item.IsBorrowingResource() {
 			resourceKeys = append(resourceKeys, item.(*BorrowResourceItem).ResourceKey)
@@ -71,13 +70,13 @@ func (i *OfferItems) GetResourceKeys() *resourcemodel.ResourceKeys {
 		}
 	}
 	if resourceKeys == nil {
-		resourceKeys = []resourcemodel.ResourceKey{}
+		resourceKeys = []keys.ResourceKey{}
 	}
-	return resourcemodel.NewResourceKeys(resourceKeys)
+	return resource.NewResourceKeys(resourceKeys)
 }
 
-func (i *OfferItems) GetUserKeys() *usermodel.UserKeys {
-	var userKeys []usermodel.UserKey
+func (i *OfferItems) GetUserKeys() *keys.UserKeys {
+	var userKeys []keys.UserKey
 	for _, offerItem := range i.Items {
 		if offerItem.GetReceiverKey().IsForUser() {
 			userKeys = append(userKeys, offerItem.GetReceiverKey().GetUserKey())
@@ -89,11 +88,11 @@ func (i *OfferItems) GetUserKeys() *usermodel.UserKeys {
 			}
 		}
 	}
-	return usermodel.NewUserKeys(userKeys)
+	return keys.NewUserKeys(userKeys)
 }
 
-func (i *OfferItems) GetGroupKeys() *group.GroupKeys {
-	var groupKeys []group.GroupKey
+func (i *OfferItems) GetGroupKeys() *keys.GroupKeys {
+	var groupKeys []keys.GroupKey
 	for _, offerItem := range i.Items {
 		if offerItem.GetReceiverKey().IsForGroup() {
 			groupKeys = append(groupKeys, offerItem.GetReceiverKey().GetGroupKey())
@@ -105,7 +104,7 @@ func (i *OfferItems) GetGroupKeys() *group.GroupKeys {
 			}
 		}
 	}
-	return group.NewGroupKeys(groupKeys)
+	return keys.NewGroupKeys(groupKeys)
 }
 
 func (i *OfferItems) IsEmpty() bool {

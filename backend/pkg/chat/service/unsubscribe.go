@@ -2,11 +2,11 @@ package service
 
 import (
 	"context"
-	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/mq"
 )
 
-func (c ChatService) UnsubscribeFromChannel(ctx context.Context, channelSubscriptionKey chat.ChannelSubscriptionKey) error {
+func (c ChatService) UnsubscribeFromChannel(ctx context.Context, channelSubscriptionKey keys.ChannelSubscriptionKey) error {
 
 	err := c.chatStore.DeleteSubscription(ctx, channelSubscriptionKey)
 	if err != nil {

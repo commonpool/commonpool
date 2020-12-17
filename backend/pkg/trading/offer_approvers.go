@@ -2,36 +2,36 @@ package trading
 
 import (
 	"fmt"
-	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
+	"github.com/commonpool/backend/pkg/keys"
 )
 
 type OfferApprovers struct {
 	OfferKey                  OfferKey
-	OfferItemsUsersCanGive    map[usermodel.UserKey]*OfferItemKeys
-	OfferItemsUsersCanReceive map[usermodel.UserKey]*OfferItemKeys
-	UsersAbleToGiveItem       map[OfferItemKey]*usermodel.UserKeys
-	UsersAbleToReceiveItem    map[OfferItemKey]*usermodel.UserKeys
+	OfferItemsUsersCanGive    map[keys.UserKey]*OfferItemKeys
+	OfferItemsUsersCanReceive map[keys.UserKey]*OfferItemKeys
+	UsersAbleToGiveItem       map[OfferItemKey]*keys.UserKeys
+	UsersAbleToReceiveItem    map[OfferItemKey]*keys.UserKeys
 }
 
-func (o OfferApprovers) IsUserAnApprover(userKey usermodel.UserKey) bool {
+func (o OfferApprovers) IsUserAnApprover(userKey keys.UserKey) bool {
 	_, canApproveGive := o.OfferItemsUsersCanGive[userKey]
 	_, canApproveReceive := o.OfferItemsUsersCanReceive[userKey]
 	return canApproveGive || canApproveReceive
 }
 
-func (o *OfferApprovers) AllUserKeys() *usermodel.UserKeys {
-	userKeyMap := map[usermodel.UserKey]bool{}
+func (o *OfferApprovers) AllUserKeys() *keys.UserKeys {
+	userKeyMap := map[keys.UserKey]bool{}
 	for userKey := range o.OfferItemsUsersCanGive {
 		userKeyMap[userKey] = true
 	}
 	for userKey := range o.OfferItemsUsersCanReceive {
 		userKeyMap[userKey] = true
 	}
-	var userKeys []usermodel.UserKey
+	var userKeys []keys.UserKey
 	for userKey := range userKeyMap {
 		userKeys = append(userKeys, userKey)
 	}
-	return usermodel.NewUserKeys(userKeys)
+	return keys.NewUserKeys(userKeys)
 }
 
 type OffersApprovers struct {

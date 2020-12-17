@@ -1,13 +1,13 @@
 package trading
 
 import (
-	"github.com/commonpool/backend/pkg/resource/model"
+	"github.com/commonpool/backend/pkg/resource"
 	"time"
 )
 
 type CreditTransferItem struct {
 	OfferItemBase
-	From               *model.Target
+	From               *resource.Target
 	Amount             time.Duration
 	CreditsTransferred bool
 }

@@ -4,7 +4,7 @@ import (
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
-	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
@@ -57,7 +57,7 @@ func (h *Handler) GetUserMemberships(c echo.Context) error {
 
 	userIdStr := c.Param("user_id")
 	if userIdStr != "" {
-		userKey = usermodel.NewUserKey(userIdStr)
+		userKey = keys.NewUserKey(userIdStr)
 	}
 
 	memberships, err := h.groupService.GetUserMemberships(ctx, group.NewGetMembershipsForUserRequest(userKey, membershipStatus))

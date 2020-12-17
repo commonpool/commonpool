@@ -3,9 +3,10 @@ package store
 import (
 	"context"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/keys"
 )
 
-func (cs *ChatStore) GetSubscriptionsForChannel(ctx context.Context, channelKey chat.ChannelKey) ([]*chat.ChannelSubscription, error) {
+func (cs *ChatStore) GetSubscriptionsForChannel(ctx context.Context, channelKey keys.ChannelKey) ([]*chat.ChannelSubscription, error) {
 
 	var subscriptions []ChannelSubscription
 	err := cs.db.

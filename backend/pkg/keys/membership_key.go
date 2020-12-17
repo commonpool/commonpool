@@ -1,12 +1,11 @@
-package group
+package keys
 
 import (
-	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"go.uber.org/zap/zapcore"
 )
 
 type MembershipKey struct {
-	UserKey  usermodel.UserKey
+	UserKey  UserKey
 	GroupKey GroupKey
 }
 
@@ -20,7 +19,7 @@ func (m MembershipKey) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
 
 var _ zapcore.ObjectMarshaler = MembershipKey{}
 
-func NewMembershipKey(groupKey GroupKey, userKey usermodel.UserKey) MembershipKey {
+func NewMembershipKey(groupKey GroupKey, userKey UserKey) MembershipKey {
 	return MembershipKey{
 		UserKey:  userKey,
 		GroupKey: groupKey,

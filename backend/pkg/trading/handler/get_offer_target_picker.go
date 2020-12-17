@@ -1,19 +1,19 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
-	"github.com/commonpool/backend/pkg/resource/model"
+	"github.com/commonpool/backend/pkg/keys"
+	"github.com/commonpool/backend/pkg/resource"
 	"github.com/commonpool/backend/pkg/trading"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
 
 type OfferGroupOrUserPickerItem struct {
-	Type    model.TargetType `json:"type"`
-	UserID  *string          `json:"userId"`
-	GroupID *string          `json:"groupId"`
-	Name    string           `json:"name"`
+	Type    resource.TargetType `json:"type"`
+	UserID  *string             `json:"userId"`
+	GroupID *string             `json:"groupId"`
+	Name    string              `json:"name"`
 }
 
 type OfferGroupOrUserPickerResult struct {
@@ -24,7 +24,7 @@ func (h *TradingHandler) HandleOfferItemTargetPicker(c echo.Context) error {
 
 	ctx, _ := handler.GetEchoContext(c, "HandleOfferItemTargetPicker")
 
-	groupKey, err := group.ParseGroupKey(c.QueryParams().Get("group_id"))
+	groupKey, err := keys.ParseGroupKey(c.QueryParams().Get("group_id"))
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func (h *TradingHandler) HandleOfferItemTargetPicker(c echo.Context) error {
 	for _, group := range groups.Items {
 		groupId := group.GetKey().String()
 		items = append(items, OfferGroupOrUserPickerItem{
-			Type:    model.GroupTarget,
+			Type:    resource.GroupTarget,
 			GroupID: &groupId,
 			Name:    group.Name,
 		})
@@ -73,7 +73,7 @@ func (h *TradingHandler) HandleOfferItemTargetPicker(c echo.Context) error {
 	for _, item := range users.Items {
 		userKey := item.GetUserKey().String()
 		items = append(items, OfferGroupOrUserPickerItem{
-			Type:   model.UserTarget,
+			Type:   resource.UserTarget,
 			UserID: &userKey,
 			Name:   item.Username,
 		})

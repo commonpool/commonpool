@@ -1,7 +1,7 @@
 package trading
 
 import (
-	"github.com/commonpool/backend/pkg/resource/model"
+	"github.com/commonpool/backend/pkg/resource"
 	"time"
 )
 
@@ -9,7 +9,7 @@ type OfferItemBase struct {
 	Type             OfferItemType
 	Key              OfferItemKey
 	OfferKey         OfferKey
-	To               *model.Target
+	To               *resource.Target
 	ReceiverAccepted bool
 	GiverAccepted    bool
 	CreatedAt        time.Time
@@ -39,7 +39,7 @@ func (c OfferItemBase) IsResourceTransfer() bool {
 	return c.Type == ResourceTransfer
 }
 
-func (c OfferItemBase) GetReceiverKey() *model.Target {
+func (c OfferItemBase) GetReceiverKey() *resource.Target {
 	return c.To
 }
 

@@ -2,40 +2,39 @@ package handler
 
 import (
 	"fmt"
-	"github.com/commonpool/backend/pkg/group"
-	"github.com/commonpool/backend/pkg/resource/model"
-	"github.com/commonpool/backend/pkg/user/usermodel"
+	"github.com/commonpool/backend/pkg/keys"
+	"github.com/commonpool/backend/pkg/resource"
 )
 
 type OfferItemTarget struct {
-	UserID  *string          `json:"userId"`
-	GroupID *string          `json:"groupId" validatde:"uuid"`
-	Type    model.TargetType `json:"type"`
+	UserID  *string             `json:"userId"`
+	GroupID *string             `json:"groupId" validatde:"uuid"`
+	Type    resource.TargetType `json:"type"`
 }
 
-func MapWebOfferItemTarget(target OfferItemTarget) (*model.Target, error) {
-	if target.Type == model.UserTarget {
-		userKey := usermodel.NewUserKey(*target.UserID)
-		return &model.Target{
+func MapWebOfferItemTarget(target OfferItemTarget) (*resource.Target, error) {
+	if target.Type == resource.UserTarget {
+		userKey := keys.NewUserKey(*target.UserID)
+		return &resource.Target{
 			UserKey:  &userKey,
 			GroupKey: nil,
-			Type:     model.UserTarget,
+			Type:     resource.UserTarget,
 		}, nil
-	} else if target.Type == model.GroupTarget {
-		groupKey, err := group.ParseGroupKey(*target.GroupID)
+	} else if target.Type == resource.GroupTarget {
+		groupKey, err := keys.ParseGroupKey(*target.GroupID)
 		if err != nil {
 			return nil, err
 		}
-		return &model.Target{
+		return &resource.Target{
 			UserKey:  nil,
 			GroupKey: &groupKey,
-			Type:     model.GroupTarget,
+			Type:     resource.GroupTarget,
 		}, nil
 	}
 	return nil, fmt.Errorf("invalid target")
 }
 
-func MapOfferItemTarget(target *model.Target) (*OfferItemTarget, error) {
+func MapOfferItemTarget(target *resource.Target) (*OfferItemTarget, error) {
 
 	if target == nil {
 		return nil, nil
@@ -45,7 +44,7 @@ func MapOfferItemTarget(target *model.Target) (*OfferItemTarget, error) {
 		return &OfferItemTarget{
 			UserID:  nil,
 			GroupID: &groupId,
-			Type:    model.GroupTarget,
+			Type:    resource.GroupTarget,
 		}, nil
 
 	} else if target.IsForUser() {
@@ -53,7 +52,7 @@ func MapOfferItemTarget(target *model.Target) (*OfferItemTarget, error) {
 		return &OfferItemTarget{
 			UserID:  &userId,
 			GroupID: nil,
-			Type:    model.UserTarget,
+			Type:    resource.UserTarget,
 		}, nil
 	} else {
 		return nil, fmt.Errorf("unexpected offer item type")
@@ -61,29 +60,29 @@ func MapOfferItemTarget(target *model.Target) (*OfferItemTarget, error) {
 
 }
 
-func (t OfferItemTarget) Parse() (*model.Target, error) {
-	if t.Type == model.GroupTarget {
-		groupKey, err := group.ParseGroupKey(*t.GroupID)
+func (t OfferItemTarget) Parse() (*resource.Target, error) {
+	if t.Type == resource.GroupTarget {
+		groupKey, err := keys.ParseGroupKey(*t.GroupID)
 		if err != nil {
 			return nil, err
 		}
-		return &model.Target{
+		return &resource.Target{
 			UserKey:  nil,
 			GroupKey: &groupKey,
-			Type:     model.GroupTarget,
+			Type:     resource.GroupTarget,
 		}, nil
-	} else if t.Type == model.UserTarget {
-		userKey := usermodel.NewUserKey(*t.UserID)
-		return &model.Target{
+	} else if t.Type == resource.UserTarget {
+		userKey := keys.NewUserKey(*t.UserID)
+		return &resource.Target{
 			UserKey:  &userKey,
 			GroupKey: nil,
-			Type:     model.UserTarget,
+			Type:     resource.UserTarget,
 		}, nil
 	}
 	return nil, fmt.Errorf("unexpected target type: %s", t.Type)
 }
 
-func NewWebOfferItemTarget(offerItemTarget *model.Target) *OfferItemTarget {
+func NewWebOfferItemTarget(offerItemTarget *resource.Target) *OfferItemTarget {
 
 	var userId *string = nil
 	var groupId *string = nil
@@ -108,7 +107,7 @@ func NewGroupTarget(group string) *OfferItemTarget {
 	return &OfferItemTarget{
 		UserID:  nil,
 		GroupID: &group,
-		Type:    model.GroupTarget,
+		Type:    resource.GroupTarget,
 	}
 }
 
@@ -116,6 +115,6 @@ func NewUserTarget(user string) *OfferItemTarget {
 	return &OfferItemTarget{
 		UserID:  &user,
 		GroupID: nil,
-		Type:    model.UserTarget,
+		Type:    resource.UserTarget,
 	}
 }

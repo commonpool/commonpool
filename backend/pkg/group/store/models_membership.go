@@ -3,7 +3,7 @@ package store
 import (
 	"fmt"
 	"github.com/commonpool/backend/pkg/group"
-	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/mitchellh/mapstructure"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
 )
@@ -31,13 +31,13 @@ func mapMembership(record neo4j.Record, key string) (*group.Membership, error) {
 		return nil, err
 	}
 
-	groupKey, err := group.ParseGroupKey(graphMembership.GroupId)
+	groupKey, err := keys.ParseGroupKey(graphMembership.GroupId)
 	if err != nil {
 		return nil, err
 	}
-	userKey := usermodel.NewUserKey(graphMembership.UserId)
+	userKey := keys.NewUserKey(graphMembership.UserId)
 
-	membershipKey := group.NewMembershipKey(groupKey, userKey)
+	membershipKey := keys.NewMembershipKey(groupKey, userKey)
 
 	return &group.Membership{
 		Key:            membershipKey,

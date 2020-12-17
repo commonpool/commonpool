@@ -1,13 +1,12 @@
-package chat
+package keys
 
 import (
-	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"go.uber.org/zap/zapcore"
 )
 
 type ChannelSubscriptionKey struct {
 	ChannelKey ChannelKey
-	UserKey    usermodel.UserKey
+	UserKey    UserKey
 }
 
 func (c ChannelSubscriptionKey) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
@@ -20,7 +19,7 @@ func (c ChannelSubscriptionKey) MarshalLogObject(encoder zapcore.ObjectEncoder) 
 
 var _ zapcore.ObjectMarshaler = ChannelSubscriptionKey{}
 
-func NewChannelSubscriptionKey(channelKey ChannelKey, userKey usermodel.UserKey) ChannelSubscriptionKey {
+func NewChannelSubscriptionKey(channelKey ChannelKey, userKey UserKey) ChannelSubscriptionKey {
 	return ChannelSubscriptionKey{
 		ChannelKey: channelKey,
 		UserKey:    userKey,

@@ -7,7 +7,7 @@ import (
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/pkg/handler"
-	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
+	"github.com/commonpool/backend/pkg/user"
 	"github.com/commonpool/backend/pkg/validation"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
@@ -31,7 +31,7 @@ type chatHandlerSuite struct {
 	Recorder      *httptest.ResponseRecorder
 	Context       echo.Context
 	Authenticator *mock.AuthenticatorMock
-	LoggedInUser  usermodel.UserReference
+	LoggedInUser  user.UserReference
 }
 
 func TestChatHandler(t *testing.T) {
@@ -51,7 +51,7 @@ func (s *chatHandlerSuite) SetupTest() {
 				}
 			}
 		},
-		GetLoggedInUserFunc: func(ctx context.Context) (usermodel.UserReference, error) {
+		GetLoggedInUserFunc: func(ctx context.Context) (user.UserReference, error) {
 			if s.LoggedInUser != nil {
 				return s.LoggedInUser, nil
 			}

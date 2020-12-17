@@ -1,7 +1,9 @@
-package model
+package resource
+
+import "github.com/commonpool/backend/pkg/keys"
 
 type ResourceKeys struct {
-	Items []ResourceKey
+	Items []keys.ResourceKey
 }
 
 func (k ResourceKeys) Count() int {
@@ -23,8 +25,8 @@ func (k ResourceKeys) Strings() []string {
 	return strings
 }
 
-func NewResourceKeys(resourceKeys []ResourceKey) *ResourceKeys {
-	copied := make([]ResourceKey, len(resourceKeys))
+func NewResourceKeys(resourceKeys []keys.ResourceKey) *ResourceKeys {
+	copied := make([]keys.ResourceKey, len(resourceKeys))
 	copy(copied, resourceKeys)
 	return &ResourceKeys{
 		Items: copied,
@@ -33,6 +35,6 @@ func NewResourceKeys(resourceKeys []ResourceKey) *ResourceKeys {
 
 func NewEmptyResourceKeys() *ResourceKeys {
 	return &ResourceKeys{
-		Items: []ResourceKey{},
+		Items: []keys.ResourceKey{},
 	}
 }

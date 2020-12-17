@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"github.com/commonpool/backend/pkg/resource"
-	resourcemodel "github.com/commonpool/backend/pkg/resource/model"
 )
 
 type ResourceService struct {
@@ -18,7 +17,7 @@ func NewResourceService(resourceStore resource.Store) *ResourceService {
 	}
 }
 
-func (r ResourceService) GetResourcesByKeys(ctx context.Context, resourceKeys *resourcemodel.ResourceKeys) (*resourcemodel.Resources, error) {
+func (r ResourceService) GetResourcesByKeys(ctx context.Context, resourceKeys *resource.ResourceKeys) (*resource.Resources, error) {
 	response, err := r.resourceStore.GetByKeys(ctx, resourceKeys)
 	if err != nil {
 		return nil, err

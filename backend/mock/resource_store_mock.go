@@ -5,8 +5,8 @@ package mock
 
 import (
 	"context"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/resource"
-	"github.com/commonpool/backend/pkg/resource/model"
 	"sync"
 )
 
@@ -49,13 +49,13 @@ type ResourceStore struct {
 	CreateFunc func(ctx context.Context, createResourceQuery *resource.CreateResourceQuery) error
 
 	// DeleteFunc mocks the Delete method.
-	DeleteFunc func(ctx context.Context, resourceKey model.ResourceKey) error
+	DeleteFunc func(ctx context.Context, resourceKey keys.ResourceKey) error
 
 	// GetByKeyFunc mocks the GetByKey method.
 	GetByKeyFunc func(ctx context.Context, getResourceByKeyQuery *resource.GetResourceByKeyQuery) (*resource.GetResourceByKeyResponse, error)
 
 	// GetByKeysFunc mocks the GetByKeys method.
-	GetByKeysFunc func(ctx context.Context, resourceKeys *model.ResourceKeys) (*resource.GetResourceByKeysResponse, error)
+	GetByKeysFunc func(ctx context.Context, resourceKeys *resource.ResourceKeys) (*resource.GetResourceByKeysResponse, error)
 
 	// SearchFunc mocks the Search method.
 	SearchFunc func(ctx context.Context, searchResourcesQuery *resource.SearchResourcesQuery) (*resource.SearchResourcesResponse, error)
@@ -77,7 +77,7 @@ type ResourceStore struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// ResourceKey is the resourceKey argument value.
-			ResourceKey model.ResourceKey
+			ResourceKey keys.ResourceKey
 		}
 		// GetByKey holds details about calls to the GetByKey method.
 		GetByKey []struct {
@@ -91,7 +91,7 @@ type ResourceStore struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// ResourceKeys is the resourceKeys argument value.
-			ResourceKeys *model.ResourceKeys
+			ResourceKeys *resource.ResourceKeys
 		}
 		// Search holds details about calls to the Search method.
 		Search []struct {
@@ -152,13 +152,13 @@ func (mock *ResourceStore) CreateCalls() []struct {
 }
 
 // Delete calls DeleteFunc.
-func (mock *ResourceStore) Delete(ctx context.Context, resourceKey model.ResourceKey) error {
+func (mock *ResourceStore) Delete(ctx context.Context, resourceKey keys.ResourceKey) error {
 	if mock.DeleteFunc == nil {
 		panic("ResourceStore.DeleteFunc: method is nil but Store.Delete was just called")
 	}
 	callInfo := struct {
 		Ctx         context.Context
-		ResourceKey model.ResourceKey
+		ResourceKey keys.ResourceKey
 	}{
 		Ctx:         ctx,
 		ResourceKey: resourceKey,
@@ -174,11 +174,11 @@ func (mock *ResourceStore) Delete(ctx context.Context, resourceKey model.Resourc
 //     len(mockedStore.DeleteCalls())
 func (mock *ResourceStore) DeleteCalls() []struct {
 	Ctx         context.Context
-	ResourceKey model.ResourceKey
+	ResourceKey keys.ResourceKey
 } {
 	var calls []struct {
 		Ctx         context.Context
-		ResourceKey model.ResourceKey
+		ResourceKey keys.ResourceKey
 	}
 	mock.lockDelete.RLock()
 	calls = mock.calls.Delete
@@ -222,13 +222,13 @@ func (mock *ResourceStore) GetByKeyCalls() []struct {
 }
 
 // GetByKeys calls GetByKeysFunc.
-func (mock *ResourceStore) GetByKeys(ctx context.Context, resourceKeys *model.ResourceKeys) (*resource.GetResourceByKeysResponse, error) {
+func (mock *ResourceStore) GetByKeys(ctx context.Context, resourceKeys *resource.ResourceKeys) (*resource.GetResourceByKeysResponse, error) {
 	if mock.GetByKeysFunc == nil {
 		panic("ResourceStore.GetByKeysFunc: method is nil but Store.GetByKeys was just called")
 	}
 	callInfo := struct {
 		Ctx          context.Context
-		ResourceKeys *model.ResourceKeys
+		ResourceKeys *resource.ResourceKeys
 	}{
 		Ctx:          ctx,
 		ResourceKeys: resourceKeys,
@@ -244,11 +244,11 @@ func (mock *ResourceStore) GetByKeys(ctx context.Context, resourceKeys *model.Re
 //     len(mockedStore.GetByKeysCalls())
 func (mock *ResourceStore) GetByKeysCalls() []struct {
 	Ctx          context.Context
-	ResourceKeys *model.ResourceKeys
+	ResourceKeys *resource.ResourceKeys
 } {
 	var calls []struct {
 		Ctx          context.Context
-		ResourceKeys *model.ResourceKeys
+		ResourceKeys *resource.ResourceKeys
 	}
 	mock.lockGetByKeys.RLock()
 	calls = mock.calls.GetByKeys

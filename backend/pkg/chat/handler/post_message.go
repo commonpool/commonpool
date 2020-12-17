@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/commonpool/backend/pkg/chat"
 	"github.com/commonpool/backend/pkg/handler"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/labstack/echo/v4"
 	uuid "github.com/satori/go.uuid"
 	"net/http"
@@ -36,7 +37,7 @@ func (h *Handler) SendMessage(c echo.Context) error {
 
 	// retrieve the thread
 	channelId := c.Param("id")
-	channelKey := chat.NewConversationKey(channelId)
+	channelKey := keys.NewConversationKey(channelId)
 	// todo verify that user has permission to post on topic
 
 	loggedInUser, err := h.auth.GetLoggedInUser(ctx)
@@ -45,7 +46,7 @@ func (h *Handler) SendMessage(c echo.Context) error {
 	}
 
 	err = h.chatService.SendMessage(ctx, &chat.Message{
-		Key:            chat.NewMessageKey(uuid.NewV4()),
+		Key:            keys.NewMessageKey(uuid.NewV4()),
 		ChannelKey:     channelKey,
 		MessageType:    chat.NormalMessage,
 		MessageSubType: chat.UserMessage,

@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/commonpool/backend/pkg/chat"
-	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
+	"github.com/commonpool/backend/pkg/keys"
 	"gorm.io/gorm"
 )
 
@@ -148,20 +148,20 @@ func mapMessage(ctx context.Context, message *Message) (*chat.Message, error) {
 		return nil, err
 	}
 
-	var visibleToUser *usermodel.UserKey
+	var visibleToUser *keys.UserKey
 	if message.VisibleToUser != nil {
-		visibleToUserKey := usermodel.NewUserKey(*message.VisibleToUser)
+		visibleToUserKey := keys.NewUserKey(*message.VisibleToUser)
 		visibleToUser = &visibleToUserKey
 	}
 
 	returnMessage := &chat.Message{
-		Key:            chat.NewMessageKey(message.ID),
-		ChannelKey:     chat.NewConversationKey(message.ChannelID),
+		Key:            keys.NewMessageKey(message.ID),
+		ChannelKey:     keys.NewConversationKey(message.ChannelID),
 		MessageType:    message.MessageType,
 		MessageSubType: message.MessageSubType,
 		SentBy: chat.MessageSender{
 			Type:     chat.UserMessageSender,
-			UserKey:  usermodel.NewUserKey(message.SentById),
+			UserKey:  keys.NewUserKey(message.SentById),
 			Username: message.SentByUsername,
 		},
 		SentAt:        message.SentAt,

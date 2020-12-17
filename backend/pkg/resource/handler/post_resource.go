@@ -3,8 +3,8 @@ package handler
 import (
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/handler"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/resource"
-	resourcemodel "github.com/commonpool/backend/pkg/resource/model"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"github.com/satori/go.uuid"
@@ -60,8 +60,8 @@ func (h *ResourceHandler) CreateResource(c echo.Context) error {
 	}
 
 	newResource := req.Resource
-	res := resourcemodel.NewResource(
-		resourcemodel.NewResourceKey(uuid.NewV4()),
+	res := resource.NewResource(
+		keys.NewResourceKey(uuid.NewV4()),
 		newResource.Type,
 		newResource.SubType,
 		loggedInUser.Subject,

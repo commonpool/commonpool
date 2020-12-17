@@ -2,10 +2,9 @@ package store
 
 import (
 	"github.com/commonpool/backend/model"
-	"github.com/commonpool/backend/pkg/group"
-	resourcemodel "github.com/commonpool/backend/pkg/resource/model"
+	"github.com/commonpool/backend/pkg/keys"
+	"github.com/commonpool/backend/pkg/resource"
 	"github.com/commonpool/backend/pkg/transaction"
-	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
 	"time"
@@ -31,13 +30,13 @@ func (t TransactionStore) SaveEntry(entry *transaction.Entry) error {
 		resourceID = &resourceKeyVal
 	}
 
-	var recipientType *resourcemodel.TargetType
+	var recipientType *resource.TargetType
 	if entry.Recipient != nil {
 		recipientTypeVal := entry.Recipient.Type
 		recipientType = &recipientTypeVal
 	}
 
-	var fromType *resourcemodel.TargetType
+	var fromType *resource.TargetType
 	if entry.From != nil {
 		fromTypeVal := entry.From.Type
 		fromType = &fromTypeVal
@@ -95,7 +94,7 @@ func (t TransactionStore) GetEntry(transactionKey model.TransactionEntryKey) (*t
 	return mapDbTransactionEntry(&transactionEntry)
 }
 
-func (t TransactionStore) GetEntriesForGroupAndUsers(groupKey group.GroupKey, userKeys *usermodel.UserKeys) (*transaction.Entries, error) {
+func (t TransactionStore) GetEntriesForGroupAndUsers(groupKey keys.GroupKey, userKeys *keys.UserKeys) (*transaction.Entries, error) {
 
 	sql := "(group_id = ? OR recipient_id = ? OR from_id = ?)"
 	var params []interface{}
@@ -141,18 +140,18 @@ type TransactionEntry struct {
 	GroupID       uuid.UUID
 	ResourceID    *uuid.UUID
 	Duration      *time.Duration
-	RecipientType *resourcemodel.TargetType
+	RecipientType *resource.TargetType
 	RecipientID   *string
-	FromType      *resourcemodel.TargetType
+	FromType      *resource.TargetType
 	FromID        *string
 	Timestamp     time.Time
 }
 
 func mapDbTransactionEntry(dbTransactionEntry *TransactionEntry) (*transaction.Entry, error) {
 
-	var resourceKey *resourcemodel.ResourceKey = nil
+	var resourceKey *keys.ResourceKey = nil
 	if dbTransactionEntry.ResourceID != nil {
-		resourceKeyVal := resourcemodel.NewResourceKey(*dbTransactionEntry.ResourceID)
+		resourceKeyVal := keys.NewResourceKey(*dbTransactionEntry.ResourceID)
 		resourceKey = &resourceKeyVal
 	}
 
@@ -169,7 +168,7 @@ func mapDbTransactionEntry(dbTransactionEntry *TransactionEntry) (*transaction.E
 	return &transaction.Entry{
 		Key:         model.NewTransactionEntryKey(dbTransactionEntry.ID),
 		Type:        dbTransactionEntry.Type,
-		GroupKey:    group.NewGroupKey(dbTransactionEntry.GroupID),
+		GroupKey:    keys.NewGroupKey(dbTransactionEntry.GroupID),
 		ResourceKey: resourceKey,
 		Duration:    dbTransactionEntry.Duration,
 		Recipient:   recipient,
@@ -179,17 +178,17 @@ func mapDbTransactionEntry(dbTransactionEntry *TransactionEntry) (*transaction.E
 
 }
 
-func mapTarget(targetType *resourcemodel.TargetType, targetId *string) (*resourcemodel.Target, error) {
-	var target *resourcemodel.Target
+func mapTarget(targetType *resource.TargetType, targetId *string) (*resource.Target, error) {
+	var target *resource.Target
 	if targetType != nil && targetId != nil {
 		if targetType.IsUser() {
-			target = resourcemodel.NewUserTarget(usermodel.NewUserKey(*targetId))
+			target = resource.NewUserTarget(keys.NewUserKey(*targetId))
 		} else if targetType.IsGroup() {
-			groupKey, err := group.ParseGroupKey(*targetId)
+			groupKey, err := keys.ParseGroupKey(*targetId)
 			if err != nil {
 				return nil, err
 			}
-			target = resourcemodel.NewGroupTarget(groupKey)
+			target = resource.NewGroupTarget(groupKey)
 		}
 	}
 	return target, nil

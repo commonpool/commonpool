@@ -1,4 +1,4 @@
-package usermodel
+package keys
 
 type UserKeys struct {
 	Items []UserKey

@@ -5,7 +5,7 @@ import (
 	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/pkg/graph"
 	"github.com/commonpool/backend/pkg/group"
-	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/mitchellh/mapstructure"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
 	"gorm.io/gorm"
@@ -103,11 +103,11 @@ func MapGroupNode(node neo4j.Node) (*group.Group, error) {
 
 func mapGraphGroupToGroup(graphGroup *Group) (*group.Group, error) {
 
-	groupKey, err := group.ParseGroupKey(graphGroup.ID)
+	groupKey, err := keys.ParseGroupKey(graphGroup.ID)
 	if err != nil {
 		return nil, err
 	}
-	userKey := usermodel.NewUserKey(graphGroup.CreatedBy)
+	userKey := keys.NewUserKey(graphGroup.CreatedBy)
 
 	return &group.Group{
 		Key:         groupKey,
@@ -121,8 +121,8 @@ func mapGraphGroupToGroup(graphGroup *Group) (*group.Group, error) {
 
 func (g *GroupStore) CreateGroupAndMembership(
 	ctx context.Context,
-	groupKey group.GroupKey,
-	createdBy usermodel.UserKey,
+	groupKey keys.GroupKey,
+	createdBy keys.UserKey,
 	name string,
 	description string) (*group.Group, *group.Membership, error) {
 
@@ -181,7 +181,7 @@ func (g *GroupStore) CreateGroupAndMembership(
 	return grp, membership, nil
 }
 
-func (g *GroupStore) GetGroup(ctx context.Context, groupKey group.GroupKey) (*group.Group, error) {
+func (g *GroupStore) GetGroup(ctx context.Context, groupKey keys.GroupKey) (*group.Group, error) {
 
 	session, err := g.graphDriver.GetSession()
 	if err != nil {
@@ -216,7 +216,7 @@ func (g *GroupStore) GetGroup(ctx context.Context, groupKey group.GroupKey) (*gr
 
 }
 
-func (g *GroupStore) GetGroupsByKeys(ctx context.Context, groupKeys *group.GroupKeys) (*group.Groups, error) {
+func (g *GroupStore) GetGroupsByKeys(ctx context.Context, groupKeys *keys.GroupKeys) (*group.Groups, error) {
 
 	session, err := g.graphDriver.GetSession()
 	if err != nil {
@@ -250,7 +250,7 @@ func (g *GroupStore) GetGroupsByKeys(ctx context.Context, groupKeys *group.Group
 	return group.NewGroups(groups), nil
 }
 
-func (g *GroupStore) CreateMembership(ctx context.Context, membershipKey group.MembershipKey, isMember bool, isAdmin bool, isOwner bool, isDeactivated bool, groupConfirmed bool, userConfirmed bool) (*group.Membership, error) {
+func (g *GroupStore) CreateMembership(ctx context.Context, membershipKey keys.MembershipKey, isMember bool, isAdmin bool, isOwner bool, isDeactivated bool, groupConfirmed bool, userConfirmed bool) (*group.Membership, error) {
 
 	session, err := g.graphDriver.GetSession()
 	if err != nil {
@@ -293,7 +293,7 @@ func (g *GroupStore) CreateMembership(ctx context.Context, membershipKey group.M
 
 }
 
-func (g *GroupStore) MarkInvitationAsAccepted(ctx context.Context, membershipKey group.MembershipKey, decisionFrom group.MembershipParty) error {
+func (g *GroupStore) MarkInvitationAsAccepted(ctx context.Context, membershipKey keys.MembershipKey, decisionFrom group.MembershipParty) error {
 
 	var cyphers = []string{`MATCH (u:User {id:$userId})-[m:IsMemberOf]->(g:Group {id:$groupId})`}
 
@@ -328,7 +328,7 @@ func (g *GroupStore) MarkInvitationAsAccepted(ctx context.Context, membershipKey
 	return nil
 }
 
-func (g *GroupStore) GetMembershipsForUser(ctx context.Context, userKey usermodel.UserKey, membershipStatus *group.MembershipStatus) (*group.Memberships, error) {
+func (g *GroupStore) GetMembershipsForUser(ctx context.Context, userKey keys.UserKey, membershipStatus *group.MembershipStatus) (*group.Memberships, error) {
 
 	session, err := g.graphDriver.GetSession()
 	if err != nil {
@@ -401,7 +401,7 @@ func (g *GroupStore) filterMembershipStatus(chain *gorm.DB, membershipStatus *gr
 	return chain
 }
 
-func (g *GroupStore) GetMembershipsForGroup(ctx context.Context, groupKey group.GroupKey, membershipStatus *group.MembershipStatus) (*group.Memberships, error) {
+func (g *GroupStore) GetMembershipsForGroup(ctx context.Context, groupKey keys.GroupKey, membershipStatus *group.MembershipStatus) (*group.Memberships, error) {
 
 	session, err := g.graphDriver.GetSession()
 	if err != nil {
@@ -441,7 +441,7 @@ func (g *GroupStore) GetMembershipsForGroup(ctx context.Context, groupKey group.
 
 }
 
-func (g *GroupStore) GetMembership(ctx context.Context, membershipKey group.MembershipKey) (*group.Membership, error) {
+func (g *GroupStore) GetMembership(ctx context.Context, membershipKey keys.MembershipKey) (*group.Membership, error) {
 
 	session, err := g.graphDriver.GetSession()
 	if err != nil {
@@ -471,7 +471,7 @@ func (g *GroupStore) GetMembership(ctx context.Context, membershipKey group.Memb
 
 }
 
-func (g *GroupStore) DeleteMembership(ctx context.Context, membershipKey group.MembershipKey) error {
+func (g *GroupStore) DeleteMembership(ctx context.Context, membershipKey keys.MembershipKey) error {
 
 	session, err := g.graphDriver.GetSession()
 	if err != nil {

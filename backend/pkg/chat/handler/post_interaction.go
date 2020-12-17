@@ -7,7 +7,7 @@ import (
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/chat"
 	"github.com/commonpool/backend/pkg/handler"
-	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/labstack/echo/v4"
 	"github.com/satori/go.uuid"
 	"net/http"
@@ -32,7 +32,7 @@ func (h *Handler) SubmitInteraction(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	loggedInUserKey := usermodel.NewUserKey(loggedInUser.Subject)
+	loggedInUserKey := keys.NewUserKey(loggedInUser.Subject)
 
 	req := SubmitInteractionRequest{}
 	if err := c.Bind(&req); err != nil {
@@ -47,7 +47,7 @@ func (h *Handler) SubmitInteraction(c echo.Context) error {
 		return err
 	}
 
-	message, err := h.chatService.GetMessage(ctx, chat.NewMessageKey(uid))
+	message, err := h.chatService.GetMessage(ctx, keys.NewMessageKey(uid))
 	if err != nil {
 		return err
 	}

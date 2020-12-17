@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/trading"
 	"github.com/labstack/echo/v4"
 	"github.com/satori/go.uuid"
@@ -53,7 +53,7 @@ func (h *TradingHandler) HandleSendOffer(c echo.Context) error {
 		tradingOfferItems = append(tradingOfferItems, tradingOfferItem)
 	}
 
-	groupKey, err := group.ParseGroupKey(req.Offer.GroupID)
+	groupKey, err := keys.ParseGroupKey(req.Offer.GroupID)
 	if err != nil {
 		return err
 	}

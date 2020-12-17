@@ -3,9 +3,10 @@ package store
 import (
 	"context"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/keys"
 )
 
-func (cs *ChatStore) GetMessage(ctx context.Context, messageKey chat.MessageKey) (*chat.Message, error) {
+func (cs *ChatStore) GetMessage(ctx context.Context, messageKey keys.MessageKey) (*chat.Message, error) {
 
 	var message Message
 	err := cs.db.

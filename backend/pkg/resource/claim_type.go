@@ -1,4 +1,4 @@
-package model
+package resource
 
 type ClaimType string
 

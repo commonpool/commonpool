@@ -2,7 +2,7 @@ package group
 
 import (
 	"context"
-	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
+	"github.com/commonpool/backend/pkg/keys"
 )
 
 type GetGroupsRequest struct {
@@ -16,20 +16,20 @@ type GetGroupsResult struct {
 }
 
 type Store interface {
-	CreateGroupAndMembership(ctx context.Context, groupKey GroupKey, createdBy usermodel.UserKey, name string, description string) (*Group, *Membership, error)
-	GetGroup(ctx context.Context, groupKey GroupKey) (*Group, error)
+	CreateGroupAndMembership(ctx context.Context, groupKey keys.GroupKey, createdBy keys.UserKey, name string, description string) (*Group, *Membership, error)
+	GetGroup(ctx context.Context, groupKey keys.GroupKey) (*Group, error)
 	GetGroups(take int, skip int) (*Groups, int64, error)
-	GetGroupsByKeys(ctx context.Context, groupKeys *GroupKeys) (*Groups, error)
-	CreateMembership(ctx context.Context, membershipKey MembershipKey, isMember bool, isAdmin bool, isOwner bool, isDeactivated bool, groupConfirmed bool, userConfirmed bool) (*Membership, error)
-	MarkInvitationAsAccepted(ctx context.Context, membershipKey MembershipKey, decisionFrom MembershipParty) error
-	GetMembership(ctx context.Context, membershipKey MembershipKey) (*Membership, error)
-	GetMembershipsForUser(ctx context.Context, userKey usermodel.UserKey, membershipStatus *MembershipStatus) (*Memberships, error)
-	GetMembershipsForGroup(ctx context.Context, groupKey GroupKey, membershipStatus *MembershipStatus) (*Memberships, error)
-	DeleteMembership(ctx context.Context, membershipKey MembershipKey) error
+	GetGroupsByKeys(ctx context.Context, groupKeys *keys.GroupKeys) (*Groups, error)
+	CreateMembership(ctx context.Context, membershipKey keys.MembershipKey, isMember bool, isAdmin bool, isOwner bool, isDeactivated bool, groupConfirmed bool, userConfirmed bool) (*Membership, error)
+	MarkInvitationAsAccepted(ctx context.Context, membershipKey keys.MembershipKey, decisionFrom MembershipParty) error
+	GetMembership(ctx context.Context, membershipKey keys.MembershipKey) (*Membership, error)
+	GetMembershipsForUser(ctx context.Context, userKey keys.UserKey, membershipStatus *MembershipStatus) (*Memberships, error)
+	GetMembershipsForGroup(ctx context.Context, groupKey keys.GroupKey, membershipStatus *MembershipStatus) (*Memberships, error)
+	DeleteMembership(ctx context.Context, membershipKey keys.MembershipKey) error
 }
 
 type CreateGroupRequest struct {
-	GroupKey    GroupKey
+	GroupKey    keys.GroupKey
 	Name        string
 	Description string
 }
@@ -39,7 +39,7 @@ type CreateGroupResponse struct {
 	Membership *Membership
 }
 
-func NewCreateGroupRequest(key GroupKey, name string, description string) *CreateGroupRequest {
+func NewCreateGroupRequest(key keys.GroupKey, name string, description string) *CreateGroupRequest {
 	return &CreateGroupRequest{
 		GroupKey:    key,
 		Name:        name,
@@ -48,19 +48,19 @@ func NewCreateGroupRequest(key GroupKey, name string, description string) *Creat
 }
 
 type GetGroupRequest struct {
-	Key GroupKey
+	Key keys.GroupKey
 }
 
 type GetGroupResult struct {
 	Group *Group
 }
 
-func NewGetGroupRequest(key GroupKey) *GetGroupRequest {
+func NewGetGroupRequest(key keys.GroupKey) *GetGroupRequest {
 	return &GetGroupRequest{Key: key}
 }
 
 type MembershipPermissions struct {
-	MembershipKey MembershipKey
+	MembershipKey keys.MembershipKey
 	IsMember      bool
 	IsAdmin       bool
 }
@@ -73,11 +73,11 @@ const (
 )
 
 type GetMembershipsForUserRequest struct {
-	UserKey          usermodel.UserKey
+	UserKey          keys.UserKey
 	MembershipStatus *MembershipStatus
 }
 
-func NewGetMembershipsForUserRequest(userKey usermodel.UserKey, membershipStatus *MembershipStatus) *GetMembershipsForUserRequest {
+func NewGetMembershipsForUserRequest(userKey keys.UserKey, membershipStatus *MembershipStatus) *GetMembershipsForUserRequest {
 	return &GetMembershipsForUserRequest{
 		UserKey:          userKey,
 		MembershipStatus: membershipStatus,
@@ -89,11 +89,11 @@ type GetMembershipsForUserResponse struct {
 }
 
 type GetMembershipsForGroupRequest struct {
-	GroupKey         GroupKey
+	GroupKey         keys.GroupKey
 	MembershipStatus *MembershipStatus
 }
 
-func NewGetMembershipsForGroupRequest(groupKey GroupKey, status *MembershipStatus) *GetMembershipsForGroupRequest {
+func NewGetMembershipsForGroupRequest(groupKey keys.GroupKey, status *MembershipStatus) *GetMembershipsForGroupRequest {
 	return &GetMembershipsForGroupRequest{
 		GroupKey:         groupKey,
 		MembershipStatus: status,
@@ -105,10 +105,10 @@ type GetMembershipsForGroupResponse struct {
 }
 
 type GetMembershipRequest struct {
-	MembershipKey MembershipKey
+	MembershipKey keys.MembershipKey
 }
 
-func NewGetMembershipRequest(membershipKey MembershipKey) *GetMembershipRequest {
+func NewGetMembershipRequest(membershipKey keys.MembershipKey) *GetMembershipRequest {
 	return &GetMembershipRequest{
 		MembershipKey: membershipKey,
 	}

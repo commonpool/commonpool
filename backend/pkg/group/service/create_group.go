@@ -5,6 +5,7 @@ import (
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/chat"
 	group "github.com/commonpool/backend/pkg/group"
+	"github.com/commonpool/backend/pkg/keys"
 )
 
 func (g GroupService) CreateGroup(ctx context.Context, request *group.CreateGroupRequest) (*group.CreateGroupResponse, error) {
@@ -19,13 +20,13 @@ func (g GroupService) CreateGroup(ctx context.Context, request *group.CreateGrou
 		return nil, err
 	}
 
-	channelKey := chat.GetChannelKeyForGroup(request.GroupKey)
+	channelKey := keys.GetChannelKeyForGroup(request.GroupKey)
 	channel, err := g.chatService.CreateChannel(ctx, channelKey, chat.GroupChannel)
 	if err != nil {
 		return nil, err
 	}
 
-	channelSubscriptionKey := chat.NewChannelSubscriptionKey(channel.GetKey(), userSession.GetUserKey())
+	channelSubscriptionKey := keys.NewChannelSubscriptionKey(channel.GetKey(), userSession.GetUserKey())
 	_, err = g.chatService.SubscribeToChannel(ctx, channelSubscriptionKey, grp.Name)
 	if err != nil {
 		return nil, err

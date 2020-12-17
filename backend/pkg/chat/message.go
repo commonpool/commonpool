@@ -2,14 +2,14 @@ package chat
 
 import (
 	"encoding/json"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/mq"
-	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"time"
 )
 
 type Message struct {
-	Key            MessageKey
-	ChannelKey     ChannelKey
+	Key            keys.MessageKey
+	ChannelKey     keys.ChannelKey
 	MessageType    MessageType
 	MessageSubType MessageSubType
 	SentBy         MessageSender
@@ -17,7 +17,7 @@ type Message struct {
 	Text           string
 	Blocks         []Block
 	Attachments    []Attachment
-	VisibleToUser  *usermodel.UserKey
+	VisibleToUser  *keys.UserKey
 }
 
 func (m *Message) AsAmqpMessage() (*mq.Message, error) {

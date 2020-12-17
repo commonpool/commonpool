@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"time"
@@ -40,7 +41,7 @@ func (s *chatHandlerSuite) TestGetMessagesShouldFailIfBeforeQueryParamNotValid()
 
 func (s *chatHandlerSuite) TestGetMessages() {
 	s.NewContext(http.MethodGet, "/api/v1/chat/messages?channel=abc&before=0", nil)
-	s.ChatService.GetMessagesFunc = func(ctx context.Context, channel chat.ChannelKey, before time.Time, take int) (*chat.GetMessagesResponse, error) {
+	s.ChatService.GetMessagesFunc = func(ctx context.Context, channel keys.ChannelKey, before time.Time, take int) (*chat.GetMessagesResponse, error) {
 		return &chat.GetMessagesResponse{
 			Messages: chat.Messages{
 				Items: []chat.Message{},

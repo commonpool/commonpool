@@ -1,13 +1,12 @@
-package model
+package resource
 
 import (
-	"github.com/commonpool/backend/pkg/group"
-	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
+	"github.com/commonpool/backend/pkg/keys"
 )
 
 type Target struct {
-	UserKey  *usermodel.UserKey
-	GroupKey *group.GroupKey
+	UserKey  *keys.UserKey
+	GroupKey *keys.GroupKey
 	Type     TargetType
 }
 
@@ -32,20 +31,20 @@ func (t Target) IsForUser() bool {
 	return t.Type == UserTarget
 }
 
-func (t Target) GetGroupKey() group.GroupKey {
+func (t Target) GetGroupKey() keys.GroupKey {
 	return *t.GroupKey
 }
-func (t Target) GetUserKey() usermodel.UserKey {
+func (t Target) GetUserKey() keys.UserKey {
 	return *t.UserKey
 }
 
-func NewUserTarget(userKey usermodel.UserKey) *Target {
+func NewUserTarget(userKey keys.UserKey) *Target {
 	return &Target{
 		UserKey: &userKey,
 		Type:    UserTarget,
 	}
 }
-func NewGroupTarget(groupKey group.GroupKey) *Target {
+func NewGroupTarget(groupKey keys.GroupKey) *Target {
 	return &Target{
 		GroupKey: &groupKey,
 		Type:     GroupTarget,

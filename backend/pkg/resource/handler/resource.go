@@ -4,15 +4,15 @@ import (
 	"github.com/commonpool/backend/pkg/exceptions"
 	group2 "github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
-	model3 "github.com/commonpool/backend/pkg/resource/model"
-	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
+	"github.com/commonpool/backend/pkg/keys"
+	"github.com/commonpool/backend/pkg/resource"
 	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 	"net/http"
 )
 
-func (h *ResourceHandler) ensureResourceIsSharedWithGroupsTheUserIsActiveMemberOf(c echo.Context, loggedInUserKey usermodel.UserKey, sharedWithGroups *group2.GroupKeys) (error, bool) {
+func (h *ResourceHandler) ensureResourceIsSharedWithGroupsTheUserIsActiveMemberOf(c echo.Context, loggedInUserKey keys.UserKey, sharedWithGroups *keys.GroupKeys) (error, bool) {
 
 	ctx, l := handler.GetEchoContext(c, "ensureResourceIsSharedWithGroupsTheUserIsActiveMemberOf")
 
@@ -34,20 +34,20 @@ func (h *ResourceHandler) ensureResourceIsSharedWithGroupsTheUserIsActiveMemberO
 	return nil, false
 }
 
-func (h *ResourceHandler) parseGroupKeys(c echo.Context, sharedWith []web.InputResourceSharing) (*group2.GroupKeys, error, bool) {
-	sharedWithGroupKeys := make([]group2.GroupKey, len(sharedWith))
+func (h *ResourceHandler) parseGroupKeys(c echo.Context, sharedWith []web.InputResourceSharing) (*keys.GroupKeys, error, bool) {
+	sharedWithGroupKeys := make([]keys.GroupKey, len(sharedWith))
 	for i := range sharedWith {
 		groupKeyStr := sharedWith[i].GroupID
-		groupKey, err := group2.ParseGroupKey(groupKeyStr)
+		groupKey, err := keys.ParseGroupKey(groupKeyStr)
 		if err != nil {
 			return nil, c.String(http.StatusBadRequest, "invalid group key : "+groupKeyStr), true
 		}
 		sharedWithGroupKeys[i] = groupKey
 	}
-	return group2.NewGroupKeys(sharedWithGroupKeys), nil, false
+	return keys.NewGroupKeys(sharedWithGroupKeys), nil, false
 }
 
-func NewResourceResponse(res *model3.Resource, creatorUsername string, creatorId string, sharedWithGroups *group2.Groups) web.Resource {
+func NewResourceResponse(res *resource.Resource, creatorUsername string, creatorId string, sharedWithGroups *group2.Groups) web.Resource {
 
 	//goland:noinspection GoPreferNilSlice
 	var sharings = []web.OutputResourceSharing{}

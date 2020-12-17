@@ -3,8 +3,8 @@ package auth
 import (
 	"context"
 	"github.com/commonpool/backend/pkg/exceptions"
+	"github.com/commonpool/backend/pkg/keys"
 	exceptions2 "github.com/commonpool/backend/pkg/user"
-	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"github.com/labstack/echo/v4"
 )
 
@@ -23,11 +23,11 @@ type UserSession struct {
 	IsAuthenticated bool
 }
 
-var _ usermodel.UserReference = &UserSession{}
+var _ exceptions2.UserReference = &UserSession{}
 
 // GetUserKey Gets the userKey from the UserSession
-func (s *UserSession) GetUserKey() usermodel.UserKey {
-	return usermodel.NewUserKey(s.Subject)
+func (s *UserSession) GetUserKey() keys.UserKey {
+	return keys.NewUserKey(s.Subject)
 }
 
 // GetUsername Gets the userName from the UserSession
@@ -62,7 +62,7 @@ func saveAuthenticatedUser(c echo.Context, store exceptions2.Store, sub string, 
 
 // saveUserInfo saves the logged in user info th database
 func saveUserInfo(as exceptions2.Store, sub string, email string, username string) error {
-	return as.Upsert(usermodel.NewUserKey(sub), email, username)
+	return as.Upsert(keys.NewUserKey(sub), email, username)
 }
 
 // SetIsAuthenticated marks the current user as authenticated

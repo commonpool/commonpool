@@ -3,11 +3,12 @@ package service
 import (
 	"context"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/mq"
 )
 
 // SubscribeToChannel will subscribe a user to a given channel
-func (c ChatService) SubscribeToChannel(ctx context.Context, channelSubscriptionKey chat.ChannelSubscriptionKey, name string) (*chat.ChannelSubscription, error) {
+func (c ChatService) SubscribeToChannel(ctx context.Context, channelSubscriptionKey keys.ChannelSubscriptionKey, name string) (*chat.ChannelSubscription, error) {
 
 	channelSubscription, err := c.chatStore.CreateSubscription(ctx, channelSubscriptionKey, name)
 	if err != nil {

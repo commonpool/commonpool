@@ -1,8 +1,7 @@
-package model
+package resource
 
 import (
-	"github.com/commonpool/backend/pkg/group"
-	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
+	"github.com/commonpool/backend/pkg/keys"
 )
 
 type Claims struct {
@@ -29,7 +28,7 @@ func (c *Claims) AppendAll(claims *Claims) {
 	}
 }
 
-func (c *Claims) UserHasClaim(userKey usermodel.UserKey, resourceKey ResourceKey, claimType ClaimType) bool {
+func (c *Claims) UserHasClaim(userKey keys.UserKey, resourceKey keys.ResourceKey, claimType ClaimType) bool {
 	for _, claim := range c.Items {
 		if claim.ClaimType == claimType && claim.ResourceKey == resourceKey && claim.For.IsForUser() && claim.For.GetUserKey() == userKey {
 			return true
@@ -38,7 +37,7 @@ func (c *Claims) UserHasClaim(userKey usermodel.UserKey, resourceKey ResourceKey
 	return false
 }
 
-func (c *Claims) GroupHasClaim(groupKey group.GroupKey, resourceKey ResourceKey, claimType ClaimType) bool {
+func (c *Claims) GroupHasClaim(groupKey keys.GroupKey, resourceKey keys.ResourceKey, claimType ClaimType) bool {
 	for _, claim := range c.Items {
 		if claim.ClaimType == claimType && claim.ResourceKey == resourceKey && claim.For.IsForGroup() && claim.For.GetGroupKey() == groupKey {
 			return true
@@ -47,7 +46,7 @@ func (c *Claims) GroupHasClaim(groupKey group.GroupKey, resourceKey ResourceKey,
 	return false
 }
 
-func (c *Claims) HasClaim(target *Target, resourceKey ResourceKey, claimType ClaimType) bool {
+func (c *Claims) HasClaim(target *Target, resourceKey keys.ResourceKey, claimType ClaimType) bool {
 	for _, claim := range c.Items {
 		if claim.ClaimType == claimType &&
 			claim.ResourceKey == resourceKey &&

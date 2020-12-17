@@ -1,8 +1,7 @@
-package model
+package resource
 
 import (
-	"github.com/commonpool/backend/pkg/group"
-	"github.com/commonpool/backend/pkg/user/usermodel"
+	"github.com/commonpool/backend/pkg/keys"
 )
 
 type Targets struct {
@@ -23,24 +22,24 @@ func NewEmptyTargets() *Targets {
 	}
 }
 
-func (t *Targets) GetUserKeys() *usermodel.UserKeys {
-	var userKeys []usermodel.UserKey
+func (t *Targets) GetUserKeys() *keys.UserKeys {
+	var userKeys []keys.UserKey
 	for _, target := range t.Items {
 		if !target.IsForUser() {
 			continue
 		}
 		userKeys = append(userKeys, target.GetUserKey())
 	}
-	return usermodel.NewUserKeys(userKeys)
+	return keys.NewUserKeys(userKeys)
 }
 
-func (t *Targets) GetGroupKeys() *group.GroupKeys {
-	var groupKeys []group.GroupKey
+func (t *Targets) GetGroupKeys() *keys.GroupKeys {
+	var groupKeys []keys.GroupKey
 	for _, target := range t.Items {
 		if !target.IsForGroup() {
 			continue
 		}
 		groupKeys = append(groupKeys, target.GetGroupKey())
 	}
-	return group.NewGroupKeys(groupKeys)
+	return keys.NewGroupKeys(groupKeys)
 }

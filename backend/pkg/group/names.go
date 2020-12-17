@@ -1,3 +1,5 @@
 package group
 
-type Names map[GroupKey]string
+import "github.com/commonpool/backend/pkg/keys"
+
+type Names map[keys.GroupKey]string

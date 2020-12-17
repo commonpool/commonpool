@@ -1,16 +1,17 @@
-package model
+package resource
 
 import (
 	"fmt"
+	"github.com/commonpool/backend/pkg/keys"
 )
 
 type Resources struct {
-	ItemMap map[ResourceKey]*Resource
+	ItemMap map[keys.ResourceKey]*Resource
 	Items   []*Resource
 }
 
 func NewResources(items []*Resource) *Resources {
-	rsMap := map[ResourceKey]*Resource{}
+	rsMap := map[keys.ResourceKey]*Resource{}
 	for _, item := range items {
 		rsMap[item.GetKey()] = item
 	}
@@ -22,12 +23,12 @@ func NewResources(items []*Resource) *Resources {
 
 func NewEmptyResources() *Resources {
 	return &Resources{
-		ItemMap: map[ResourceKey]*Resource{},
+		ItemMap: map[keys.ResourceKey]*Resource{},
 		Items:   []*Resource{},
 	}
 }
 
-func (r *Resources) GetResource(key ResourceKey) (*Resource, error) {
+func (r *Resources) GetResource(key keys.ResourceKey) (*Resource, error) {
 	rs, ok := r.ItemMap[key]
 	if !ok {
 		return nil, fmt.Errorf("resource not found")
@@ -44,18 +45,18 @@ func (r *Resources) Contains(resource *Resource) bool {
 	return r.ContainsKey(resource.GetKey())
 }
 
-func (r *Resources) ContainsKey(key ResourceKey) bool {
+func (r *Resources) ContainsKey(key keys.ResourceKey) bool {
 	_, ok := r.ItemMap[key]
 	return ok
 }
 
 func (r *Resources) GetKeys() *ResourceKeys {
-	var resourceKeys []ResourceKey
+	var resourceKeys []keys.ResourceKey
 	for _, resource := range r.Items {
 		resourceKeys = append(resourceKeys, resource.GetKey())
 	}
 	if resourceKeys == nil {
-		resourceKeys = []ResourceKey{}
+		resourceKeys = []keys.ResourceKey{}
 	}
 	return NewResourceKeys(resourceKeys)
 }

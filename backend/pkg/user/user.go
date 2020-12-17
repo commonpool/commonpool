@@ -1,6 +1,7 @@
-package usermodel
+package user
 
 import (
+	"github.com/commonpool/backend/pkg/keys"
 	"time"
 )
 
@@ -15,8 +16,8 @@ type User struct {
 
 var _ UserReference = &User{}
 
-func (u *User) GetUserKey() UserKey {
-	return NewUserKey(u.ID)
+func (u *User) GetUserKey() keys.UserKey {
+	return keys.NewUserKey(u.ID)
 }
 
 func (u *User) GetUsername() string {

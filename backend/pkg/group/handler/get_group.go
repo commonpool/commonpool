@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
@@ -32,7 +33,7 @@ func (h *Handler) GetGroup(c echo.Context) error {
 
 	ctx, _ := handler.GetEchoContext(c, "GetGroup")
 
-	groupKey, err := group.ParseGroupKey(c.Param("id"))
+	groupKey, err := keys.ParseGroupKey(c.Param("id"))
 	if err != nil {
 		return err
 	}

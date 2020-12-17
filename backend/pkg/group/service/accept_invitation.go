@@ -8,6 +8,7 @@ import (
 	"github.com/commonpool/backend/pkg/chat"
 	"github.com/commonpool/backend/pkg/exceptions"
 	group2 "github.com/commonpool/backend/pkg/group"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/mq"
 )
 
@@ -53,7 +54,7 @@ func (g GroupService) CreateOrAcceptInvitation(ctx context.Context, request *gro
 
 	} else {
 
-		loggedInUserMembershipKey := group2.NewMembershipKey(membershipKey.GroupKey, userSession.GetUserKey())
+		loggedInUserMembershipKey := keys.NewMembershipKey(membershipKey.GroupKey, userSession.GetUserKey())
 		loggedInUserMembership, err := g.groupStore.GetMembership(ctx, loggedInUserMembershipKey)
 		if err != nil {
 			return nil, exceptions.ErrMembershipPartyUnauthorized
@@ -103,9 +104,9 @@ func (g GroupService) CreateOrAcceptInvitation(ctx context.Context, request *gro
 			return nil, err
 		}
 
-		channelKey := chat.GetChannelKeyForGroup(request.MembershipKey.GroupKey)
+		channelKey := keys.GetChannelKeyForGroup(request.MembershipKey.GroupKey)
 
-		channelSubscriptionKey := chat.NewChannelSubscriptionKey(channelKey, acceptedMembership.GetUserKey())
+		channelSubscriptionKey := keys.NewChannelSubscriptionKey(channelKey, acceptedMembership.GetUserKey())
 		_, err = g.chatService.SubscribeToChannel(ctx, channelSubscriptionKey, grp.Name)
 		if err != nil {
 			return nil, err

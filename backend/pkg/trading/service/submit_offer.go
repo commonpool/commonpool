@@ -5,18 +5,16 @@ import (
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/chat"
 	"github.com/commonpool/backend/pkg/exceptions"
-	"github.com/commonpool/backend/pkg/group"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/resource"
-	resourcemodel "github.com/commonpool/backend/pkg/resource/model"
 	"github.com/commonpool/backend/pkg/trading"
-	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
 	"strings"
 	"time"
 )
 
-func (t TradingService) SendOffer(ctx context.Context, groupKey group.GroupKey, offerItems *trading.OfferItems, message string) (*trading.Offer, *trading.OfferItems, error) {
+func (t TradingService) SendOffer(ctx context.Context, groupKey keys.GroupKey, offerItems *trading.OfferItems, message string) (*trading.Offer, *trading.OfferItems, error) {
 
 	userSession, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
@@ -92,21 +90,21 @@ func (t TradingService) SendOffer(ctx context.Context, groupKey group.GroupKey, 
 	return offer, offerItems, nil
 }
 
-func (t TradingService) findAppropriateChannelForOffer(offer *trading.Offer, offerItems *trading.OfferItems, approvers *usermodel.UserKeys) (chat.ChannelKey, chat.ChannelType, error) {
+func (t TradingService) findAppropriateChannelForOffer(offer *trading.Offer, offerItems *trading.OfferItems, approvers *keys.UserKeys) (keys.ChannelKey, chat.ChannelType, error) {
 	if !offerItems.GetGroupKeys().IsEmpty() {
-		channelKey := chat.GetChannelKeyForGroup(offer.GroupKey)
+		channelKey := keys.GetChannelKeyForGroup(offer.GroupKey)
 		return channelKey, chat.GroupChannel, nil
 	}
-	channelKey, err := chat.GetChannelKey(approvers)
+	channelKey, err := keys.GetChannelKey(approvers)
 	if err != nil {
-		return chat.ChannelKey{}, 0, err
+		return keys.ChannelKey{}, 0, err
 	}
 	return channelKey, chat.ConversationChannel, nil
 }
 
-func (t TradingService) assertResourcesAreViewableByGroup(resources *resource.GetResourceByKeysResponse, groupKey group.GroupKey) error {
+func (t TradingService) assertResourcesAreViewableByGroup(resources *resource.GetResourceByKeysResponse, groupKey keys.GroupKey) error {
 	for _, item := range resources.Resources.Items {
-		if !resources.Claims.GroupHasClaim(groupKey, item.Key, resourcemodel.ViewerClaim) {
+		if !resources.Claims.GroupHasClaim(groupKey, item.Key, resource.ViewerClaim) {
 			return exceptions.ErrResourceNotSharedWithGroup
 		}
 	}
@@ -119,7 +117,7 @@ func (t TradingService) assertResourcesAreNotTransferredToTheirCurrentOwner(reso
 			continue
 		}
 		resourceTransfer := offerItem.(*trading.ResourceTransferItem)
-		if resources.Claims.HasClaim(resourceTransfer.To, resourceTransfer.ResourceKey, resourcemodel.OwnershipClaim) {
+		if resources.Claims.HasClaim(resourceTransfer.To, resourceTransfer.ResourceKey, resource.OwnershipClaim) {
 			return exceptions.ErrCannotTransferResourceToItsOwner
 		}
 	}
@@ -177,7 +175,7 @@ func (t TradingService) assertBorrowOfferItemPointToObjectTypedResource(resource
 	return nil
 }
 
-func (t TradingService) sendCustomOfferMessage(ctx context.Context, fromUser *auth.UserSession, userKeys *usermodel.UserKeys, message string) error {
+func (t TradingService) sendCustomOfferMessage(ctx context.Context, fromUser *auth.UserSession, userKeys *keys.UserKeys, message string) error {
 
 	if strings.TrimSpace(message) == "" {
 		return nil
@@ -227,7 +225,7 @@ func (t TradingService) sendAcceptOrDeclineMessages(ctx context.Context, offerIt
 	return nil
 }
 
-func (t TradingService) buildAcceptOrDeclineChatMessage(recipientUserKey usermodel.UserKey, offer *trading.Offer, offerItems *trading.OfferItems) []chat.Block {
+func (t TradingService) buildAcceptOrDeclineChatMessage(recipientUserKey keys.UserKey, offer *trading.Offer, offerItems *trading.OfferItems) []chat.Block {
 
 	messageBlocks := []chat.Block{
 		*chat.NewHeaderBlock(
@@ -380,7 +378,7 @@ func assertTimeOfferItemsHavePositiveTimeValue(offerItems *trading.OfferItems) e
 }
 
 func assertResourcesAreTransferredOnlyOnce(offerItems *trading.OfferItems) error {
-	var seenResourceKeys []resourcemodel.ResourceKey
+	var seenResourceKeys []keys.ResourceKey
 	for _, item := range offerItems.Items {
 		if item.IsResourceTransfer() {
 			resourceTransfer := item.(*trading.ResourceTransferItem)

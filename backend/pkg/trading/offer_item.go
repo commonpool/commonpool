@@ -1,6 +1,8 @@
 package trading
 
-import "github.com/commonpool/backend/pkg/resource/model"
+import (
+	"github.com/commonpool/backend/pkg/resource"
+)
 
 type OfferItem interface {
 	Type() OfferItemType
@@ -14,5 +16,5 @@ type OfferItem interface {
 	IsAccepted() bool
 	IsAcceptedByReceiver() bool
 	IsAcceptedByGiver() bool
-	GetReceiverKey() *model.Target
+	GetReceiverKey() *resource.Target
 }

@@ -3,18 +3,17 @@ package handler
 import (
 	fmt "fmt"
 	"github.com/commonpool/backend/pkg/exceptions"
-	"github.com/commonpool/backend/pkg/group"
-	resourcemodel "github.com/commonpool/backend/pkg/resource/model"
+	"github.com/commonpool/backend/pkg/keys"
+	"github.com/commonpool/backend/pkg/resource"
 	"github.com/commonpool/backend/pkg/trading"
-	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"github.com/labstack/echo/v4"
 	"time"
 )
 
-func parseTargetFromQueryParams(c echo.Context, typeQueryParam string, valueQueryParam string) (*resourcemodel.Target, error) {
+func parseTargetFromQueryParams(c echo.Context, typeQueryParam string, valueQueryParam string) (*resource.Target, error) {
 	typeParam := c.QueryParams().Get(typeQueryParam)
 	if typeParam != "" {
-		typeValue, err := resourcemodel.ParseOfferItemTargetType(typeParam)
+		typeValue, err := resource.ParseOfferItemTargetType(typeParam)
 		if err != nil {
 			return nil, err
 		}
@@ -24,14 +23,14 @@ func parseTargetFromQueryParams(c echo.Context, typeQueryParam string, valueQuer
 			return nil, exceptions.ErrQueryParamRequired(valueQueryParam)
 		}
 		if targetType.IsGroup() {
-			groupKey, err := group.ParseGroupKey(targetIdStr)
+			groupKey, err := keys.ParseGroupKey(targetIdStr)
 			if err != nil {
 				return nil, err
 			}
-			return resourcemodel.NewGroupTarget(groupKey), nil
+			return resource.NewGroupTarget(groupKey), nil
 		} else if targetType.IsUser() {
-			userKey := usermodel.NewUserKey(targetIdStr)
-			return resourcemodel.NewUserTarget(userKey), nil
+			userKey := keys.NewUserKey(targetIdStr)
+			return resource.NewUserTarget(userKey), nil
 		}
 	}
 	return nil, nil
@@ -43,10 +42,10 @@ func mapWebOfferItem(offerItem trading.OfferItem, approvers *trading.OfferApprov
 	toApprovers, hasToApprovers := approvers.UsersAbleToReceiveItem[offerItem.GetKey()]
 
 	if !hasFromApprovers {
-		fromApprovers = usermodel.NewEmptyUserKeys()
+		fromApprovers = keys.NewEmptyUserKeys()
 	}
 	if !hasToApprovers {
-		toApprovers = usermodel.NewEmptyUserKeys()
+		toApprovers = keys.NewEmptyUserKeys()
 	}
 
 	if offerItem.IsCreditTransfer() {
@@ -249,7 +248,7 @@ func mapCreateBorrowItem(tradingOfferItem SendOfferPayloadItem, itemKey trading.
 		return nil, err
 	}
 
-	resourceKey, err := resourcemodel.ParseResourceKey(*tradingOfferItem.ResourceId)
+	resourceKey, err := keys.ParseResourceKey(*tradingOfferItem.ResourceId)
 	if err != nil {
 		return nil, err
 	}
@@ -276,7 +275,7 @@ func mapCreateProvideServiceItem(tradingOfferItem SendOfferPayloadItem, itemKey 
 		return nil, err
 	}
 
-	resourceKey, err := resourcemodel.ParseResourceKey(*tradingOfferItem.ResourceId)
+	resourceKey, err := keys.ParseResourceKey(*tradingOfferItem.ResourceId)
 	if err != nil {
 		return nil, err
 	}
@@ -304,7 +303,7 @@ func mapCreateResourceTransferItem(tradingOfferItem SendOfferPayloadItem, itemKe
 		return nil, err
 	}
 
-	resourceKey, err := resourcemodel.ParseResourceKey(*tradingOfferItem.ResourceId)
+	resourceKey, err := keys.ParseResourceKey(*tradingOfferItem.ResourceId)
 	if err != nil {
 		return nil, err
 	}

@@ -1,7 +1,7 @@
 package chat
 
 import (
-	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
+	"github.com/commonpool/backend/pkg/keys"
 )
 
 type Messages struct {
@@ -14,9 +14,9 @@ func NewMessages(items []Message) Messages {
 	}
 }
 
-func (m *Messages) GetAllAuthorKeys() *usermodel.UserKeys {
-	var userKeys []usermodel.UserKey
-	var userMap = map[usermodel.UserKey]bool{}
+func (m *Messages) GetAllAuthorKeys() *keys.UserKeys {
+	var userKeys []keys.UserKey
+	var userMap = map[keys.UserKey]bool{}
 	for _, item := range m.Items {
 		if item.MessageType != NormalMessage || item.MessageSubType != UserMessage {
 			continue
@@ -27,5 +27,5 @@ func (m *Messages) GetAllAuthorKeys() *usermodel.UserKeys {
 			userMap[authorKey] = true
 		}
 	}
-	return usermodel.NewUserKeys(userKeys)
+	return keys.NewUserKeys(userKeys)
 }

@@ -2,25 +2,25 @@ package chat
 
 import (
 	"context"
-	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
+	"github.com/commonpool/backend/pkg/keys"
 	"time"
 )
 
 type Store interface {
 	GetSubscriptionsForUser(ctx context.Context, request *GetSubscriptions) (*ChannelSubscriptions, error)
-	GetSubscriptionsForChannel(ctx context.Context, channelKey ChannelKey) ([]*ChannelSubscription, error)
+	GetSubscriptionsForChannel(ctx context.Context, channelKey keys.ChannelKey) ([]*ChannelSubscription, error)
 	GetSubscription(ctx context.Context, request *GetSubscription) (*ChannelSubscription, error)
-	GetMessage(ctx context.Context, messageKey MessageKey) (*Message, error)
+	GetMessage(ctx context.Context, messageKey keys.MessageKey) (*Message, error)
 	GetMessages(ctx context.Context, request *GetMessages) (*GetMessagesResponse, error)
 	SaveMessage(ctx context.Context, request *Message) error
-	GetChannel(ctx context.Context, channelKey ChannelKey) (*Channel, error)
+	GetChannel(ctx context.Context, channelKey keys.ChannelKey) (*Channel, error)
 	CreateChannel(ctx context.Context, channel *Channel) error
-	CreateSubscription(ctx context.Context, key ChannelSubscriptionKey, name string) (*ChannelSubscription, error)
-	DeleteSubscription(ctx context.Context, key ChannelSubscriptionKey) error
+	CreateSubscription(ctx context.Context, key keys.ChannelSubscriptionKey, name string) (*ChannelSubscription, error)
+	DeleteSubscription(ctx context.Context, key keys.ChannelSubscriptionKey) error
 }
 
 type GetMessage struct {
-	MessageKey MessageKey
+	MessageKey keys.MessageKey
 }
 
 type GetMessageResponse struct {
@@ -28,7 +28,7 @@ type GetMessageResponse struct {
 }
 
 type GetChannel struct {
-	ChannelKey ChannelKey
+	ChannelKey keys.ChannelKey
 }
 
 type GetChannelResponse struct {
@@ -36,13 +36,13 @@ type GetChannelResponse struct {
 }
 
 type SaveMessageRequest struct {
-	ChannelKey    ChannelKey         `json:"channelKey"`
-	Text          string             `json:"text"`
-	Attachments   []Attachment       `json:"attachments"`
-	Blocks        []Block            `json:"blocks"`
-	FromUser      usermodel.UserKey  `json:"fromUser"`
-	FromUserName  string             `json:"toUser"`
-	VisibleToUser *usermodel.UserKey `json:"visibleToUser"`
+	ChannelKey    keys.ChannelKey `json:"channelKey"`
+	Text          string          `json:"text"`
+	Attachments   []Attachment    `json:"attachments"`
+	Blocks        []Block         `json:"blocks"`
+	FromUser      keys.UserKey    `json:"fromUser"`
+	FromUserName  string          `json:"toUser"`
+	VisibleToUser *keys.UserKey   `json:"visibleToUser"`
 }
 
 type SaveMessageResponse struct {
@@ -55,8 +55,8 @@ type SendMessageToThreadResponse struct {
 type GetMessages struct {
 	Take    int
 	Before  time.Time
-	Channel ChannelKey
-	UserKey usermodel.UserKey
+	Channel keys.ChannelKey
+	UserKey keys.UserKey
 }
 
 type GetMessagesResponse struct {
@@ -65,7 +65,7 @@ type GetMessagesResponse struct {
 }
 
 type GetSubscription struct {
-	SubscriptionKey ChannelSubscriptionKey
+	SubscriptionKey keys.ChannelSubscriptionKey
 }
 
 type GetSubscriptionResponse struct {
@@ -75,10 +75,10 @@ type GetSubscriptionResponse struct {
 type GetSubscriptions struct {
 	Take    int
 	Skip    int
-	UserKey usermodel.UserKey
+	UserKey keys.UserKey
 }
 
-func NewGetSubscriptions(userKey usermodel.UserKey, take int, skip int) *GetSubscriptions {
+func NewGetSubscriptions(userKey keys.UserKey, take int, skip int) *GetSubscriptions {
 	return &GetSubscriptions{
 		Take:    take,
 		Skip:    skip,

@@ -4,7 +4,7 @@ import (
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
-	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
@@ -43,13 +43,13 @@ func (h *Handler) CreateOrAcceptMembership(c echo.Context) error {
 		return err
 	}
 
-	groupKey, err := group.ParseGroupKey(req.GroupID)
+	groupKey, err := keys.ParseGroupKey(req.GroupID)
 	if err != nil {
 		return err
 	}
-	userKey := usermodel.NewUserKey(req.UserID)
+	userKey := keys.NewUserKey(req.UserID)
 
-	membershipKey := group.NewMembershipKey(groupKey, userKey)
+	membershipKey := keys.NewMembershipKey(groupKey, userKey)
 	acceptInvitationResponse, err := h.groupService.CreateOrAcceptInvitation(ctx, group.NewAcceptInvitationRequest(membershipKey))
 	if err != nil {
 		return err

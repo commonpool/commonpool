@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"github.com/commonpool/backend/pkg/chat"
 	group2 "github.com/commonpool/backend/pkg/group"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/resource"
 	trading2 "github.com/commonpool/backend/pkg/trading"
 	transaction2 "github.com/commonpool/backend/pkg/transaction"
 	"github.com/commonpool/backend/pkg/user"
-	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"time"
 )
 
@@ -43,10 +43,10 @@ func NewTradingService(
 
 func (t TradingService) checkOfferCompleted(
 	ctx context.Context,
-	groupKey group2.GroupKey,
+	groupKey keys.GroupKey,
 	offerKey trading2.OfferKey,
 	offerItems *trading2.OfferItems,
-	userConfirmingItem usermodel.UserReference,
+	userConfirmingItem user.UserReference,
 	usersInOffer *user.Users) error {
 
 	if offerItems.AllPartiesAccepted() && offerItems.AllUserActionsCompleted() {
@@ -152,7 +152,7 @@ func (t TradingService) buildOfferCompletedMessage(ctx context.Context, items *t
 
 }
 
-func (t TradingService) checkIfAllItemsCompleted(ctx context.Context, loggerInUser usermodel.UserReference, offerItem trading2.OfferItem) error {
+func (t TradingService) checkIfAllItemsCompleted(ctx context.Context, loggerInUser user.UserReference, offerItem trading2.OfferItem) error {
 
 	offer, err := t.tradingStore.GetOffer(offerItem.GetOfferKey())
 	if err != nil {

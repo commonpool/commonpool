@@ -4,6 +4,7 @@ import (
 	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
+	"github.com/commonpool/backend/pkg/keys"
 	handler3 "github.com/commonpool/backend/pkg/resource/handler"
 	"github.com/labstack/echo/v4"
 	"github.com/satori/go.uuid"
@@ -53,7 +54,7 @@ func (h *Handler) CreateGroup(c echo.Context) error {
 		return handler3.NewErrResponse(c, exceptions.ErrValidation("name is required"))
 	}
 
-	var groupKey = group.NewGroupKey(uuid.NewV4())
+	var groupKey = keys.NewGroupKey(uuid.NewV4())
 
 	createGroupResponse, err := h.groupService.CreateGroup(ctx, group.NewCreateGroupRequest(groupKey, req.Name, req.Description))
 	if err != nil {

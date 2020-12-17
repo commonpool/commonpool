@@ -1,13 +1,13 @@
 package trading
 
 import (
-	resourcemodel "github.com/commonpool/backend/pkg/resource/model"
+	"github.com/commonpool/backend/pkg/keys"
 	"time"
 )
 
 type BorrowResourceItem struct {
 	OfferItemBase
-	ResourceKey      resourcemodel.ResourceKey
+	ResourceKey      keys.ResourceKey
 	Duration         time.Duration
 	ItemTaken        bool
 	ItemGiven        bool

@@ -1,12 +1,12 @@
 package trading
 
 import (
-	resourcemodel "github.com/commonpool/backend/pkg/resource/model"
+	"github.com/commonpool/backend/pkg/keys"
 )
 
 type ResourceTransferItem struct {
 	OfferItemBase
-	ResourceKey  resourcemodel.ResourceKey
+	ResourceKey  keys.ResourceKey
 	ItemGiven    bool
 	ItemReceived bool
 }

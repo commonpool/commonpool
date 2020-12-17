@@ -1,9 +1,7 @@
-package chat
+package keys
 
 import (
 	"fmt"
-	"github.com/commonpool/backend/pkg/group"
-	usermodel "github.com/commonpool/backend/pkg/user/usermodel"
 	"github.com/commonpool/backend/pkg/utils"
 	"go.uber.org/zap/zapcore"
 	"sort"
@@ -37,7 +35,7 @@ func NewConversationKey(key string) ChannelKey {
 	}
 }
 
-func GetChannelKey(userKeys *usermodel.UserKeys) (ChannelKey, error) {
+func GetChannelKey(userKeys *UserKeys) (ChannelKey, error) {
 
 	if userKeys == nil || len(userKeys.Items) == 0 {
 		err := fmt.Errorf("cannot get conversation channel for 0 participants")
@@ -60,7 +58,7 @@ func GetChannelKey(userKeys *usermodel.UserKeys) (ChannelKey, error) {
 
 }
 
-func GetChannelKeyForGroup(groupKey group.GroupKey) ChannelKey {
+func GetChannelKeyForGroup(groupKey GroupKey) ChannelKey {
 	shortUid := utils.ShortUuid(groupKey.ID)
 	return ChannelKey{
 		ID: shortUid,

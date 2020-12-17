@@ -6,6 +6,7 @@ import (
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/chat"
 	group2 "github.com/commonpool/backend/pkg/group"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/mq"
 )
 
@@ -38,7 +39,7 @@ func (g GroupService) CancelOrDeclineInvitation(ctx context.Context, request *gr
 	} else {
 		// group is declining invitation from user
 
-		adminMembershipKey := group2.NewMembershipKey(membershipKey.GroupKey, userSession.GetUserKey())
+		adminMembershipKey := keys.NewMembershipKey(membershipKey.GroupKey, userSession.GetUserKey())
 		adminMembership, err := g.groupStore.GetMembership(ctx, adminMembershipKey)
 		if err != nil {
 			return err
@@ -66,9 +67,9 @@ func (g GroupService) CancelOrDeclineInvitation(ctx context.Context, request *gr
 			return err
 		}
 
-		channelKey := chat.GetChannelKeyForGroup(membershipKey.GroupKey)
+		channelKey := keys.GetChannelKeyForGroup(membershipKey.GroupKey)
 
-		channelSubscriptionKey := chat.NewChannelSubscriptionKey(channelKey, membershipKey.UserKey)
+		channelSubscriptionKey := keys.NewChannelSubscriptionKey(channelKey, membershipKey.UserKey)
 		err = g.chatService.UnsubscribeFromChannel(ctx, channelSubscriptionKey)
 		if err != nil {
 			return err
