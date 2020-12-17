@@ -1,7 +1,6 @@
-package trading
+package keys
 
 import (
-	"github.com/commonpool/backend/pkg/keys"
 	"github.com/satori/go.uuid"
 )
 
@@ -10,15 +9,15 @@ type OfferDecisionKey struct {
 	UserID  string
 }
 
-func NewOfferDecisionKey(offerKey OfferKey, userKey keys.UserKey) OfferDecisionKey {
+func NewOfferDecisionKey(offerKey OfferKey, userKey UserKey) OfferDecisionKey {
 	return OfferDecisionKey{
 		OfferID: offerKey.ID,
 		UserID:  userKey.String(),
 	}
 }
 
-func (o *OfferDecisionKey) GetUserKey() keys.UserKey {
-	return keys.NewUserKey(o.UserID)
+func (o *OfferDecisionKey) GetUserKey() UserKey {
+	return NewUserKey(o.UserID)
 }
 
 func (o *OfferDecisionKey) GetOfferKey() OfferKey {

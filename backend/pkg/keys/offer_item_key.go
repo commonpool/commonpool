@@ -1,4 +1,4 @@
-package trading
+package keys
 
 import "github.com/satori/go.uuid"
 

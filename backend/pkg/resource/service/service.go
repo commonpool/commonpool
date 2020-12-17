@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/resource"
 )
 
@@ -17,7 +18,7 @@ func NewResourceService(resourceStore resource.Store) *ResourceService {
 	}
 }
 
-func (r ResourceService) GetResourcesByKeys(ctx context.Context, resourceKeys *resource.ResourceKeys) (*resource.Resources, error) {
+func (r ResourceService) GetResourcesByKeys(ctx context.Context, resourceKeys *keys.ResourceKeys) (*resource.Resources, error) {
 	response, err := r.resourceStore.GetByKeys(ctx, resourceKeys)
 	if err != nil {
 		return nil, err

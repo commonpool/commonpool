@@ -2,7 +2,6 @@ package trading
 
 import (
 	"github.com/commonpool/backend/pkg/keys"
-	"github.com/commonpool/backend/pkg/resource"
 )
 
 type OfferItems struct {
@@ -35,7 +34,7 @@ func NewOfferItems(offerItems []OfferItem) *OfferItems {
 	}
 }
 
-func (i *OfferItems) GetOfferItem(key OfferItemKey) OfferItem {
+func (i *OfferItems) GetOfferItem(key keys.OfferItemKey) OfferItem {
 	for _, offerItem := range i.Items {
 		if offerItem.GetKey() == key {
 			return offerItem
@@ -58,7 +57,7 @@ func (i *OfferItems) ItemCount() int {
 	return len(i.Items)
 }
 
-func (i *OfferItems) GetResourceKeys() *resource.ResourceKeys {
+func (i *OfferItems) GetResourceKeys() *keys.ResourceKeys {
 	var resourceKeys []keys.ResourceKey
 	for _, item := range i.Items {
 		if item.IsBorrowingResource() {
@@ -72,7 +71,7 @@ func (i *OfferItems) GetResourceKeys() *resource.ResourceKeys {
 	if resourceKeys == nil {
 		resourceKeys = []keys.ResourceKey{}
 	}
-	return resource.NewResourceKeys(resourceKeys)
+	return keys.NewResourceKeys(resourceKeys)
 }
 
 func (i *OfferItems) GetUserKeys() *keys.UserKeys {

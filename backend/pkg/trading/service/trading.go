@@ -44,7 +44,7 @@ func NewTradingService(
 func (t TradingService) checkOfferCompleted(
 	ctx context.Context,
 	groupKey keys.GroupKey,
-	offerKey trading2.OfferKey,
+	offerKey keys.OfferKey,
 	offerItems *trading2.OfferItems,
 	userConfirmingItem user.UserReference,
 	usersInOffer *user.Users) error {

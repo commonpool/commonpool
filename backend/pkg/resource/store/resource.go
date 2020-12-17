@@ -32,7 +32,7 @@ func NewResourceStore(graphDriver graph2.Driver, transactionService transaction2
 	}
 }
 
-func (rs *ResourceStore) GetByKeys(ctx ctx.Context, resourceKeys *resource.ResourceKeys) (*resource.GetResourceByKeysResponse, error) {
+func (rs *ResourceStore) GetByKeys(ctx ctx.Context, resourceKeys *keys.ResourceKeys) (*resource.GetResourceByKeysResponse, error) {
 
 	graphSession, err := rs.graphDriver.GetSession()
 	if err != nil {
@@ -42,7 +42,7 @@ func (rs *ResourceStore) GetByKeys(ctx ctx.Context, resourceKeys *resource.Resou
 	return rs.getByKeys(ctx, graphSession, resourceKeys)
 }
 
-func (rs *ResourceStore) getByKeys(ctx ctx.Context, session neo4j.Session, resourceKeys *resource.ResourceKeys) (*resource.GetResourceByKeysResponse, error) {
+func (rs *ResourceStore) getByKeys(ctx ctx.Context, session neo4j.Session, resourceKeys *keys.ResourceKeys) (*resource.GetResourceByKeysResponse, error) {
 
 	getResult, err := session.Run(`
 		MATCH (resource:Resource) 
@@ -146,7 +146,7 @@ func (rs *ResourceStore) GetByKey(ctx ctx.Context, getResourceByKeyQuery *resour
 func (rs *ResourceStore) getByKey(ctx ctx.Context, session neo4j.Session, getResourceByKeyQuery *resource.GetResourceByKeyQuery) (*resource.GetResourceByKeyResponse, error) {
 
 	key := getResourceByKeyQuery.ResourceKey
-	response, err := rs.GetByKeys(ctx, resource.NewResourceKeys([]keys.ResourceKey{key}))
+	response, err := rs.GetByKeys(ctx, keys.NewResourceKeys([]keys.ResourceKey{key}))
 	if err != nil {
 		return nil, err
 	}

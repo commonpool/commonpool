@@ -50,7 +50,7 @@ func (r *Resources) ContainsKey(key keys.ResourceKey) bool {
 	return ok
 }
 
-func (r *Resources) GetKeys() *ResourceKeys {
+func (r *Resources) GetKeys() *keys.ResourceKeys {
 	var resourceKeys []keys.ResourceKey
 	for _, resource := range r.Items {
 		resourceKeys = append(resourceKeys, resource.GetKey())
@@ -58,5 +58,5 @@ func (r *Resources) GetKeys() *ResourceKeys {
 	if resourceKeys == nil {
 		resourceKeys = []keys.ResourceKey{}
 	}
-	return NewResourceKeys(resourceKeys)
+	return keys.NewResourceKeys(resourceKeys)
 }

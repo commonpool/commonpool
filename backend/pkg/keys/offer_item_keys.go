@@ -1,4 +1,4 @@
-package trading
+package keys
 
 type OfferItemKeys struct {
 	Items []OfferItemKey

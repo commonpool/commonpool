@@ -4,10 +4,11 @@ import (
 	"context"
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/exceptions"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/trading"
 )
 
-func (t TradingService) ConfirmResourceTransferred(ctx context.Context, confirmedItemKey trading.OfferItemKey) error {
+func (t TradingService) ConfirmResourceTransferred(ctx context.Context, confirmedItemKey keys.OfferItemKey) error {
 
 	loggedInUser, err := auth.GetLoggedInUser(ctx)
 	if err != nil {

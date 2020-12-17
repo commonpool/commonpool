@@ -7,7 +7,7 @@ import (
 
 type Store interface {
 	GetByKey(ctx context.Context, getResourceByKeyQuery *GetResourceByKeyQuery) (*GetResourceByKeyResponse, error)
-	GetByKeys(ctx context.Context, resourceKeys *ResourceKeys) (*GetResourceByKeysResponse, error)
+	GetByKeys(ctx context.Context, resourceKeys *keys.ResourceKeys) (*GetResourceByKeysResponse, error)
 	Search(ctx context.Context, searchResourcesQuery *SearchResourcesQuery) (*SearchResourcesResponse, error)
 	Delete(ctx context.Context, resourceKey keys.ResourceKey) error
 	Create(ctx context.Context, createResourceQuery *CreateResourceQuery) error

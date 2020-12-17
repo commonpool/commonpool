@@ -6,11 +6,11 @@ import (
 )
 
 type OfferApprovers struct {
-	OfferKey                  OfferKey
-	OfferItemsUsersCanGive    map[keys.UserKey]*OfferItemKeys
-	OfferItemsUsersCanReceive map[keys.UserKey]*OfferItemKeys
-	UsersAbleToGiveItem       map[OfferItemKey]*keys.UserKeys
-	UsersAbleToReceiveItem    map[OfferItemKey]*keys.UserKeys
+	OfferKey                  keys.OfferKey
+	OfferItemsUsersCanGive    map[keys.UserKey]*keys.OfferItemKeys
+	OfferItemsUsersCanReceive map[keys.UserKey]*keys.OfferItemKeys
+	UsersAbleToGiveItem       map[keys.OfferItemKey]*keys.UserKeys
+	UsersAbleToReceiveItem    map[keys.OfferItemKey]*keys.UserKeys
 }
 
 func (o OfferApprovers) IsUserAnApprover(userKey keys.UserKey) bool {
@@ -46,7 +46,7 @@ func NewOffersApprovers(items []*OfferApprovers) *OffersApprovers {
 	}
 }
 
-func (a *OffersApprovers) GetApproversForOffer(offerKey OfferKey) (*OfferApprovers, error) {
+func (a *OffersApprovers) GetApproversForOffer(offerKey keys.OfferKey) (*OfferApprovers, error) {
 	for _, offerApprovers := range a.Items {
 		if offerApprovers.OfferKey == offerKey {
 			return offerApprovers, nil

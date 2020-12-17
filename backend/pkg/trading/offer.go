@@ -6,7 +6,7 @@ import (
 )
 
 type Offer struct {
-	Key            OfferKey
+	Key            keys.OfferKey
 	GroupKey       keys.GroupKey
 	CreatedByKey   keys.UserKey
 	Status         OfferStatus
@@ -16,7 +16,7 @@ type Offer struct {
 	Message        string
 }
 
-func NewOffer(offerKey OfferKey, groupKey keys.GroupKey, author keys.UserKey, message string, expiration *time.Time) *Offer {
+func NewOffer(offerKey keys.OfferKey, groupKey keys.GroupKey, author keys.UserKey, message string, expiration *time.Time) *Offer {
 	return &Offer{
 		Key:            offerKey,
 		GroupKey:       groupKey,
@@ -28,7 +28,7 @@ func NewOffer(offerKey OfferKey, groupKey keys.GroupKey, author keys.UserKey, me
 	}
 }
 
-func (o *Offer) GetKey() OfferKey {
+func (o *Offer) GetKey() keys.OfferKey {
 	return o.Key
 }
 

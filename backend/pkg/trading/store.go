@@ -7,19 +7,19 @@ import (
 
 type Store interface {
 	SaveOffer(offer *Offer, offerItems *OfferItems) error
-	GetOffer(key OfferKey) (*Offer, error)
-	GetOfferItemsForOffer(key OfferKey) (*OfferItems, error)
-	GetOfferItem(ctx context.Context, key OfferItemKey) (OfferItem, error)
+	GetOffer(key keys.OfferKey) (*Offer, error)
+	GetOfferItemsForOffer(key keys.OfferKey) (*OfferItems, error)
+	GetOfferItem(ctx context.Context, key keys.OfferItemKey) (OfferItem, error)
 	GetOffersForUser(userKey keys.UserKey) (*GetOffersResult, error)
 	UpdateOfferItem(ctx context.Context, offerItem OfferItem) error
-	UpdateOfferStatus(key OfferKey, offer OfferStatus) error
+	UpdateOfferStatus(key keys.OfferKey, offer OfferStatus) error
 	GetTradingHistory(ctx context.Context, ids *keys.UserKeys) ([]HistoryEntry, error)
-	FindApproversForOffer(offerKey OfferKey) (*OfferApprovers, error)
-	FindApproversForOffers(offerKeys *OfferKeys) (*OffersApprovers, error)
+	FindApproversForOffer(offerKey keys.OfferKey) (*OfferApprovers, error)
+	FindApproversForOffers(offerKeys *keys.OfferKeys) (*OffersApprovers, error)
 	FindApproversForCandidateOffer(offer *Offer, offerItems *OfferItems) (*keys.UserKeys, error)
-	FindReceivingApproversForOfferItem(offerItemKey OfferItemKey) (*keys.UserKeys, error)
-	FindGivingApproversForOfferItem(offerItemKey OfferItemKey) (*keys.UserKeys, error)
-	MarkOfferItemsAsAccepted(ctx context.Context, approvedBy keys.UserKey, approvedByGiver *OfferItemKeys, approvedByReceiver *OfferItemKeys) error
+	FindReceivingApproversForOfferItem(offerItemKey keys.OfferItemKey) (*keys.UserKeys, error)
+	FindGivingApproversForOfferItem(offerItemKey keys.OfferItemKey) (*keys.UserKeys, error)
+	MarkOfferItemsAsAccepted(ctx context.Context, approvedBy keys.UserKey, approvedByGiver *keys.OfferItemKeys, approvedByReceiver *keys.OfferItemKeys) error
 }
 
 type GetOffersQuery struct {
@@ -37,13 +37,13 @@ type GetOffersResultItem struct {
 	OfferItems *OfferItems
 }
 
-func (r *GetOffersResult) GetOfferKeys() *OfferKeys {
-	var offerKeys []OfferKey
+func (r *GetOffersResult) GetOfferKeys() *keys.OfferKeys {
+	var offerKeys []keys.OfferKey
 	for _, item := range r.Items {
 		offerKeys = append(offerKeys, item.Offer.Key)
 	}
 	if offerKeys == nil {
-		offerKeys = []OfferKey{}
+		offerKeys = []keys.OfferKey{}
 	}
-	return NewOfferKeys(offerKeys)
+	return keys.NewOfferKeys(offerKeys)
 }

@@ -1,14 +1,15 @@
 package trading
 
 import (
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/resource"
 	"time"
 )
 
 type OfferItemBase struct {
 	Type             OfferItemType
-	Key              OfferItemKey
-	OfferKey         OfferKey
+	Key              keys.OfferItemKey
+	OfferKey         keys.OfferKey
 	To               *resource.Target
 	ReceiverAccepted bool
 	GiverAccepted    bool
@@ -16,11 +17,11 @@ type OfferItemBase struct {
 	UpdatedAt        time.Time
 }
 
-func (c OfferItemBase) GetKey() OfferItemKey {
+func (c OfferItemBase) GetKey() keys.OfferItemKey {
 	return c.Key
 }
 
-func (c OfferItemBase) GetOfferKey() OfferKey {
+func (c OfferItemBase) GetOfferKey() keys.OfferKey {
 	return c.OfferKey
 }
 

@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/exceptions"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/trading"
 )
 
-func (t TradingService) DeclineOffer(ctx context.Context, offerKey trading.OfferKey) error {
+func (t TradingService) DeclineOffer(ctx context.Context, offerKey keys.OfferKey) error {
 
 	user, err := auth.GetLoggedInUser(ctx)
 	if err != nil {

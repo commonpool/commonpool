@@ -61,7 +61,7 @@ func (t TradingService) SendOffer(ctx context.Context, groupKey keys.GroupKey, o
 		return nil, nil, err
 	}
 
-	offerKey := trading.NewOfferKey(uuid.NewV4())
+	offerKey := keys.NewOfferKey(uuid.NewV4())
 	offer := trading.NewOffer(offerKey, groupKey, userSession.GetUserKey(), message, nil)
 
 	err = t.tradingStore.SaveOffer(offer, offerItems)

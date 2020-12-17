@@ -55,7 +55,7 @@ type ResourceStore struct {
 	GetByKeyFunc func(ctx context.Context, getResourceByKeyQuery *resource.GetResourceByKeyQuery) (*resource.GetResourceByKeyResponse, error)
 
 	// GetByKeysFunc mocks the GetByKeys method.
-	GetByKeysFunc func(ctx context.Context, resourceKeys *resource.ResourceKeys) (*resource.GetResourceByKeysResponse, error)
+	GetByKeysFunc func(ctx context.Context, resourceKeys *keys.ResourceKeys) (*resource.GetResourceByKeysResponse, error)
 
 	// SearchFunc mocks the Search method.
 	SearchFunc func(ctx context.Context, searchResourcesQuery *resource.SearchResourcesQuery) (*resource.SearchResourcesResponse, error)
@@ -91,7 +91,7 @@ type ResourceStore struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// ResourceKeys is the resourceKeys argument value.
-			ResourceKeys *resource.ResourceKeys
+			ResourceKeys *keys.ResourceKeys
 		}
 		// Search holds details about calls to the Search method.
 		Search []struct {
@@ -222,13 +222,13 @@ func (mock *ResourceStore) GetByKeyCalls() []struct {
 }
 
 // GetByKeys calls GetByKeysFunc.
-func (mock *ResourceStore) GetByKeys(ctx context.Context, resourceKeys *resource.ResourceKeys) (*resource.GetResourceByKeysResponse, error) {
+func (mock *ResourceStore) GetByKeys(ctx context.Context, resourceKeys *keys.ResourceKeys) (*resource.GetResourceByKeysResponse, error) {
 	if mock.GetByKeysFunc == nil {
 		panic("ResourceStore.GetByKeysFunc: method is nil but Store.GetByKeys was just called")
 	}
 	callInfo := struct {
 		Ctx          context.Context
-		ResourceKeys *resource.ResourceKeys
+		ResourceKeys *keys.ResourceKeys
 	}{
 		Ctx:          ctx,
 		ResourceKeys: resourceKeys,
@@ -244,11 +244,11 @@ func (mock *ResourceStore) GetByKeys(ctx context.Context, resourceKeys *resource
 //     len(mockedStore.GetByKeysCalls())
 func (mock *ResourceStore) GetByKeysCalls() []struct {
 	Ctx          context.Context
-	ResourceKeys *resource.ResourceKeys
+	ResourceKeys *keys.ResourceKeys
 } {
 	var calls []struct {
 		Ctx          context.Context
-		ResourceKeys *resource.ResourceKeys
+		ResourceKeys *keys.ResourceKeys
 	}
 	mock.lockGetByKeys.RLock()
 	calls = mock.calls.GetByKeys

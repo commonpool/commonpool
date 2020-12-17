@@ -1,13 +1,14 @@
 package trading
 
 import (
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/resource"
 )
 
 type OfferItem interface {
 	Type() OfferItemType
-	GetOfferKey() OfferKey
-	GetKey() OfferItemKey
+	GetOfferKey() keys.OfferKey
+	GetKey() keys.OfferItemKey
 	IsCreditTransfer() bool
 	IsServiceProviding() bool
 	IsBorrowingResource() bool

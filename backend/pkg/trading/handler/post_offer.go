@@ -45,7 +45,7 @@ func (h *TradingHandler) HandleSendOffer(c echo.Context) error {
 
 	var tradingOfferItems []trading.OfferItem
 	for _, tradingOfferItem := range req.Offer.Items {
-		itemKey := trading.NewOfferItemKey(uuid.NewV4())
+		itemKey := keys.NewOfferItemKey(uuid.NewV4())
 		tradingOfferItem, err := mapNewOfferItem(tradingOfferItem, itemKey)
 		if err != nil {
 			return err

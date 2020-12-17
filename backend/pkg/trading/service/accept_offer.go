@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/exceptions"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/trading"
 )
 
-func (t TradingService) AcceptOffer(ctx context.Context, offerKey trading.OfferKey) error {
+func (t TradingService) AcceptOffer(ctx context.Context, offerKey keys.OfferKey) error {
 
 	loggedInUser, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
@@ -45,7 +46,7 @@ func (t TradingService) AcceptOffer(ctx context.Context, offerKey trading.OfferK
 		return exceptions.ErrUnauthorized
 	}
 
-	var offerItemsPendingGiverApproval []trading.OfferItemKey
+	var offerItemsPendingGiverApproval []keys.OfferItemKey
 	if approvableOfferItemsOnGivingSide != nil {
 		for _, offerItemKey := range approvableOfferItemsOnGivingSide.Items {
 			offerItem := offerItems.GetOfferItem(offerItemKey)
@@ -55,7 +56,7 @@ func (t TradingService) AcceptOffer(ctx context.Context, offerKey trading.OfferK
 			offerItemsPendingGiverApproval = append(offerItemsPendingGiverApproval, offerItemKey)
 		}
 	}
-	var offerItemsPendingReceiverApproval []trading.OfferItemKey
+	var offerItemsPendingReceiverApproval []keys.OfferItemKey
 	if approvableOfferItemsOnReceivingSide != nil {
 		for _, offerItemKey := range approvableOfferItemsOnReceivingSide.Items {
 			offerItem := offerItems.GetOfferItem(offerItemKey)
@@ -73,8 +74,8 @@ func (t TradingService) AcceptOffer(ctx context.Context, offerKey trading.OfferK
 	err = t.tradingStore.MarkOfferItemsAsAccepted(
 		ctx,
 		loggedInUserKey,
-		trading.NewOfferItemKeys(offerItemsPendingGiverApproval),
-		trading.NewOfferItemKeys(offerItemsPendingReceiverApproval))
+		keys.NewOfferItemKeys(offerItemsPendingGiverApproval),
+		keys.NewOfferItemKeys(offerItemsPendingReceiverApproval))
 
 	if err != nil {
 		return err

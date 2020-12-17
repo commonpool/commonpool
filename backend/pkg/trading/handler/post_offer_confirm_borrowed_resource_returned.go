@@ -2,7 +2,7 @@ package handler
 
 import (
 	"github.com/commonpool/backend/pkg/handler"
-	"github.com/commonpool/backend/pkg/trading"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
@@ -11,7 +11,7 @@ func (h *TradingHandler) HandleConfirmBorrowedResourceReturned(c echo.Context) e
 
 	ctx, _ := handler.GetEchoContext(c, "HandleConfirmBorrowedResourceReturned")
 
-	offerItemKey, err := trading.ParseOfferItemKey(c.Param("id"))
+	offerItemKey, err := keys.ParseOfferItemKey(c.Param("id"))
 	if err != nil {
 		return err
 	}
