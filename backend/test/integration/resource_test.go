@@ -59,7 +59,7 @@ func CreateResource(t *testing.T, ctx context.Context, userSession *auth.UserSes
 	}
 
 	c, recorder := NewRequest(ctx, userSession, http.MethodPost, "/api/v1/resources", payload)
-	assert.NoError(t, a.CreateResource(c))
+	assert.NoError(t, ResourceHandler.CreateResource(c))
 	response := &handler.CreateResourceResponse{}
 	t.Log(recorder.Body.String())
 	return response, ReadResponse(t, recorder, response)
@@ -74,7 +74,7 @@ func SearchResources(t *testing.T, ctx context.Context, userSession *auth.UserSe
 	if sharedWithGroup != nil {
 		c.QueryParams()["group_id"] = []string{*sharedWithGroup}
 	}
-	assert.NoError(t, a.SearchResources(c))
+	assert.NoError(t, ResourceHandler.SearchResources(c))
 	response := &handler.SearchResourcesResponse{}
 	t.Log(recorder.Body.String())
 	return response, ReadResponse(t, recorder, response)
@@ -84,7 +84,7 @@ func GetResource(t *testing.T, ctx context.Context, userSession *auth.UserSessio
 	c, recorder := NewRequest(ctx, userSession, http.MethodPost, fmt.Sprintf("/api/v1/resources/%s", resourceKey), nil)
 	c.SetParamNames("id")
 	c.SetParamValues(resourceKey)
-	assert.NoError(t, a.GetResource(c))
+	assert.NoError(t, ResourceHandler.GetResource(c))
 	response := &handler.GetResourceResponse{}
 	t.Log(recorder.Body.String())
 	return response, ReadResponse(t, recorder, response)
@@ -94,7 +94,7 @@ func UpdateResource(t *testing.T, ctx context.Context, userSession *auth.UserSes
 	c, recorder := NewRequest(ctx, userSession, http.MethodPut, fmt.Sprintf("/api/v1/resources/%s", resourceKey), request)
 	c.SetParamNames("id")
 	c.SetParamValues(resourceKey)
-	assert.NoError(t, a.UpdateResource(c))
+	assert.NoError(t, ResourceHandler.UpdateResource(c))
 	response := &handler.UpdateResourceResponse{}
 	t.Log(recorder.Body.String())
 	return response, ReadResponse(t, recorder, response)

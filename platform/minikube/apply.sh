@@ -34,12 +34,18 @@ spec:
               - name: neo4j-http
                 port: 7474
                 targetPort: 7474
-              - name: neo4j-bolt
+              - name: bolt-http
                 port: 7687
                 targetPort: 7687
+              - name: bolt-tcp
+                port: 7686
+                targetPort: 7686
               - name: postgres
                 port: 5432
                 targetPort: 5432
+              - name: amqp
+                port: 5672
+                targetPort: 5672
 EOF
 
 set +e

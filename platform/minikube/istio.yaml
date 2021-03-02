@@ -20,15 +20,21 @@ spec:
     - port:
         number: 7687
         name: neo4j-bolt
-        protocol: HTTPS
+        protocol: TCP
       hosts:
         - "0.graphdb.commonpool.dev"
         - "1.graphdb.commonpool.dev"
         - "2.graphdb.commonpool.dev"
         - "graphdb.commonpool.dev"
-      tls:
-        mode: SIMPLE
-        credentialName: commonpool-cert-prod
+    - port:
+        number: 7686
+        name: bolt-tcp
+        protocol: TCP
+      hosts:
+        - "0.graphdb.commonpool.dev"
+        - "1.graphdb.commonpool.dev"
+        - "2.graphdb.commonpool.dev"
+        - "graphdb.commonpool.dev"
     - port:
         number: 5432
         name: postgres-tcp
@@ -62,7 +68,14 @@ spec:
   hosts:
     - graphdb-neo4j-core-0.graphdb-neo4j.default.svc.cluster.local
     - 0.graphdb.commonpool.dev
-  http:
+  tcp:
+    - match:
+        - port: 7686
+      route:
+        - destination:
+            host: graphdb-neo4j-0.default.svc.cluster.local
+            port:
+              number: 7687
     - match:
         - port: 7687
       route:
@@ -70,6 +83,7 @@ spec:
             host: graphdb-neo4j-0.default.svc.cluster.local
             port:
               number: 7687
+  http:
     - match:
         - port: 7474
       route:
@@ -89,7 +103,14 @@ spec:
   hosts:
     - graphdb-neo4j-core-1.graphdb-neo4j.default.svc.cluster.local
     - 1.graphdb.commonpool.dev
-  http:
+  tcp:
+    - match:
+        - port: 7686
+      route:
+        - destination:
+            host: graphdb-neo4j-1.default.svc.cluster.local
+            port:
+              number: 7687
     - match:
         - port: 7687
       route:
@@ -97,6 +118,7 @@ spec:
             host: graphdb-neo4j-1.default.svc.cluster.local
             port:
               number: 7687
+  http:
     - match:
         - port: 7474
       route:
@@ -116,7 +138,14 @@ spec:
   hosts:
     - graphdb-neo4j-core-2.graphdb-neo4j.default.svc.cluster.local
     - 2.graphdb.commonpool.dev
-  http:
+  tcp:
+    - match:
+        - port: 7686
+      route:
+        - destination:
+            host: graphdb-neo4j-2.default.svc.cluster.local
+            port:
+              number: 7687
     - match:
         - port: 7687
       route:
@@ -124,6 +153,7 @@ spec:
             host: graphdb-neo4j-2.default.svc.cluster.local
             port:
               number: 7687
+  http:
     - match:
         - port: 7474
       route:
@@ -143,7 +173,14 @@ spec:
   hosts:
     - graphdb-neo4j.default.svc.cluster.local
     - graphdb.commonpool.dev
-  http:
+  tcp:
+    - match:
+        - port: 7686
+      route:
+        - destination:
+            host: graphdb-neo4j.default.svc.cluster.local
+            port:
+              number: 7687
     - match:
         - port: 7687
       route:
@@ -151,6 +188,7 @@ spec:
             host: graphdb-neo4j.default.svc.cluster.local
             port:
               number: 7687
+  http:
     - match:
         - port: 7474
       route:

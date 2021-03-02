@@ -12,7 +12,7 @@ import (
 	"github.com/commonpool/backend/pkg/trading"
 	transaction2 "github.com/commonpool/backend/pkg/transaction"
 	"github.com/mitchellh/mapstructure"
-	"github.com/neo4j/neo4j-go-driver/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"strings"
@@ -35,10 +35,7 @@ func NewResourceStore(graphDriver graph2.Driver, transactionService transaction2
 
 func (rs *ResourceStore) GetByKeys(ctx ctx.Context, resourceKeys *keys.ResourceKeys) (*resource.GetResourceByKeysResponse, error) {
 
-	graphSession, err := rs.graphDriver.GetSession()
-	if err != nil {
-		return nil, err
-	}
+	graphSession := rs.graphDriver.GetSession()
 
 	return rs.getByKeys(ctx, graphSession, resourceKeys)
 }
@@ -135,11 +132,7 @@ func createClaimsForTargets(resourceKey keys.ResourceKey, claimType resource.Cla
 // GetByKey Gets a resource by key
 func (rs *ResourceStore) GetByKey(ctx ctx.Context, getResourceByKeyQuery *resource.GetResourceByKeyQuery) (*resource.GetResourceByKeyResponse, error) {
 
-	graphSession, err := rs.graphDriver.GetSession()
-	if err != nil {
-		return nil, err
-	}
-
+	graphSession := rs.graphDriver.GetSession()
 	return rs.getByKey(ctx, graphSession, getResourceByKeyQuery)
 
 }
@@ -168,11 +161,7 @@ func (rs *ResourceStore) getByKey(ctx ctx.Context, session neo4j.Session, getRes
 // Delete deletes a resource
 func (rs *ResourceStore) Delete(ctx context.Context, resourceKey keys.ResourceKey) error {
 
-	graphSession, err := rs.graphDriver.GetSession()
-	if err != nil {
-		return err
-	}
-
+	graphSession := rs.graphDriver.GetSession()
 	graphSession.Run(`MATCH (r:Resource {id:$id}) DETACH DELETE`, map[string]interface{}{
 		"id": resourceKey.String(),
 	})
@@ -205,10 +194,7 @@ func (rs *ResourceStore) Delete(ctx context.Context, resourceKey keys.ResourceKe
 // Create creates a resource
 func (rs *ResourceStore) Create(ctx context.Context, createResourceQuery *resource.CreateResourceQuery) error {
 
-	graphSession, err := rs.graphDriver.GetSession()
-	if err != nil {
-		return err
-	}
+	graphSession := rs.graphDriver.GetSession()
 
 	resourceKey := createResourceQuery.Resource.GetKey()
 	now := time.Now().UTC().UnixNano() / 1e6
@@ -302,19 +288,19 @@ func (rs *ResourceStore) Create(ctx context.Context, createResourceQuery *resour
 
 }
 
-func (rs *ResourceStore) mapGraphResourceRecord(record neo4j.Record, key string) (*resource.Resource, error) {
+func (rs *ResourceStore) mapGraphResourceRecord(record *neo4j.Record, key string) (*resource.Resource, error) {
 	resourceRecord, _ := record.Get(key)
-	node := resourceRecord.(neo4j.Node)
+	node := resourceRecord.(*neo4j.Node)
 	return MapResourceNode(node)
 }
 
-func IsResourceNode(node neo4j.Node) bool {
+func IsResourceNode(node *neo4j.Node) bool {
 	return graph2.NodeHasLabel(node, "Resource")
 }
 
-func MapResourceNode(node neo4j.Node) (*resource.Resource, error) {
+func MapResourceNode(node *neo4j.Node) (*resource.Resource, error) {
 	var graphResource = Resource{}
-	err := mapstructure.Decode(node.Props(), &graphResource)
+	err := mapstructure.Decode(node.Props, &graphResource)
 	if err != nil {
 		return nil, err
 	}
@@ -325,10 +311,10 @@ func MapResourceNode(node neo4j.Node) (*resource.Resource, error) {
 	return mappedResource, nil
 }
 
-func (rs *ResourceStore) mapGraphSharingRecord(record neo4j.Record, resourceFieldKey string, groupIdsFieldKey string) (*resource.Sharings, error) {
+func (rs *ResourceStore) mapGraphSharingRecord(record *neo4j.Record, resourceFieldKey string, groupIdsFieldKey string) (*resource.Sharings, error) {
 	resourceField, _ := record.Get(resourceFieldKey)
 	resourceNode := resourceField.(neo4j.Node)
-	resourceId := resourceNode.Props()["id"].(string)
+	resourceId := resourceNode.Props["id"].(string)
 	resourceKey, err := keys.ParseResourceKey(resourceId)
 	if err != nil {
 		return nil, err
@@ -358,10 +344,7 @@ func (rs *ResourceStore) mapGraphSharingRecord(record neo4j.Record, resourceFiel
 // Update updates a resource
 func (rs *ResourceStore) Update(ctx context.Context, request *resource.UpdateResourceQuery) error {
 
-	session, err := rs.graphDriver.GetSession()
-	if err != nil {
-		return err
-	}
+	session := rs.graphDriver.GetSession()
 	defer session.Close()
 
 	now := time.Now().UTC().UnixNano() / 1e6
@@ -476,11 +459,7 @@ func (rs *ResourceStore) Search(context ctx.Context, request *resource.SearchRes
 
 	l := logging.WithContext(context)
 
-	session, err := rs.graphDriver.GetSession()
-	if err != nil {
-		l.Error("could not get graph session", zap.Error(err))
-		return nil, err
-	}
+	session := rs.graphDriver.GetSession()
 	defer session.Close()
 
 	propertyValues := map[string]interface{}{}

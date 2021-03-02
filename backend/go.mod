@@ -18,13 +18,14 @@ require (
 	github.com/google/go-cmp v0.5.2 // indirect
 	github.com/gorilla/websocket v1.4.2
 	github.com/jmank88/nuts v0.4.0 // indirect
-	github.com/labstack/echo/v4 v4.1.17
+	github.com/labstack/echo/v4 v4.2.0
 	github.com/labstack/gommon v0.3.0
 	github.com/mitchellh/mapstructure v1.4.0
 	github.com/neo4j/neo4j-go-driver v1.8.3
+	github.com/neo4j/neo4j-go-driver/v4 v4.2.3
 	github.com/nightlyone/lockfile v1.0.0 // indirect
 	github.com/nxadm/tail v1.4.5 // indirect
-	github.com/onsi/ginkgo v1.14.2
+	github.com/onsi/ginkgo v1.14.2 // indirect
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect

@@ -6,7 +6,7 @@ import (
 	"github.com/commonpool/backend/logging"
 	"github.com/commonpool/backend/pkg/config"
 	"github.com/mitchellh/mapstructure"
-	"github.com/neo4j/neo4j-go-driver/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"go.uber.org/zap"
 	"strings"
 )
@@ -66,7 +66,7 @@ func createIdConstraint(ctx context.Context, session neo4j.Session, nodeName str
 
 	l := logging.WithContext(ctx)
 
-	result, err := session.Run(`CREATE CONSTRAINT IF NOT EXISTS idx`+nodeName+` ON (n:`+nodeName+`) ASSERT (n.id) IS UNIQUE`, map[string]interface{}{})
+	result, err := session.Run(`CREATE CONSTRAINT IF NOT EXISTS idx`+nodeName+` ON (n:`+nodeName+`) ASSERT n.id IS UNIQUE`, map[string]interface{}{})
 	if err != nil {
 		l.Error("could not create constraint", zap.Error(err))
 		return err
@@ -137,21 +137,21 @@ func getDatabaseLeaderSession(appConfig *config.AppConfig, databaseName string) 
 		appConfig.BoltUrl,
 		neo4j.BasicAuth(appConfig.BoltUsername, appConfig.BoltPassword, ""),
 		func(c *neo4j.Config) {
-			c.Encrypted = false
+
 		})
 
 	if err != nil {
 		return nil, fmt.Errorf("could not create neo4j driver: %v", err)
 	}
 
-	session, err := tempDriver.NewSession(neo4j.SessionConfig{
+	session := tempDriver.NewSession(neo4j.SessionConfig{
 		AccessMode:   neo4j.AccessModeWrite,
 		Bookmarks:    nil,
-		DatabaseName: "system",
+		DatabaseName: databaseName,
 	})
-	if err != nil {
-		return nil, fmt.Errorf("could not open connection: %v", err)
-	}
+
+	return session, nil
+
 	defer session.Close()
 
 	leaderBoltUrl, err := findDatabaseLeaderBoltUrl(session, databaseName)
@@ -163,13 +163,13 @@ func getDatabaseLeaderSession(appConfig *config.AppConfig, databaseName string) 
 		leaderBoltUrl,
 		neo4j.BasicAuth(appConfig.BoltUsername, appConfig.BoltPassword, ""),
 		func(c *neo4j.Config) {
-			c.Encrypted = false
+
 		})
 	if err != nil {
 		return nil, fmt.Errorf("could not create system leader neo4j driver: %v", err)
 	}
 
-	leaderSession, err := leaderDriver.NewSession(neo4j.SessionConfig{
+	leaderSession := leaderDriver.NewSession(neo4j.SessionConfig{
 		AccessMode:   neo4j.AccessModeWrite,
 		Bookmarks:    nil,
 		DatabaseName: databaseName,

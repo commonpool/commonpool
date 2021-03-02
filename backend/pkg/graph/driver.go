@@ -3,11 +3,11 @@ package graph
 import (
 	"fmt"
 	"github.com/commonpool/backend/pkg/config"
-	"github.com/neo4j/neo4j-go-driver/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 )
 
 type Driver interface {
-	GetSession() (neo4j.Session, error)
+	GetSession() (neo4j.Session)
 }
 
 type Neo4jGraphDriver struct {
@@ -15,13 +15,12 @@ type Neo4jGraphDriver struct {
 	databaseName string
 }
 
-func (n Neo4jGraphDriver) GetSession() (neo4j.Session, error) {
-	sess, err := n.driver.NewSession(neo4j.SessionConfig{
+func (n Neo4jGraphDriver) GetSession() (neo4j.Session) {
+	return n.driver.NewSession(neo4j.SessionConfig{
 		AccessMode:   neo4j.AccessModeWrite,
 		Bookmarks:    nil,
 		DatabaseName: n.databaseName,
 	})
-	return sess, err
 }
 
 var _ Driver = &Neo4jGraphDriver{}
@@ -32,21 +31,17 @@ func NewNeo4jDriver(appConfig *config.AppConfig, databaseName string) (*Neo4jGra
 		appConfig.BoltUrl,
 		neo4j.BasicAuth(appConfig.BoltUsername, appConfig.BoltPassword, ""),
 		func(c *neo4j.Config) {
-			c.Encrypted = false
 		})
 
 	if err != nil {
 		return nil, fmt.Errorf("could not create neo4j driver: %v", err)
 	}
 
-	session, err := tempDriver.NewSession(neo4j.SessionConfig{
+	session := tempDriver.NewSession(neo4j.SessionConfig{
 		AccessMode:   neo4j.AccessModeWrite,
 		Bookmarks:    nil,
 		DatabaseName: "system",
 	})
-	if err != nil {
-		return nil, fmt.Errorf("could not open connection: %v", err)
-	}
 
 	defer session.Close()
 
@@ -59,7 +54,7 @@ func NewNeo4jDriver(appConfig *config.AppConfig, databaseName string) (*Neo4jGra
 		leaderBoltUrl,
 		neo4j.BasicAuth(appConfig.BoltUsername, appConfig.BoltPassword, ""),
 		func(c *neo4j.Config) {
-			c.Encrypted = false
+
 		})
 	if err != nil {
 		return nil, fmt.Errorf("could not create system leader neo4j driver: %v", err)

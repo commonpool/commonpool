@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/auth"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/mq"
 	"github.com/commonpool/backend/pkg/server"
 	"github.com/labstack/echo/v4"
@@ -63,7 +63,7 @@ func setUnauthenticated(c echo.Context) {
 	c.Set(auth.IsAuthenticatedKey, false)
 }
 
-func ListenOnUserExchange(t *testing.T, ctx context.Context, userKey model.UserKey) *UserExchangeListener {
+func ListenOnUserExchange(t *testing.T, ctx context.Context, userKey keys.UserKey) *UserExchangeListener {
 
 	randomStr := uuid.NewV4().String()
 	amqpChan, err := AmqpClient.GetChannel()

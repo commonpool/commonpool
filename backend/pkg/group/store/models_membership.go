@@ -5,7 +5,7 @@ import (
 	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/mitchellh/mapstructure"
-	"github.com/neo4j/neo4j-go-driver/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 )
 
 type Membership struct {
@@ -18,7 +18,7 @@ type Membership struct {
 	UserConfirmed  bool   `mapstructure:"userConfirmed"`
 }
 
-func mapMembership(record neo4j.Record, key string) (*group.Membership, error) {
+func mapMembership(record *neo4j.Record, key string) (*group.Membership, error) {
 
 	graphMembership := Membership{}
 	field, ok := record.Get(key)
@@ -26,7 +26,7 @@ func mapMembership(record neo4j.Record, key string) (*group.Membership, error) {
 		return nil, fmt.Errorf("could not get field " + key)
 	}
 	relationship, _ := field.(neo4j.Relationship)
-	err := mapstructure.Decode(relationship.Props(), &graphMembership)
+	err := mapstructure.Decode(relationship.Props, &graphMembership)
 	if err != nil {
 		return nil, err
 	}

@@ -3,22 +3,30 @@ package integration
 import (
 	"context"
 	"fmt"
-
 	"github.com/commonpool/backend/mock"
 	"github.com/commonpool/backend/pkg/auth"
+	authhandler "github.com/commonpool/backend/pkg/auth/handler"
+	chathandler "github.com/commonpool/backend/pkg/chat/handler"
 	chatservice "github.com/commonpool/backend/pkg/chat/service"
 	chatstore "github.com/commonpool/backend/pkg/chat/store"
 	"github.com/commonpool/backend/pkg/config"
 	"github.com/commonpool/backend/pkg/db"
 	graph2 "github.com/commonpool/backend/pkg/graph"
+	grouphandler "github.com/commonpool/backend/pkg/group/handler"
 	groupservice "github.com/commonpool/backend/pkg/group/service"
 	groupstore "github.com/commonpool/backend/pkg/group/store"
 	"github.com/commonpool/backend/pkg/mq"
+	resourcehandler "github.com/commonpool/backend/pkg/resource/handler"
+	"github.com/commonpool/backend/pkg/resource/service"
 	resourcestore "github.com/commonpool/backend/pkg/resource/store"
+	"github.com/commonpool/backend/pkg/session"
+	tradinghandler "github.com/commonpool/backend/pkg/trading/handler"
 	tradingservice "github.com/commonpool/backend/pkg/trading/service"
 	tradingstore "github.com/commonpool/backend/pkg/trading/store"
 	transactionservice "github.com/commonpool/backend/pkg/transaction/service"
 	transactionstore "github.com/commonpool/backend/pkg/transaction/store"
+	userhandler "github.com/commonpool/backend/pkg/user/handler"
+	userservice "github.com/commonpool/backend/pkg/user/service"
 	userstore "github.com/commonpool/backend/pkg/user/store"
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/driver/postgres"
@@ -30,7 +38,7 @@ import (
 	"testing"
 )
 
-var a *handler.Handler
+
 var Db *gorm.DB
 var AmqpClient mq.Client
 var ResourceStore resourcestore.ResourceStore
@@ -45,6 +53,15 @@ var Authorizer *mock.AuthenticatorMock
 var Driver *graph2.Neo4jGraphDriver
 var TransactionStore *transactionstore.TransactionStore
 var TransactionService *transactionservice.TransactionService
+var UserService *userservice.UserService
+var ResourceService *service.ResourceService
+var AuthHandler *authhandler.AuthHandler
+var SessionHandler *session.Handler
+var ChatHandler *chathandler.Handler
+var GroupHandler *grouphandler.Handler
+var ResourceHandler *resourcehandler.ResourceHandler
+var UserHandler *userhandler.UserHandler
+var TradingHandler *tradinghandler.TradingHandler
 
 func TestMain(m *testing.M) {
 
@@ -82,18 +99,34 @@ func TestMain(m *testing.M) {
 	ChatStore = *chatstore.NewChatStore(Db)
 	TradingStore = *tradingstore.NewTradingStore(Driver)
 	GroupStore = *groupstore.NewGroupStore(Driver)
-	ChatService = *chatservice.NewChatService(&AuthStore, &GroupStore, &ResourceStore, AmqpClient, &ChatStore)
+	ChatService = *chatservice.NewChatService(&AuthStore, AmqpClient, &ChatStore)
 	GroupService = *groupservice.NewGroupService(&GroupStore, AmqpClient, ChatService, &AuthStore)
 	TradingService = *tradingservice.NewTradingService(TradingStore, &ResourceStore, &AuthStore, ChatService, GroupService, TransactionService)
+	UserService = userservice.NewUserService(&AuthStore)
+	ResourceService = service.NewResourceService(&ResourceStore)
+
+	AuthHandler = authhandler.NewHandler(Authorizer)
+	//authHandler.Register(v1)
+
+	SessionHandler = session.NewHandler(Authorizer)
+	//sessionHandler.Register(v1)
+
+	ChatHandler = chathandler.NewHandler(ChatService, TradingService, appConfig, Authorizer)
+	//chatHandler.Register(v1)
+
+	GroupHandler = grouphandler.NewHandler(GroupService, UserService, Authorizer)
+	//groupHandler.Register(v1)
+
+	ResourceHandler = resourcehandler.NewHandler(ResourceService, GroupService, UserService, Authorizer)
+	//resourceHandler.Register(v1)
+
+	UserHandler = userhandler.NewHandler(UserService, Authorizer)
+	//userHandler.Register(v1)
+
+	TradingHandler = tradinghandler.NewTradingHandler(TradingService, GroupService, UserService, Authorizer)
+	//userHandler.Register(v1)
 
 	db.AutoMigrate(Db)
-
-	a = handler.NewHandler(
-		&AuthStore,
-		Authorizer,
-		AmqpClient,
-		ChatService,
-		TradingService)
 
 	cleanDb()
 

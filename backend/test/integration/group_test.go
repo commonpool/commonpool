@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/exceptions"
 	group2 "github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/group/handler"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
@@ -17,7 +17,7 @@ import (
 
 func CreateGroup(t *testing.T, ctx context.Context, userSession *auth.UserSession, request *handler.CreateGroupRequest) (*handler.CreateGroupResponse, *http.Response, error) {
 	c, recorder := NewRequest(ctx, userSession, http.MethodGet, "/api/v1/groups", request)
-	err := a.CreateGroup(c)
+	err := GroupHandler.CreateGroup(c)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -28,7 +28,7 @@ func CreateGroup(t *testing.T, ctx context.Context, userSession *auth.UserSessio
 
 func CreateOrAcceptInvitation(t *testing.T, ctx context.Context, userSession *auth.UserSession, request *handler.CreateOrAcceptInvitationRequest) (*handler.CreateOrAcceptInvitationResponse, *http.Response, error) {
 	c, recorder := NewRequest(ctx, userSession, http.MethodGet, "/api/v1/groups", request)
-	err := a.CreateOrAcceptMembership(c)
+	err := GroupHandler.CreateOrAcceptMembership(c)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -37,20 +37,20 @@ func CreateOrAcceptInvitation(t *testing.T, ctx context.Context, userSession *au
 	return response, ReadResponse(t, recorder, response), nil
 }
 
-func DeclineOrCancelInvitation(t *testing.T, ctx context.Context, userSession *auth.UserSession, request *handler.CancelOrDeclineInvitationRequest) (*handler.CancelOrDeclineInvitationResponse, *http.Response) {
+func DeclineOrCancelInvitation(t *testing.T, ctx context.Context, userSession *auth.UserSession, request *handler.CancelOrDeclineInvitationRequest) *http.Response {
 	c, recorder := NewRequest(ctx, userSession, http.MethodGet, "/api/v1/groups", request)
-	assert.NoError(t, a.CancelOrDeclineInvitation(c))
-	response := &handler.CancelOrDeclineInvitationResponse{}
+	assert.NoError(t, GroupHandler.CancelOrDeclineInvitation(c))
+	response := group2.CancelOrDeclineInvitationRequest{}
 	t.Log(recorder.Body.String())
-	return response, ReadResponse(t, recorder, response)
+	return ReadResponse(t, recorder, response)
 }
 
-func GetUsersForInvitePicker(t *testing.T, ctx context.Context, groupId model.GroupKey, take int, skip int, userSession *auth.UserSession) (*handler.GetUsersForGroupInvitePickerResponse, *http.Response) {
+func GetUsersForInvitePicker(t *testing.T, ctx context.Context, groupId keys.GroupKey, take int, skip int, userSession *auth.UserSession) (*handler.GetUsersForGroupInvitePickerResponse, *http.Response) {
 	groupIdStr := groupId.ID.String()
 	c, recorder := NewRequest(ctx, userSession, http.MethodGet, fmt.Sprintf(`/api/v1/groups/%s/invite-member-picker?take=%d&skip=%d`, groupIdStr, take, skip), nil)
 	c.SetParamNames("id")
 	c.SetParamValues(groupIdStr)
-	assert.NoError(t, a.GetUsersForGroupInvitePicker(c))
+	assert.NoError(t, GroupHandler.GetUsersForGroupInvitePicker(c))
 	response := &handler.GetUsersForGroupInvitePickerResponse{}
 	t.Log(recorder.Body.String())
 	return response, ReadResponse(t, recorder, response)
@@ -58,7 +58,7 @@ func GetUsersForInvitePicker(t *testing.T, ctx context.Context, groupId model.Gr
 
 func GetLoggedInUserMemberships(t *testing.T, ctx context.Context, userSession *auth.UserSession) (*handler.GetUserMembershipsResponse, *http.Response) {
 	c, recorder := NewRequest(ctx, userSession, http.MethodGet, `/api/v1/my-memberships`, nil)
-	assert.NoError(t, a.GetLoggedInUserMemberships(c))
+	assert.NoError(t, GroupHandler.GetUserMemberships(c))
 	response := &handler.GetUserMembershipsResponse{}
 	t.Log(recorder.Body.String())
 	return response, ReadResponse(t, recorder, response)
@@ -153,7 +153,7 @@ func TestCreateGroupShouldCreateOwnerMembership(t *testing.T) {
 
 	assert.Equal(t, http.StatusCreated, createGroupHttp.StatusCode)
 
-	gk, _ := model.ParseGroupKey(createGroup.Group.ID)
+	gk, _ := keys.ParseGroupKey(createGroup.Group.ID)
 	grps, _ := GroupService.GetGroupMemberships(ctx, group2.NewGetMembershipsForGroupRequest(gk, nil))
 	assert.Equal(t, 1, len(grps.Memberships.Items))
 	assert.Equal(t, true, grps.Memberships.Items[0].IsOwner)
@@ -318,14 +318,14 @@ func TestInviteeShouldBeAbleToDeclineInvitationFromOwner(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, acceptInvitationHttp.StatusCode)
 
-	_, declineInvitationHttp := DeclineOrCancelInvitation(t, ctx, user2, &handler.CancelOrDeclineInvitationRequest{
+	declineInvitationHttp := DeclineOrCancelInvitation(t, ctx, user2, &handler.CancelOrDeclineInvitationRequest{
 		UserID:  user2.Subject,
 		GroupID: createGroup.Group.ID,
 	})
 	assert.Equal(t, http.StatusAccepted, declineInvitationHttp.StatusCode)
 
-	grpKey, _ := model.ParseGroupKey(createGroup.Group.ID)
-	_, err = GroupStore.GetMembership(ctx, model.NewMembershipKey(grpKey, user2.GetUserKey()))
+	grpKey, _ := keys.ParseGroupKey(createGroup.Group.ID)
+	_, err = GroupStore.GetMembership(ctx, keys.NewMembershipKey(grpKey, user2.GetUserKey()))
 	assert.True(t, errors.Is(err, exceptions.ErrMembershipNotFound))
 }
 
@@ -356,13 +356,13 @@ func TestOwnerShouldBeAbleToDeclineInvitationFromOwner(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, httpRes := DeclineOrCancelInvitation(t, ctx, user1, &handler.CancelOrDeclineInvitationRequest{
+	httpRes := DeclineOrCancelInvitation(t, ctx, user1, &handler.CancelOrDeclineInvitationRequest{
 		UserID:  user2.Subject,
 		GroupID: createGroup.Group.ID,
 	})
 	assert.Equal(t, http.StatusAccepted, httpRes.StatusCode)
-	grpKey, _ := model.ParseGroupKey(createGroup.Group.ID)
-	_, err = GroupStore.GetMembership(ctx, model.NewMembershipKey(grpKey, user2.GetUserKey()))
+	grpKey, _ := keys.ParseGroupKey(createGroup.Group.ID)
+	_, err = GroupStore.GetMembership(ctx, keys.NewMembershipKey(grpKey, user2.GetUserKey()))
 	assert.True(t, errors.Is(err, exceptions.ErrMembershipNotFound))
 }
 
@@ -667,7 +667,7 @@ func TestGetUsersForInvitePickerShouldNotReturnDuplicates(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	grpKey, _ := model.ParseGroupKey(grp.Group.ID)
+	grpKey, _ := keys.ParseGroupKey(grp.Group.ID)
 	resp, httpResp := GetUsersForInvitePicker(t, ctx, grpKey, 100, 0, user3)
 
 	assert.Equal(t, http.StatusOK, httpResp.StatusCode)

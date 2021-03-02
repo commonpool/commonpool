@@ -8,7 +8,7 @@ import (
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/user"
 	"github.com/labstack/gommon/log"
-	"github.com/neo4j/neo4j-go-driver/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"strings"
 )
 
@@ -26,10 +26,7 @@ func NewUserStore(graphDriver graph2.Driver) *UserStore {
 
 func (us *UserStore) GetByKeys(ctx context.Context, keys *keys.UserKeys) (*user.Users, error) {
 
-	session, err := us.graphDriver.GetSession()
-	if err != nil {
-		return nil, err
-	}
+	session := us.graphDriver.GetSession()
 	defer session.Close()
 
 	return us.getByKeys(session, keys)
@@ -37,10 +34,7 @@ func (us *UserStore) GetByKeys(ctx context.Context, keys *keys.UserKeys) (*user.
 
 func (us *UserStore) Upsert(key keys.UserKey, email string, username string) error {
 
-	session, err := us.graphDriver.GetSession()
-	if err != nil {
-		return err
-	}
+	session := us.graphDriver.GetSession()
 	defer session.Close()
 
 	usr, err := us.getByKey(session, key)
@@ -167,10 +161,7 @@ func (us *UserStore) getByKeys(session neo4j.Session, key *keys.UserKeys) (*user
 }
 
 func (us *UserStore) GetByKey(key keys.UserKey) (*user.User, error) {
-	session, err := us.graphDriver.GetSession()
-	if err != nil {
-		return nil, err
-	}
+	session := us.graphDriver.GetSession()
 	defer session.Close()
 
 	u, err := us.getByKey(session, key)
@@ -190,10 +181,7 @@ func (us *UserStore) GetUsername(key keys.UserKey) (string, error) {
 
 func (us *UserStore) Find(query user.Query) (*user.Users, error) {
 
-	session, err := us.graphDriver.GetSession()
-	if err != nil {
-		return nil, err
-	}
+	session := us.graphDriver.GetSession()
 	defer session.Close()
 
 	var whereClauses []string
@@ -241,14 +229,14 @@ func (us *UserStore) Find(query user.Query) (*user.Users, error) {
 	return user.NewUsers(users), err
 }
 
-func IsUserNode(node neo4j.Node) bool {
+func IsUserNode(node *neo4j.Node) bool {
 	return graph2.NodeHasLabel(node, "User")
 }
 
 func MapUserNode(node neo4j.Node) *user.User {
 	return &user.User{
-		ID:       node.Props()["id"].(string),
-		Username: node.Props()["username"].(string),
-		Email:    node.Props()["email"].(string),
+		ID:       node.Props["id"].(string),
+		Username: node.Props["username"].(string),
+		Email:    node.Props["email"].(string),
 	}
 }

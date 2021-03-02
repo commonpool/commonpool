@@ -6,10 +6,10 @@ import (
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/trading"
 	"github.com/commonpool/backend/pkg/user/store"
-	"github.com/neo4j/neo4j-go-driver/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 )
 
-func MapTargets(record neo4j.Record, targetsFieldName string) (*trading.Targets, error) {
+func MapTargets(record *neo4j.Record, targetsFieldName string) (*trading.Targets, error) {
 	field, _ := record.Get(targetsFieldName)
 
 	if field == nil {
@@ -19,7 +19,7 @@ func MapTargets(record neo4j.Record, targetsFieldName string) (*trading.Targets,
 	intfs := field.([]interface{})
 	var targets []*trading.Target
 	for _, intf := range intfs {
-		node := intf.(neo4j.Node)
+		node := intf.(*neo4j.Node)
 		target, err := MapOfferItemTarget(node)
 		if err != nil {
 			return nil, err
@@ -29,7 +29,7 @@ func MapTargets(record neo4j.Record, targetsFieldName string) (*trading.Targets,
 	return trading.NewTargets(targets), nil
 }
 
-func MapOfferItemTarget(node neo4j.Node) (*trading.Target, error) {
+func MapOfferItemTarget(node *neo4j.Node) (*trading.Target, error) {
 	if node == nil {
 		return nil, fmt.Errorf("node is nil")
 	}
@@ -40,7 +40,7 @@ func MapOfferItemTarget(node neo4j.Node) (*trading.Target, error) {
 	}
 
 	if isGroup {
-		groupKey, err := keys.ParseGroupKey(node.Props()["id"].(string))
+		groupKey, err := keys.ParseGroupKey(node.Props["id"].(string))
 		if err != nil {
 			return nil, err
 		}
@@ -49,7 +49,7 @@ func MapOfferItemTarget(node neo4j.Node) (*trading.Target, error) {
 			Type:     trading.GroupTarget,
 		}, nil
 	}
-	userKey := keys.NewUserKey(node.Props()["id"].(string))
+	userKey := keys.NewUserKey(node.Props["id"].(string))
 	return &trading.Target{
 		UserKey: &userKey,
 		Type:    trading.UserTarget,

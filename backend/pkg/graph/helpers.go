@@ -1,9 +1,9 @@
 package graph
 
-import "github.com/neo4j/neo4j-go-driver/neo4j"
+import "github.com/neo4j/neo4j-go-driver/v4/neo4j"
 
-func NodeHasLabel(node neo4j.Node, nodeLabel string) bool {
-	for _, label := range node.Labels() {
+func NodeHasLabel(node *neo4j.Node, nodeLabel string) bool {
+	for _, label := range node.Labels {
 		if nodeLabel == label {
 			return true
 		}
