@@ -38,7 +38,6 @@ import (
 	"testing"
 )
 
-
 var Db *gorm.DB
 var AmqpClient mq.Client
 var ResourceStore resourcestore.ResourceStore
@@ -130,10 +129,7 @@ func TestMain(m *testing.M) {
 
 	cleanDb()
 
-	session, err := Driver.GetSession()
-	if err != nil {
-		panic(err)
-	}
+	session := Driver.GetSession()
 	defer session.Close()
 
 	result, err := session.Run(`MATCH (u:User) detach delete u`, map[string]interface{}{})
@@ -172,12 +168,9 @@ var createUserLock sync.Mutex
 
 func cleanDb() {
 
-	session, err := Driver.GetSession()
-	if err != nil {
-		panic(err)
-	}
+	session := Driver.GetSession()
 
-	_, err = session.Run(`MATCH (n) DETACH DELETE n`, map[string]interface{}{})
+	_, err := session.Run(`MATCH (n) DETACH DELETE n`, map[string]interface{}{})
 	if err != nil {
 		panic(err)
 	}

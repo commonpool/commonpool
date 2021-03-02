@@ -19,7 +19,7 @@ func MapTargets(record *neo4j.Record, targetsFieldName string) (*trading.Targets
 	intfs := field.([]interface{})
 	var targets []*trading.Target
 	for _, intf := range intfs {
-		node := intf.(*neo4j.Node)
+		node := intf.(neo4j.Node)
 		target, err := MapOfferItemTarget(node)
 		if err != nil {
 			return nil, err
@@ -29,10 +29,7 @@ func MapTargets(record *neo4j.Record, targetsFieldName string) (*trading.Targets
 	return trading.NewTargets(targets), nil
 }
 
-func MapOfferItemTarget(node *neo4j.Node) (*trading.Target, error) {
-	if node == nil {
-		return nil, fmt.Errorf("node is nil")
-	}
+func MapOfferItemTarget(node neo4j.Node) (*trading.Target, error) {
 	isGroup := store2.IsGroupNode(node)
 	isUser := !isGroup && store.IsUserNode(node)
 	if !isGroup && !isUser {

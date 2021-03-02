@@ -27,7 +27,7 @@ func NewGroupStore(graphDriver graph.Driver) *GroupStore {
 
 func (g *GroupStore) GetGroups(take int, skip int) (*group.Groups, int64, error) {
 
-	session:= g.graphDriver.GetSession()
+	session := g.graphDriver.GetSession()
 	defer session.Close()
 
 	result, err := session.Run(`
@@ -81,7 +81,7 @@ func mapRecordToGroup(record *neo4j.Record, key string) (*group.Group, error) {
 	return MapGroupNode(node)
 }
 
-func IsGroupNode(node *neo4j.Node) bool {
+func IsGroupNode(node neo4j.Node) bool {
 	return graph.NodeHasLabel(node, "Group")
 }
 
@@ -382,7 +382,7 @@ func (g *GroupStore) filterMembershipStatus(chain *gorm.DB, membershipStatus *gr
 
 func (g *GroupStore) GetMembershipsForGroup(ctx context.Context, groupKey keys.GroupKey, membershipStatus *group.MembershipStatus) (*group.Memberships, error) {
 
-	session:= g.graphDriver.GetSession()
+	session := g.graphDriver.GetSession()
 	defer session.Close()
 
 	cypher := "MATCH (u:User)-[m:IsMemberOf]->(g:Group {id:$groupId})"

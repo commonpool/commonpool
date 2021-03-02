@@ -113,9 +113,11 @@ func TestCreateGroupEmptyName(t *testing.T) {
 		Name:        "",
 		Description: "description",
 	})
-	if err != nil {
-		t.Fatal(err)
+
+	if !assert.NotNil(t, err) {
+		return
 	}
+
 	assert.Equal(t, http.StatusBadRequest, httpResponse.StatusCode)
 }
 

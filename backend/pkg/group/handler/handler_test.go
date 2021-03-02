@@ -11,7 +11,6 @@ import (
 
 func TestCreateGroup(t *testing.T) {
 
-	handler.mockLoggedInAs(handler.user1)
 	createGroupResponse := createGroup(t, "name", "description")
 	groupId := createGroupResponse.Group.ID
 

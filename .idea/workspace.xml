@@ -5,24 +5,19 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/backend/go.mod" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/backend/go.sum" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/graph/driver.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/graph/driver.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/config/config_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/config/config_test.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/pkg/graph/graph_init.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/graph/graph_init.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/pkg/graph/helpers.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/graph/helpers.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/group/handler/handler_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/handler/handler_test.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/pkg/group/store/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/store/group.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/store/models_membership.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/store/models_membership.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/pkg/resource/store/resource.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/store/resource.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/pkg/shared/store/model.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/shared/store/model.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/pkg/trading/store/trading.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/store/trading.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/pkg/user/store/auth.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/user/store/auth.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/utils/partition.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/utils/partition.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/test/integration/group_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test/integration/group_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/test/integration/helpers_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test/integration/helpers_test.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/test/integration/main_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test/integration/main_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/test/integration/resource_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test/integration/resource_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/test/integration/trading_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test/integration/trading_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/test/integration/utils_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test/integration/utils_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/platform/minikube/apply.sh" beforeDir="false" afterPath="$PROJECT_DIR$/platform/minikube/apply.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/platform/minikube/istio.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/platform/minikube/istio.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/platform/minikube/neo4j.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/platform/minikube/neo4j.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/platform/minikube/rabbit.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/platform/minikube/rabbit.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -56,7 +51,7 @@
     <property name="go.sdk.automatically.set" value="true" />
     <property name="go.tried.to.enable.integration.vgo.integrator" value="true" />
     <property name="go.vendoring.notification.had.been.shown" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/platform/minikube" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/backend/.env" />
     <property name="settings.editor.selected.configurable" value="go.vgo" />
   </component>
   <component name="RecentsManager">
@@ -64,7 +59,7 @@
       <recent name="$PROJECT_DIR$/platform/minikube" />
     </key>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Go Test.go test integration">
     <configuration name="go build github.com/commonpool/backend" type="GoApplicationRunConfiguration" factoryName="Go Application" nameIsGenerated="true">
       <module name="commonpool" />
       <working_directory value="$PROJECT_DIR$/backend" />
@@ -85,6 +80,81 @@
       <directory value="$PROJECT_DIR$/backend" />
       <method v="2" />
     </configuration>
+    <configuration name="config_test.go" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="commonpool" />
+      <working_directory value="$PROJECT_DIR$/backend/pkg/config" />
+      <framework value="gotest" />
+      <kind value="FILE" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$/backend/pkg/config/config_test.go" />
+      <method v="2" />
+    </configuration>
+    <configuration name="github.com/commonpool/backend/pkg/config/TestGetDbConfigShouldNotFail in github.com/commonpool/backend/pkg/config" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="commonpool" />
+      <working_directory value="$PROJECT_DIR$/backend/pkg/config" />
+      <framework value="gotest" />
+      <kind value="PACKAGE" />
+      <package value="github.com/commonpool/backend/pkg/config" />
+      <directory value="$PROJECT_DIR$/backend/pkg" />
+      <filePath value="$PROJECT_DIR$" />
+      <pattern value="^\Qgithub.com\E$/^\Qcommonpool\E$/^\Qbackend\E$/^\Qpkg\E$/^\Qconfig\E$/^\QTestGetDbConfigShouldNotFail\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="go test integration" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="commonpool" />
+      <working_directory value="$PROJECT_DIR$/backend/test/integration" />
+      <EXTENSION ID="net.ashald.envfile">
+        <option name="IS_ENABLED" value="true" />
+        <option name="IS_SUBST" value="false" />
+        <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
+        <option name="IS_IGNORE_MISSING_FILES" value="false" />
+        <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
+        <ENTRIES>
+          <ENTRY IS_ENABLED="true" PARSER="runconfig" />
+          <ENTRY IS_ENABLED="true" PARSER="env" PATH="backend/.env" />
+        </ENTRIES>
+      </EXTENSION>
+      <framework value="gotest" />
+      <kind value="DIRECTORY" />
+      <directory value="$PROJECT_DIR$/backend/test/integration" />
+      <filePath value="$PROJECT_DIR$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="go test pkg" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="commonpool" />
+      <working_directory value="$PROJECT_DIR$/backend/pkg" />
+      <framework value="gotest" />
+      <kind value="DIRECTORY" />
+      <directory value="$PROJECT_DIR$/backend/pkg" />
+      <filePath value="$PROJECT_DIR$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="gobench integration" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="commonpool" />
+      <working_directory value="$PROJECT_DIR$/backend/test/integration" />
+      <framework value="gobench" />
+      <kind value="DIRECTORY" />
+      <directory value="$PROJECT_DIR$/backend/test/integration" />
+      <filePath value="$PROJECT_DIR$" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Go Build.go build github.com/commonpool/backend" />
+      <item itemvalue="Go Test.go test pkg" />
+      <item itemvalue="Go Test.github.com/commonpool/backend/pkg/config/TestGetDbConfigShouldNotFail in github.com/commonpool/backend/pkg/config" />
+      <item itemvalue="Go Test.config_test.go" />
+      <item itemvalue="Go Test.gobench integration" />
+      <item itemvalue="Go Test.go test integration" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Go Test.go test integration" />
+        <item itemvalue="Go Test.gobench integration" />
+        <item itemvalue="Go Test.go test pkg" />
+        <item itemvalue="Go Test.config_test.go" />
+        <item itemvalue="Go Test.github.com/commonpool/backend/pkg/config/TestGetDbConfigShouldNotFail in github.com/commonpool/backend/pkg/config" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
@@ -102,7 +172,21 @@
       <option name="project" value="LOCAL" />
       <updated>1614719194487</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="convert neo4j from bolt:// to neo4j://, update to latest driver, update echo version">
+      <created>1614725912456</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1614725912456</updated>
+    </task>
+    <task id="LOCAL-00003" summary="tidy dependencies">
+      <created>1614725952631</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1614725952631</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -122,7 +206,9 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="blurp" />
-    <option name="LAST_COMMIT_MESSAGE" value="blurp" />
+    <MESSAGE value="convert neo4j from bolt:// to neo4j://, update to latest driver, update echo version" />
+    <MESSAGE value="tidy dependencies" />
+    <option name="LAST_COMMIT_MESSAGE" value="tidy dependencies" />
   </component>
   <component name="VgoProject">
     <integration-enabled>true</integration-enabled>

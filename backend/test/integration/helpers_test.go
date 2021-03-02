@@ -34,10 +34,7 @@ func testUser(t *testing.T) (*auth.UserSession, func()) {
 
 	return u, func(user *auth.UserSession) func() {
 		return func() {
-			session, err := Driver.GetSession()
-			if err != nil {
-				t.Fatal(err)
-			}
+			session := Driver.GetSession()
 			defer session.Close()
 			result, err := session.Run(`MATCH (u:User{id:$id}) detach delete u`, map[string]interface{}{
 				"id": user.Subject,

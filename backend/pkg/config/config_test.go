@@ -36,6 +36,13 @@ func setup() {
 	env["OIDC_DISCOVERY_URL"] = "https://auth.example.com"
 	env["OIDC_CLIENT_ID"] = "oidc-client-id"
 	env["OIDC_CLIENT_SECRET"] = "oidc-client-secret"
+	env["BOLT_URL"] = "bolt-url"
+	env["BOLT_USERNAME"] = "bolt-uname"
+	env["BOLT_PASSWORD"] = "bolt-pwd"
+	env["NEO4J_DATABASE_NAME"] = "neo4j-db"
+	env["CALLBACK_TOKEN"] = "cb-token"
+	env["AMQP_URL"] = "amqp-url"
+	env["SECURE_COOKIES"] = "sec-ckies"
 }
 
 func TestGetDbConfigShouldNotFail(t *testing.T) {

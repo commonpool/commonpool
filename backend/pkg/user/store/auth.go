@@ -229,7 +229,7 @@ func (us *UserStore) Find(query user.Query) (*user.Users, error) {
 	return user.NewUsers(users), err
 }
 
-func IsUserNode(node *neo4j.Node) bool {
+func IsUserNode(node neo4j.Node) bool {
 	return graph2.NodeHasLabel(node, "User")
 }
 

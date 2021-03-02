@@ -903,19 +903,27 @@ func (t TradingStore) GetOfferItem(ctx context.Context, key keys.OfferItemKey) (
 	}
 
 	offerField, _ := result.Record().Get("o")
-	offerNode := offerField.(*neo4j.Node)
+	offerNode := offerField.(neo4j.Node)
 
 	fromField, _ := result.Record().Get("from")
-	fromNode := fromField.(*neo4j.Node)
+	fromNode, fromNodeOk := fromField.(neo4j.Node)
+	var fromNodePtr *neo4j.Node
+	if fromNodeOk {
+		fromNodePtr = &fromNode
+	}
 
 	toField, _ := result.Record().Get("to")
-	toNode := toField.(*neo4j.Node)
+	toNode, toNodeOk := toField.(neo4j.Node)
+	var toNodePtr *neo4j.Node
+	if toNodeOk {
+		toNodePtr = &toNode
+	}
 
-	return MapOfferItem(offerKey, offerNode, fromNode, toNode)
+	return MapOfferItem(offerKey, offerNode, fromNodePtr, toNodePtr)
 
 }
 
-func MapOfferItem(offerKey keys.OfferKey, offerItemNode *neo4j.Node, fromNode *neo4j.Node, toNode *neo4j.Node) (trading.OfferItem, error) {
+func MapOfferItem(offerKey keys.OfferKey, offerItemNode neo4j.Node, fromNode *neo4j.Node, toNode *neo4j.Node) (trading.OfferItem, error) {
 
 	offerItemType := offerItemNode.Props["type"].(string)
 	var fromResource *resource.Resource
@@ -924,21 +932,21 @@ func MapOfferItem(offerKey keys.OfferKey, offerItemNode *neo4j.Node, fromNode *n
 	var err error
 
 	if fromNode != nil {
-		if groupstore.IsGroupNode(fromNode) || store2.IsUserNode(fromNode) {
-			fromTarget, err = sharedstore.MapOfferItemTarget(fromNode)
+		if groupstore.IsGroupNode(*fromNode) || store2.IsUserNode(*fromNode) {
+			fromTarget, err = sharedstore.MapOfferItemTarget(*fromNode)
 			if err != nil {
 				return nil, err
 			}
-		} else if resourcestore.IsResourceNode(fromNode) {
-			fromResource, err = resourcestore.MapResourceNode(fromNode)
+		} else if resourcestore.IsResourceNode(*fromNode) {
+			fromResource, err = resourcestore.MapResourceNode(*fromNode)
 			if err != nil {
 				return nil, err
 			}
 		}
 	}
 	if toNode != nil {
-		if groupstore.IsGroupNode(toNode) || store2.IsUserNode(toNode) {
-			toTarget, err = sharedstore.MapOfferItemTarget(toNode)
+		if groupstore.IsGroupNode(*toNode) || store2.IsUserNode(*toNode) {
+			toTarget, err = sharedstore.MapOfferItemTarget(*toNode)
 			if err != nil {
 				return nil, err
 			}
@@ -1272,15 +1280,15 @@ func (t TradingStore) GetOfferItemsForOffer(key keys.OfferKey) (*trading.OfferIt
 		}
 
 		offerItemField, _ := result.Record().Get("offerItem")
-		offerItemNode := offerItemField.(*neo4j.Node)
+		offerItemNode := offerItemField.(neo4j.Node)
 
 		fromField, _ := result.Record().Get("from")
-		fromNode := fromField.(*neo4j.Node)
+		fromNode := fromField.(neo4j.Node)
 
 		toField, _ := result.Record().Get("to")
-		toNode := toField.(*neo4j.Node)
+		toNode := toField.(neo4j.Node)
 
-		offerItem, err := MapOfferItem(offerKey, offerItemNode, fromNode, toNode)
+		offerItem, err := MapOfferItem(offerKey, offerItemNode, &fromNode, &toNode)
 		if err != nil {
 			return nil, err
 		}
@@ -1374,11 +1382,11 @@ func (t TradingStore) GetOffersForUser(userKey keys.UserKey) (*trading.GetOffers
 
 			offerItemContainer := offerItemContainerIntf.(map[string]interface{})
 			offerItemField := offerItemContainer["offerItem"]
-			offerItemNode := offerItemField.(*neo4j.Node)
-			fromNode := offerItemContainer["from"].(*neo4j.Node)
-			toNode := offerItemContainer["to"].(*neo4j.Node)
+			offerItemNode := offerItemField.(neo4j.Node)
+			fromNode := offerItemContainer["from"].(neo4j.Node)
+			toNode := offerItemContainer["to"].(neo4j.Node)
 
-			offerItem, err := MapOfferItem(offer.GetKey(), offerItemNode, fromNode, toNode)
+			offerItem, err := MapOfferItem(offer.GetKey(), offerItemNode, &fromNode, &toNode)
 			if err != nil {
 				return nil, err
 			}

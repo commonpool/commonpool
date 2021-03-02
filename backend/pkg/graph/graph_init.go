@@ -66,7 +66,7 @@ func createIdConstraint(ctx context.Context, session neo4j.Session, nodeName str
 
 	l := logging.WithContext(ctx)
 
-	result, err := session.Run(`CREATE CONSTRAINT IF NOT EXISTS idx`+nodeName+` ON (n:`+nodeName+`) ASSERT n.id IS UNIQUE`, map[string]interface{}{})
+	result, err := session.Run(`CREATE CONSTRAINT idx`+nodeName+` IF NOT EXISTS  ON (n:`+nodeName+`) ASSERT n.id IS UNIQUE`, map[string]interface{}{})
 	if err != nil {
 		l.Error("could not create constraint", zap.Error(err))
 		return err
