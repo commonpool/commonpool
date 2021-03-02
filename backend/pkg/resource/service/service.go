@@ -35,9 +35,9 @@ func (r ResourceService) Search(ctx context.Context, query *resource.SearchResou
 }
 
 func (r ResourceService) Create(ctx context.Context, query *resource.CreateResourceQuery) error {
-	panic("implement me")
+	return r.resourceStore.Create(ctx, query)
 }
 
 func (r ResourceService) Update(ctx context.Context, query *resource.UpdateResourceQuery) error {
-	panic("implement me")
+	return r.resourceStore.Update(ctx, query)
 }

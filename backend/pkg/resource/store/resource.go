@@ -9,6 +9,7 @@ import (
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/resource"
 	"github.com/commonpool/backend/pkg/shared/store"
+	"github.com/commonpool/backend/pkg/trading"
 	transaction2 "github.com/commonpool/backend/pkg/transaction"
 	"github.com/mitchellh/mapstructure"
 	"github.com/neo4j/neo4j-go-driver/neo4j"
@@ -119,7 +120,7 @@ func (rs *ResourceStore) getByKeys(ctx ctx.Context, session neo4j.Session, resou
 
 }
 
-func createClaimsForTargets(resourceKey keys.ResourceKey, claimType resource.ClaimType, targets *resource.Targets) *resource.Claims {
+func createClaimsForTargets(resourceKey keys.ResourceKey, claimType resource.ClaimType, targets *trading.Targets) *resource.Claims {
 	var claims []*resource.Claim
 	for _, target := range targets.Items {
 		claims = append(claims, &resource.Claim{

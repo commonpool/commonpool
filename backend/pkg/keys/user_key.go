@@ -1,6 +1,7 @@
 package keys
 
 import (
+	"encoding/json"
 	"fmt"
 	"go.uber.org/zap/zapcore"
 )
@@ -30,4 +31,17 @@ func (k UserKey) GetExchangeName() string {
 
 func (k UserKey) GetFrontendLink() string {
 	return fmt.Sprintf("<commonpool-user id='%s'></commonpool-user>", k.String())
+}
+
+func (k UserKey) MarshalJSON() ([]byte, error) {
+	return json.Marshal(k.subject)
+}
+
+func (k *UserKey) UnmarshalJSON(data []byte) error {
+	var uid string
+	if err := json.Unmarshal(data, &uid); err != nil {
+		return err
+	}
+	k.subject = uid
+	return nil
 }

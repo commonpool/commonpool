@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/test"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 )
@@ -28,9 +29,9 @@ func (s *chatHandlerSuite) TestGetSubscriptionsShouldFailIfSkipInvalidInt() {
 	s.ServeHTTP()
 	s.AssertBadRequest()
 	s.AssertErrorResponse(
-		HasStatusCode(http.StatusBadRequest),
-		HasCode("ErrInvalidSkipQueryParam"),
-		HasMessage(`query parameter 'skip' is invalid`))
+		test.HasStatusCode(http.StatusBadRequest),
+		test.HasCode("ErrInvalidSkipQueryParam"),
+		test.HasMessage(`query parameter 'skip' is invalid`))
 }
 
 func (s *chatHandlerSuite) TestGetSubscriptionsShouldFailIfTakeInvalidInt() {
@@ -38,7 +39,7 @@ func (s *chatHandlerSuite) TestGetSubscriptionsShouldFailIfTakeInvalidInt() {
 	s.ServeHTTP()
 	s.AssertBadRequest()
 	s.AssertErrorResponse(
-		HasStatusCode(http.StatusBadRequest),
-		HasCode("ErrInvalidTakeQueryParam"),
-		HasMessage(`query parameter 'take' is invalid`))
+		test.HasStatusCode(http.StatusBadRequest),
+		test.HasCode("ErrInvalidTakeQueryParam"),
+		test.HasMessage(`query parameter 'take' is invalid`))
 }

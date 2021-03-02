@@ -3,7 +3,6 @@ package session
 import (
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/handler"
-	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
@@ -40,14 +39,20 @@ func (h *Handler) SessionInfo(c echo.Context) error {
 	loggedInUser, err := auth.GetLoggedInUser(ctx)
 
 	if err != nil {
-		return c.JSON(http.StatusOK, &web.UserAuthResponse{
+		return c.JSON(http.StatusOK, &UserAuthResponse{
 			IsAuthenticated: false,
 		})
 	}
 
-	return c.JSON(http.StatusOK, web.UserAuthResponse{
+	return c.JSON(http.StatusOK, UserAuthResponse{
 		IsAuthenticated: true,
 		Username:        loggedInUser.Username,
 		Id:              loggedInUser.Subject,
 	})
+}
+
+type UserAuthResponse struct {
+	IsAuthenticated bool   `json:"isAuthenticated"`
+	Username        string `json:"username"`
+	Id              string `json:"id"`
 }

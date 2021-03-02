@@ -21,28 +21,28 @@ var _ chat.Service = &ChatService{}
 //
 //         // make and configure a mocked chat.Service
 //         mockedService := &ChatService{
-//             CreateChannelFunc: func(ctx context.Context, channelKey chatmodel.ChannelKey, channelType chatmodel.ChannelType) (*chatmodel.Channel, error) {
+//             CreateChannelFunc: func(ctx context.Context, channelKey keys.ChannelKey, channelType chat.ChannelType) (*chat.Channel, error) {
 // 	               panic("mock out the CreateChannel method")
 //             },
-//             CreateUserExchangeFunc: func(ctx context.Context, userKey usermodel.UserKey) (string, error) {
+//             CreateUserExchangeFunc: func(ctx context.Context, userKey keys.UserKey) (string, error) {
 // 	               panic("mock out the CreateUserExchange method")
 //             },
 //             DeleteGroupChannelFunc: func(ctx context.Context, request *chat.DeleteGroupChannel) (*chat.DeleteGroupChannelResponse, error) {
 // 	               panic("mock out the DeleteGroupChannel method")
 //             },
-//             GetChannelFunc: func(ctx context.Context, channelKey chatmodel.ChannelKey) (*chatmodel.Channel, error) {
+//             GetChannelFunc: func(ctx context.Context, channelKey keys.ChannelKey) (*chat.Channel, error) {
 // 	               panic("mock out the GetChannel method")
 //             },
-//             GetMessageFunc: func(ctx context.Context, messageKey chatmodel.MessageKey) (*chatmodel.Message, error) {
+//             GetMessageFunc: func(ctx context.Context, messageKey keys.MessageKey) (*chat.Message, error) {
 // 	               panic("mock out the GetMessage method")
 //             },
-//             GetMessagesFunc: func(ctx context.Context, channel chatmodel.ChannelKey, before time.Time, take int) (*chat.GetMessagesResponse, error) {
+//             GetMessagesFunc: func(ctx context.Context, channel keys.ChannelKey, before time.Time, take int) (*chat.GetMessagesResponse, error) {
 // 	               panic("mock out the GetMessages method")
 //             },
-//             GetSubscriptionsForUserFunc: func(ctx context.Context, take int, skip int) (*chatmodel.ChannelSubscriptions, error) {
+//             GetSubscriptionsForUserFunc: func(ctx context.Context, take int, skip int) (*chat.ChannelSubscriptions, error) {
 // 	               panic("mock out the GetSubscriptionsForUser method")
 //             },
-//             GetUserExchangeNameFunc: func(ctx context.Context, userKey usermodel.UserKey) string {
+//             GetUserExchangeNameFunc: func(ctx context.Context, userKey keys.UserKey) string {
 // 	               panic("mock out the GetUserExchangeName method")
 //             },
 //             SendConversationMessageFunc: func(ctx context.Context, request *chat.SendConversationMessage) (*chat.SendConversationMessageResponse, error) {
@@ -51,13 +51,13 @@ var _ chat.Service = &ChatService{}
 //             SendGroupMessageFunc: func(ctx context.Context, request *chat.SendGroupMessage) (*chat.SendGroupMessageResponse, error) {
 // 	               panic("mock out the SendGroupMessage method")
 //             },
-//             SendMessageFunc: func(ctx context.Context, message *chatmodel.Message) error {
+//             SendMessageFunc: func(ctx context.Context, message *chat.Message) error {
 // 	               panic("mock out the SendMessage method")
 //             },
-//             SubscribeToChannelFunc: func(ctx context.Context, channelSubscriptionKey chatmodel.ChannelSubscriptionKey, name string) (*chatmodel.ChannelSubscription, error) {
+//             SubscribeToChannelFunc: func(ctx context.Context, channelSubscriptionKey keys.ChannelSubscriptionKey, name string) (*chat.ChannelSubscription, error) {
 // 	               panic("mock out the SubscribeToChannel method")
 //             },
-//             UnsubscribeFromChannelFunc: func(ctx context.Context, channelSubscriptionKey chatmodel.ChannelSubscriptionKey) error {
+//             UnsubscribeFromChannelFunc: func(ctx context.Context, channelSubscriptionKey keys.ChannelSubscriptionKey) error {
 // 	               panic("mock out the UnsubscribeFromChannel method")
 //             },
 //         }

@@ -6,10 +6,10 @@ import (
 )
 
 type Store interface {
-	GetByKey(key keys.UserKey) (*User, error)
-	GetByKeys(ctx context.Context, keys *keys.UserKeys) (*Users, error)
-	Upsert(key keys.UserKey, email string, username string) error
-	GetUsername(key keys.UserKey) (string, error)
+	GetByKey(userKey keys.UserKey) (*User, error)
+	GetByKeys(ctx context.Context, userKeys *keys.UserKeys) (*Users, error)
+	Upsert(userKey keys.UserKey, email string, username string) error
+	GetUsername(userKey keys.UserKey) (string, error)
 	Find(query Query) (*Users, error)
 }
 

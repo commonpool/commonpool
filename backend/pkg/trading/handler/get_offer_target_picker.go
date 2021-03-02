@@ -3,17 +3,16 @@ package handler
 import (
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/keys"
-	"github.com/commonpool/backend/pkg/resource"
 	"github.com/commonpool/backend/pkg/trading"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
 
 type OfferGroupOrUserPickerItem struct {
-	Type    resource.TargetType `json:"type"`
-	UserID  *string             `json:"userId"`
-	GroupID *string             `json:"groupId"`
-	Name    string              `json:"name"`
+	Type    trading.TargetType `json:"type"`
+	UserID  *string            `json:"userId"`
+	GroupID *string            `json:"groupId"`
+	Name    string             `json:"name"`
 }
 
 type OfferGroupOrUserPickerResult struct {
@@ -59,7 +58,7 @@ func (h *TradingHandler) HandleOfferItemTargetPicker(c echo.Context) error {
 	for _, group := range groups.Items {
 		groupId := group.GetKey().String()
 		items = append(items, OfferGroupOrUserPickerItem{
-			Type:    resource.GroupTarget,
+			Type:    trading.GroupTarget,
 			GroupID: &groupId,
 			Name:    group.Name,
 		})
@@ -73,7 +72,7 @@ func (h *TradingHandler) HandleOfferItemTargetPicker(c echo.Context) error {
 	for _, item := range users.Items {
 		userKey := item.GetUserKey().String()
 		items = append(items, OfferGroupOrUserPickerItem{
-			Type:   resource.UserTarget,
+			Type:   trading.UserTarget,
 			UserID: &userKey,
 			Name:   item.Username,
 		})

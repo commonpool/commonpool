@@ -27,6 +27,8 @@ spec:
   secretName: commonpool-cert-prod
   dnsNames:
   - commonpool.net
+  - "*.commonpool.net"
+  - "*.graphdb.commonpool.net"
   issuerRef:
     name: letsencrypt-prod
     kind: ClusterIssuer

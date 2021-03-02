@@ -27,7 +27,7 @@ func (t TradingService) AcceptOffer(ctx context.Context, offerKey keys.OfferKey)
 		return err
 	}
 
-	if offerItems.AllPartiesAccepted() {
+	if offerItems.AllApproved() {
 		err := fmt.Errorf("offer is already accepted")
 		return err
 	}
@@ -37,20 +37,21 @@ func (t TradingService) AcceptOffer(ctx context.Context, offerKey keys.OfferKey)
 		return err
 	}
 
-	approvableOfferItemsOnGivingSide, canApproveOfferGivingAnything :=
-		approvers.OfferItemsUsersCanGive[loggedInUserKey]
-	approvableOfferItemsOnReceivingSide, canApproveReceivingAnything :=
-		approvers.OfferItemsUsersCanReceive[loggedInUserKey]
-
-	if !canApproveOfferGivingAnything && !canApproveReceivingAnything {
+	if !approvers.HasAnyOfferItemsToApprove(loggedInUserKey) {
 		return exceptions.ErrUnauthorized
 	}
+
+	approvableOfferItemsOnGivingSide :=
+		approvers.GetOutboundOfferItems(loggedInUserKey)
+
+	approvableOfferItemsOnReceivingSide :=
+		approvers.GetInboundOfferItems(loggedInUserKey)
 
 	var offerItemsPendingGiverApproval []keys.OfferItemKey
 	if approvableOfferItemsOnGivingSide != nil {
 		for _, offerItemKey := range approvableOfferItemsOnGivingSide.Items {
 			offerItem := offerItems.GetOfferItem(offerItemKey)
-			if offerItem.IsAcceptedByGiver() {
+			if offerItem.IsOutboundApproved() {
 				continue
 			}
 			offerItemsPendingGiverApproval = append(offerItemsPendingGiverApproval, offerItemKey)
@@ -60,7 +61,7 @@ func (t TradingService) AcceptOffer(ctx context.Context, offerKey keys.OfferKey)
 	if approvableOfferItemsOnReceivingSide != nil {
 		for _, offerItemKey := range approvableOfferItemsOnReceivingSide.Items {
 			offerItem := offerItems.GetOfferItem(offerItemKey)
-			if offerItem.IsAcceptedByReceiver() {
+			if offerItem.IsInboundApproved() {
 				continue
 			}
 			offerItemsPendingReceiverApproval = append(offerItemsPendingReceiverApproval, offerItemKey)
@@ -143,7 +144,7 @@ func (t TradingService) AcceptOffer(ctx context.Context, offerKey keys.OfferKey)
 		return err
 	}
 
-	if offerItems.AllPartiesAccepted() {
+	if offerItems.AllApproved() {
 		err := t.tradingStore.UpdateOfferStatus(offerKey, trading.AcceptedOffer)
 		if err != nil {
 			return err
@@ -160,7 +161,7 @@ func (t TradingService) AcceptOffer(ctx context.Context, offerKey keys.OfferKey)
 		return err
 	}
 
-	// if offerItems.AllPartiesAccepted() {
+	// if offerItems.AllApproved() {
 	//
 	// 	var blocks []chat.Block
 	// 	blocks = append(blocks, *chat.NewHeaderBlock(

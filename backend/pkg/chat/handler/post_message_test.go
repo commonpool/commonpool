@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/test"
 	"net/http"
 )
 
@@ -21,9 +22,9 @@ func (s *chatHandlerSuite) TestPostMessageShouldFailIfMessageNil() {
 	s.ServeHTTP()
 	s.AssertBadRequest()
 	s.AssertErrorResponse(
-		HasStatusCode(http.StatusBadRequest),
-		HasCode("ErrValidation"),
-		HasValidationError("SendMessageRequest.message", "message is required"))
+		test.HasStatusCode(http.StatusBadRequest),
+		test.HasCode("ErrValidation"),
+		test.HasValidationError("SendMessageRequest.message", "message is required"))
 }
 
 func (s *chatHandlerSuite) TestPostMessageShouldFailIfMessageEmpty() {
@@ -31,9 +32,9 @@ func (s *chatHandlerSuite) TestPostMessageShouldFailIfMessageEmpty() {
 	s.ServeHTTP()
 	s.AssertBadRequest()
 	s.AssertErrorResponse(
-		HasStatusCode(http.StatusBadRequest),
-		HasCode("ErrValidation"),
-		HasValidationError("SendMessageRequest.message", "message is required"))
+		test.HasStatusCode(http.StatusBadRequest),
+		test.HasCode("ErrValidation"),
+		test.HasValidationError("SendMessageRequest.message", "message is required"))
 }
 
 func (s *chatHandlerSuite) TestPostMessageShouldFailIfMessageBlank() {
@@ -41,7 +42,7 @@ func (s *chatHandlerSuite) TestPostMessageShouldFailIfMessageBlank() {
 	s.ServeHTTP()
 	s.AssertBadRequest()
 	s.AssertErrorResponse(
-		HasStatusCode(http.StatusBadRequest),
-		HasCode("ErrValidation"),
-		HasValidationError("SendMessageRequest.message", "message is required"))
+		test.HasStatusCode(http.StatusBadRequest),
+		test.HasCode("ErrValidation"),
+		test.HasValidationError("SendMessageRequest.message", "message is required"))
 }

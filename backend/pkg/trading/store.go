@@ -14,7 +14,7 @@ type Store interface {
 	UpdateOfferItem(ctx context.Context, offerItem OfferItem) error
 	UpdateOfferStatus(key keys.OfferKey, offer OfferStatus) error
 	GetTradingHistory(ctx context.Context, ids *keys.UserKeys) ([]HistoryEntry, error)
-	FindApproversForOffer(offerKey keys.OfferKey) (*OfferApprovers, error)
+	FindApproversForOffer(offerKey keys.OfferKey) (Approvers, error)
 	FindApproversForOffers(offerKeys *keys.OfferKeys) (*OffersApprovers, error)
 	FindApproversForCandidateOffer(offer *Offer, offerItems *OfferItems) (*keys.UserKeys, error)
 	FindReceivingApproversForOfferItem(offerItemKey keys.OfferItemKey) (*keys.UserKeys, error)

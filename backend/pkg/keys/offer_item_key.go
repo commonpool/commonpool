@@ -1,6 +1,9 @@
 package keys
 
-import "github.com/satori/go.uuid"
+import (
+	"encoding/json"
+	"github.com/satori/go.uuid"
+)
 
 type OfferItemKey struct {
 	ID uuid.UUID
@@ -12,6 +15,9 @@ func (o OfferItemKey) String() string {
 
 func NewOfferItemKey(id uuid.UUID) OfferItemKey {
 	return OfferItemKey{ID: id}
+}
+func GenerateOfferItemKey() OfferItemKey {
+	return OfferItemKey{ID: uuid.NewV4()}
 }
 
 func ParseOfferItemKey(str string) (OfferItemKey, error) {
@@ -28,4 +34,21 @@ func MustParseOfferItemKey(str string) OfferItemKey {
 		panic(err)
 	}
 	return NewOfferItemKey(uid)
+}
+
+func (k OfferItemKey) MarshalJSON() ([]byte, error) {
+	return json.Marshal(k.ID.String())
+}
+
+func (k *OfferItemKey) UnmarshalJSON(data []byte) error {
+	var uid string
+	if err := json.Unmarshal(data, &uid); err != nil {
+		return err
+	}
+	id, err := uuid.FromString(uid)
+	if err != nil {
+		return err
+	}
+	k.ID = id
+	return nil
 }

@@ -1,9 +1,8 @@
 package service
 
 import (
-	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/keys"
-	"github.com/commonpool/backend/pkg/resource"
+	"github.com/commonpool/backend/pkg/trading"
 	transaction2 "github.com/commonpool/backend/pkg/transaction"
 	uuid "github.com/satori/go.uuid"
 	"time"
@@ -24,7 +23,7 @@ var _ transaction2.Service = &TransactionService{}
 func (t TransactionService) UserSharedResourceWithGroup(groupKey keys.GroupKey, resourceKey keys.ResourceKey) (*transaction2.Entry, error) {
 
 	entry := &transaction2.Entry{
-		Key:         model.NewTransactionEntryKey(uuid.NewV4()),
+		Key:         keys.NewTransactionEntryKey(uuid.NewV4()),
 		Type:        transaction2.ResourceSharedWithGroup,
 		GroupKey:    groupKey,
 		ResourceKey: &resourceKey,
@@ -45,7 +44,7 @@ func (t TransactionService) UserSharedResourceWithGroup(groupKey keys.GroupKey, 
 
 func (t TransactionService) UserRemovedResourceFromGroup(groupKey keys.GroupKey, resourceKey keys.ResourceKey) (*transaction2.Entry, error) {
 	entry := &transaction2.Entry{
-		Key:         model.NewTransactionEntryKey(uuid.NewV4()),
+		Key:         keys.NewTransactionEntryKey(uuid.NewV4()),
 		Type:        transaction2.ResourceRemovedFromGroup,
 		GroupKey:    groupKey,
 		ResourceKey: &resourceKey,
@@ -65,7 +64,7 @@ func (t TransactionService) UserRemovedResourceFromGroup(groupKey keys.GroupKey,
 
 func (t TransactionService) ServiceWasProvided(groupKey keys.GroupKey, resourceKey keys.ResourceKey, duration time.Duration) (*transaction2.Entry, error) {
 	entry := &transaction2.Entry{
-		Key:         model.NewTransactionEntryKey(uuid.NewV4()),
+		Key:         keys.NewTransactionEntryKey(uuid.NewV4()),
 		Type:        transaction2.ServiceProvided,
 		GroupKey:    groupKey,
 		ResourceKey: &resourceKey,
@@ -83,9 +82,9 @@ func (t TransactionService) ServiceWasProvided(groupKey keys.GroupKey, resourceK
 	return t.store.GetEntry(entry.Key)
 }
 
-func (t TransactionService) ResourceWasBorrowed(groupKey keys.GroupKey, resourceKey keys.ResourceKey, recipient *resource.Target, expectedDuration time.Duration) (*transaction2.Entry, error) {
+func (t TransactionService) ResourceWasBorrowed(groupKey keys.GroupKey, resourceKey keys.ResourceKey, recipient *trading.Target, expectedDuration time.Duration) (*transaction2.Entry, error) {
 	entry := &transaction2.Entry{
-		Key:         model.NewTransactionEntryKey(uuid.NewV4()),
+		Key:         keys.NewTransactionEntryKey(uuid.NewV4()),
 		Type:        transaction2.ResourceBorrowed,
 		GroupKey:    groupKey,
 		ResourceKey: &resourceKey,
@@ -103,9 +102,9 @@ func (t TransactionService) ResourceWasBorrowed(groupKey keys.GroupKey, resource
 	return t.store.GetEntry(entry.Key)
 }
 
-func (t TransactionService) ResourceWasReturned(groupKey keys.GroupKey, resourceKey keys.ResourceKey, recipient *resource.Target, actualDuration time.Duration) (*transaction2.Entry, error) {
+func (t TransactionService) ResourceWasReturned(groupKey keys.GroupKey, resourceKey keys.ResourceKey, recipient *trading.Target, actualDuration time.Duration) (*transaction2.Entry, error) {
 	entry := &transaction2.Entry{
-		Key:         model.NewTransactionEntryKey(uuid.NewV4()),
+		Key:         keys.NewTransactionEntryKey(uuid.NewV4()),
 		Type:        transaction2.ResourceReturned,
 		GroupKey:    groupKey,
 		ResourceKey: &resourceKey,
@@ -123,9 +122,9 @@ func (t TransactionService) ResourceWasReturned(groupKey keys.GroupKey, resource
 	return t.store.GetEntry(entry.Key)
 }
 
-func (t TransactionService) ResourceWasTaken(groupKey keys.GroupKey, resourceKey keys.ResourceKey, recipient *resource.Target) (*transaction2.Entry, error) {
+func (t TransactionService) ResourceWasTaken(groupKey keys.GroupKey, resourceKey keys.ResourceKey, recipient *trading.Target) (*transaction2.Entry, error) {
 	entry := &transaction2.Entry{
-		Key:         model.NewTransactionEntryKey(uuid.NewV4()),
+		Key:         keys.NewTransactionEntryKey(uuid.NewV4()),
 		Type:        transaction2.ResourceTaken,
 		GroupKey:    groupKey,
 		ResourceKey: &resourceKey,
@@ -143,9 +142,9 @@ func (t TransactionService) ResourceWasTaken(groupKey keys.GroupKey, resourceKey
 	return t.store.GetEntry(entry.Key)
 }
 
-func (t TransactionService) TimeCreditsExchanged(groupKey keys.GroupKey, from *resource.Target, recipient *resource.Target, amount time.Duration) (*transaction2.Entry, error) {
+func (t TransactionService) TimeCreditsExchanged(groupKey keys.GroupKey, from *trading.Target, recipient *trading.Target, amount time.Duration) (*transaction2.Entry, error) {
 	entry := &transaction2.Entry{
-		Key:         model.NewTransactionEntryKey(uuid.NewV4()),
+		Key:         keys.NewTransactionEntryKey(uuid.NewV4()),
 		Type:        transaction2.TimeCreditsExchanged,
 		GroupKey:    groupKey,
 		ResourceKey: nil,
@@ -167,6 +166,6 @@ func (t TransactionService) GetEntriesForGroupAndUsers(groupKey keys.GroupKey, u
 	return t.store.GetEntriesForGroupAndUsers(groupKey, userKeys)
 }
 
-func (t TransactionService) GetEntry(entryKey model.TransactionEntryKey) (*transaction2.Entry, error) {
+func (t TransactionService) GetEntry(entryKey keys.TransactionEntryKey) (*transaction2.Entry, error) {
 	return t.store.GetEntry(entryKey)
 }

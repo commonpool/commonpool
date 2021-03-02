@@ -49,7 +49,7 @@ func (t TradingService) checkOfferCompleted(
 	userConfirmingItem user.UserReference,
 	usersInOffer *user.Users) error {
 
-	if offerItems.AllPartiesAccepted() && offerItems.AllUserActionsCompleted() {
+	if offerItems.AllApproved() && offerItems.AllUserActionsCompleted() {
 		for _, offerItem := range offerItems.Items {
 			if offerItem.IsCreditTransfer() {
 				creditTransfer := offerItem.(*trading2.CreditTransferItem)

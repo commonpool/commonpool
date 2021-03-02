@@ -19,3 +19,7 @@ func NewOfferItemKeys(items []OfferItemKey) *OfferItemKeys {
 		Items: copied,
 	}
 }
+
+func (t *OfferItemKeys) IsEmpty() bool {
+	return len(t.Items) == 0
+}

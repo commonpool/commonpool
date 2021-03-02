@@ -4,16 +4,15 @@ import (
 	fmt "fmt"
 	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/pkg/keys"
-	"github.com/commonpool/backend/pkg/resource"
 	"github.com/commonpool/backend/pkg/trading"
 	"github.com/labstack/echo/v4"
 	"time"
 )
 
-func parseTargetFromQueryParams(c echo.Context, typeQueryParam string, valueQueryParam string) (*resource.Target, error) {
+func parseTargetFromQueryParams(c echo.Context, typeQueryParam string, valueQueryParam string) (*trading.Target, error) {
 	typeParam := c.QueryParams().Get(typeQueryParam)
 	if typeParam != "" {
-		typeValue, err := resource.ParseOfferItemTargetType(typeParam)
+		typeValue, err := trading.ParseOfferItemTargetType(typeParam)
 		if err != nil {
 			return nil, err
 		}
@@ -27,26 +26,19 @@ func parseTargetFromQueryParams(c echo.Context, typeQueryParam string, valueQuer
 			if err != nil {
 				return nil, err
 			}
-			return resource.NewGroupTarget(groupKey), nil
+			return trading.NewGroupTarget(groupKey), nil
 		} else if targetType.IsUser() {
 			userKey := keys.NewUserKey(targetIdStr)
-			return resource.NewUserTarget(userKey), nil
+			return trading.NewUserTarget(userKey), nil
 		}
 	}
 	return nil, nil
 }
 
-func mapWebOfferItem(offerItem trading.OfferItem, approvers *trading.OfferApprovers) (*OfferItem, error) {
+func mapWebOfferItem(offerItem trading.OfferItem, approvers trading.Approvers) (*OfferItem, error) {
 
-	fromApprovers, hasFromApprovers := approvers.UsersAbleToGiveItem[offerItem.GetKey()]
-	toApprovers, hasToApprovers := approvers.UsersAbleToReceiveItem[offerItem.GetKey()]
-
-	if !hasFromApprovers {
-		fromApprovers = keys.NewEmptyUserKeys()
-	}
-	if !hasToApprovers {
-		toApprovers = keys.NewEmptyUserKeys()
-	}
+	outboundApprovers := approvers.GetOutboundApprovers(offerItem.GetKey())
+	inboundApprovers := approvers.GetInboundApprovers(offerItem.GetKey())
 
 	if offerItem.IsCreditTransfer() {
 
@@ -67,10 +59,10 @@ func mapWebOfferItem(offerItem trading.OfferItem, approvers *trading.OfferApprov
 			From:               from,
 			To:                 to,
 			Type:               trading.CreditTransfer,
-			ReceivingApprovers: toApprovers.Strings(),
-			GivingApprovers:    fromApprovers.Strings(),
-			GiverApproved:      creditTransfer.GiverAccepted,
-			ReceiverApproved:   creditTransfer.ReceiverAccepted,
+			ReceivingApprovers: inboundApprovers.Strings(),
+			GivingApprovers:    outboundApprovers.Strings(),
+			GiverApproved:      creditTransfer.ApprovedOutbound,
+			ReceiverApproved:   creditTransfer.ApprovedInbound,
 			Amount:             &amount,
 		}, nil
 
@@ -91,10 +83,10 @@ func mapWebOfferItem(offerItem trading.OfferItem, approvers *trading.OfferApprov
 			ResourceId:         &resourceId,
 			Duration:           &duration,
 			Type:               trading.BorrowResource,
-			ReceivingApprovers: toApprovers.Strings(),
-			GivingApprovers:    fromApprovers.Strings(),
-			GiverApproved:      borrowResource.GiverAccepted,
-			ReceiverApproved:   borrowResource.ReceiverAccepted,
+			ReceivingApprovers: inboundApprovers.Strings(),
+			GivingApprovers:    outboundApprovers.Strings(),
+			GiverApproved:      borrowResource.ApprovedOutbound,
+			ReceiverApproved:   borrowResource.ApprovedInbound,
 			ItemGiven:          borrowResource.ItemGiven,
 			ItemTaken:          borrowResource.ItemTaken,
 			ItemReceivedBack:   borrowResource.ItemReceivedBack,
@@ -116,10 +108,10 @@ func mapWebOfferItem(offerItem trading.OfferItem, approvers *trading.OfferApprov
 			To:                 to,
 			ResourceId:         &resourceId,
 			Type:               trading.ResourceTransfer,
-			ReceivingApprovers: toApprovers.Strings(),
-			GivingApprovers:    fromApprovers.Strings(),
-			GiverApproved:      resourceTransfer.GiverAccepted,
-			ReceiverApproved:   resourceTransfer.ReceiverAccepted,
+			ReceivingApprovers: inboundApprovers.Strings(),
+			GivingApprovers:    outboundApprovers.Strings(),
+			GiverApproved:      resourceTransfer.ApprovedOutbound,
+			ReceiverApproved:   resourceTransfer.ApprovedInbound,
 			ItemGiven:          resourceTransfer.ItemGiven,
 			ItemTaken:          resourceTransfer.ItemReceived,
 		}, nil
@@ -141,10 +133,10 @@ func mapWebOfferItem(offerItem trading.OfferItem, approvers *trading.OfferApprov
 			ResourceId:                  &resourceId,
 			Duration:                    &duration,
 			Type:                        trading.ProvideService,
-			ReceivingApprovers:          toApprovers.Strings(),
-			GivingApprovers:             fromApprovers.Strings(),
-			GiverApproved:               serviceProvision.GiverAccepted,
-			ReceiverApproved:            serviceProvision.ReceiverAccepted,
+			ReceivingApprovers:          inboundApprovers.Strings(),
+			GivingApprovers:             outboundApprovers.Strings(),
+			GiverApproved:               serviceProvision.ApprovedOutbound,
+			ReceiverApproved:            serviceProvision.ApprovedInbound,
 			ServiceGivenConfirmation:    serviceProvision.ServiceGivenConfirmation,
 			ServiceReceivedConfirmation: serviceProvision.ServiceReceivedConfirmation,
 		}, nil
@@ -154,36 +146,7 @@ func mapWebOfferItem(offerItem trading.OfferItem, approvers *trading.OfferApprov
 
 }
 
-func (h *TradingHandler) getWebOffer(offerKey keys.OfferKey) (*OfferResponse, error) {
-
-	offer, err := h.tradingService.GetOffer(offerKey)
-	if err != nil {
-		return nil, err
-	}
-
-	items, err := h.tradingService.GetOfferItemsForOffer(offerKey)
-	if err != nil {
-		return nil, err
-	}
-
-	approvers, err := h.tradingService.FindApproversForOffer(offer.Key)
-	if err != nil {
-		return nil, err
-	}
-
-	webOffer, err := h.mapToWebOffer(offer, items, approvers)
-	if err != nil {
-		return nil, err
-	}
-
-	response := OfferResponse{
-		Offer: webOffer,
-	}
-
-	return &response, nil
-}
-
-func (h *TradingHandler) mapToWebOffer(offer *trading.Offer, items *trading.OfferItems, approvers *trading.OfferApprovers) (*Offer, error) {
+func (h *TradingHandler) mapToWebOffer(offer *trading.Offer, items *trading.OfferItems, approvers trading.Approvers) (*Offer, error) {
 
 	authorUsername, err := h.userService.GetUsername(offer.GetAuthorKey())
 	if err != nil {

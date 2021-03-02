@@ -1,19 +1,18 @@
 package transaction
 
 import (
-	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/keys"
-	"github.com/commonpool/backend/pkg/resource"
+	"github.com/commonpool/backend/pkg/trading"
 	"time"
 )
 
 type Entry struct {
-	Key         model.TransactionEntryKey
+	Key         keys.TransactionEntryKey
 	Type        Type
 	GroupKey    keys.GroupKey
 	ResourceKey *keys.ResourceKey
 	Duration    *time.Duration
-	Recipient   *resource.Target
-	From        *resource.Target
+	Recipient   *trading.Target
+	From        *trading.Target
 	Timestamp   time.Time
 }

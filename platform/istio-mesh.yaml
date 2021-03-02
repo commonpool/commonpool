@@ -26,6 +26,28 @@ spec:
     tls:
       mode: SIMPLE 
       credentialName: commonpool-cert-prod
+  - port:
+      number: 7474
+      name: neo4j-https
+      protocol: HTTPS
+    hosts:
+      - "*.graphdb.commonpool.net"
+      - "graphdb.commonpool.net"
+    tls:
+      mode: SIMPLE
+      credentialName: commonpool-cert-prod
+  - port:
+      number: 7687
+      name: neo4j-bolt
+      protocol: HTTPS
+    hosts:
+      - "0.graphdb.commonpool.net"
+      - "1.graphdb.commonpool.net"
+      - "2.graphdb.commonpool.net"
+      - "graphdb.commonpool.net"
+    tls:
+      mode: SIMPLE
+      credentialName: commonpool-cert-prod
 ---
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
@@ -73,3 +95,112 @@ spec:
   - name: staging
     labels:
       version: staging
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: neo4j-0
+  namespace: default
+spec:
+  gateways:
+    - commonpool
+  hosts:
+    - graphdb-neo4j-core-0.graphdb-neo4j.default.svc.cluster.local
+    - 0.graphdb.commonpool.net
+  http:
+    - match:
+        - port: 7687
+      route:
+        - destination:
+            host: graphdb-neo4j-0.default.svc.cluster.local
+            port:
+              number: 7687
+    - match:
+        - port: 7474
+      route:
+        - destination:
+            host: graphdb-neo4j-0.default.svc.cluster.local
+            port:
+              number: 7474
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: neo4j-1
+  namespace: default
+spec:
+  gateways:
+    - commonpool
+  hosts:
+    - graphdb-neo4j-core-1.graphdb-neo4j.default.svc.cluster.local
+    - 1.graphdb.commonpool.net
+  http:
+    - match:
+        - port: 7687
+      route:
+        - destination:
+            host: graphdb-neo4j-1.default.svc.cluster.local
+            port:
+              number: 7687
+    - match:
+        - port: 7474
+      route:
+        - destination:
+            host: graphdb-neo4j-1.default.svc.cluster.local
+            port:
+              number: 7474
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: neo4j-2
+  namespace: default
+spec:
+  gateways:
+    - commonpool
+  hosts:
+    - graphdb-neo4j-core-2.graphdb-neo4j.default.svc.cluster.local
+    - 2.graphdb.commonpool.net
+  http:
+    - match:
+        - port: 7687
+      route:
+        - destination:
+            host: graphdb-neo4j-2.default.svc.cluster.local
+            port:
+              number: 7687
+    - match:
+        - port: 7474
+      route:
+        - destination:
+            host: graphdb-neo4j-2.default.svc.cluster.local
+            port:
+              number: 7474
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: neo4j
+  namespace: default
+spec:
+  gateways:
+    - commonpool
+  hosts:
+    - graphdb-neo4j.default.svc.cluster.local
+    - graphdb.commonpool.net
+  http:
+    - match:
+        - port: 7687
+      route:
+        - destination:
+            host: graphdb-neo4j.default.svc.cluster.local
+            port:
+              number: 7687
+    - match:
+        - port: 7474
+      route:
+        - destination:
+            host: graphdb-neo4j.default.svc.cluster.local
+            port:
+              number: 7474
+---

@@ -5,7 +5,6 @@ import (
 	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/keys"
-	handler3 "github.com/commonpool/backend/pkg/resource/handler"
 	"github.com/labstack/echo/v4"
 	"github.com/satori/go.uuid"
 	"net/http"
@@ -51,7 +50,7 @@ func (h *Handler) CreateGroup(c echo.Context) error {
 	req.Description = strings.TrimSpace(req.Description)
 
 	if req.Name == "" {
-		return handler3.NewErrResponse(c, exceptions.ErrValidation("name is required"))
+		return exceptions.ErrValidation("name is required")
 	}
 
 	var groupKey = keys.NewGroupKey(uuid.NewV4())

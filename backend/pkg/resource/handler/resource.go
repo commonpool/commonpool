@@ -1,40 +1,19 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/pkg/exceptions"
 	group2 "github.com/commonpool/backend/pkg/group"
-	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/resource"
-	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
-	"go.uber.org/zap"
 	"net/http"
+	"time"
 )
 
-func (h *ResourceHandler) ensureResourceIsSharedWithGroupsTheUserIsActiveMemberOf(c echo.Context, loggedInUserKey keys.UserKey, sharedWithGroups *keys.GroupKeys) (error, bool) {
-
-	ctx, l := handler.GetEchoContext(c, "ensureResourceIsSharedWithGroupsTheUserIsActiveMemberOf")
-
-	var membershipStatus = group2.ApprovedMembershipStatus
-
-	userMemberships, err := h.groupService.GetUserMemberships(ctx, group2.NewGetMembershipsForUserRequest(loggedInUserKey, &membershipStatus))
-	if err != nil {
-		l.Error("could not get user memberships", zap.Error(err))
-		return err, true
-	}
-
-	// Checking if resource is shared with groups the user is part of
-	for _, sharedWith := range sharedWithGroups.Items {
-		hasMembershipInGroup := userMemberships.Memberships.ContainsMembershipForGroup(sharedWith)
-		if !hasMembershipInGroup {
-			return c.String(http.StatusBadRequest, "cannot share resource with a group you are not part of"), true
-		}
-	}
-	return nil, false
+type InputResourceSharing struct {
+	GroupID string `json:"groupId" validate:"required,uuid"`
 }
 
-func (h *ResourceHandler) parseGroupKeys(c echo.Context, sharedWith []web.InputResourceSharing) (*keys.GroupKeys, error, bool) {
+func (h *ResourceHandler) parseGroupKeys(c echo.Context, sharedWith []InputResourceSharing) (*keys.GroupKeys, error, bool) {
 	sharedWithGroupKeys := make([]keys.GroupKey, len(sharedWith))
 	for i := range sharedWith {
 		groupKeyStr := sharedWith[i].GroupID
@@ -47,18 +26,32 @@ func (h *ResourceHandler) parseGroupKeys(c echo.Context, sharedWith []web.InputR
 	return keys.NewGroupKeys(sharedWithGroupKeys), nil, false
 }
 
-func NewResourceResponse(res *resource.Resource, creatorUsername string, creatorId string, sharedWithGroups *group2.Groups) web.Resource {
+type Resource struct {
+	Id               string                  `json:"id"`
+	Summary          string                  `json:"summary"`
+	Description      string                  `json:"description"`
+	Type             resource.Type           `json:"type"`
+	SubType          resource.SubType        `json:"subType"`
+	CreatedAt        time.Time               `json:"createdAt"`
+	CreatedBy        string                  `json:"createdBy"`
+	CreatedById      string                  `json:"createdById"`
+	ValueInHoursFrom int                     `json:"valueInHoursFrom"`
+	ValueInHoursTo   int                     `json:"valueInHoursTo"`
+	SharedWith       []OutputResourceSharing `json:"sharedWith"`
+}
+
+func NewResourceResponse(res *resource.Resource, creatorUsername string, creatorId string, sharedWithGroups *group2.Groups) Resource {
 
 	//goland:noinspection GoPreferNilSlice
-	var sharings = []web.OutputResourceSharing{}
+	var sharings = []OutputResourceSharing{}
 	for _, withGroup := range sharedWithGroups.Items {
-		sharings = append(sharings, web.OutputResourceSharing{
+		sharings = append(sharings, OutputResourceSharing{
 			GroupID:   withGroup.Key.String(),
 			GroupName: withGroup.Name,
 		})
 	}
 
-	return web.Resource{
+	return Resource{
 		Id:               res.Key.String(),
 		Type:             res.Type,
 		SubType:          res.SubType,
@@ -73,11 +66,11 @@ func NewResourceResponse(res *resource.Resource, creatorUsername string, creator
 	}
 }
 
-func NewErrResponse(c echo.Context, err error) error {
-	res, ok := err.(*exceptions.ErrorResponse)
-	if !ok {
-		statusCode := http.StatusInternalServerError
-		return c.JSON(statusCode, exceptions.NewError(err.Error(), "", statusCode))
-	}
-	return c.JSON(res.StatusCode, res)
+type OutputResourceSharing struct {
+	GroupID   string `json:"groupId"`
+	GroupName string `json:"groupName"`
+}
+
+type GetResourceResponse struct {
+	Resource Resource `json:"resource"`
 }

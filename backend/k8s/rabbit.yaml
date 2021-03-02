@@ -34,28 +34,36 @@ spec:
     - port: 15692
       name: rabbitmq-prometheus
 ---
-apiVersion: v1
-kind: Pod
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   labels:
     app: rabbitmq
   name: rabbitmq
 spec:
-  containers:
-    - name: rabbitmq
-      image: rabbitmq:3-management
-      resources:
-        requests:
-          cpu: 100m
-          memory: 100Mi
-      ports:
-        - containerPort: 15672
-          hostPort: 15672
-          protocol: TCP
-        - containerPort: 6379
-          hostPort: 6379
-          protocol: TCP
-        - containerPort: 25672
-          hostPort: 25672
-          protocol: TCP
+  selector:
+    matchLabels:
+      app: rabbitmq
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+    spec:
+      containers:
+        - name: rabbitmq
+          image: rabbitmq:3-management
+          resources:
+            requests:
+              cpu: 100m
+              memory: 100Mi
+          ports:
+            - containerPort: 15672
+              hostPort: 15672
+              protocol: TCP
+            - containerPort: 6379
+              hostPort: 6379
+              protocol: TCP
+            - containerPort: 25672
+              hostPort: 25672
+              protocol: TCP
 ---

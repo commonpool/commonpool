@@ -2,8 +2,6 @@ package handler
 
 import (
 	"github.com/commonpool/backend/pkg/keys"
-	"github.com/commonpool/backend/pkg/resource/handler"
-	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
@@ -27,10 +25,10 @@ func (h *UserHandler) GetUserInfo(c echo.Context) error {
 	user, err := h.userService.GetUser(userKey)
 
 	if err != nil {
-		return handler.NewErrResponse(c, err)
+		return err
 	}
 
-	response := web.UserInfoResponse{
+	response := UserInfoResponse{
 		Username: user.Username,
 		Id:       user.ID,
 	}

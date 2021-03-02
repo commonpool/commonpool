@@ -1,0 +1,215 @@
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: commonpool
+  namespace: default
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 7474
+        name: neo4j-https
+        protocol: HTTPS
+      hosts:
+        - "*.graphdb.commonpool.dev"
+        - "graphdb.commonpool.dev"
+      tls:
+        mode: SIMPLE
+        credentialName: commonpool-cert-prod
+    - port:
+        number: 7687
+        name: neo4j-bolt
+        protocol: HTTPS
+      hosts:
+        - "0.graphdb.commonpool.dev"
+        - "1.graphdb.commonpool.dev"
+        - "2.graphdb.commonpool.dev"
+        - "graphdb.commonpool.dev"
+      tls:
+        mode: SIMPLE
+        credentialName: commonpool-cert-prod
+    - port:
+        number: 5432
+        name: postgres-tcp
+        protocol: TCP
+      hosts:
+        - "db.commonpool.dev"
+    - port:
+        number: 5672
+        name: amqp-tcp
+        protocol: TCP
+      hosts:
+        - "amqp.commonpool.dev"
+    - port:
+        number: 443
+        name: rabbit-tls
+        protocol: HTTPS
+      hosts:
+        - rabbit.commonpool.dev
+      tls:
+        mode: SIMPLE
+        credentialName: commonpool-cert-prod
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: neo4j-0
+  namespace: default
+spec:
+  gateways:
+    - commonpool
+  hosts:
+    - graphdb-neo4j-core-0.graphdb-neo4j.default.svc.cluster.local
+    - 0.graphdb.commonpool.dev
+  http:
+    - match:
+        - port: 7687
+      route:
+        - destination:
+            host: graphdb-neo4j-0.default.svc.cluster.local
+            port:
+              number: 7687
+    - match:
+        - port: 7474
+      route:
+        - destination:
+            host: graphdb-neo4j-0.default.svc.cluster.local
+            port:
+              number: 7474
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: neo4j-1
+  namespace: default
+spec:
+  gateways:
+    - commonpool
+  hosts:
+    - graphdb-neo4j-core-1.graphdb-neo4j.default.svc.cluster.local
+    - 1.graphdb.commonpool.dev
+  http:
+    - match:
+        - port: 7687
+      route:
+        - destination:
+            host: graphdb-neo4j-1.default.svc.cluster.local
+            port:
+              number: 7687
+    - match:
+        - port: 7474
+      route:
+        - destination:
+            host: graphdb-neo4j-1.default.svc.cluster.local
+            port:
+              number: 7474
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: neo4j-2
+  namespace: default
+spec:
+  gateways:
+    - commonpool
+  hosts:
+    - graphdb-neo4j-core-2.graphdb-neo4j.default.svc.cluster.local
+    - 2.graphdb.commonpool.dev
+  http:
+    - match:
+        - port: 7687
+      route:
+        - destination:
+            host: graphdb-neo4j-2.default.svc.cluster.local
+            port:
+              number: 7687
+    - match:
+        - port: 7474
+      route:
+        - destination:
+            host: graphdb-neo4j-2.default.svc.cluster.local
+            port:
+              number: 7474
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: neo4j
+  namespace: default
+spec:
+  gateways:
+    - commonpool
+  hosts:
+    - graphdb-neo4j.default.svc.cluster.local
+    - graphdb.commonpool.dev
+  http:
+    - match:
+        - port: 7687
+      route:
+        - destination:
+            host: graphdb-neo4j.default.svc.cluster.local
+            port:
+              number: 7687
+    - match:
+        - port: 7474
+      route:
+        - destination:
+            host: graphdb-neo4j.default.svc.cluster.local
+            port:
+              number: 7474
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: postgres
+spec:
+  hosts:
+    - postgres.default.svc.cluster.local
+    - db.commonpool.dev
+  gateways:
+    - commonpool
+  tcp:
+    - match:
+        - port: 5432
+      route:
+        - destination:
+            host: postgres.default.svc.cluster.local
+            port:
+              number: 5432
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: amqp
+spec:
+  hosts:
+    - amqp.default.svc.cluster.local
+    - amqp.commonpool.dev
+  gateways:
+    - commonpool
+  tcp:
+    - match:
+        - port: 5672
+      route:
+        - destination:
+            host: rabbit.default.svc.cluster.local
+            port:
+              number: 5672
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: rabbitmq
+spec:
+  hosts:
+    - rabbit.default.svc.cluster.local
+    - rabbit.commonpool.dev
+  gateways:
+    - commonpool
+  http:
+    - route:
+        - destination:
+            host: rabbit.default.svc.cluster.local
+            port:
+              number: 15672

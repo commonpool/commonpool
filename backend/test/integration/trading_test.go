@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/auth"
+	handler2 "github.com/commonpool/backend/pkg/resource/handler"
 	"github.com/commonpool/backend/pkg/trading"
 	"github.com/commonpool/backend/pkg/trading/handler"
 	"github.com/commonpool/backend/web"
@@ -70,9 +71,9 @@ func TestUserCanSubmitOfferBetweenUsers(t *testing.T) {
 
 	ctx := context.Background()
 
-	resp, _ := CreateResource(t, ctx, user1, &web.CreateResourceRequest{
-		Resource: web.CreateResourcePayload{
-			SharedWith: []web.InputResourceSharing{
+	resp, _ := CreateResource(t, ctx, user1, &handler2.CreateResourceRequest{
+		Resource: handler2.CreateResourcePayload{
+			SharedWith: []handler2.InputResourceSharing{
 				{
 					GroupID: group.ID,
 				},
@@ -111,9 +112,9 @@ func TestUserCanSubmitOfferBetweenUsersAndGroup(t *testing.T) {
 
 	ctx := context.Background()
 
-	resp, _ := CreateResource(t, ctx, user1, &web.CreateResourceRequest{
-		Resource: web.CreateResourcePayload{
-			SharedWith: []web.InputResourceSharing{
+	resp, _ := CreateResource(t, ctx, user1, &handler2.CreateResourceRequest{
+		Resource: handler2.CreateResourcePayload{
+			SharedWith: []handler2.InputResourceSharing{
 				{
 					GroupID: group.ID,
 				},
@@ -155,9 +156,9 @@ func TestUserCanSubmitOfferBetweenGroupAndMultipleUsers(t *testing.T) {
 
 	ctx := context.Background()
 
-	resp, _ := CreateResource(t, ctx, user1, &web.CreateResourceRequest{
-		Resource: web.CreateResourcePayload{
-			SharedWith: []web.InputResourceSharing{
+	resp, _ := CreateResource(t, ctx, user1, &handler2.CreateResourceRequest{
+		Resource: handler2.CreateResourcePayload{
+			SharedWith: []handler2.InputResourceSharing{
 				{
 					GroupID: group.ID,
 				},
@@ -200,9 +201,9 @@ func TestUsersCanAcceptOfferBetweenUsers(t *testing.T) {
 
 	ctx := context.Background()
 
-	resp, _ := CreateResource(t, ctx, user1, &web.CreateResourceRequest{
-		Resource: web.CreateResourcePayload{
-			SharedWith: []web.InputResourceSharing{
+	resp, _ := CreateResource(t, ctx, user1, &handler2.CreateResourceRequest{
+		Resource: handler2.CreateResourcePayload{
+			SharedWith: []handler2.InputResourceSharing{
 				{
 					GroupID: group.ID,
 				},
@@ -259,9 +260,9 @@ func TestUserCannotCreateOfferForResourceNotSharedWithGroup(t *testing.T) {
 	group1 := testGroup(t, user1, user2)
 	group2 := testGroup(t, user1, user2)
 
-	resource, _ := CreateResource(t, ctx, user1, &web.CreateResourceRequest{
-		Resource: web.CreateResourcePayload{
-			SharedWith: []web.InputResourceSharing{
+	resource, _ := CreateResource(t, ctx, user1, &handler2.CreateResourceRequest{
+		Resource: handler2.CreateResourcePayload{
+			SharedWith: []handler2.InputResourceSharing{
 				{
 					GroupID: group2.ID,
 				},
@@ -299,9 +300,9 @@ func TestCannotCreateResourceTransferItemForResourceAlreadyOwned(t *testing.T) {
 
 	group := testGroup(t, user1, user2)
 
-	resource, _ := CreateResource(t, ctx, user1, &web.CreateResourceRequest{
-		Resource: web.CreateResourcePayload{
-			SharedWith: []web.InputResourceSharing{
+	resource, _ := CreateResource(t, ctx, user1, &handler2.CreateResourceRequest{
+		Resource: handler2.CreateResourcePayload{
+			SharedWith: []handler2.InputResourceSharing{
 				{
 					GroupID: group.ID,
 				},
@@ -339,9 +340,9 @@ func TestUsersCanDeclineOffer(t *testing.T) {
 
 	ctx := context.Background()
 
-	resp, _ := CreateResource(t, ctx, user1, &web.CreateResourceRequest{
-		Resource: web.CreateResourcePayload{
-			SharedWith: []web.InputResourceSharing{
+	resp, _ := CreateResource(t, ctx, user1, &handler2.CreateResourceRequest{
+		Resource: handler2.CreateResourcePayload{
+			SharedWith: []handler2.InputResourceSharing{
 				{
 					GroupID: group.ID,
 				},
@@ -397,9 +398,9 @@ func TestSendingOfferShouldCreateChatChannelBetweenUsers(t *testing.T) {
 
 	ctx := context.Background()
 
-	resp, _ := CreateResource(t, ctx, user1, &web.CreateResourceRequest{
-		Resource: web.CreateResourcePayload{
-			SharedWith: []web.InputResourceSharing{
+	resp, _ := CreateResource(t, ctx, user1, &handler2.CreateResourceRequest{
+		Resource: handler2.CreateResourcePayload{
+			SharedWith: []handler2.InputResourceSharing{
 				{
 					GroupID: group.ID,
 				},
@@ -452,16 +453,16 @@ func TestSendingOfferBetweenMultiplePeopleShouldCreateChatChannelBetweenUsers(t 
 
 	ctx := context.Background()
 
-	res1, _ := CreateResource(t, ctx, user1, &web.CreateResourceRequest{
-		Resource: web.CreateResourcePayload{
-			SharedWith: []web.InputResourceSharing{
+	res1, _ := CreateResource(t, ctx, user1, &handler2.CreateResourceRequest{
+		Resource: handler2.CreateResourcePayload{
+			SharedWith: []handler2.InputResourceSharing{
 				{GroupID: group.ID},
 			},
 		},
 	})
-	res2, _ := CreateResource(t, ctx, user2, &web.CreateResourceRequest{
-		Resource: web.CreateResourcePayload{
-			SharedWith: []web.InputResourceSharing{
+	res2, _ := CreateResource(t, ctx, user2, &handler2.CreateResourceRequest{
+		Resource: handler2.CreateResourcePayload{
+			SharedWith: []handler2.InputResourceSharing{
 				{GroupID: group.ID},
 			},
 		},

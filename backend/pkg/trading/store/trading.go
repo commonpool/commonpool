@@ -498,7 +498,7 @@ func (t TradingStore) FindApproversForOffers(offerKeys *keys.OfferKeys) (*tradin
 
 }
 
-func (t TradingStore) FindApproversForOffer(offerKey keys.OfferKey) (*trading.OfferApprovers, error) {
+func (t TradingStore) FindApproversForOffer(offerKey keys.OfferKey) (trading.Approvers, error) {
 
 	approvers, err := t.FindApproversForOffers(keys.NewOfferKeys([]keys.OfferKey{offerKey}))
 	if err != nil {
@@ -563,7 +563,7 @@ func (t TradingStore) SaveOffer(offer *trading.Offer, offerItems *trading.OfferI
 	}
 
 	var acceptedAt *time.Time = nil
-	if offerItems.AllPartiesAccepted() {
+	if offerItems.AllApproved() {
 		acceptedAt = &now
 	}
 
@@ -619,8 +619,8 @@ func (t TradingStore) SaveOffer(offer *trading.Offer, offerItems *trading.OfferI
 			params[offerItemRef+"_id"] = offerItem.GetKey().String()
 			params[offerItemRef+"_type"] = offerItem.Type()
 			params[offerItemRef+"_amount"] = int(creditTransfer.Amount.Seconds())
-			params[offerItemRef+"_from_approved"] = creditTransfer.GiverAccepted
-			params[offerItemRef+"_to_approved"] = creditTransfer.ReceiverAccepted
+			params[offerItemRef+"_from_approved"] = creditTransfer.ApprovedOutbound
+			params[offerItemRef+"_to_approved"] = creditTransfer.ApprovedInbound
 			params[offerItemRef+"_credits_transferred"] = creditTransfer.CreditsTransferred
 			params[offerItemRef+"_completed"] = creditTransfer.IsCompleted()
 			params[offerItemRef+"_created_at"] = now
@@ -664,8 +664,8 @@ func (t TradingStore) SaveOffer(offer *trading.Offer, offerItems *trading.OfferI
 			params[offerItemRef+"_id"] = provideService.Key.String()
 			params[offerItemRef+"_type"] = string(trading.ProvideService)
 			params[offerItemRef+"_duration"] = int(provideService.Duration.Seconds())
-			params[offerItemRef+"_from_approved"] = provideService.GiverAccepted
-			params[offerItemRef+"_to_approved"] = provideService.ReceiverAccepted
+			params[offerItemRef+"_from_approved"] = provideService.ApprovedOutbound
+			params[offerItemRef+"_to_approved"] = provideService.ApprovedInbound
 			params[offerItemRef+"_given"] = provideService.ServiceGivenConfirmation
 			params[offerItemRef+"_received"] = provideService.ServiceReceivedConfirmation
 			params[offerItemRef+"_created_at"] = now
@@ -708,8 +708,8 @@ func (t TradingStore) SaveOffer(offer *trading.Offer, offerItems *trading.OfferI
 			params[offerItemRef+"_id"] = borrowResource.Key.String()
 			params[offerItemRef+"_type"] = string(trading.BorrowResource)
 			params[offerItemRef+"_duration"] = int(borrowResource.Duration.Seconds())
-			params[offerItemRef+"_from_approved"] = borrowResource.GiverAccepted
-			params[offerItemRef+"_to_approved"] = borrowResource.ReceiverAccepted
+			params[offerItemRef+"_from_approved"] = borrowResource.ApprovedOutbound
+			params[offerItemRef+"_to_approved"] = borrowResource.ApprovedInbound
 			params[offerItemRef+"_given"] = borrowResource.ItemGiven
 			params[offerItemRef+"_taken"] = borrowResource.ItemTaken
 			params[offerItemRef+"_returned_back"] = borrowResource.ItemReturnedBack
@@ -751,8 +751,8 @@ func (t TradingStore) SaveOffer(offer *trading.Offer, offerItems *trading.OfferI
 
 			params[offerItemRef+"_id"] = resourceTransfer.Key.String()
 			params[offerItemRef+"_type"] = string(trading.ResourceTransfer)
-			params[offerItemRef+"_from_approved"] = resourceTransfer.GiverAccepted
-			params[offerItemRef+"_to_approved"] = resourceTransfer.ReceiverAccepted
+			params[offerItemRef+"_from_approved"] = resourceTransfer.ApprovedOutbound
+			params[offerItemRef+"_to_approved"] = resourceTransfer.ApprovedInbound
 			params[offerItemRef+"_given"] = resourceTransfer.ItemGiven
 			params[offerItemRef+"_received"] = resourceTransfer.ItemReceived
 			params[offerItemRef+"_completed"] = resourceTransfer.IsCompleted()
@@ -943,8 +943,8 @@ func MapOfferItem(offerKey keys.OfferKey, offerItemNode neo4j.Node, fromNode neo
 
 	offerItemType := offerItemNode.Props()["type"].(string)
 	var fromResource *resource.Resource
-	var fromTarget *resource.Target
-	var toTarget *resource.Target
+	var fromTarget *trading.Target
+	var toTarget *trading.Target
 	var err error
 
 	if fromNode != nil {
@@ -981,8 +981,8 @@ func MapOfferItem(offerKey keys.OfferKey, offerItemNode neo4j.Node, fromNode neo
 		Key:              offerItemKey,
 		OfferKey:         offerKey,
 		To:               toTarget,
-		ReceiverAccepted: offerItemNode.Props()[ToApprovedKey].(bool),
-		GiverAccepted:    offerItemNode.Props()[FromApprovedKey].(bool),
+		ApprovedInbound:  offerItemNode.Props()[ToApprovedKey].(bool),
+		ApprovedOutbound: offerItemNode.Props()[FromApprovedKey].(bool),
 		CreatedAt:        offerItemNode.Props()[CreatedAtKey].(time.Time),
 		UpdatedAt:        offerItemNode.Props()[UpdatedAtKey].(time.Time),
 	}
@@ -1103,8 +1103,8 @@ func (t TradingStore) UpdateOfferItem(ctx context.Context, offerItem trading.Off
 		RETURN o`,
 			map[string]interface{}{
 				"id":            service.Key.String(),
-				FromApprovedKey: service.GiverAccepted,
-				ToApprovedKey:   service.ReceiverAccepted,
+				FromApprovedKey: service.ApprovedOutbound,
+				ToApprovedKey:   service.ApprovedInbound,
 				GivenKey:        service.ServiceGivenConfirmation,
 				ReceivedKey:     service.ServiceReceivedConfirmation,
 				CompletedKey:    service.IsCompleted(),
@@ -1124,8 +1124,8 @@ func (t TradingStore) UpdateOfferItem(ctx context.Context, offerItem trading.Off
 			RETURN o`,
 			map[string]interface{}{
 				"id":                  creditTransfer.Key.String(),
-				FromApprovedKey:       creditTransfer.GiverAccepted,
-				ToApprovedKey:         creditTransfer.ReceiverAccepted,
+				FromApprovedKey:       creditTransfer.ApprovedOutbound,
+				ToApprovedKey:         creditTransfer.ApprovedInbound,
 				CreditsTransferredKey: creditTransfer.CreditsTransferred,
 				CompletedKey:          creditTransfer.IsCompleted(),
 			})
@@ -1146,8 +1146,8 @@ func (t TradingStore) UpdateOfferItem(ctx context.Context, offerItem trading.Off
 			RETURN o`,
 			map[string]interface{}{
 				"id":            resourceBorrow.Key.String(),
-				FromApprovedKey: resourceBorrow.GiverAccepted,
-				ToApprovedKey:   resourceBorrow.ReceiverAccepted,
+				FromApprovedKey: resourceBorrow.ApprovedOutbound,
+				ToApprovedKey:   resourceBorrow.ApprovedInbound,
 				GivenKey:        resourceBorrow.ItemGiven,
 				TakenKey:        resourceBorrow.ItemTaken,
 				ReturnedBackKey: resourceBorrow.ItemReturnedBack,
@@ -1169,8 +1169,8 @@ func (t TradingStore) UpdateOfferItem(ctx context.Context, offerItem trading.Off
 		RETURN o`,
 			map[string]interface{}{
 				"id":            service.Key.String(),
-				FromApprovedKey: service.GiverAccepted,
-				ToApprovedKey:   service.ReceiverAccepted,
+				FromApprovedKey: service.ApprovedOutbound,
+				ToApprovedKey:   service.ApprovedInbound,
 				GivenKey:        service.ItemGiven,
 				ReceivedKey:     service.ItemReceived,
 				CompletedKey:    service.IsCompleted(),

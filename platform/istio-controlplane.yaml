@@ -5,3 +5,35 @@ metadata:
   name: istio-controlplane
 spec:
   profile: demo
+  meshConfig:
+    accessLogFile: /dev/stdout
+  components:
+    ingressGateways:
+      - name: istio-ingressgateway
+        k8s:
+          service:
+            ports:
+              - name: status-port
+                port: 15021
+                targetPort: 15021
+              - name: http2
+                port: 80
+                targetPort: 8080
+              - name: https
+                port: 443
+                targetPort: 8443
+              - name: tcp
+                port: 31400
+                targetPort: 31400
+              - name: tls
+                port: 15443
+                targetPort: 15443
+              - name: neo4j-http
+                port: 7474
+                targetPort: 7474
+              - name: neo4j-bolt
+                port: 7687
+                targetPort: 7687
+              - name: rabbit
+                port: 32026
+                targetPort: 32026

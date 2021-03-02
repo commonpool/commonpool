@@ -25,7 +25,7 @@ var _ auth.Authenticator = &AuthenticatorMock{}
 //             AuthenticateFunc: func(redirectOnError bool) echo.MiddlewareFunc {
 // 	               panic("mock out the Authenticate method")
 //             },
-//             GetLoggedInUserFunc: func(ctx context.Context) (usermodel.UserReference, error) {
+//             GetLoggedInUserFunc: func(ctx context.Context) (user.UserReference, error) {
 // 	               panic("mock out the GetLoggedInUser method")
 //             },
 //             GetRedirectResponseFunc: func(request *http.Request) (*auth.RedirectResponse, error) {

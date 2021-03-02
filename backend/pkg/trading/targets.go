@@ -1,4 +1,4 @@
-package resource
+package trading
 
 import (
 	"github.com/commonpool/backend/pkg/keys"

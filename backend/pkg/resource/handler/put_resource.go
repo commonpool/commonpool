@@ -7,12 +7,27 @@ import (
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/keys"
 	resource "github.com/commonpool/backend/pkg/resource"
-	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 	"net/http"
 	"strings"
 )
+
+type UpdateResourceRequest struct {
+	Resource UpdateResourcePayload `json:"resource"`
+}
+
+type UpdateResourcePayload struct {
+	Summary          string                 `json:"summary" validate:"required,max=100"`
+	Description      string                 `json:"description" validate:"required,max=2000"`
+	ValueInHoursFrom int                    `json:"valueInHoursFrom" validate:"min=0"`
+	ValueInHoursTo   int                    `json:"valueInHoursTo" validate:"min=0"`
+	SharedWith       []InputResourceSharing `json:"sharedWith"`
+}
+
+type UpdateResourceResponse struct {
+	Resource Resource `json:"resource"`
+}
 
 // UpdateResource
 // @Summary Updates a resource
@@ -31,7 +46,7 @@ func (h *ResourceHandler) UpdateResource(c echo.Context) error {
 	ctx, l := handler.GetEchoContext(c, "UpdateResource")
 
 	c.Logger().Debug("UpdateResource: updating resource")
-	req := web.UpdateResourceRequest{}
+	req := UpdateResourceRequest{}
 
 	// Binds the request payload to the web.UpdateResourceRequest instance
 	if err := c.Bind(&req); err != nil {
@@ -116,7 +131,7 @@ func (h *ResourceHandler) UpdateResource(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
-	return c.JSON(http.StatusOK, web.GetResourceResponse{
+	return c.JSON(http.StatusOK, GetResourceResponse{
 		Resource: NewResourceResponse(getResourceResponse.Resource, loggedInUser.Username, loggedInUser.Subject, groups),
 	})
 

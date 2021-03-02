@@ -1,0 +1,946 @@
+
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+  name: graphdb-neo4j-secrets
+  namespace: default
+data:
+  neo4j-password: S0hiU0JqMmRpODdXMGpqVENlRGpEUFNIbTNaMkhsUnNXQWMyOHJOcDQxVXJFaGlrdTd1TVVFWkpNRUUwTEdubw==
+  neo4j-username: bmVvNGo=
+---
+# Source: neo4j/templates/service-account.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: graphdb-neo4j-sa
+---
+# Source: neo4j/templates/common-configmap.yaml
+# This ConfigMap gets passed to ALL CORE AND READ REPLICA cluster members to configure them.
+# It contains the truly common things that are configuration wide.  The core and replica set
+# each have a separate configmap for those concerns.
+#
+# Here we translate a lot of user settings & preferences into env vars that get passed
+# to the Neo4j docker container.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: graphdb-neo4j-common-config
+data:
+  NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
+  NUMBER_OF_CORES: "3"
+  AUTH_ENABLED: "true"
+  NEO4J_dbms_default__database: "neo4j"
+  NEO4J_dbms_connector_bolt_listen__address: 0.0.0.0:7687
+  NEO4J_dbms_connector_http_listen__address: 0.0.0.0:7474
+  NEO4J_dbms_connector_https_listen__address: 0.0.0.0:7473
+  NEO4J_causal__clustering_minimum__core__cluster__size__at__formation: "3"
+  NEO4J_causal__clustering_minimum__core__cluster__size__at__runtime: "2"
+  NEO4J_dbms_jvm_additional: "-XX:+ExitOnOutOfMemoryError"
+  NEO4J_metrics_graphite_enabled: "false"
+  NEO4J_metrics_graphite_server: "localhost:2003"
+  NEO4J_metrics_graphite_interval: "3s"
+  NEO4J_metrics_prometheus_enabled: "false"
+  NEO4J_metrics_prometheus_endpoint: "localhost:2004"
+  NEO4J_metrics_csv_enabled: "true"
+  NEO4J_metrics_csv_interval: "3s"
+  NEO4J_metrics_jmx_enabled: "true"
+  NEO4JLABS_PLUGINS: "[\"apoc\"]"
+  NEO4J_apoc_import_file_use__neo4j__config: "true"
+---
+# Source: neo4j/templates/core-configmap.yaml
+# This ConfigMap gets passed to all core cluster members to configure them.
+# Take note that some networking settings like internal hostname still get configured
+# when the pod starts, but most non-networking specific configs can be tailored here.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: graphdb-neo4j-core-config
+data:
+  NEO4J_dbms_mode: CORE
+---
+# Source: neo4j/templates/pod-init-script.yaml
+# This is a bash script that runs on each pod when it starts up, and handles issues in the environment
+# like configuration processing.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "graphdb-init-script"
+  labels:
+    helm.sh/chart: neo4j-4.0.4-1
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: "graphdb"
+    app.kubernetes.io/name: neo4j
+    app.kubernetes.io/component: init
+data:
+  init.sh: |-
+    # Local hostname (graph-neo4j-core-0) converted to graph_neo4j_core_0
+    # So that if a var is defined graph_neo4j_core_0_MYSETTING
+    # its host-specific value will override whatever the default MYSETTING
+    # is in the environment.
+    # In this way we can give a single configmap to all 3 pods in a stateful
+    # set, and still be able to do per-pod bespoke config.
+    export override_prefix=$(hostname | sed s/-/_/g)
+    # Ensure HOST is set, but take a default from the outer environment if present.
+    export HOST=${HOST:-$(hostname -f)}
+
+    declare -A NEO4J_SETTINGS
+
+    # HTTPS
+    NEO4J_SETTINGS[dbms_connector_https_enabled]=true
+
+    # Default settings values; either inherit from outward settings,
+    # or, lacking any definition, take the local host
+    NEO4J_SETTINGS[NEO4J_dbms_default__advertised__address]=${NEO4J_dbms_default__advertised__address:-$HOST}
+    NEO4J_SETTINGS[NEO4J_dbms_connector_bolt_advertised__address]=${NEO4J_dbms_connector_bolt_advertised__address:-$HOST:7687}
+    NEO4J_SETTINGS[NEO4J_dbms_connector_http_advertised__address]=${NEO4J_dbms_connector_http_advertised__address:-$HOST:7474}
+    NEO4J_SETTINGS[NEO4J_dbms_connector_https_advertised__address]=${NEO4J_dbms_connector_https_advertised__address:-$HOST:7473}
+    NEO4J_SETTINGS[NEO4J_causal__clustering_discovery__advertised__address]=${NEO4J_causal__clustering_discovery__advertised__address:-$HOST:5000}
+
+    export graphdb_neo4j_core_0_NEO4J_dbms_connector_bolt_advertised__address=0.graphdb.commonpool.dev:7687
+    export graphdb_neo4j_core_1_NEO4J_dbms_connector_bolt_advertised__address=1.graphdb.commonpool.dev:7687
+    export graphdb_neo4j_core_2_NEO4J_dbms_connector_bolt_advertised__address=2.graphdb.commonpool.dev:7687
+
+    export graphdb_neo4j_core_0_NEO4J_dbms_connector_http_advertised__address=0.graphdb.commonpool.dev:7474
+    export graphdb_neo4j_core_1_NEO4J_dbms_connector_http_advertised__address=1.graphdb.commonpool.dev:7474
+    export graphdb_neo4j_core_2_NEO4J_dbms_connector_http_advertised__address=2.graphdb.commonpool.dev:7474
+
+    neo4jAdminMemrec() {
+        echo "Calling neo4j-admin memrec to suggest memory settings"
+        # Neo4j-admin memrec outputs configuration like this: dbms.memory.heap.max_size=9000m
+        # with a lot of comments.  We strip the comments, then
+        # process its output into a docker env var by following the Neo4j docker rules:
+        # underscores doubled, dots -> _
+        # So dbms.memory.heap.max_size=9000m => export NEO4J_dbms_memory_heap_max__size=9000m
+        for line in $(/var/lib/neo4j/bin/neo4j-admin memrec | grep -v '^\#' | sed 's/_/__/g' | sed 's/\./_/g' | sed 's/^/NEO4J_/g') ; do
+            echo export $line ;
+        done > /var/lib/neo4j/conf/memory-recommendations.sh
+
+        . /var/lib/neo4j/conf/memory-recommendations.sh
+    }
+
+    echo "Configuration override prefix = $override_prefix"
+
+    # Check to see if a particular env var has a host-specific override.  If it does,
+    # return the override.  Otherwise return the default value.
+    getSettingValue() {
+      # Setting key: $1
+      # Default value: $2
+      # Return: modify $SETTING_VALUE
+      export override_varname=$override_prefix"_"$1
+      echo "Checking for override $override_varname"
+      if [ -z "${!override_varname}" ] ; then
+          SETTING_VALUE=$2
+      else
+          echo "Found ovveride value for setting '$1' = ${!override_varname}"
+          SETTING_VALUE=${!override_varname}
+      fi
+    }
+
+    # For each config item, set an env var to the appropriate
+    # metadata value or default value.  This sets us up for envsubst
+    for setting in "${!NEO4J_SETTINGS[@]}" ; do
+      # echo setting $setting
+      # echo default
+      getSettingValue $setting "${NEO4J_SETTINGS[$setting]}"
+      # echo "Setting $setting to $SETTING_VALUE"
+
+      # Set the variable named setting to the result.
+      # See: https://stackoverflow.com/questions/9714902/how-to-use-a-variables-value-as-another-variables-name-in-bash
+      export $setting="$SETTING_VALUE"
+    done
+
+    # These settings are *not* overrideable, because they must match the addresses the
+    # core members see to avoid akka rejections, and to facilitate basic cluster formation.
+    # K8S discovery requires an LB service per pod, and a service account with permissions to query the discovery API
+    export NEO4J_causal__clustering_kubernetes_label__selector="neo4j.com/cluster=graphdb-neo4j,neo4j.com/role=CORE"
+    export NEO4J_causal__clustering_discovery__type=K8S
+    export NEO4J_causal__clustering_kubernetes_service__port__name="discovery"
+
+    if [ "${AUTH_ENABLED:-}" == "true" ]; then
+      export NEO4J_AUTH="neo4j/${NEO4J_SECRETS_PASSWORD}"
+    else
+      export NEO4J_AUTH="none"
+    fi
+
+    # Once passed through to auth, unset this so Neo4j doesn't misinterpret it as config.
+    unset NEO4J_SECRETS_PASSWORD
+---
+# Source: neo4j/templates/readreplicas-configmap.yaml
+# This ConfigMap gets passed to all core cluster members to configure them.
+# Take note that some networking settings like internal hostname still get configured
+# when the pod starts, but most non-networking specific configs can be tailored here.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: graphdb-neo4j-replica-config
+data:
+  NEO4J_dbms_mode: READ_REPLICA
+---
+# Source: neo4j/templates/tests/test-script.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "graphdb-test-script"
+  labels:
+    helm.sh/chart: neo4j-4.0.4-1
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: "graphdb"
+    app.kubernetes.io/name: neo4j
+    app.kubernetes.io/component: tester
+  annotations:
+    "helm.sh/hook-delete-policy": "before-hook-creation,hook-succeeded"
+data:
+  run.sh: |-
+    export PATH=/usr/bin:$PATH
+    export host="$NAME-neo4j.$NAMESPACE.svc.cluster.local"
+    export replica_host="$NAME-readreplica-svc.$NAMESPACE.svc.cluster.local"
+    echo "HOST $host"
+    # This endpoint proves availability of the overall service
+    export endpoint="http://$host:$PORT_HTTP"
+    echo "ENDPOINT $endpoint"
+    # Mounted secret
+    export NEO4J_SECRETS_PASSWORD=$(cat /secret/neo4j-password)
+    export auth="neo4j:${NEO4J_SECRETS_PASSWORD}"
+    echo "AUTH $auth"
+    echo "CORES $CORES"
+    echo "RRs $READ_REPLICAS"
+
+    # When test resources are deployed cluster hasn't had a chance to form yet.
+    # This polls in a loop waiting for cluster to become available, and gives up/fails
+    # tests if it doesn't work within attempts.
+    attempt=0
+    attempts=5
+
+    while true; do
+      attempt=$[$attempt + 1]
+      /usr/bin/curl -s -I $endpoint/ | grep "200 OK"
+      if [ $? -eq 0 ] ; then
+        echo "✔️ Neo4j is up at attempt $attempt; HTTP port $PORT_HTTP"
+        break
+      fi
+
+      if [ $attempt -ge "$attempts" ]; then
+        echo "❌ REST API seems not to be coming up, giving up after $attempts attempts"
+        exit 1
+      fi
+
+      echo "Sleeping; not up yet after $attempt attempts"
+      sleep 5
+    done
+
+    # Pass index ID to get hostname for that pod.
+    function core_hostname {
+      # Example: a-neo4j-core-0.a-neo4j.default.svc.cluster.local
+      echo "$NAME-neo4j-core-$1.$NAME-neo4j.$NAMESPACE.svc.cluster.local"
+    }
+
+    test_index=0
+
+    function succeed {
+      echo "✔️  Test $test_index: $1"
+      test_index=$[$test_index + 1]
+    }
+
+    function fail {
+      echo "❌ Test $test_index: $1"
+      echo "Additional information: " "$2"
+      exit 1
+    }
+
+    function cypher {
+      # Use routing driver by default, send query wherever.
+      DEFAULT_ENDPOINT="neo4j://$host:$PORT_BOLT"
+
+      # If caller specified, use a specific endpoint to route a query to just one node.
+      ENDPOINT=${2:-$DEFAULT_ENDPOINT}
+
+      echo "$1" | /usr/bin/cypher-shell -u neo4j -a "$ENDPOINT" -p "$NEO4J_SECRETS_PASSWORD"
+    }
+
+    function runtest {
+      # Use routing driver by default, send query wherever.
+      DEFAULT_ENDPOINT="neo4j://$host:$PORT_BOLT"
+
+      # If caller specified, use a specific endpoint to route a query to just one node.
+      ENDPOINT=${3:-$DEFAULT_ENDPOINT}
+
+      echo "Running $1 against $ENDPOINT"
+      output=$(cypher "$2" "$3")
+
+      if [ $? -eq 0 ] ; then
+        succeed "$1"
+      else
+        echo "Last output -- $output"
+        fail "$1" "$output"
+      fi
+    }
+
+    # At this point the service endpoint proves that at least one host is up.
+    # Provide just a bit more time for all of them to finish coming up because we'll
+    # be testing them individually.
+    echo "Waiting for formation to finish"
+    attempt=0
+    attempts=100
+    while true; do
+      attempt=$[$attempt + 1]
+      cypher "RETURN 1;"
+      if [ $? -eq 0 ] ; then
+        echo "✔️ Neo4j BOLT is up at attempt $attempt; BOLT port $PORT_BOLT"
+        break
+      fi
+
+      if [ $attempt -ge "$attempts" ]; then
+        echo "❌ BOLT API seems not to be coming up, giving up after $attempts attempts"
+        exit 1
+      fi
+
+      echo "Sleeping; bolt not up yet after $attempt attempts"
+      sleep 5
+    done
+
+    echo "All pre-requisites met, beginning main testing"
+
+    echo "Basic topology upfront"
+    cypher "CALL dbms.cluster.overview();"
+
+    runtest "Bolt is available, port $PORT_BOLT"               "RETURN 'yes';"
+    runtest "Basic read queries"                               "MATCH (n) RETURN COUNT(n);"
+    runtest "Database is in clustered mode"                    "CALL dbms.cluster.overview();"
+    runtest "Cluster accepts writes"                           'CREATE (t:TestNode) RETURN count(t);'
+
+    # Data from server on cluster topology.
+    topology=$(cypher "CALL dbms.cluster.overview();")
+    echo "TOPOLOGY $topology"
+
+    # LEADERS
+    leaders=$(echo $topology | grep 'system: "LEADER"' | wc -l)
+    test="Cluster has 1 system leader"
+    if [ $leaders -eq 1 ] ; then
+      succeed "$test"
+    else
+      fail "$test" "$leaders leaders"
+    fi
+
+    # FOLLOWERS
+    followers=$(echo $topology | grep -o 'system: "FOLLOWER"' | wc -l)
+    test="Cluster has 1-CORES followers"
+    if [ $followers -eq $((CORES-1)) ] ; then
+      succeed "$test"
+    else
+      fail "$test" "$followers followers"
+    fi
+
+    # REPLICAS
+    read_replicas=$(echo $topology | grep -o 'system: "READ_REPLICA"' | wc -l)
+    test="Cluster has $READ_REPLICAS read replicas"
+    if [ $read_replicas -eq $READ_REPLICAS ] ; then
+      succeed "$test"
+    else
+      fail "$test" "$read_replicas replicas"
+    fi
+
+    # Each core is individually up and configured.
+    for id in $(seq 0 $((CORES - 1))); do
+      core_host=$(core_hostname $id)
+      core_endpoint="bolt://$core_host:$PORT_BOLT"
+
+      test="Core host $id of $CORES -- $core_endpoint is available"
+      runtest "$test" "MATCH (n) RETURN COUNT(n);" "$core_endpoint"
+
+      test="Core host $id of $CORES -- $core_endpoint has APOC installed correctly"
+      runtest "$test" "RETURN apoc.version();" "$core_endpoint"
+    done
+
+    # Test for data replication.
+    runtest "Sample canary write" 'CREATE (c:Canary) RETURN count(c);'
+    echo "Sleeping a few seconds to permit replication"
+    sleep 5
+
+    # Check each core, count the canary writes. They should all agree.
+    for id in $(seq 0 $((CORES - 1))); do
+      core_host=$(core_hostname $id)
+      # Use bolt driver, not routing driver, to ensure that test verifies data
+      # exists on this host.
+      core_endpoint="bolt://$core_host:$PORT_BOLT"
+      test="Core host $id has the canary write"
+      result=$(cypher "MATCH (c:Canary) WITH count(c) as x where x = 1 RETURN x;" "$core_endpoint")
+      exit_code=$?
+      if [ $exit_code -eq 0 ] ; then
+        # Check that the data is there.
+        found_results=$(echo "$result" | grep -o 1 | wc -l)
+
+        if [ $found_results -eq 1 ] ; then
+          succeed "$test"
+        else
+          fail "$test" "Canary read did not return data -- $found_results found results from $result"
+        fi
+      else
+        fail "$test" "Canary read failed to execute -- exit code $exit_code / RESULT -- $result"
+      fi
+    done
+
+    echo "All good; testing completed"
+    exit 0
+---
+# Source: neo4j/templates/service-account.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: graphdb-neo4j-service-reader
+rules:
+  - apiGroups: [""] # "" indicates the core API group
+    resources: ["services"]
+    verbs: ["get", "watch", "list"]
+---
+# Source: neo4j/templates/service-account.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: graphdb-neo4j-sa-to-service-reader-binding
+subjects:
+  - kind: ServiceAccount
+    name: graphdb-neo4j-sa
+roleRef:
+  # "roleRef" specifies the binding to a Role / ClusterRole
+  kind: Role # this must be Role or ClusterRole
+  name: graphdb-neo4j-service-reader # this must match the name of the Role or ClusterRole you wish to bind to
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: neo4j/templates/core-dns.yaml
+# This service is intended for clients running in kubernetes to connect to the
+# cluster.  This distinguishes it from discovery-lb which is about cluster formation
+# and internal communication.
+apiVersion: v1
+kind: Service
+metadata:
+  name: graphdb-neo4j
+  labels:
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/instance: "graphdb"
+    helm.sh/chart: "neo4j-4.0.4-1"
+    app.kubernetes.io/name: neo4j
+    app.kubernetes.io/component: core
+spec:
+  # clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+    - name: http
+      port: 7474
+      targetPort: 7474
+    - name: bolt
+      port: 7687
+      targetPort: 7687
+    - name: https
+      port: 7473
+      targetPort: 7473
+  selector:
+    app.kubernetes.io/name: neo4j
+    app.kubernetes.io/instance: "graphdb"
+    app.kubernetes.io/component: core
+---
+# Source: neo4j/templates/discovery-lb.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: discovery-graphdb-neo4j-0
+  labels:
+    neo4j.com/cluster: graphdb-neo4j
+    neo4j.com/role: CORE
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/instance: "graphdb"
+    helm.sh/chart: "neo4j-4.0.4-1"
+    app.kubernetes.io/name: neo4j
+    app.kubernetes.io/component: core
+spec:
+  publishNotReadyAddresses: true
+  type: ClusterIP
+  ports:
+    - name: discovery
+      port: 5000
+      targetPort: 5000
+      protocol: TCP
+    - name: transaction
+      port: 6000
+      targetPort: 6000
+      protocol: TCP
+    - name: raft
+      port: 7000
+      targetPort: 7000
+      protocol: TCP
+    - name: jmx
+      port: 3637
+      targetPort: 3637
+      protocol: TCP
+  selector:
+    statefulset.kubernetes.io/pod-name: "graphdb-neo4j-core-0"
+---
+# Source: neo4j/templates/discovery-lb.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: discovery-graphdb-neo4j-1
+  labels:
+    neo4j.com/cluster: graphdb-neo4j
+    neo4j.com/role: CORE
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/instance: "graphdb"
+    helm.sh/chart: "neo4j-4.0.4-1"
+    app.kubernetes.io/name: neo4j
+    app.kubernetes.io/component: core
+spec:
+  publishNotReadyAddresses: true
+  type: ClusterIP
+  ports:
+    - name: discovery
+      port: 5000
+      targetPort: 5000
+      protocol: TCP
+    - name: transaction
+      port: 6000
+      targetPort: 6000
+      protocol: TCP
+    - name: raft
+      port: 7000
+      targetPort: 7000
+      protocol: TCP
+    - name: jmx
+      port: 3637
+      targetPort: 3637
+      protocol: TCP
+  selector:
+    statefulset.kubernetes.io/pod-name: "graphdb-neo4j-core-1"
+---
+# Source: neo4j/templates/discovery-lb.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: discovery-graphdb-neo4j-2
+  labels:
+    neo4j.com/cluster: graphdb-neo4j
+    neo4j.com/role: CORE
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/instance: "graphdb"
+    helm.sh/chart: "neo4j-4.0.4-1"
+    app.kubernetes.io/name: neo4j
+    app.kubernetes.io/component: core
+spec:
+  publishNotReadyAddresses: true
+  type: ClusterIP
+  ports:
+    - name: discovery
+      port: 5000
+      targetPort: 5000
+      protocol: TCP
+    - name: transaction
+      port: 6000
+      targetPort: 6000
+      protocol: TCP
+    - name: raft
+      port: 7000
+      targetPort: 7000
+      protocol: TCP
+    - name: jmx
+      port: 3637
+      targetPort: 3637
+      protocol: TCP
+  selector:
+    statefulset.kubernetes.io/pod-name: "graphdb-neo4j-core-2"
+---
+# Source: neo4j/templates/readreplicas-dns.yaml
+# This service is intended for clients running in kubernetes to connect to the
+# cluster replica set.  This distinguishes it from discovery-lb which is about
+# cluster formation and internal communication.
+apiVersion: v1
+kind: Service
+metadata:
+  name: graphdb-neo4j-replica
+  labels:
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/instance: "graphdb"
+    helm.sh/chart: "neo4j-4.0.4-1"
+    app.kubernetes.io/name: graphdb-neo4j-replica
+    app.kubernetes.io/component: core
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+    - name: http
+      port: 7474
+      targetPort: 7474
+    - name: bolt
+      port: 7687
+      targetPort: 7687
+    - name: https
+      port: 7473
+      targetPort: 7473
+  selector:
+    app.kubernetes.io/name: neo4j
+    app.kubernetes.io/instance: "graphdb"
+    app.kubernetes.io/component: replica
+---
+# Source: neo4j/templates/readreplicas-deployment.yaml
+apiVersion: "apps/v1"
+kind: Deployment
+metadata:
+  name: "graphdb-neo4j-replica"
+  labels:
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/instance: "graphdb"
+    helm.sh/chart: neo4j-4.0.4-1
+    app.kubernetes.io/name: neo4j
+    app.kubernetes.io/component: replica
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: neo4j
+      app.kubernetes.io/instance: "graphdb"
+      app.kubernetes.io/component: replica
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: neo4j
+        app.kubernetes.io/instance: "graphdb"
+        app.kubernetes.io/component: replica
+    spec:
+      serviceAccountName: "graphdb-neo4j-sa"
+      containers:
+        - name: neo4j
+          image: "neo4j:4.2.1-enterprise"
+          imagePullPolicy: "IfNotPresent"
+          # Most pod config is factored into a different configMap, which is user overrideable.
+          envFrom:
+            - configMapRef:
+                name: graphdb-neo4j-common-config
+            - configMapRef:
+                name: graphdb-neo4j-replica-config
+          env:
+            - name: NEO4J_SECRETS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: graphdb-neo4j-secrets
+                  key: neo4j-password
+          command:
+            - "/bin/bash"
+            - "-c"
+            - |
+              # Replicas advertise by bare IP, not hostname.  This is because deployments in kubernetes
+              # don't provide good FQDNs. (https://github.com/kubernetes/kubernetes/issues/60789)
+              # The FQDN advertisement address is necessary for the akka cluster formation in Neo4j to work,
+              # so if you advertise with a bare local hostname or something invalid, the read replica will be
+              # unable to join the raft group.
+              export HOST=$(hostname -i)
+
+              # Processes key configuration elements and exports env vars we need.
+              . /helm-init/init.sh
+
+              # These settings are *not* overrideable, because they must match the addresses the
+              # core members see to avoid akka rejections.
+              export NEO4J_causal__clustering_discovery__advertised__address=$HOST:5000
+              export NEO4J_causal__clustering_transaction__advertised__address=$HOST:6000
+              export NEO4J_causal__clustering_raft__advertised__address=$HOST:7000
+
+              echo "Starting Neo4j READ_REPLICA on $HOST"
+              exec /docker-entrypoint.sh "neo4j"
+          ports:
+            - containerPort: 5000
+              name: discovery
+            - containerPort: 7000
+              name: raft
+            - containerPort: 6000
+              name: tx
+            - containerPort: 7474
+              name: browser
+            - containerPort: 7687
+              name: bolt
+            - containerPort: 3637
+              name: jmx
+          volumeMounts:
+            - name: init-script
+              mountPath: /helm-init
+            - name: plugins
+              mountPath: /plugins
+          readinessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 120
+            periodSeconds: 10
+            tcpSocket:
+              port: 7687
+            timeoutSeconds: 2
+          livenessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 300
+            periodSeconds: 10
+            tcpSocket:
+              port: 7687
+            timeoutSeconds: 2
+          resources:
+            {}
+      volumes:
+        - name: init-script
+          configMap:
+            name: "graphdb-init-script"
+        - name: plugins
+          emptyDir: {}
+---
+# Source: neo4j/templates/core-statefulset.yaml
+apiVersion: "apps/v1"
+kind: StatefulSet
+metadata:
+  name: "graphdb-neo4j-core"
+spec:
+  podManagementPolicy: Parallel
+  serviceName: graphdb-neo4j
+  replicas: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: "graphdb"
+      app.kubernetes.io/name: neo4j
+      app.kubernetes.io/component: core
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/managed-by: "Helm"
+        app.kubernetes.io/instance: "graphdb"
+        helm.sh/chart: "neo4j-4.0.4-1"
+        app.kubernetes.io/name: neo4j
+        app.kubernetes.io/component: core
+    spec:
+      serviceAccountName: "graphdb-neo4j-sa"
+      containers:
+        - name: graphdb-neo4j
+          image: "neo4j:4.2.1-enterprise"
+          imagePullPolicy: "IfNotPresent"
+          # Most pod config is factored into a different configMap, which is user overrideable.
+          envFrom:
+            - configMapRef:
+                name: graphdb-neo4j-common-config
+            - configMapRef:
+                name: graphdb-neo4j-core-config
+          env:
+            - name: NEO4J_SECRETS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: graphdb-neo4j-secrets
+                  key: neo4j-password
+          command:
+            - "/bin/bash"
+            - "-c"
+            - |
+              export core_idx=$(hostname | sed 's|.*-||')
+
+              # Processes key configuration elements and exports env vars we need.
+              . /helm-init/init.sh
+
+              # We advertise the discovery-lb addresses (see discovery-lb.yaml) because
+              # it is for internal cluster comms and is limited to private ports.
+              export DISCOVERY_HOST="discovery-graphdb-neo4j-${core_idx}.default.svc.cluster.local"
+              export NEO4J_causal__clustering_discovery__advertised__address="$DISCOVERY_HOST:5000"
+              export NEO4J_causal__clustering_transaction__advertised__address="$DISCOVERY_HOST:6000"
+              export NEO4J_causal__clustering_raft__advertised__address="$DISCOVERY_HOST:7000"
+
+              echo "Starting Neo4j CORE $core_idx on $HOST"
+              exec /docker-entrypoint.sh "neo4j"
+          ports:
+            - containerPort: 5000
+              name: discovery
+            - containerPort: 7000
+              name: raft
+            - containerPort: 6000
+              name: tx
+            - containerPort: 7474
+              name: browser
+            - containerPort: 7687
+              name: bolt
+            - containerPort: 3637
+              name: jmx
+          volumeMounts:
+            - name: init-script
+              mountPath: /helm-init
+            - name: datadir
+              mountPath: "/data"
+            - name: plugins
+              mountPath: /plugins
+          readinessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 120
+            periodSeconds: 10
+            tcpSocket:
+              port: 7687
+            timeoutSeconds: 2
+          livenessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 300
+            periodSeconds: 10
+            tcpSocket:
+              port: 7687
+            timeoutSeconds: 2
+          resources:
+            {}
+      volumes:
+        - name: init-script
+          configMap:
+            name: "graphdb-init-script"
+        - name: plugins
+          emptyDir: {}
+  volumeClaimTemplates:
+    - metadata:
+        name: datadir
+        annotations:
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: "10Gi"
+---
+# Source: neo4j/templates/discovery-lb.yaml
+# This creates a discovery LB for each member in the core set, and ties to
+# the use of the Neo4j discovery type "K8S" with the configured selectors.
+---
+# Source: neo4j/templates/tests/tester.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "graphdb-neo4j-service-test-f0cjj"
+  labels:
+    helm.sh/chart: neo4j-4.0.4-1
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: "graphdb"
+    app.kubernetes.io/name: neo4j
+    app.kubernetes.io/component: tester
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": "before-hook-creation"
+spec:
+  containers:
+    - name: graphdb-ui-test
+      image: gcr.io/neo4j-helm/tester:4.0.0
+      imagePullPolicy: IfNotPresent
+      env:
+        - name: NAME
+          value: "graphdb"
+        - name: CORES
+          value: "3"
+        - name: READ_REPLICAS
+          value: "0"
+        - name: NAMESPACE
+          value: "default"
+        - name: PORT_HTTP
+          value: "7474"
+        - name: PORT_BOLT
+          value: "7687"
+      volumeMounts:
+        - name: secret-volume
+          mountPath: /secret
+          readOnly: true
+        - name: config-volume
+          mountPath: /tester
+          readOnly: true
+      command: ["/bin/bash"]
+      args: ["/tester/run.sh"]
+  restartPolicy: Never
+  volumes:
+    - name: secret-volume
+      secret:
+        secretName: "graphdb-neo4j-secrets"
+        items:
+          - key: neo4j-password
+            path: neo4j-password
+    - name: config-volume
+      configMap:
+        name: "graphdb-test-script"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: graphdb-neo4j-0
+  labels:
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/instance: "graphdb"
+    helm.sh/chart: "neo4j-4.0.4-1"
+    app.kubernetes.io/name: graphdb-neo4j-replica
+    app.kubernetes.io/component: core
+spec:
+  type: ClusterIP
+  publishNotReadyAddresses: true
+  ports:
+    - name: http
+      port: 7474
+      targetPort: 7474
+    - name: bolt
+      port: 7687
+      targetPort: 7687
+    - name: https
+      port: 7473
+      targetPort: 7473
+  selector:
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/instance: "graphdb"
+    helm.sh/chart: "neo4j-4.0.4-1"
+    app.kubernetes.io/name: neo4j
+    app.kubernetes.io/component: core
+    statefulset.kubernetes.io/pod-name: graphdb-neo4j-core-0
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: graphdb-neo4j-1
+  labels:
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/instance: "graphdb"
+    helm.sh/chart: "neo4j-4.0.4-1"
+    app.kubernetes.io/name: graphdb-neo4j-replica
+    app.kubernetes.io/component: core
+spec:
+  type: ClusterIP
+  publishNotReadyAddresses: true
+  ports:
+    - name: http
+      port: 7474
+      targetPort: 7474
+    - name: bolt
+      port: 7687
+      targetPort: 7687
+    - name: https
+      port: 7473
+      targetPort: 7473
+  selector:
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/instance: "graphdb"
+    helm.sh/chart: "neo4j-4.0.4-1"
+    app.kubernetes.io/name: neo4j
+    app.kubernetes.io/component: core
+    statefulset.kubernetes.io/pod-name: graphdb-neo4j-core-1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: graphdb-neo4j-2
+  labels:
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/instance: "graphdb"
+    helm.sh/chart: "neo4j-4.0.4-1"
+    app.kubernetes.io/name: graphdb-neo4j-replica
+    app.kubernetes.io/component: core
+spec:
+  type: ClusterIP
+  publishNotReadyAddresses: true
+  ports:
+    - name: http
+      port: 7474
+      targetPort: 7474
+    - name: bolt
+      port: 7687
+      targetPort: 7687
+    - name: https
+      port: 7473
+      targetPort: 7473
+  selector:
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/instance: "graphdb"
+    helm.sh/chart: "neo4j-4.0.4-1"
+    app.kubernetes.io/name: neo4j
+    app.kubernetes.io/component: core
+    statefulset.kubernetes.io/pod-name: graphdb-neo4j-core-2

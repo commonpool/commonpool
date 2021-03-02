@@ -2,18 +2,17 @@ package handler
 
 import (
 	"github.com/commonpool/backend/pkg/keys"
-	handler2 "github.com/commonpool/backend/pkg/resource/handler"
 	"github.com/commonpool/backend/pkg/user"
+	"github.com/commonpool/backend/pkg/user/handler"
 	"github.com/commonpool/backend/pkg/utils"
-	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
 
 type GetUsersForGroupInvitePickerResponse struct {
-	Users []web.UserInfoResponse `json:"users"`
-	Take  int                    `json:"take"`
-	Skip  int                    `json:"skip"`
+	Users []handler.UserInfoResponse `json:"users"`
+	Take  int                        `json:"take"`
+	Skip  int                        `json:"skip"`
 }
 
 // GetGroup godoc
@@ -30,19 +29,19 @@ type GetUsersForGroupInvitePickerResponse struct {
 func (h *Handler) GetUsersForGroupInvitePicker(c echo.Context) error {
 	skip, err := utils.ParseSkip(c)
 	if err != nil {
-		return handler2.NewErrResponse(c, err)
+		return err
 	}
 
 	take, err := utils.ParseTake(c, 10, 100)
 	if err != nil {
-		return handler2.NewErrResponse(c, err)
+		return err
 	}
 
 	qry := c.QueryParam("query")
 
 	groupKey, err := keys.ParseGroupKey(c.Param("id"))
 	if err != nil {
-		return handler2.NewErrResponse(c, err)
+		return err
 	}
 
 	userQuery := user.Query{
@@ -54,12 +53,12 @@ func (h *Handler) GetUsersForGroupInvitePicker(c echo.Context) error {
 
 	users, err := h.userService.Find(userQuery)
 	if err != nil {
-		return handler2.NewErrResponse(c, err)
+		return err
 	}
 
-	responseItems := make([]web.UserInfoResponse, len(users.Items))
+	responseItems := make([]handler.UserInfoResponse, len(users.Items))
 	for i, u := range users.Items {
-		responseItems[i] = web.UserInfoResponse{
+		responseItems[i] = handler.UserInfoResponse{
 			Id:       u.ID,
 			Username: u.Username,
 		}

@@ -31,7 +31,7 @@ func (t TradingService) DeclineOffer(ctx context.Context, offerKey keys.OfferKey
 		return err
 	}
 
-	if !approvers.IsUserAnApprover(loggedInUserKey) {
+	if !approvers.HasAnyOfferItemsToApprove(loggedInUserKey) {
 		return exceptions.ErrForbidden
 	}
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/commonpool/backend/pkg/chat"
 	"github.com/commonpool/backend/pkg/keys"
+	"github.com/commonpool/backend/pkg/test"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"time"
@@ -14,9 +15,9 @@ func (s *chatHandlerSuite) TestGetMessagesShouldFailIfChannelKeyNotPresent() {
 	s.ServeHTTP()
 	s.AssertBadRequest()
 	s.AssertErrorResponse(
-		HasStatusCode(http.StatusBadRequest),
-		HasCode("ErrQueryParamRequired"),
-		HasMessage(`query parameter 'channel' is required`))
+		test.HasStatusCode(http.StatusBadRequest),
+		test.HasCode("ErrQueryParamRequired"),
+		test.HasMessage(`query parameter 'channel' is required`))
 }
 
 func (s *chatHandlerSuite) TestGetMessagesShouldFailIfTakeQueryParamNotValid() {
@@ -24,9 +25,9 @@ func (s *chatHandlerSuite) TestGetMessagesShouldFailIfTakeQueryParamNotValid() {
 	s.ServeHTTP()
 	s.AssertBadRequest()
 	s.AssertErrorResponse(
-		HasStatusCode(http.StatusBadRequest),
-		HasCode("ErrInvalidTakeQueryParam"),
-		HasMessage(`query parameter 'take' is invalid`))
+		test.HasStatusCode(http.StatusBadRequest),
+		test.HasCode("ErrInvalidTakeQueryParam"),
+		test.HasMessage(`query parameter 'take' is invalid`))
 }
 
 func (s *chatHandlerSuite) TestGetMessagesShouldFailIfBeforeQueryParamNotValid() {
@@ -34,9 +35,9 @@ func (s *chatHandlerSuite) TestGetMessagesShouldFailIfBeforeQueryParamNotValid()
 	s.ServeHTTP()
 	s.AssertBadRequest()
 	s.AssertErrorResponse(
-		HasStatusCode(http.StatusBadRequest),
-		HasCode("ErrInvalidBeforeQueryParam"),
-		HasMessage(`query parameter 'before' is invalid`))
+		test.HasStatusCode(http.StatusBadRequest),
+		test.HasCode("ErrInvalidBeforeQueryParam"),
+		test.HasMessage(`query parameter 'before' is invalid`))
 }
 
 func (s *chatHandlerSuite) TestGetMessages() {

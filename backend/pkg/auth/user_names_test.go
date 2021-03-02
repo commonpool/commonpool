@@ -1,14 +1,14 @@
 package auth
 
 import (
-	"github.com/commonpool/backend/model"
+	"github.com/commonpool/backend/pkg/keys"
 	"testing"
 )
 import "github.com/stretchr/testify/assert"
 
 func TestUserNames(t *testing.T) {
-	userKey1 := model.NewUserKey("user")
-	userKey2 := model.NewUserKey("user2")
+	userKey1 := keys.NewUserKey("user")
+	userKey2 := keys.NewUserKey("user2")
 
 	userNames := UserNames{
 		userKey1: "name",

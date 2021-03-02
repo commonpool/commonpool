@@ -1,9 +1,8 @@
 package store
 
 import (
-	"github.com/commonpool/backend/model"
 	"github.com/commonpool/backend/pkg/keys"
-	"github.com/commonpool/backend/pkg/resource"
+	"github.com/commonpool/backend/pkg/trading"
 	"github.com/commonpool/backend/pkg/transaction"
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
@@ -30,13 +29,13 @@ func (t TransactionStore) SaveEntry(entry *transaction.Entry) error {
 		resourceID = &resourceKeyVal
 	}
 
-	var recipientType *resource.TargetType
+	var recipientType *trading.TargetType
 	if entry.Recipient != nil {
 		recipientTypeVal := entry.Recipient.Type
 		recipientType = &recipientTypeVal
 	}
 
-	var fromType *resource.TargetType
+	var fromType *trading.TargetType
 	if entry.From != nil {
 		fromTypeVal := entry.From.Type
 		fromType = &fromTypeVal
@@ -85,7 +84,7 @@ func (t TransactionStore) SaveEntry(entry *transaction.Entry) error {
 	return nil
 }
 
-func (t TransactionStore) GetEntry(transactionKey model.TransactionEntryKey) (*transaction.Entry, error) {
+func (t TransactionStore) GetEntry(transactionKey keys.TransactionEntryKey) (*transaction.Entry, error) {
 	var transactionEntry TransactionEntry
 	err := t.db.Model(TransactionEntry{}).First(&transactionEntry, "id = ?", transactionKey.String()).Error
 	if err != nil {
@@ -140,9 +139,9 @@ type TransactionEntry struct {
 	GroupID       uuid.UUID
 	ResourceID    *uuid.UUID
 	Duration      *time.Duration
-	RecipientType *resource.TargetType
+	RecipientType *trading.TargetType
 	RecipientID   *string
-	FromType      *resource.TargetType
+	FromType      *trading.TargetType
 	FromID        *string
 	Timestamp     time.Time
 }
@@ -166,7 +165,7 @@ func mapDbTransactionEntry(dbTransactionEntry *TransactionEntry) (*transaction.E
 	}
 
 	return &transaction.Entry{
-		Key:         model.NewTransactionEntryKey(dbTransactionEntry.ID),
+		Key:         keys.NewTransactionEntryKey(dbTransactionEntry.ID),
 		Type:        dbTransactionEntry.Type,
 		GroupKey:    keys.NewGroupKey(dbTransactionEntry.GroupID),
 		ResourceKey: resourceKey,
@@ -178,17 +177,17 @@ func mapDbTransactionEntry(dbTransactionEntry *TransactionEntry) (*transaction.E
 
 }
 
-func mapTarget(targetType *resource.TargetType, targetId *string) (*resource.Target, error) {
-	var target *resource.Target
+func mapTarget(targetType *trading.TargetType, targetId *string) (*trading.Target, error) {
+	var target *trading.Target
 	if targetType != nil && targetId != nil {
 		if targetType.IsUser() {
-			target = resource.NewUserTarget(keys.NewUserKey(*targetId))
+			target = trading.NewUserTarget(keys.NewUserKey(*targetId))
 		} else if targetType.IsGroup() {
 			groupKey, err := keys.ParseGroupKey(*targetId)
 			if err != nil {
 				return nil, err
 			}
-			target = resource.NewGroupTarget(groupKey)
+			target = trading.NewGroupTarget(groupKey)
 		}
 	}
 	return target, nil

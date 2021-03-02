@@ -2,7 +2,6 @@ package trading
 
 import (
 	"github.com/commonpool/backend/pkg/keys"
-	"github.com/commonpool/backend/pkg/resource"
 )
 
 type OfferItem interface {
@@ -15,7 +14,7 @@ type OfferItem interface {
 	IsResourceTransfer() bool
 	IsCompleted() bool
 	IsAccepted() bool
-	IsAcceptedByReceiver() bool
-	IsAcceptedByGiver() bool
-	GetReceiverKey() *resource.Target
+	IsInboundApproved() bool
+	IsOutboundApproved() bool
+	GetReceiverKey() *Target
 }

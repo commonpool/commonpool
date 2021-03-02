@@ -6,14 +6,14 @@ import (
 )
 
 type Offer struct {
-	Key            keys.OfferKey
-	GroupKey       keys.GroupKey
-	CreatedByKey   keys.UserKey
-	Status         OfferStatus
-	CreatedAt      time.Time
-	ExpirationTime *time.Time
-	CompletedAt    *time.Time
-	Message        string
+	Key            keys.OfferKey `json:"id"`
+	GroupKey       keys.GroupKey `json:"groupId"`
+	CreatedByKey   keys.UserKey  `json:"createdById"`
+	Status         OfferStatus   `json:"status"`
+	CreatedAt      time.Time     `json:"createdAt"`
+	ExpirationTime *time.Time    `json:"expirationTime"`
+	CompletedAt    *time.Time    `json:"completedAt"`
+	Message        string        `json:"message"`
 }
 
 func NewOffer(offerKey keys.OfferKey, groupKey keys.GroupKey, author keys.UserKey, message string, expiration *time.Time) *Offer {

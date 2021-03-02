@@ -2,19 +2,18 @@ package trading
 
 import (
 	"github.com/commonpool/backend/pkg/keys"
-	"github.com/commonpool/backend/pkg/resource"
 	"time"
 )
 
 type OfferItemBase struct {
-	Type             OfferItemType
-	Key              keys.OfferItemKey
-	OfferKey         keys.OfferKey
-	To               *resource.Target
-	ReceiverAccepted bool
-	GiverAccepted    bool
-	CreatedAt        time.Time
-	UpdatedAt        time.Time
+	Type             OfferItemType     `json:"type"`
+	Key              keys.OfferItemKey `json:"id"`
+	OfferKey         keys.OfferKey     `json:"offerId"`
+	To               *Target           `json:"to"`
+	ApprovedInbound  bool              `json:"approvedInbound"`
+	ApprovedOutbound bool              `json:"approvedOutbound"`
+	CreatedAt        time.Time         `json:"createdAt"`
+	UpdatedAt        time.Time         `json:"updatedAt"`
 }
 
 func (c OfferItemBase) GetKey() keys.OfferItemKey {
@@ -40,18 +39,18 @@ func (c OfferItemBase) IsResourceTransfer() bool {
 	return c.Type == ResourceTransfer
 }
 
-func (c OfferItemBase) GetReceiverKey() *resource.Target {
+func (c OfferItemBase) GetReceiverKey() *Target {
 	return c.To
 }
 
 func (c OfferItemBase) IsAccepted() bool {
-	return c.IsAcceptedByGiver() && c.IsAcceptedByReceiver()
+	return c.IsOutboundApproved() && c.IsInboundApproved()
 }
 
-func (c OfferItemBase) IsAcceptedByReceiver() bool {
-	return c.ReceiverAccepted
+func (c OfferItemBase) IsInboundApproved() bool {
+	return c.ApprovedInbound
 }
 
-func (c OfferItemBase) IsAcceptedByGiver() bool {
-	return c.GiverAccepted
+func (c OfferItemBase) IsOutboundApproved() bool {
+	return c.ApprovedOutbound
 }

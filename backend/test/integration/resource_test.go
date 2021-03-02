@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/resource"
-	"github.com/commonpool/backend/web"
+	"github.com/commonpool/backend/pkg/resource/handler"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"strconv"
@@ -14,20 +14,20 @@ import (
 
 var resourceCounter = 1
 
-func CreateResource(t *testing.T, ctx context.Context, userSession *auth.UserSession, opts ...*web.CreateResourceRequest) (*web.CreateResourceResponse, *http.Response) {
+func CreateResource(t *testing.T, ctx context.Context, userSession *auth.UserSession, opts ...*handler.CreateResourceRequest) (*handler.CreateResourceResponse, *http.Response) {
 
 	resourceCounter++
 	var resourceName = "resource-" + strconv.Itoa(resourceCounter)
 
-	payload := &web.CreateResourceRequest{
-		Resource: web.CreateResourcePayload{
+	payload := &handler.CreateResourceRequest{
+		Resource: handler.CreateResourcePayload{
 			Summary:          resourceName,
 			Description:      resourceName,
 			Type:             resource.Offer,
 			SubType:          resource.ObjectResource,
 			ValueInHoursFrom: 0,
 			ValueInHoursTo:   0,
-			SharedWith:       []web.InputResourceSharing{},
+			SharedWith:       []handler.InputResourceSharing{},
 		},
 	}
 
@@ -60,12 +60,12 @@ func CreateResource(t *testing.T, ctx context.Context, userSession *auth.UserSes
 
 	c, recorder := NewRequest(ctx, userSession, http.MethodPost, "/api/v1/resources", payload)
 	assert.NoError(t, a.CreateResource(c))
-	response := &web.CreateResourceResponse{}
+	response := &handler.CreateResourceResponse{}
 	t.Log(recorder.Body.String())
 	return response, ReadResponse(t, recorder, response)
 }
 
-func SearchResources(t *testing.T, ctx context.Context, userSession *auth.UserSession, take int, skip int, query string, resourceType resource.Type, sharedWithGroup *string) (*web.SearchResourcesResponse, *http.Response) {
+func SearchResources(t *testing.T, ctx context.Context, userSession *auth.UserSession, take int, skip int, query string, resourceType resource.Type, sharedWithGroup *string) (*handler.SearchResourcesResponse, *http.Response) {
 	c, recorder := NewRequest(ctx, userSession, http.MethodGet, "/api/v1/resources", nil)
 	c.QueryParams()["take"] = []string{strconv.Itoa(take)}
 	c.QueryParams()["skip"] = []string{strconv.Itoa(skip)}
@@ -75,27 +75,27 @@ func SearchResources(t *testing.T, ctx context.Context, userSession *auth.UserSe
 		c.QueryParams()["group_id"] = []string{*sharedWithGroup}
 	}
 	assert.NoError(t, a.SearchResources(c))
-	response := &web.SearchResourcesResponse{}
+	response := &handler.SearchResourcesResponse{}
 	t.Log(recorder.Body.String())
 	return response, ReadResponse(t, recorder, response)
 }
 
-func GetResource(t *testing.T, ctx context.Context, userSession *auth.UserSession, resourceKey string) (*web.GetResourceResponse, *http.Response) {
+func GetResource(t *testing.T, ctx context.Context, userSession *auth.UserSession, resourceKey string) (*handler.GetResourceResponse, *http.Response) {
 	c, recorder := NewRequest(ctx, userSession, http.MethodPost, fmt.Sprintf("/api/v1/resources/%s", resourceKey), nil)
 	c.SetParamNames("id")
 	c.SetParamValues(resourceKey)
 	assert.NoError(t, a.GetResource(c))
-	response := &web.GetResourceResponse{}
+	response := &handler.GetResourceResponse{}
 	t.Log(recorder.Body.String())
 	return response, ReadResponse(t, recorder, response)
 }
 
-func UpdateResource(t *testing.T, ctx context.Context, userSession *auth.UserSession, resourceKey string, request *web.UpdateResourceRequest) (*web.UpdateResourceResponse, *http.Response) {
+func UpdateResource(t *testing.T, ctx context.Context, userSession *auth.UserSession, resourceKey string, request *handler.UpdateResourceRequest) (*handler.UpdateResourceResponse, *http.Response) {
 	c, recorder := NewRequest(ctx, userSession, http.MethodPut, fmt.Sprintf("/api/v1/resources/%s", resourceKey), request)
 	c.SetParamNames("id")
 	c.SetParamValues(resourceKey)
 	assert.NoError(t, a.UpdateResource(c))
-	response := &web.UpdateResourceResponse{}
+	response := &handler.UpdateResourceResponse{}
 	t.Log(recorder.Body.String())
 	return response, ReadResponse(t, recorder, response)
 }
@@ -108,14 +108,14 @@ func TestUserCanCreateResource(t *testing.T) {
 
 	ctx := context.Background()
 
-	resp, httpResp := CreateResource(t, ctx, user1, &web.CreateResourceRequest{
-		Resource: web.CreateResourcePayload{
+	resp, httpResp := CreateResource(t, ctx, user1, &handler.CreateResourceRequest{
+		Resource: handler.CreateResourcePayload{
 			Summary:          "Summary",
 			Description:      "Description",
 			Type:             resource.Offer,
 			ValueInHoursFrom: 1,
 			ValueInHoursTo:   3,
-			SharedWith:       []web.InputResourceSharing{},
+			SharedWith:       []handler.InputResourceSharing{},
 		},
 	})
 
@@ -137,8 +137,8 @@ func TestUserCanSearchResources(t *testing.T) {
 
 	ctx := context.Background()
 
-	CreateResource(t, ctx, user1, &web.CreateResourceRequest{
-		Resource: web.CreateResourcePayload{
+	CreateResource(t, ctx, user1, &handler.CreateResourceRequest{
+		Resource: handler.CreateResourcePayload{
 			Summary: "Blabbers",
 		},
 	})
@@ -162,8 +162,8 @@ func TestUserCanSearchResourcesWhenNoMatch(t *testing.T) {
 
 	ctx := context.Background()
 
-	CreateResource(t, ctx, user1, &web.CreateResourceRequest{
-		Resource: web.CreateResourcePayload{
+	CreateResource(t, ctx, user1, &handler.CreateResourceRequest{
+		Resource: handler.CreateResourcePayload{
 			Summary: "SizzlersBopBiBouWap",
 		},
 	})
@@ -186,13 +186,13 @@ func TestUserCanSearchResourcesWithSkip(t *testing.T) {
 
 	ctx := context.Background()
 
-	CreateResource(t, ctx, user1, &web.CreateResourceRequest{
-		Resource: web.CreateResourcePayload{
+	CreateResource(t, ctx, user1, &handler.CreateResourceRequest{
+		Resource: handler.CreateResourcePayload{
 			Summary: "ResourceSkip1",
 		},
 	})
-	CreateResource(t, ctx, user1, &web.CreateResourceRequest{
-		Resource: web.CreateResourcePayload{
+	CreateResource(t, ctx, user1, &handler.CreateResourceRequest{
+		Resource: handler.CreateResourcePayload{
 			Summary: "ResourceSkip2",
 		},
 	})
@@ -219,20 +219,20 @@ func TestUserCanSearchResourcesSharedWithGroup(t *testing.T) {
 	group1 := testGroup(t, user1)
 	group2 := testGroup(t, user1)
 
-	CreateResource(t, ctx, user1, &web.CreateResourceRequest{
-		Resource: web.CreateResourcePayload{
+	CreateResource(t, ctx, user1, &handler.CreateResourceRequest{
+		Resource: handler.CreateResourcePayload{
 			Summary: "SharedWithGroup",
-			SharedWith: []web.InputResourceSharing{
+			SharedWith: []handler.InputResourceSharing{
 				{
 					GroupID: group1.ID,
 				},
 			},
 		},
 	})
-	CreateResource(t, ctx, user1, &web.CreateResourceRequest{
-		Resource: web.CreateResourcePayload{
+	CreateResource(t, ctx, user1, &handler.CreateResourceRequest{
+		Resource: handler.CreateResourcePayload{
 			Summary: "SharedWithGroup",
-			SharedWith: []web.InputResourceSharing{
+			SharedWith: []handler.InputResourceSharing{
 				{
 					GroupID: group2.ID,
 				},
@@ -262,10 +262,10 @@ func TestUserCanSearchResourcesSharedWithMultipleGroups(t *testing.T) {
 	group1 := testGroup(t, user1)
 	group2 := testGroup(t, user1)
 
-	createResource1, createResource1Http := CreateResource(t, ctx, user1, &web.CreateResourceRequest{
-		Resource: web.CreateResourcePayload{
+	createResource1, createResource1Http := CreateResource(t, ctx, user1, &handler.CreateResourceRequest{
+		Resource: handler.CreateResourcePayload{
 			Summary: "A-4ccf1c0f-d791-437b-becd-8c4592d3bc1d",
-			SharedWith: []web.InputResourceSharing{
+			SharedWith: []handler.InputResourceSharing{
 				{
 					GroupID: group1.ID,
 				}, {
@@ -275,12 +275,12 @@ func TestUserCanSearchResourcesSharedWithMultipleGroups(t *testing.T) {
 		},
 	})
 	assert.Equal(t, http.StatusCreated, createResource1Http.StatusCode)
-	createResource2, createResource2Http := CreateResource(t, ctx, user1, &web.CreateResourceRequest{
-		Resource: web.CreateResourcePayload{
+	createResource2, createResource2Http := CreateResource(t, ctx, user1, &handler.CreateResourceRequest{
+		Resource: handler.CreateResourcePayload{
 			Summary: "B-4ccf1c0f-d791-437b-becd-8c4592d3bc1d",
 			Type:    resource.Offer,
 			SubType: resource.ObjectResource,
-			SharedWith: []web.InputResourceSharing{
+			SharedWith: []handler.InputResourceSharing{
 				{
 					GroupID: group2.ID,
 				},
@@ -332,8 +332,8 @@ func TestUserCanUpdateResource(t *testing.T) {
 
 	ctx := context.Background()
 
-	res, _ := CreateResource(t, ctx, user1, &web.CreateResourceRequest{
-		Resource: web.CreateResourcePayload{
+	res, _ := CreateResource(t, ctx, user1, &handler.CreateResourceRequest{
+		Resource: handler.CreateResourcePayload{
 			Summary:          "Snippers Boop",
 			Description:      "Description",
 			ValueInHoursFrom: 1,
@@ -341,8 +341,8 @@ func TestUserCanUpdateResource(t *testing.T) {
 		},
 	})
 
-	updateResource, httpRes := UpdateResource(t, ctx, user1, res.Resource.Id, &web.UpdateResourceRequest{
-		Resource: web.UpdateResourcePayload{
+	updateResource, httpRes := UpdateResource(t, ctx, user1, res.Resource.Id, &handler.UpdateResourceRequest{
+		Resource: handler.UpdateResourcePayload{
 			Summary:          "New Summary",
 			Description:      "New Description",
 			ValueInHoursFrom: 5,
@@ -370,15 +370,15 @@ func TestUserCanUpdateResourceSharings(t *testing.T) {
 	group1 := testGroup(t, user1)
 	group2 := testGroup(t, user1)
 
-	createResource, createResourceHttp := CreateResource(t, ctx, user1, &web.CreateResourceRequest{
-		Resource: web.CreateResourcePayload{
+	createResource, createResourceHttp := CreateResource(t, ctx, user1, &handler.CreateResourceRequest{
+		Resource: handler.CreateResourcePayload{
 			Summary:          "Snippers Boop",
 			Description:      "Description",
 			Type:             resource.Offer,
 			SubType:          resource.ObjectResource,
 			ValueInHoursFrom: 1,
 			ValueInHoursTo:   3,
-			SharedWith: []web.InputResourceSharing{
+			SharedWith: []handler.InputResourceSharing{
 				{GroupID: group1.ID},
 				{GroupID: group2.ID},
 			},
@@ -386,13 +386,13 @@ func TestUserCanUpdateResourceSharings(t *testing.T) {
 	})
 	assert.Equal(t, http.StatusCreated, createResourceHttp.StatusCode)
 
-	updateResource1, updateResource1Http := UpdateResource(t, ctx, user1, createResource.Resource.Id, &web.UpdateResourceRequest{
-		Resource: web.UpdateResourcePayload{
+	updateResource1, updateResource1Http := UpdateResource(t, ctx, user1, createResource.Resource.Id, &handler.UpdateResourceRequest{
+		Resource: handler.UpdateResourcePayload{
 			Summary:          "New Summary",
 			Description:      "New Description",
 			ValueInHoursFrom: 5,
 			ValueInHoursTo:   10,
-			SharedWith: []web.InputResourceSharing{
+			SharedWith: []handler.InputResourceSharing{
 				{GroupID: group1.ID},
 			},
 		},
@@ -400,13 +400,13 @@ func TestUserCanUpdateResourceSharings(t *testing.T) {
 	assert.Equal(t, http.StatusOK, updateResource1Http.StatusCode)
 	assert.Equal(t, 1, len(updateResource1.Resource.SharedWith))
 
-	updateResource2, updateResource2Http := UpdateResource(t, ctx, user1, createResource.Resource.Id, &web.UpdateResourceRequest{
-		Resource: web.UpdateResourcePayload{
+	updateResource2, updateResource2Http := UpdateResource(t, ctx, user1, createResource.Resource.Id, &handler.UpdateResourceRequest{
+		Resource: handler.UpdateResourcePayload{
 			Summary:          "New Summary",
 			Description:      "New Description",
 			ValueInHoursFrom: 5,
 			ValueInHoursTo:   10,
-			SharedWith: []web.InputResourceSharing{
+			SharedWith: []handler.InputResourceSharing{
 				{GroupID: group1.ID},
 				{GroupID: group2.ID},
 			},
@@ -427,9 +427,9 @@ func TestUserCanShareResourceWithGroup(t *testing.T) {
 
 	group1 := testGroup(t, user1)
 
-	res, httpRes := CreateResource(t, ctx, user1, &web.CreateResourceRequest{
-		Resource: web.CreateResourcePayload{
-			SharedWith: []web.InputResourceSharing{{GroupID: group1.ID}},
+	res, httpRes := CreateResource(t, ctx, user1, &handler.CreateResourceRequest{
+		Resource: handler.CreateResourcePayload{
+			SharedWith: []handler.InputResourceSharing{{GroupID: group1.ID}},
 		},
 	})
 
@@ -452,9 +452,9 @@ func TestUserCanShareResourceWithMultipleGroups(t *testing.T) {
 	group2 := testGroup(t, user1)
 	group3 := testGroup(t, user1)
 
-	res, httpRes := CreateResource(t, ctx, user1, &web.CreateResourceRequest{
-		Resource: web.CreateResourcePayload{
-			SharedWith: []web.InputResourceSharing{
+	res, httpRes := CreateResource(t, ctx, user1, &handler.CreateResourceRequest{
+		Resource: handler.CreateResourcePayload{
+			SharedWith: []handler.InputResourceSharing{
 				{GroupID: group1.ID},
 				{GroupID: group2.ID},
 				{GroupID: group3.ID},

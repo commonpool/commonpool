@@ -6,8 +6,8 @@ import (
 )
 
 type Service interface {
-	GetUser(key keys.UserKey) (*User, error)
-	GetUsername(key keys.UserKey) (string, error)
+	GetUser(userKey keys.UserKey) (*User, error)
+	GetUsername(userKey keys.UserKey) (string, error)
 	Find(query Query) (*Users, error)
-	GetByKeys(ctx context.Context, keys *keys.UserKeys) (*Users, error)
+	GetByKeys(ctx context.Context, userKeys *keys.UserKeys) (*Users, error)
 }

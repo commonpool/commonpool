@@ -1,13 +1,17 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/pkg/resource/handler"
 	"github.com/commonpool/backend/pkg/user"
 	"github.com/commonpool/backend/pkg/utils"
-	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
+
+type UsersInfoResponse struct {
+	Users []UserInfoResponse `json:"users"`
+	Take  int                `json:"take"`
+	Skip  int                `json:"skip"`
+}
 
 // GetUserInfo godoc
 // @Summary Finds users
@@ -30,7 +34,7 @@ func (h *UserHandler) SearchUsers(c echo.Context) error {
 
 	take, err := utils.ParseTake(c, 10, 100)
 	if err != nil {
-		return handler.NewErrResponse(c, err)
+		return err
 	}
 
 	qry := c.QueryParam("query")
@@ -46,15 +50,15 @@ func (h *UserHandler) SearchUsers(c echo.Context) error {
 		return err
 	}
 
-	responseItems := make([]web.UserInfoResponse, len(users.Items))
+	responseItems := make([]UserInfoResponse, len(users.Items))
 	for i, u := range users.Items {
-		responseItems[i] = web.UserInfoResponse{
+		responseItems[i] = UserInfoResponse{
 			Id:       u.ID,
 			Username: u.Username,
 		}
 	}
 
-	response := web.UsersInfoResponse{
+	response := UsersInfoResponse{
 		Users: responseItems,
 		Take:  take,
 		Skip:  skip,

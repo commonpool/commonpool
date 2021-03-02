@@ -20,34 +20,34 @@ var _ chat.Store = &ChatStore{}
 //
 //         // make and configure a mocked chat.Store
 //         mockedStore := &ChatStore{
-//             CreateChannelFunc: func(ctx context.Context, channel *chatmodel.Channel) error {
+//             CreateChannelFunc: func(ctx context.Context, channel *chat.Channel) error {
 // 	               panic("mock out the CreateChannel method")
 //             },
-//             CreateSubscriptionFunc: func(ctx context.Context, key chatmodel.ChannelSubscriptionKey, name string) (*chatmodel.ChannelSubscription, error) {
+//             CreateSubscriptionFunc: func(ctx context.Context, key keys.ChannelSubscriptionKey, name string) (*chat.ChannelSubscription, error) {
 // 	               panic("mock out the CreateSubscription method")
 //             },
-//             DeleteSubscriptionFunc: func(ctx context.Context, key chatmodel.ChannelSubscriptionKey) error {
+//             DeleteSubscriptionFunc: func(ctx context.Context, key keys.ChannelSubscriptionKey) error {
 // 	               panic("mock out the DeleteSubscription method")
 //             },
-//             GetChannelFunc: func(ctx context.Context, channelKey chatmodel.ChannelKey) (*chatmodel.Channel, error) {
+//             GetChannelFunc: func(ctx context.Context, channelKey keys.ChannelKey) (*chat.Channel, error) {
 // 	               panic("mock out the GetChannel method")
 //             },
-//             GetMessageFunc: func(ctx context.Context, messageKey chatmodel.MessageKey) (*chatmodel.Message, error) {
+//             GetMessageFunc: func(ctx context.Context, messageKey keys.MessageKey) (*chat.Message, error) {
 // 	               panic("mock out the GetMessage method")
 //             },
 //             GetMessagesFunc: func(ctx context.Context, request *chat.GetMessages) (*chat.GetMessagesResponse, error) {
 // 	               panic("mock out the GetMessages method")
 //             },
-//             GetSubscriptionFunc: func(ctx context.Context, request *chat.GetSubscription) (*chatmodel.ChannelSubscription, error) {
+//             GetSubscriptionFunc: func(ctx context.Context, request *chat.GetSubscription) (*chat.ChannelSubscription, error) {
 // 	               panic("mock out the GetSubscription method")
 //             },
-//             GetSubscriptionsForChannelFunc: func(ctx context.Context, channelKey chatmodel.ChannelKey) ([]*chatmodel.ChannelSubscription, error) {
+//             GetSubscriptionsForChannelFunc: func(ctx context.Context, channelKey keys.ChannelKey) ([]*chat.ChannelSubscription, error) {
 // 	               panic("mock out the GetSubscriptionsForChannel method")
 //             },
-//             GetSubscriptionsForUserFunc: func(ctx context.Context, request *chat.GetSubscriptions) (*chatmodel.ChannelSubscriptions, error) {
+//             GetSubscriptionsForUserFunc: func(ctx context.Context, request *chat.GetSubscriptions) (*chat.ChannelSubscriptions, error) {
 // 	               panic("mock out the GetSubscriptionsForUser method")
 //             },
-//             SaveMessageFunc: func(ctx context.Context, request *chatmodel.Message) error {
+//             SaveMessageFunc: func(ctx context.Context, request *chat.Message) error {
 // 	               panic("mock out the SaveMessage method")
 //             },
 //         }

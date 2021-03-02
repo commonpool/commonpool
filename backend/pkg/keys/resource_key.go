@@ -1,6 +1,7 @@
 package keys
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/satori/go.uuid"
@@ -13,6 +14,11 @@ type ResourceKey struct {
 func NewResourceKey(id uuid.UUID) ResourceKey {
 	return ResourceKey{
 		ID: id,
+	}
+}
+func GenerateResourceKey() ResourceKey {
+	return ResourceKey{
+		ID: uuid.NewV4(),
 	}
 }
 
@@ -38,4 +44,21 @@ func (r *ResourceKey) String() string {
 
 func (r *ResourceKey) GetFrontendLink() string {
 	return fmt.Sprintf("<commonpool-resource id='%s'><commonpool-resource>", r.String())
+}
+
+func (k ResourceKey) MarshalJSON() ([]byte, error) {
+	return json.Marshal(k.ID.String())
+}
+
+func (k *ResourceKey) UnmarshalJSON(data []byte) error {
+	var uid string
+	if err := json.Unmarshal(data, &uid); err != nil {
+		return err
+	}
+	id, err := uuid.FromString(uid)
+	if err != nil {
+		return err
+	}
+	k.ID = id
+	return nil
 }

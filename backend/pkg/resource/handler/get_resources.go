@@ -6,11 +6,17 @@ import (
 	"github.com/commonpool/backend/pkg/keys"
 	resource2 "github.com/commonpool/backend/pkg/resource"
 	"github.com/commonpool/backend/pkg/utils"
-	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"strings"
 )
+
+type SearchResourcesResponse struct {
+	TotalCount int        `json:"totalCount"`
+	Take       int        `json:"take"`
+	Skip       int        `json:"skip"`
+	Resources  []Resource `json:"resources"`
+}
 
 // SearchResources godoc
 // @Summary Searches resources
@@ -93,7 +99,7 @@ func (h *ResourceHandler) SearchResources(c echo.Context) error {
 	}
 
 	resourceItems := resources.Resources.Items
-	var resourcesResponse = make([]web.Resource, len(resourceItems))
+	var resourcesResponse = make([]Resource, len(resourceItems))
 	for i, item := range resourceItems {
 
 		createdBy, err := createdByUsers.GetUser(keys.NewUserKey(item.CreatedBy))
@@ -111,7 +117,7 @@ func (h *ResourceHandler) SearchResources(c echo.Context) error {
 	}
 
 	// return
-	return c.JSON(http.StatusOK, web.SearchResourcesResponse{
+	return c.JSON(http.StatusOK, SearchResourcesResponse{
 		Resources:  resourcesResponse,
 		Take:       take,
 		Skip:       skip,

@@ -4,7 +4,6 @@ import (
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/keys"
 	resource2 "github.com/commonpool/backend/pkg/resource"
-	"github.com/commonpool/backend/web"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
@@ -47,7 +46,7 @@ func (h *ResourceHandler) GetResource(c echo.Context) error {
 	}
 
 	// return
-	return c.JSON(http.StatusOK, web.GetResourceResponse{
+	return c.JSON(http.StatusOK, GetResourceResponse{
 		Resource: NewResourceResponse(res, username, ownerKey.String(), groups),
 	})
 }

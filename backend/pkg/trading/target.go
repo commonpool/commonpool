@@ -1,13 +1,13 @@
-package resource
+package trading
 
 import (
 	"github.com/commonpool/backend/pkg/keys"
 )
 
 type Target struct {
-	UserKey  *keys.UserKey
-	GroupKey *keys.GroupKey
-	Type     TargetType
+	UserKey  *keys.UserKey  `json:"userId,omitempty"`
+	GroupKey *keys.GroupKey `json:"groupId,omitempty"`
+	Type     TargetType     `json:"type"`
 }
 
 func (t Target) Equals(target *Target) bool {

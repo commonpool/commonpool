@@ -23,13 +23,13 @@ var _ resource.Store = &ResourceStore{}
 //             CreateFunc: func(ctx context.Context, createResourceQuery *resource.CreateResourceQuery) error {
 // 	               panic("mock out the Create method")
 //             },
-//             DeleteFunc: func(ctx context.Context, resourceKey model.ResourceKey) error {
+//             DeleteFunc: func(ctx context.Context, resourceKey keys.ResourceKey) error {
 // 	               panic("mock out the Delete method")
 //             },
 //             GetByKeyFunc: func(ctx context.Context, getResourceByKeyQuery *resource.GetResourceByKeyQuery) (*resource.GetResourceByKeyResponse, error) {
 // 	               panic("mock out the GetByKey method")
 //             },
-//             GetByKeysFunc: func(ctx context.Context, resourceKeys *model.ResourceKeys) (*resource.GetResourceByKeysResponse, error) {
+//             GetByKeysFunc: func(ctx context.Context, resourceKeys *keys.ResourceKeys) (*resource.GetResourceByKeysResponse, error) {
 // 	               panic("mock out the GetByKeys method")
 //             },
 //             SearchFunc: func(ctx context.Context, searchResourcesQuery *resource.SearchResourcesQuery) (*resource.SearchResourcesResponse, error) {
