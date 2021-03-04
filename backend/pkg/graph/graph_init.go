@@ -11,6 +11,29 @@ import (
 	"strings"
 )
 
+func cleanDatabase(ctx context.Context, appConfig *config.AppConfig) error {
+
+	l := logging.WithContext(ctx)
+
+	dbSession, err := getDatabaseLeaderSession(appConfig, appConfig.Neo4jDatabase)
+	if err != nil {
+		l.Error("could not get database leader session", zap.Error(err))
+		return err
+	}
+
+	res, err := dbSession.Run(`MATCH (n) DETACH DELETE n`, map[string]interface{}{})
+	if err != nil {
+		return err
+	}
+
+	if res.Err() != nil {
+		return res.Err()
+	}
+
+	return nil
+
+}
+
 func InitGraphDatabase(ctx context.Context, appConfig *config.AppConfig) error {
 
 	l := logging.WithContext(ctx)

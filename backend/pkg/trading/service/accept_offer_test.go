@@ -6,6 +6,7 @@ import (
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/trading"
+	"github.com/commonpool/backend/pkg/user"
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 	"time"
@@ -25,8 +26,8 @@ func (t *tradingTestSuite) TestAcceptOffer() {
 	}
 	offerItems := trading.NewOfferItems([]trading.OfferItem{
 		trading.NewCreditTransferItem(offerKey, offerItemKey, userTarget, groupTarget, time.Hour, trading.NewCreditTransferItemOptions{
-			GiverAccepted:    true,
-			ReceiverAccepted: true,
+			GiverAccepted:    false,
+			ReceiverAccepted: false,
 		}),
 	})
 
@@ -40,6 +41,11 @@ func (t *tradingTestSuite) TestAcceptOffer() {
 		GetInboundOfferItemsFunc: func(userKey keys.UserKey) *keys.OfferItemKeys {
 			return keys.NewOfferItemKeys([]keys.OfferItemKey{})
 		},
+		AllUserKeysFunc: func() *keys.UserKeys {
+			return keys.NewUserKeys([]keys.UserKey{
+				userKey,
+			})
+		},
 	}
 
 	tradingStore := &mock.TradingStore{
@@ -50,10 +56,24 @@ func (t *tradingTestSuite) TestAcceptOffer() {
 		FindApproversForOfferFunc: func(offerKey keys.OfferKey) (trading.Approvers, error) {
 			return approvers, nil
 		},
+		MarkOfferItemsAsAcceptedFunc: func(ctx context.Context, approvedBy keys.UserKey, approvedByGiver *keys.OfferItemKeys, approvedByReceiver *keys.OfferItemKeys) error {
+			return nil
+		},
+	}
+
+	userStore := &mock.UserStore{
+		GetByKeysFunc: func(ctx context.Context, userKeys *keys.UserKeys) (*user.Users, error) {
+			return user.NewUsers([]*user.User{
+				{
+					ID: userKey.String(),
+				},
+			}), nil
+		},
 	}
 
 	tradingService := &TradingService{
 		tradingStore: tradingStore,
+		userStore:    userStore,
 	}
 
 	ctx := context.TODO()
@@ -62,5 +82,6 @@ func (t *tradingTestSuite) TestAcceptOffer() {
 	err := tradingService.AcceptOffer(ctx, offerKey)
 
 	assert.NoError(t.T(), err)
+	assert.Len(t.T(), tradingStore.MarkOfferItemsAsAcceptedCalls(), 1)
 
 }

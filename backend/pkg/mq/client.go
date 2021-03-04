@@ -93,7 +93,7 @@ func (r RabbitMqChannel) Publish(ctx context.Context, exchange string, key strin
 	})
 }
 
-func NewRabbitMqClient(ctx context.Context, amqpUrl string) (Client, error) {
+func NewRabbitMqClient(ctx context.Context, amqpUrl string) (*RabbitMqClient, error) {
 
 	l := logging.WithContext(ctx)
 
@@ -109,7 +109,7 @@ func NewRabbitMqClient(ctx context.Context, amqpUrl string) (Client, error) {
 		return nil, err
 	}
 
-	rabbitMqClient := RabbitMqClient{
+	rabbitMqClient := &RabbitMqClient{
 		connection: conn,
 		channel:    ch,
 	}
@@ -137,9 +137,7 @@ func NewRabbitMqClient(ctx context.Context, amqpUrl string) (Client, error) {
 		return nil, err
 	}
 
-	amqpClient := Client(rabbitMqClient)
-
-	return amqpClient, nil
+	return rabbitMqClient, nil
 
 }
 

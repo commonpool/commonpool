@@ -8,7 +8,7 @@ spec:
     istio: ingressgateway
   servers:
     - port:
-        number: 7474
+        number: 443
         name: neo4j-https
         protocol: HTTPS
       hosts:
@@ -19,22 +19,16 @@ spec:
         credentialName: commonpool-cert-prod
     - port:
         number: 7687
-        name: neo4j-bolt
-        protocol: TCP
+        name: bolt-tls
+        protocol: TLS
       hosts:
         - "0.graphdb.commonpool.dev"
         - "1.graphdb.commonpool.dev"
         - "2.graphdb.commonpool.dev"
         - "graphdb.commonpool.dev"
-    - port:
-        number: 7686
-        name: bolt-tcp
-        protocol: TCP
-      hosts:
-        - "0.graphdb.commonpool.dev"
-        - "1.graphdb.commonpool.dev"
-        - "2.graphdb.commonpool.dev"
-        - "graphdb.commonpool.dev"
+      tls:
+        mode: SIMPLE
+        credentialName: commonpool-cert-prod
     - port:
         number: 5432
         name: postgres-tcp
@@ -56,6 +50,15 @@ spec:
       tls:
         mode: SIMPLE
         credentialName: commonpool-cert-prod
+    - port:
+        number: 6379
+        name: redis-tls
+        protocol: TLS
+      hosts:
+        - redis.commonpool.dev
+      tls:
+        mode: SIMPLE
+        credentialName: commonpool-cert-prod
 ---
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
@@ -70,13 +73,6 @@ spec:
     - 0.graphdb.commonpool.dev
   tcp:
     - match:
-        - port: 7686
-      route:
-        - destination:
-            host: graphdb-neo4j-0.default.svc.cluster.local
-            port:
-              number: 7687
-    - match:
         - port: 7687
       route:
         - destination:
@@ -85,7 +81,7 @@ spec:
               number: 7687
   http:
     - match:
-        - port: 7474
+        - port: 443
       route:
         - destination:
             host: graphdb-neo4j-0.default.svc.cluster.local
@@ -105,13 +101,6 @@ spec:
     - 1.graphdb.commonpool.dev
   tcp:
     - match:
-        - port: 7686
-      route:
-        - destination:
-            host: graphdb-neo4j-1.default.svc.cluster.local
-            port:
-              number: 7687
-    - match:
         - port: 7687
       route:
         - destination:
@@ -120,7 +109,7 @@ spec:
               number: 7687
   http:
     - match:
-        - port: 7474
+        - port: 443
       route:
         - destination:
             host: graphdb-neo4j-1.default.svc.cluster.local
@@ -140,13 +129,6 @@ spec:
     - 2.graphdb.commonpool.dev
   tcp:
     - match:
-        - port: 7686
-      route:
-        - destination:
-            host: graphdb-neo4j-2.default.svc.cluster.local
-            port:
-              number: 7687
-    - match:
         - port: 7687
       route:
         - destination:
@@ -155,7 +137,7 @@ spec:
               number: 7687
   http:
     - match:
-        - port: 7474
+        - port: 443
       route:
         - destination:
             host: graphdb-neo4j-2.default.svc.cluster.local
@@ -175,13 +157,6 @@ spec:
     - graphdb.commonpool.dev
   tcp:
     - match:
-        - port: 7686
-      route:
-        - destination:
-            host: graphdb-neo4j.default.svc.cluster.local
-            port:
-              number: 7687
-    - match:
         - port: 7687
       route:
         - destination:
@@ -190,7 +165,7 @@ spec:
               number: 7687
   http:
     - match:
-        - port: 7474
+        - port: 443
       route:
         - destination:
             host: graphdb-neo4j.default.svc.cluster.local
@@ -251,3 +226,22 @@ spec:
             host: rabbit.default.svc.cluster.local
             port:
               number: 15672
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: redis
+spec:
+  hosts:
+    - redis-master.default.svc.cluster.local
+    - redis.commonpool.dev
+  gateways:
+    - commonpool
+  tcp:
+    - match:
+        - port: 6379
+      route:
+        - destination:
+            host: redis-master.default.svc.cluster.local
+            port:
+              number: 6379

@@ -45,7 +45,7 @@ func MapSubscriptions(ctx context.Context, chatService chat.Service, subscriptio
 		if err != nil {
 			return nil, err
 		}
-		items = append(items, *MapSubscription(channel, &subscription))
+		items = append(items, *MapSubscription(channel, subscription))
 	}
 	if items == nil {
 		items = []Subscription{}

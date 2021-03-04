@@ -11,12 +11,12 @@ type Offer struct {
 	CreatedByKey   keys.UserKey  `json:"createdById"`
 	Status         OfferStatus   `json:"status"`
 	CreatedAt      time.Time     `json:"createdAt"`
-	ExpirationTime *time.Time    `json:"expirationTime"`
-	CompletedAt    *time.Time    `json:"completedAt"`
+	ExpirationTime time.Time     `json:"expirationTime"`
+	CompletedAt    time.Time     `json:"completedAt"`
 	Message        string        `json:"message"`
 }
 
-func NewOffer(offerKey keys.OfferKey, groupKey keys.GroupKey, author keys.UserKey, message string, expiration *time.Time) *Offer {
+func NewOffer(offerKey keys.OfferKey, groupKey keys.GroupKey, author keys.UserKey, message string, expiration time.Time) *Offer {
 	return &Offer{
 		Key:            offerKey,
 		GroupKey:       groupKey,

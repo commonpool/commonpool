@@ -13,14 +13,16 @@ import (
 
 func GetEchoContext(c echo.Context, handler string) (context.Context, *zap.Logger) {
 	ctx := GetContext(c)
-	l := logging.WithContext(ctx).With(zap.String("handler", handler)).Named("handler." + handler)
+	l := logging.
+		WithContext(ctx).
+		With(zap.String("handler", handler)).
+		Named("handler." + handler)
 	return ctx, l
 }
 
 var HttpErrorHandler = func(err error, c echo.Context) {
 
-	_, l := GetEchoContext(c, "")
-	l.Error(err.Error(), zap.Error(err))
+	c.Logger().Error(err)
 
 	if ws, ok := err.(*exceptions.WebServiceException); ok {
 		c.JSON(ws.Status, &exceptions.ErrorResponse{

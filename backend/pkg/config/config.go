@@ -6,44 +6,54 @@ import (
 )
 
 type AppConfig struct {
-	SecureCookies    bool
-	BaseUri          string
-	OidcDiscoveryUrl string
-	OidcClientId     string
-	OidcClientSecret string
-	DbHost           string
-	DbPort           int
-	DbName           string
-	DbUsername       string
-	DbPassword       string
-	CallbackToken    string
-	AmqpUrl          string
-	BoltUrl          string
-	BoltUsername     string
-	BoltPassword     string
-	Neo4jDatabase    string
+	SecureCookies      bool
+	BaseUri            string
+	OidcDiscoveryUrl   string
+	OidcClientId       string
+	OidcClientSecret   string
+	DbHost             string
+	DbPort             int
+	DbName             string
+	DbUsername         string
+	DbPassword         string
+	CallbackToken      string
+	AmqpUrl            string
+	BoltUrl            string
+	BoltUsername       string
+	BoltPassword       string
+	Neo4jDatabase      string
+	RedisHost          string
+	RedisPort          string
+	RedisPassword      string
+	RedisTlsEnabled    bool
+	RedisTlsSkipVerify bool
 }
 
 func GetAppConfig(readEnv EnvReader, readFile FileReader) (*AppConfig, error) {
 
 	var (
-		err           error
-		boltUrl       string
-		boltPassword  string
-		boltUsername  string
-		dbUser        string
-		dbPassword    string
-		dbName        string
-		dbPort        string
-		callbackToken string
-		amqpUrl       string
-		dbHost        string
-		baseUri       string
-		discoveryUrl  string
-		clientId      string
-		clientSecret  string
-		secureCookies string
-		neo4jDatabase string
+		err                error
+		boltUrl            string
+		boltPassword       string
+		boltUsername       string
+		dbUser             string
+		dbPassword         string
+		dbName             string
+		dbPort             string
+		callbackToken      string
+		amqpUrl            string
+		dbHost             string
+		baseUri            string
+		discoveryUrl       string
+		clientId           string
+		clientSecret       string
+		secureCookies      string
+		neo4jDatabase      string
+		redisHost          string
+		redisPort          string
+		redisPassword      string
+		redisTlsEnabled    string
+		redisTlsSkipVerify string
 	)
 
 	if dbName, err = readEnvVarOrFile(readFile, readEnv, dbNameEnv); err != nil {
@@ -110,28 +120,49 @@ func GetAppConfig(readEnv EnvReader, readFile FileReader) (*AppConfig, error) {
 		return nil, err
 	}
 
+	if redisHost, err = readEnvVarOrFile(readFile, readEnv, redisHostEnv); err != nil {
+		return nil, err
+	}
+	if redisPort, err = readEnvVarOrFile(readFile, readEnv, redisPortEnv); err != nil {
+		return nil, err
+	}
+	if redisPassword, err = readEnvVarOrFile(readFile, readEnv, redisPasswordEnv); err != nil {
+		return nil, err
+	}
+	if redisTlsEnabled, err = readEnvVarOrFile(readFile, readEnv, redisTlsEnabledEnv); err != nil {
+		return nil, err
+	}
+	if redisTlsSkipVerify, err = readEnvVarOrFile(readFile, readEnv, redisTlsSkipVerifyEnv); err != nil {
+		return nil, err
+	}
+
 	dbPortValue, err := strconv.Atoi(dbPort)
 	if err != nil {
 		return nil, err
 	}
 
 	appConfig := &AppConfig{
-		BaseUri:          baseUri,
-		OidcClientId:     clientId,
-		OidcClientSecret: clientSecret,
-		OidcDiscoveryUrl: discoveryUrl,
-		DbHost:           dbHost,
-		DbPort:           dbPortValue,
-		DbName:           dbName,
-		DbUsername:       dbUser,
-		DbPassword:       dbPassword,
-		SecureCookies:    secureCookies == "true",
-		CallbackToken:    callbackToken,
-		AmqpUrl:          amqpUrl,
-		BoltUrl:          boltUrl,
-		BoltUsername:     boltUsername,
-		BoltPassword:     boltPassword,
-		Neo4jDatabase:    neo4jDatabase,
+		BaseUri:            baseUri,
+		OidcClientId:       clientId,
+		OidcClientSecret:   clientSecret,
+		OidcDiscoveryUrl:   discoveryUrl,
+		DbHost:             dbHost,
+		DbPort:             dbPortValue,
+		DbName:             dbName,
+		DbUsername:         dbUser,
+		DbPassword:         dbPassword,
+		SecureCookies:      secureCookies == "true",
+		CallbackToken:      callbackToken,
+		AmqpUrl:            amqpUrl,
+		BoltUrl:            boltUrl,
+		BoltUsername:       boltUsername,
+		BoltPassword:       boltPassword,
+		Neo4jDatabase:      neo4jDatabase,
+		RedisHost:          redisHost,
+		RedisPort:          redisPort,
+		RedisPassword:      redisPassword,
+		RedisTlsEnabled:    redisTlsEnabled == "true",
+		RedisTlsSkipVerify: redisTlsSkipVerify == "true",
 	}
 	return appConfig, nil
 }
@@ -163,22 +194,27 @@ func readEnvVarOrFile(readFile FileReader, readEnv EnvReader, envValueName strin
 type EnvReader func(string) (string, bool)
 
 const (
-	dbUserEnv           = "DB_USER"
-	dbPasswordEnv       = "DB_PASSWORD"
-	dbNameEnv           = "DB_NAME"
-	dbPortEnv           = "DB_PORT"
-	dbHostEnv           = "DB_HOST"
-	baseUrlEnv          = "BASE_URL"
-	oidcDiscoveryUrlEnv = "OIDC_DISCOVERY_URL"
-	oidcClientIdEnv     = "OIDC_CLIENT_ID"
-	oidcClientSecretEnv = "OIDC_CLIENT_SECRET"
-	secureCookiesEnv    = "SECURE_COOKIES"
-	callbackTokenEnv    = "CALLBACK_TOKEN"
-	amqpUrlEnv          = "AMQP_URL"
-	boltUrlEnv          = "BOLT_URL"
-	boltUsernameEnv     = "BOLT_USERNAME"
-	boltPasswordEnv     = "BOLT_PASSWORD"
-	neo4jDatabaseName   = "NEO4J_DATABASE_NAME"
+	dbUserEnv             = "DB_USER"
+	dbPasswordEnv         = "DB_PASSWORD"
+	dbNameEnv             = "DB_NAME"
+	dbPortEnv             = "DB_PORT"
+	dbHostEnv             = "DB_HOST"
+	baseUrlEnv            = "BASE_URL"
+	oidcDiscoveryUrlEnv   = "OIDC_DISCOVERY_URL"
+	oidcClientIdEnv       = "OIDC_CLIENT_ID"
+	oidcClientSecretEnv   = "OIDC_CLIENT_SECRET"
+	secureCookiesEnv      = "SECURE_COOKIES"
+	redisHostEnv          = "REDIS_HOST"
+	redisPortEnv          = "REDIS_PORT"
+	redisPasswordEnv      = "REDIS_PASSWORD"
+	redisTlsEnabledEnv    = "REDIS_ENABLE_TLS"
+	redisTlsSkipVerifyEnv = "REDIS_TLS_SKIP_VERIFY"
+	callbackTokenEnv      = "CALLBACK_TOKEN"
+	amqpUrlEnv            = "AMQP_URL"
+	boltUrlEnv            = "BOLT_URL"
+	boltUsernameEnv       = "BOLT_USERNAME"
+	boltPasswordEnv       = "BOLT_PASSWORD"
+	neo4jDatabaseName     = "NEO4J_DATABASE_NAME"
 )
 
 type FileReader func(string) ([]byte, error)

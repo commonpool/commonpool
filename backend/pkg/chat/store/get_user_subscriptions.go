@@ -7,7 +7,7 @@ import (
 
 func (cs *ChatStore) GetSubscriptionsForUser(ctx context.Context, request *chat.GetSubscriptions) (*chat.ChannelSubscriptions, error) {
 
-	var subscriptions []chat.ChannelSubscription
+	var subscriptions []ChannelSubscription
 	err := cs.db.
 		Where("user_id = ?", request.UserKey.String()).
 		Order("last_message_at desc").
@@ -19,5 +19,11 @@ func (cs *ChatStore) GetSubscriptionsForUser(ctx context.Context, request *chat.
 	if err != nil {
 		return nil, err
 	}
-	return chat.NewChannelSubscriptions(subscriptions), nil
+
+	var result []*chat.ChannelSubscription
+	for _, subscription := range subscriptions {
+		result = append(result, subscription.Map())
+	}
+
+	return chat.NewChannelSubscriptions(result), nil
 }

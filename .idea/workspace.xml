@@ -1,38 +1,124 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="7cd8279a-e3af-42a0-8513-69224f91376a" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/backend/pkg/clusterlock/redis_lock.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/eventbus/catch_up_listener.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/eventbus/deduplicate_listener.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/eventbus/deduplicate_listener_test.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/eventbus/deduplicator.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/eventbus/listener.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/eventbus/locked_listener.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/eventbus/locked_listener_test.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/eventbus/memory_deduplicator_test.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/eventbus/parallel_listener.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/eventbus/parallel_listener_test.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/eventbus/publisher.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/eventbus/rabbit_listener.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/eventbus/rabbit_listener_test.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/eventbus/redis_deduplicator_test.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/eventbus/replay_listener.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/eventbus/replay_listener_test.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/eventbus/sequence_listener.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/eventbus/sequence_listener_test.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/eventbus/static_listener.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/eventstore/eventstore.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/eventstore/eventstore_test.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/nuke/handler/nuke_handler.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/domain_test.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/event.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/event_borrower_returned_resource_notified.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/event_lender_received_back_resource_notified.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/event_offer_approved.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/event_offer_completed.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/event_offer_declined.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/event_offer_item_approved.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/event_offer_submitted.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/event_resource_borrowed_notified.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/event_resource_lent_notified.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/event_resource_transfer_given_notified.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/event_resource_transfer_received_notified.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/event_service_given_notified.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/event_service_received_notified.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/offer.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/offer_item.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/offer_item_approval.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/offer_item_credit_transfer.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/offer_item_resource_borrow.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/offer_item_resource_transfer.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/offer_item_service.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/offer_status.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/permission_matrix.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/repo.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/target.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/listeners/offer_read_model.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/listeners/transaction_history.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/store/repository.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/store/repository_test.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/platform/minikube/istio-controlplane.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/platform/minikube/redis.yaml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/backend/go.mod" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/backend/go.sum" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/config/config_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/config/config_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/chat/channel_subscriptions.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/chat/channel_subscriptions.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/chat/handler/subscription.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/chat/handler/subscription.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/chat/store/get_user_subscriptions.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/chat/store/get_user_subscriptions.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/config/config.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/config/config.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/db/db.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/db/db.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/graph/driver.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/graph/driver.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/pkg/graph/graph_init.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/graph/graph_init.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/graph/helpers.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/graph/helpers.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/handler/handler_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/handler/handler_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/store/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/store/group.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/store/resource.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/store/resource.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/shared/store/model.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/shared/store/model.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/handler/echo.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/handler/echo.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/mq/client.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/mq/client.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/server/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/server/server.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/handler/handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/handler/handler.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/handler/helpers.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/handler/helpers.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/handler/offer.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/handler/offer.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/handler/post_offer.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/handler/post_offer.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/offer.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/offer.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/service/accept_offer.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/service/accept_offer.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/service/accept_offer_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/service/accept_offer_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/service/confirm_borrowed_resource_returned.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/service/confirm_borrowed_resource_returned.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/service/submit_offer.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/service/submit_offer.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/service/trading.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/service/trading.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/pkg/trading/store/trading.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/store/trading.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/user/store/auth.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/user/store/auth.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/utils/partition.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/utils/partition.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/test/integration/group_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test/integration/group_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/test/integration/helpers_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test/integration/helpers_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/test/integration/main_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test/integration/main_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/user/users.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/user/users.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/api/backend.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/api/backend.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/platform/minikube/apply.sh" beforeDir="false" afterPath="$PROJECT_DIR$/platform/minikube/apply.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/platform/minikube/istio.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/platform/minikube/istio.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/platform/minikube/neo4j.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/platform/minikube/neo4j.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Go File" />
+      </list>
+    </option>
+  </component>
   <component name="GOROOT" url="file://$USER_HOME$/go/go1.15.6" />
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitSEFilterConfiguration">
+    <file-type-list>
+      <filtered-out-file-type name="LOCAL_BRANCH" />
+      <filtered-out-file-type name="REMOTE_BRANCH" />
+      <filtered-out-file-type name="TAG" />
+      <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
+    </file-type-list>
   </component>
   <component name="GoLibraries">
     <option name="indexEntireGoPath" value="false" />
   </component>
   <component name="KubernetesApiPersistence">
-    <option name="context" value="us-east-1.staging.app.commonpool.net" />
+    <option name="context" value="minikube" />
     <option name="namespace" value="default" />
   </component>
   <component name="ProjectId" id="1lE2NveqT4lceYGPcXKwcaoot3v" />
@@ -41,25 +127,42 @@
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
+    <property name="DatabaseDriversLRU" value="sqlite&#10;postgresql" />
+    <property name="DefaultGoTemplateProperty" value="Go File" />
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="TF_FMT" value="false" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="configurable..is.expanded" value="false" />
     <property name="configurable.GoLibrariesConfigurable.is.expanded" value="true" />
+    <property name="database.data.extractors.current.export.id" value="JSON-Groovy.json.groovy" />
+    <property name="database.data.extractors.current.id" value="JSON-Groovy.json.groovy" />
     <property name="go.import.settings.migrated" value="true" />
     <property name="go.sdk.automatically.set" value="true" />
     <property name="go.tried.to.enable.integration.vgo.integrator" value="true" />
     <property name="go.vendoring.notification.had.been.shown" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/backend/.env" />
-    <property name="settings.editor.selected.configurable" value="go.vgo" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/backend/pkg/eventbus" />
+    <property name="settings.editor.selected.configurable" value="com.intellij.kubernetes.view.ui.settings.KubernetesViewConfigurable" />
+    <property name="two.files.diff.last.used.file" value="$PROJECT_DIR$/backend/pkg/trading/domain/repository_test" />
   </component>
   <component name="RecentsManager">
+    <key name="GoMoveDeclarationDialog.RECENT_KEY">
+      <recent name="$PROJECT_DIR$/backend/pkg/trading/domain" />
+      <recent name="$PROJECT_DIR$/backend/pkg/nuke" />
+    </key>
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/backend/pkg/eventbus" />
+      <recent name="$PROJECT_DIR$/backend/pkg/trading/domain" />
       <recent name="$PROJECT_DIR$/platform/minikube" />
     </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/backend/pkg/trading" />
+      <recent name="$PROJECT_DIR$/backend/pkg/trading/store/" />
+      <recent name="$PROJECT_DIR$/backend/pkg/eventstore" />
+      <recent name="$PROJECT_DIR$/backend/pkg/nuke/handler" />
+    </key>
   </component>
-  <component name="RunManager" selected="Go Test.go test integration">
+  <component name="RunManager" selected="Go Build.go build github.com/commonpool/backend">
     <configuration name="go build github.com/commonpool/backend" type="GoApplicationRunConfiguration" factoryName="Go Application" nameIsGenerated="true">
       <module name="commonpool" />
       <working_directory value="$PROJECT_DIR$/backend" />
@@ -80,29 +183,98 @@
       <directory value="$PROJECT_DIR$/backend" />
       <method v="2" />
     </configuration>
-    <configuration name="config_test.go" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="TestDeduplicateListener in github.com/commonpool/backend/pkg/eventbus" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="commonpool" />
-      <working_directory value="$PROJECT_DIR$/backend/pkg/config" />
-      <framework value="gotest" />
-      <kind value="FILE" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$/backend/pkg/config/config_test.go" />
-      <method v="2" />
-    </configuration>
-    <configuration name="github.com/commonpool/backend/pkg/config/TestGetDbConfigShouldNotFail in github.com/commonpool/backend/pkg/config" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
-      <module name="commonpool" />
-      <working_directory value="$PROJECT_DIR$/backend/pkg/config" />
+      <working_directory value="$PROJECT_DIR$/backend/pkg/eventbus" />
+      <EXTENSION ID="net.ashald.envfile">
+        <option name="IS_ENABLED" value="true" />
+        <option name="IS_SUBST" value="false" />
+        <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
+        <option name="IS_IGNORE_MISSING_FILES" value="false" />
+        <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
+        <ENTRIES>
+          <ENTRY IS_ENABLED="true" PARSER="runconfig" />
+          <ENTRY IS_ENABLED="true" PARSER="env" PATH="backend/.env" />
+        </ENTRIES>
+      </EXTENSION>
       <framework value="gotest" />
       <kind value="PACKAGE" />
-      <package value="github.com/commonpool/backend/pkg/config" />
-      <directory value="$PROJECT_DIR$/backend/pkg" />
+      <package value="github.com/commonpool/backend/pkg/eventbus" />
+      <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
-      <pattern value="^\Qgithub.com\E$/^\Qcommonpool\E$/^\Qbackend\E$/^\Qpkg\E$/^\Qconfig\E$/^\QTestGetDbConfigShouldNotFail\E$" />
+      <pattern value="^\QTestDeduplicateListener\E$" />
       <method v="2" />
     </configuration>
-    <configuration name="go test integration" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="TestLockedListener in github.com/commonpool/backend/pkg/eventbus" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="commonpool" />
-      <working_directory value="$PROJECT_DIR$/backend/test/integration" />
+      <working_directory value="$PROJECT_DIR$/backend/pkg/eventbus" />
+      <EXTENSION ID="net.ashald.envfile">
+        <option name="IS_ENABLED" value="true" />
+        <option name="IS_SUBST" value="false" />
+        <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
+        <option name="IS_IGNORE_MISSING_FILES" value="false" />
+        <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
+        <ENTRIES>
+          <ENTRY IS_ENABLED="true" PARSER="runconfig" />
+          <ENTRY IS_ENABLED="true" PARSER="env" PATH="backend/.env" />
+        </ENTRIES>
+      </EXTENSION>
+      <framework value="gotest" />
+      <kind value="PACKAGE" />
+      <package value="github.com/commonpool/backend/pkg/eventbus" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <pattern value="^\QTestLockedListener\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="TestMemoryDeduplicator in github.com/commonpool/backend/pkg/eventbus" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="commonpool" />
+      <working_directory value="$PROJECT_DIR$/backend/pkg/eventbus" />
+      <EXTENSION ID="net.ashald.envfile">
+        <option name="IS_ENABLED" value="true" />
+        <option name="IS_SUBST" value="false" />
+        <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
+        <option name="IS_IGNORE_MISSING_FILES" value="false" />
+        <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
+        <ENTRIES>
+          <ENTRY IS_ENABLED="true" PARSER="runconfig" />
+          <ENTRY IS_ENABLED="true" PARSER="env" PATH="backend/.env" />
+        </ENTRIES>
+      </EXTENSION>
+      <framework value="gotest" />
+      <kind value="PACKAGE" />
+      <package value="github.com/commonpool/backend/pkg/eventbus" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <pattern value="^\QTestMemoryDeduplicator\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="TestRedisDeduplicator in github.com/commonpool/backend/pkg/eventbus" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="commonpool" />
+      <working_directory value="$PROJECT_DIR$/backend/pkg/eventbus" />
+      <EXTENSION ID="net.ashald.envfile">
+        <option name="IS_ENABLED" value="true" />
+        <option name="IS_SUBST" value="false" />
+        <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
+        <option name="IS_IGNORE_MISSING_FILES" value="false" />
+        <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
+        <ENTRIES>
+          <ENTRY IS_ENABLED="true" PARSER="runconfig" />
+          <ENTRY IS_ENABLED="true" PARSER="env" PATH="backend/.env" />
+        </ENTRIES>
+      </EXTENSION>
+      <framework value="gotest" />
+      <kind value="PACKAGE" />
+      <package value="github.com/commonpool/backend/pkg/eventbus" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <pattern value="^\QTestRedisDeduplicator\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
+      <module name="commonpool" />
+      <working_directory value="$PROJECT_DIR$" />
+      <go_parameters value="-i" />
       <EXTENSION ID="net.ashald.envfile">
         <option name="IS_ENABLED" value="true" />
         <option name="IS_SUBST" value="false" />
@@ -116,43 +288,46 @@
       </EXTENSION>
       <framework value="gotest" />
       <kind value="DIRECTORY" />
-      <directory value="$PROJECT_DIR$/backend/test/integration" />
+      <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
       <method v="2" />
     </configuration>
-    <configuration name="go test pkg" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="go test github.com/commonpool/backend/pkg/eventbus" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="commonpool" />
-      <working_directory value="$PROJECT_DIR$/backend/pkg" />
+      <working_directory value="$PROJECT_DIR$/backend/pkg/eventbus" />
+      <EXTENSION ID="net.ashald.envfile">
+        <option name="IS_ENABLED" value="true" />
+        <option name="IS_SUBST" value="false" />
+        <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
+        <option name="IS_IGNORE_MISSING_FILES" value="false" />
+        <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
+        <ENTRIES>
+          <ENTRY IS_ENABLED="true" PARSER="runconfig" />
+          <ENTRY IS_ENABLED="true" PARSER="env" PATH="backend/.env" />
+        </ENTRIES>
+      </EXTENSION>
       <framework value="gotest" />
-      <kind value="DIRECTORY" />
-      <directory value="$PROJECT_DIR$/backend/pkg" />
-      <filePath value="$PROJECT_DIR$" />
-      <method v="2" />
-    </configuration>
-    <configuration name="gobench integration" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
-      <module name="commonpool" />
-      <working_directory value="$PROJECT_DIR$/backend/test/integration" />
-      <framework value="gobench" />
-      <kind value="DIRECTORY" />
-      <directory value="$PROJECT_DIR$/backend/test/integration" />
+      <kind value="PACKAGE" />
+      <package value="github.com/commonpool/backend/pkg/eventbus" />
+      <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
       <method v="2" />
     </configuration>
     <list>
       <item itemvalue="Go Build.go build github.com/commonpool/backend" />
-      <item itemvalue="Go Test.go test pkg" />
-      <item itemvalue="Go Test.github.com/commonpool/backend/pkg/config/TestGetDbConfigShouldNotFail in github.com/commonpool/backend/pkg/config" />
-      <item itemvalue="Go Test.config_test.go" />
-      <item itemvalue="Go Test.gobench integration" />
-      <item itemvalue="Go Test.go test integration" />
+      <item itemvalue="Go Test.go test github.com/commonpool/backend/pkg/eventbus" />
+      <item itemvalue="Go Test.TestDeduplicateListener in github.com/commonpool/backend/pkg/eventbus" />
+      <item itemvalue="Go Test.TestMemoryDeduplicator in github.com/commonpool/backend/pkg/eventbus" />
+      <item itemvalue="Go Test.TestRedisDeduplicator in github.com/commonpool/backend/pkg/eventbus" />
+      <item itemvalue="Go Test.TestLockedListener in github.com/commonpool/backend/pkg/eventbus" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Go Test.go test integration" />
-        <item itemvalue="Go Test.gobench integration" />
-        <item itemvalue="Go Test.go test pkg" />
-        <item itemvalue="Go Test.config_test.go" />
-        <item itemvalue="Go Test.github.com/commonpool/backend/pkg/config/TestGetDbConfigShouldNotFail in github.com/commonpool/backend/pkg/config" />
+        <item itemvalue="Go Test.TestLockedListener in github.com/commonpool/backend/pkg/eventbus" />
+        <item itemvalue="Go Test.TestRedisDeduplicator in github.com/commonpool/backend/pkg/eventbus" />
+        <item itemvalue="Go Test.go test github.com/commonpool/backend/pkg/eventbus" />
+        <item itemvalue="Go Test.TestMemoryDeduplicator in github.com/commonpool/backend/pkg/eventbus" />
+        <item itemvalue="Go Test.TestDeduplicateListener in github.com/commonpool/backend/pkg/eventbus" />
       </list>
     </recent_temporary>
   </component>
@@ -186,7 +361,14 @@
       <option name="project" value="LOCAL" />
       <updated>1614725952631</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="fix tests and some neo4j upgrade bugs">
+      <created>1614727521975</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1614727521975</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -208,7 +390,8 @@
     <MESSAGE value="blurp" />
     <MESSAGE value="convert neo4j from bolt:// to neo4j://, update to latest driver, update echo version" />
     <MESSAGE value="tidy dependencies" />
-    <option name="LAST_COMMIT_MESSAGE" value="tidy dependencies" />
+    <MESSAGE value="fix tests and some neo4j upgrade bugs" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix tests and some neo4j upgrade bugs" />
   </component>
   <component name="VgoProject">
     <integration-enabled>true</integration-enabled>

@@ -102,9 +102,9 @@ data:
     export graphdb_neo4j_core_1_NEO4J_dbms_connector_bolt_advertised__address=1.graphdb.commonpool.dev:7687
     export graphdb_neo4j_core_2_NEO4J_dbms_connector_bolt_advertised__address=2.graphdb.commonpool.dev:7687
 
-    export graphdb_neo4j_core_0_NEO4J_dbms_connector_http_advertised__address=0.graphdb.commonpool.dev:7474
-    export graphdb_neo4j_core_1_NEO4J_dbms_connector_http_advertised__address=1.graphdb.commonpool.dev:7474
-    export graphdb_neo4j_core_2_NEO4J_dbms_connector_http_advertised__address=2.graphdb.commonpool.dev:7474
+    export graphdb_neo4j_core_0_NEO4J_dbms_connector_http_advertised__address=0.graphdb.commonpool.dev
+    export graphdb_neo4j_core_1_NEO4J_dbms_connector_http_advertised__address=1.graphdb.commonpool.dev
+    export graphdb_neo4j_core_2_NEO4J_dbms_connector_http_advertised__address=2.graphdb.commonpool.dev
 
     neo4jAdminMemrec() {
         echo "Calling neo4j-admin memrec to suggest memory settings"

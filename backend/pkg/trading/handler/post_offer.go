@@ -1,11 +1,13 @@
 package handler
 
 import (
+	"fmt"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/trading"
 	"github.com/labstack/echo/v4"
 	"github.com/satori/go.uuid"
+	"go.uber.org/zap"
 	"net/http"
 )
 
@@ -30,44 +32,57 @@ type SendOfferPayloadItem struct {
 
 func (h *TradingHandler) HandleSendOffer(c echo.Context) error {
 
-	ctx, _ := handler.GetEchoContext(c, "HandleSendOffer")
+	ctx, l := handler.GetEchoContext(c, "HandleSendOffer")
 
 	var err error
 
+	l.Debug("binding request to SendOfferRequest")
 	req := SendOfferRequest{}
 	if err = c.Bind(&req); err != nil {
-		return err
+		return fmt.Errorf("could not bind SendOfferRequest: %v", err)
 	}
 
+	l.Debug("validating request")
 	if err = c.Validate(req); err != nil {
-		return err
+		return fmt.Errorf("error validating SendOfferRequest: %v", err)
 	}
 
+	l.Debug("mapping offer items")
 	var tradingOfferItems []trading.OfferItem
-	for _, tradingOfferItem := range req.Offer.Items {
+	for i, tradingOfferItem := range req.Offer.Items {
+
+		l.Debug("generating new key for offerItem")
 		itemKey := keys.NewOfferItemKey(uuid.NewV4())
+
+		l.Debug("mapping offer item", zap.Int("i", i))
 		tradingOfferItem, err := mapNewOfferItem(tradingOfferItem, itemKey)
+
 		if err != nil {
-			return err
+			return fmt.Errorf("could not map offer item %d: %v", i, err)
 		}
+
 		tradingOfferItems = append(tradingOfferItems, tradingOfferItem)
 	}
 
+	l.Debug("parsing group key")
 	groupKey, err := keys.ParseGroupKey(req.Offer.GroupID)
 	if err != nil {
 		return err
 	}
 
+	l.Debug("sending offer")
 	offer, offerItems, err := h.tradingService.SendOffer(ctx, groupKey, trading.NewOfferItems(tradingOfferItems), "")
 	if err != nil {
 		return err
 	}
 
+	l.Debug("getting approvers for offer")
 	approvers, err := h.tradingService.FindApproversForOffer(offer.Key)
 	if err != nil {
 		return err
 	}
 
+	l.Debug("mapping to web offer")
 	webOffer, err := h.mapToWebOffer(offer, offerItems, approvers)
 	if err != nil {
 		return err

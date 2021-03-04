@@ -8,7 +8,7 @@ import (
 type Offer struct {
 	ID             string              `json:"id"`
 	CreatedAt      time.Time           `json:"createdAt"`
-	CompletedAt    *time.Time          `json:"completedAt"`
+	CompletedAt    time.Time           `json:"completedAt"`
 	Status         trading.OfferStatus `json:"status"`
 	AuthorID       string              `json:"authorId"`
 	AuthorUsername string              `json:"authorUsername"`

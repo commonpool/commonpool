@@ -1,10 +1,10 @@
 package chat
 
 type ChannelSubscriptions struct {
-	Items []ChannelSubscription
+	Items []*ChannelSubscription
 }
 
-func NewChannelSubscriptions(items []ChannelSubscription) *ChannelSubscriptions {
+func NewChannelSubscriptions(items []*ChannelSubscription) *ChannelSubscriptions {
 	return &ChannelSubscriptions{
 		Items: items,
 	}

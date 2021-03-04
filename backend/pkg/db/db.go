@@ -3,7 +3,8 @@ package db
 import (
 	"fmt"
 	chatstore "github.com/commonpool/backend/pkg/chat/store"
-	"github.com/commonpool/backend/pkg/transaction/store"
+	"github.com/commonpool/backend/pkg/eventstore"
+	transactionstore "github.com/commonpool/backend/pkg/transaction/store"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"os"
@@ -11,7 +12,9 @@ import (
 )
 
 func NewTestDb() *gorm.DB {
-	db, err := gorm.Open(sqlite.Open("./realworld_test.db"), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open("./realworld_test.db"), &gorm.Config{
+		SkipDefaultTransaction: true,
+	})
 	if err != nil {
 		fmt.Println("storage err: ", err)
 	}
@@ -32,7 +35,9 @@ func AutoMigrate(db *gorm.DB) {
 		&chatstore.Channel{},
 		&chatstore.ChannelSubscription{},
 		&chatstore.Message{},
-		&store.TransactionEntry{},
+		&transactionstore.TransactionEntry{},
+		&eventstore.Stream{},
+		eventstore.StreamEvent{},
 	)
 	if err != nil {
 		panic(err)

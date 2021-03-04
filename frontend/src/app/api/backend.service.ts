@@ -258,7 +258,7 @@ export class BackendService {
   }
 
   getSession(): Observable<SessionResponse> {
-    return this.http.get(`${environment.apiUrl}/api/v1/meta/who-am-i`, {
+    return this.http.get(`${environment.apiUrl}/api/v1/session/info`, {
       observe: 'response',
     }).pipe(
       map((res) => {
@@ -458,7 +458,7 @@ export class BackendService {
   }
 
   getMyMemberships(request: GetMyMembershipsRequest): Observable<GetMyMembershipsResponse> {
-    return this.http.get(`${environment.apiUrl}/api/v1/my/memberships`, {
+    return this.http.get(`${environment.apiUrl}/api/v1/memberships`, {
       observe: 'response'
     }).pipe(
       map((res) => {
@@ -475,7 +475,8 @@ export class BackendService {
     if (request.membershipStatus !== undefined) {
       params.status = request.membershipStatus.toString();
     }
-    return this.http.get(`${environment.apiUrl}/api/v1/users/${request.userId}/memberships`, {
+    params.user_id = request.userId;
+    return this.http.get(`${environment.apiUrl}/api/v1/memberships`, {
       observe: 'response',
       params
     }).pipe(

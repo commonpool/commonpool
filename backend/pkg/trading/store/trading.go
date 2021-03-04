@@ -542,9 +542,9 @@ func (t TradingStore) SaveOffer(offer *trading.Offer, offerItems *trading.OfferI
 	params["offer_id"] = offer.GetKey().String()
 	params[CompletedKey] = offerItems.AllUserActionsCompleted()
 
-	var completedAt *time.Time = nil
+	var completedAt = time.Time{}
 	if offerItems.AllUserActionsCompleted() {
-		completedAt = &now
+		completedAt = now
 	}
 
 	var acceptedAt *time.Time = nil
@@ -1202,7 +1202,14 @@ func (t TradingStore) GetOffer(key keys.OfferKey) (*trading.Offer, error) {
 	defer session.Close()
 
 	result, err := session.Run(`
-		MATCH (offer:Offer {id:$id})-[:CreatedBy]->(createdBy:User) return offer, createdBy.id as createdById`,
+		MATCH 
+		(offer:Offer {id:$id})-[:CreatedBy]->(createdBy:User),
+		(offer)-[inRel:In]->(group:Group)
+
+		return 
+			offer, 
+			createdBy.id as createdById,
+			group.id as groupId`,
 		map[string]interface{}{
 			"id": key.String(),
 		})
@@ -1220,14 +1227,21 @@ func (t TradingStore) GetOffer(key keys.OfferKey) (*trading.Offer, error) {
 	createdById := createdByField.(string)
 	createdByKey := keys.NewUserKey(createdById)
 
+	groupField, _ := result.Record().Get("groupId")
+	groupId := groupField.(string)
+	groupKey, err := keys.ParseGroupKey(groupId)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse group key: %v", err)
+	}
+
 	offerField, _ := result.Record().Get("offer")
 	offerNode := offerField.(neo4j.Node)
 
-	return MapOfferNode(offerNode, createdByKey)
+	return MapOfferNode(offerNode, createdByKey, groupKey)
 
 }
 
-func MapOfferNode(node neo4j.Node, createdByKey keys.UserKey) (*trading.Offer, error) {
+func MapOfferNode(node neo4j.Node, createdByKey keys.UserKey, groupKey keys.GroupKey) (*trading.Offer, error) {
 
 	offerId := node.Props["id"].(string)
 	offerKey, err := keys.ParseOfferKey(offerId)
@@ -1242,6 +1256,7 @@ func MapOfferNode(node neo4j.Node, createdByKey keys.UserKey) (*trading.Offer, e
 
 	return &trading.Offer{
 		Key:          offerKey,
+		GroupKey:     groupKey,
 		CreatedByKey: createdByKey,
 		Status:       status,
 		CreatedAt:    node.Props["created_at"].(time.Time),
@@ -1343,9 +1358,9 @@ func (t TradingStore) GetOffersForUser(userKey keys.UserKey) (*trading.GetOffers
 		
 		with collect(distinct o) as offers
 		UNWIND offers as offer
-		match (from)-[:From]->(offerItem)-[:IsPartOf]->(offer)-[:CreatedBy]->(creator),(to)<-[:To]-(offerItem)
+		match (from)-[:From]->(offerItem)-[:IsPartOf]->(offer)-[:CreatedBy]->(creator),(to)<-[:To]-(offerItem),(offer)-[inRel:In]->(group)
 		
-		return offer, creator.id as createdById, collect({offerItem: offerItem, from: from, to: to}) as offerItems`,
+		return offer, creator.id as createdById, group.id as groupId, collect({offerItem: offerItem, from: from, to: to}) as offerItems`,
 		map[string]interface{}{
 			"userId": userKey.String(),
 		})
@@ -1369,7 +1384,14 @@ func (t TradingStore) GetOffersForUser(userKey keys.UserKey) (*trading.GetOffers
 		createdById := createdByField.(string)
 		createdByKey := keys.NewUserKey(createdById)
 
-		offer, err := MapOfferNode(offerNode, createdByKey)
+		groupField, _ := record.Get("groupId")
+		groupId := groupField.(string)
+		groupKey, err := keys.ParseGroupKey(groupId)
+		if err != nil {
+			return nil, err
+		}
+
+		offer, err := MapOfferNode(offerNode, createdByKey, groupKey)
 		if err != nil {
 			return nil, err
 		}

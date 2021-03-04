@@ -2,12 +2,14 @@ package service
 
 import (
 	"fmt"
+	"github.com/commonpool/backend/logging"
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/chat"
 	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/resource"
 	"github.com/commonpool/backend/pkg/trading"
+	"github.com/commonpool/backend/pkg/trading/domain"
 	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
 	"strings"
@@ -16,73 +18,97 @@ import (
 
 func (t TradingService) SendOffer(ctx context.Context, groupKey keys.GroupKey, offerItems *trading.OfferItems, message string) (*trading.Offer, *trading.OfferItems, error) {
 
+	l := logging.WithContext(ctx)
+
+	o := domain.NewOffer()
+	var domainOfferItems []*domain.OfferItem
+
+	o.Submit(groupKey)
+
+	l.Debug("getting logged in user")
 	userSession, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
 		return nil, nil, exceptions.ErrUnauthorized
 	}
 
+	l.Debug("making sure resources appear only once in the offer")
 	// The ownership of a resource can only be moved once in an offer
 	if err := assertResourcesAreTransferredOnlyOnce(offerItems); err != nil {
 		return nil, nil, err
 	}
 
+	l.Debug("making sure offer have positive time values")
 	// All time based offers must have positive time values. No negative time
 	if err := assertTimeOfferItemsHavePositiveTimeValue(offerItems); err != nil {
 		return nil, nil, err
 	}
 
+	l.Debug("retrieving resources in offer")
 	resources, err := t.resourceStore.GetByKeys(ctx, offerItems.GetResourceKeys())
 	if err != nil {
 		return nil, nil, err
 	}
 
+	l.Debug("checking that resources are viewable by the group")
 	// Checking that the offer's group can actually 'see' the resource
 	if err := t.assertResourcesAreViewableByGroup(resources, groupKey); err != nil {
 		return nil, nil, err
 	}
 
+	l.Debug("checking that the offer does not include transferring a resource to its current owner")
 	// Checking that an offer does not include transferring a resource to its current owner
 	if err := t.assertResourcesAreNotTransferredToTheirCurrentOwner(resources, offerItems); err != nil {
 		return nil, nil, err
 	}
 
+	l.Debug("checking that resource_transfer offerItems refer to object-typed resources")
 	// Checking that resource_transfer offerItems refer to object-typed resources
 	if err := t.assertResourceTransferOfferItemsReferToObjectResources(resources, offerItems); err != nil {
 		return nil, nil, err
 	}
 
+	l.Debug("checking that service_provision offer-items actually point to a service-typed resource")
 	// Checking that service_provision offer-items actually point to a service-typed resource
 	if err := t.assertProvideServiceItemsAreForServiceResources(resources, offerItems); err != nil {
 		return nil, nil, err
 	}
 
+	l.Debug("checking that borrowal offer-items actually point to a object-typed resource")
 	// Checking that borrowal offer-items actually point to a object-typed resource
 	if err := t.assertBorrowOfferItemPointToObjectTypedResource(resources, offerItems); err != nil {
 		return nil, nil, err
 	}
 
+	l.Debug("generating new offer key")
 	offerKey := keys.NewOfferKey(uuid.NewV4())
-	offer := trading.NewOffer(offerKey, groupKey, userSession.GetUserKey(), message, nil)
 
+	l.Debug("creating new offer object")
+	offer := trading.NewOffer(offerKey, groupKey, userSession.GetUserKey(), message, time.Time{})
+
+	l.Debug("saving offer in store")
 	err = t.tradingStore.SaveOffer(offer, offerItems)
 	if err != nil {
 		return nil, nil, err
 	}
 
+	l.Debug("getting offer from store")
 	offer, err = t.tradingStore.GetOffer(offerKey)
 	if err != nil {
 		return nil, nil, err
 	}
 
+	l.Debug("getting offer items")
 	offerItems, err = t.tradingStore.GetOfferItemsForOffer(offerKey)
 	if err != nil {
 		return nil, nil, err
 	}
 
+	l.Debug("sending accept/decline message")
 	if err := t.sendAcceptOrDeclineMessages(ctx, offerItems, offer, userSession); err != nil {
 		return nil, nil, err
 	}
 
+	l.Debug("sending custom offer message")
 	if err := t.sendCustomOfferMessage(ctx, userSession, offerItems.GetUserKeys(), message); err != nil {
 		return nil, nil, err
 	}

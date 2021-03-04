@@ -28,7 +28,7 @@ func NewTradingHandler(
 	}
 }
 
-func (h *TradingHandler) Register(e *echo.Echo) {
+func (h *TradingHandler) Register(e *echo.Group) {
 
 	offers := e.Group("/offers", h.authorization.Authenticate(true))
 	offers.GET("/:id", h.HandleGetOffer)

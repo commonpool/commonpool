@@ -184,19 +184,35 @@ func mapNewOfferItem(tradingOfferItem SendOfferPayloadItem, itemKey keys.OfferIt
 
 	if itemType == trading.CreditTransfer {
 
-		return mapCreateCreditTransferItem(tradingOfferItem, itemKey)
+		res, err := mapCreateCreditTransferItem(tradingOfferItem, itemKey)
+		if err != nil {
+			return nil, fmt.Errorf("error mapping tradingOfferItem as trading.CreditTransferItem: %v", err)
+		}
+		return res, nil
 
 	} else if itemType == trading.ResourceTransfer {
 
-		return mapCreateResourceTransferItem(tradingOfferItem, itemKey)
+		res, err := mapCreateResourceTransferItem(tradingOfferItem, itemKey)
+		if err != nil {
+			return nil, fmt.Errorf("error mapping tradingOfferItem as trading.ResourceTransferItem: %v", err)
+		}
+		return res, nil
 
 	} else if itemType == trading.ProvideService {
 
-		return mapCreateProvideServiceItem(tradingOfferItem, itemKey)
+		res, err := mapCreateProvideServiceItem(tradingOfferItem, itemKey)
+		if err != nil {
+			return nil, fmt.Errorf("error mapping tradingOfferItem as trading.ProvideServiceItem: %v", err)
+		}
+		return res, nil
 
 	} else if itemType == trading.BorrowResource {
 
-		return mapCreateBorrowItem(tradingOfferItem, itemKey)
+		res, err := mapCreateBorrowItem(tradingOfferItem, itemKey)
+		if err != nil {
+			return nil, fmt.Errorf("error mapping tradingOfferItem as trading.BorrowItem: %v", err)
+		}
+		return res, nil
 
 	} else {
 
@@ -208,17 +224,17 @@ func mapNewOfferItem(tradingOfferItem SendOfferPayloadItem, itemKey keys.OfferIt
 func mapCreateBorrowItem(tradingOfferItem SendOfferPayloadItem, itemKey keys.OfferItemKey) (*trading.BorrowResourceItem, error) {
 	to, err := MapWebOfferItemTarget(tradingOfferItem.To)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error mapping 'tradingOfferItem.To' as trading.Target: %v", err)
 	}
 
 	resourceKey, err := keys.ParseResourceKey(*tradingOfferItem.ResourceId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error parsing 'tradingOfferItem.ResourceId' as keys.ResourceKey: %v", err)
 	}
 
 	duration, err := time.ParseDuration(*tradingOfferItem.Duration)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error parsing 'tradingOfferItem.Duration' as time.Duration: %v", err)
 	}
 
 	return &trading.BorrowResourceItem{
@@ -235,17 +251,17 @@ func mapCreateBorrowItem(tradingOfferItem SendOfferPayloadItem, itemKey keys.Off
 func mapCreateProvideServiceItem(tradingOfferItem SendOfferPayloadItem, itemKey keys.OfferItemKey) (*trading.ProvideServiceItem, error) {
 	to, err := MapWebOfferItemTarget(tradingOfferItem.To)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error mapping 'tradingOfferItem.To' as trading.Target: %v", err)
 	}
 
 	resourceKey, err := keys.ParseResourceKey(*tradingOfferItem.ResourceId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error parsing 'tradingOfferItem.ResourceId' as keys.ResourceKey: %v", err)
 	}
 
 	duration, err := time.ParseDuration(*tradingOfferItem.Duration)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error parsing 'tradingOfferItem.Duration' as time.Duration: %v", err)
 	}
 
 	return &trading.ProvideServiceItem{
@@ -263,12 +279,12 @@ func mapCreateResourceTransferItem(tradingOfferItem SendOfferPayloadItem, itemKe
 
 	to, err := MapWebOfferItemTarget(tradingOfferItem.To)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error mapping 'tradingOfferItem.To' to trading.Target: %v", err)
 	}
 
 	resourceKey, err := keys.ParseResourceKey(*tradingOfferItem.ResourceId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error parsing 'tradingOfferItem.ResourceId' as keys.ResourceKey: %v", err)
 	}
 
 	return &trading.ResourceTransferItem{
@@ -284,17 +300,17 @@ func mapCreateResourceTransferItem(tradingOfferItem SendOfferPayloadItem, itemKe
 func mapCreateCreditTransferItem(tradingOfferItem SendOfferPayloadItem, itemKey keys.OfferItemKey) (*trading.CreditTransferItem, error) {
 	to, err := MapWebOfferItemTarget(tradingOfferItem.To)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error mapping 'tradingOfferItem.To' as trading.Target: %v", err)
 	}
 
 	from, err := MapWebOfferItemTarget(*tradingOfferItem.From)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error mapping 'tradingOfferItem.From' as trading.Target: %v", err)
 	}
 
 	amount, err := time.ParseDuration(*tradingOfferItem.Amount)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error parsing 'tradingOfferItem.Amount' as time.Duration: %v", err)
 	}
 
 	return &trading.CreditTransferItem{

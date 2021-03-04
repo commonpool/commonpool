@@ -1,7 +1,7 @@
 package user
 
 import (
-	"fmt"
+	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/pkg/keys"
 )
 
@@ -40,7 +40,7 @@ func NewEmptyUsers() *Users {
 func (u *Users) GetUser(key keys.UserKey) (*User, error) {
 	user, ok := u.userMap[key]
 	if !ok {
-		return nil, fmt.Errorf("user not found")
+		return nil, exceptions.ErrUserNotFound
 	}
 	return user, nil
 }

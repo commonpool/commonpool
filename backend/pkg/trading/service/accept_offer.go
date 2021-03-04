@@ -41,42 +41,42 @@ func (t TradingService) AcceptOffer(ctx context.Context, offerKey keys.OfferKey)
 		return exceptions.ErrUnauthorized
 	}
 
-	approvableOfferItemsOnGivingSide :=
+	outboundApprovableItems :=
 		approvers.GetOutboundOfferItems(loggedInUserKey)
 
-	approvableOfferItemsOnReceivingSide :=
+	inboundApprovableItems :=
 		approvers.GetInboundOfferItems(loggedInUserKey)
 
-	var offerItemsPendingGiverApproval []keys.OfferItemKey
-	if approvableOfferItemsOnGivingSide != nil {
-		for _, offerItemKey := range approvableOfferItemsOnGivingSide.Items {
+	var offerItemsPendingOutboundApproval []keys.OfferItemKey
+	if outboundApprovableItems != nil {
+		for _, offerItemKey := range outboundApprovableItems.Items {
 			offerItem := offerItems.GetOfferItem(offerItemKey)
 			if offerItem.IsOutboundApproved() {
 				continue
 			}
-			offerItemsPendingGiverApproval = append(offerItemsPendingGiverApproval, offerItemKey)
+			offerItemsPendingOutboundApproval = append(offerItemsPendingOutboundApproval, offerItemKey)
 		}
 	}
-	var offerItemsPendingReceiverApproval []keys.OfferItemKey
-	if approvableOfferItemsOnReceivingSide != nil {
-		for _, offerItemKey := range approvableOfferItemsOnReceivingSide.Items {
+	var offerItemsPendingInboundApproval []keys.OfferItemKey
+	if inboundApprovableItems != nil {
+		for _, offerItemKey := range inboundApprovableItems.Items {
 			offerItem := offerItems.GetOfferItem(offerItemKey)
 			if offerItem.IsInboundApproved() {
 				continue
 			}
-			offerItemsPendingReceiverApproval = append(offerItemsPendingReceiverApproval, offerItemKey)
+			offerItemsPendingInboundApproval = append(offerItemsPendingInboundApproval, offerItemKey)
 		}
 	}
 
-	if len(offerItemsPendingReceiverApproval) == 0 && len(offerItemsPendingGiverApproval) == 0 {
+	if len(offerItemsPendingInboundApproval) == 0 && len(offerItemsPendingOutboundApproval) == 0 {
 		return fmt.Errorf("nothing left to approve by you")
 	}
 
 	err = t.tradingStore.MarkOfferItemsAsAccepted(
 		ctx,
 		loggedInUserKey,
-		keys.NewOfferItemKeys(offerItemsPendingGiverApproval),
-		keys.NewOfferItemKeys(offerItemsPendingReceiverApproval))
+		keys.NewOfferItemKeys(offerItemsPendingOutboundApproval),
+		keys.NewOfferItemKeys(offerItemsPendingInboundApproval))
 
 	if err != nil {
 		return err
