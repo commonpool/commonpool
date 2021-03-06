@@ -38,12 +38,12 @@ func (h *Handler) getGroupNamesForMemberships(ctx context.Context, memberships *
 		groupKey := membership.GetGroupKey()
 		_, ok := groupNames[groupKey]
 		if !ok {
-			getGroup, err := h.groupService.GetGroup(ctx, group.NewGetGroupRequest(groupKey))
+			getGroup, err := h.groupService.GetGroup(ctx, groupKey)
 			if err != nil {
 				l.Error("could not get group", zap.Error(err))
 				return groupNames, err
 			}
-			groupNames[groupKey] = getGroup.Group.Name
+			groupNames[groupKey] = getGroup.Name
 		}
 	}
 	return groupNames, nil

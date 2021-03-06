@@ -1,6 +1,9 @@
 package readmodels
 
-import "time"
+import (
+	"github.com/commonpool/backend/pkg/group/domain"
+	"time"
+)
 
 type GroupReadModel struct {
 	Version     int       `gorm:"not null"`
@@ -24,4 +27,6 @@ type MembershipReadModel struct {
 	GroupConfirmedAt *time.Time
 	UserConfirmed    bool `gorm:"not null"`
 	UserConfirmedAt  *time.Time
+	UserName         string                  `gorm:"type:varchar(128)"`
+	Status           domain.MembershipStatus `gorm:"not null"`
 }

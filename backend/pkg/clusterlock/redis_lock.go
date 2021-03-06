@@ -38,7 +38,7 @@ type EverySecondRetryStrategy struct {
 }
 
 func (e EverySecondRetryStrategy) NextBackoff() time.Duration {
-	return time.Second
+	return time.Millisecond * 10
 }
 
 var _ RetryStrategy = &EverySecondRetryStrategy{}

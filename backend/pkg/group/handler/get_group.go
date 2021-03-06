@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/pkg/group"
+	"github.com/commonpool/backend/pkg/group/readmodels"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/labstack/echo/v4"
@@ -12,7 +12,7 @@ type GetGroupResponse struct {
 	Group *Group `json:"group"`
 }
 
-func NewGetGroupResponse(group *group.Group) GetGroupResponse {
+func NewGetGroupResponse(group *readmodels.GroupReadModel) GetGroupResponse {
 	return GetGroupResponse{
 		Group: NewGroup(group),
 	}
@@ -38,12 +38,12 @@ func (h *Handler) GetGroup(c echo.Context) error {
 		return err
 	}
 
-	getGroupResponse, err := h.groupService.GetGroup(ctx, group.NewGetGroupRequest(groupKey))
+	getGroupResponse, err := h.groupService.GetGroup(ctx, groupKey)
 	if err != nil {
 		return err
 	}
 
-	var response = NewGetGroupResponse(getGroupResponse.Group)
+	var response = NewGetGroupResponse(getGroupResponse)
 	return c.JSON(http.StatusOK, response)
 
 }

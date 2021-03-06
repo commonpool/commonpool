@@ -12,7 +12,7 @@ type ReplayEventsByTypeOptions struct {
 
 type EventStore interface {
 	Load(ctx context.Context, streamKey StreamKey) ([]eventsource.Event, error)
-	Save(ctx context.Context, streamKey StreamKey, expectedRevision int, events []eventsource.Event) error
+	Save(ctx context.Context, streamKey StreamKey, expectedRevision int, events []eventsource.Event) ([]eventsource.Event, error)
 	ReplayEventsByType(ctx context.Context, eventTypes []string, timestamp time.Time, replayFunc func(events []eventsource.Event) error, options ...ReplayEventsByTypeOptions) error
 }
 

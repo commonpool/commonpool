@@ -24,23 +24,21 @@ func (t TradingService) FindTargetsForOfferItem(
 		return nil, err
 	}
 
-	group, err := t.groupService.GetGroup(ctx, &group2.GetGroupRequest{
-		Key: groupKey,
-	})
+	_, err = t.groupService.GetGroup(ctx, groupKey)
 	if err != nil {
 		return nil, err
 	}
 
 	var targets []*domain2.Target
 
-	groupTarget := domain2.NewGroupTarget(group.Group.Key)
-
+	groupTarget := domain2.NewGroupTarget(groupKey)
 	if to == nil || !to.Equals(groupTarget) {
 		targets = append(targets, groupTarget)
 	}
 
-	for _, membership := range membershipsForGroup.Memberships.Items {
-		userTarget := domain2.NewUserTarget(membership.GetUserKey())
+	for _, membership := range membershipsForGroup.Memberships {
+		userKey := keys.NewUserKey(membership.UserKey)
+		userTarget := domain2.NewUserTarget(userKey)
 		if to == nil || !to.Equals(userTarget) {
 			targets = append(targets, userTarget)
 		}

@@ -17,6 +17,13 @@ type GroupReadModelListener struct {
 	db                     *gorm.DB
 }
 
+func NewGroupReadModelListener(catchUpListenerFactory eventbus.CatchUpListenerFactory, db *gorm.DB) *GroupReadModelListener {
+	return &GroupReadModelListener{
+		catchUpListenerFactory: catchUpListenerFactory,
+		db:                     db,
+	}
+}
+
 func (l *GroupReadModelListener) Start(ctx context.Context) error {
 
 	if err := l.migrateDatabase(); err != nil {
@@ -183,10 +190,7 @@ func (l *GroupReadModelListener) applyGroupCreatedEvent(e domain.GroupCreated) e
 		CreatedBy:   e.CreatedBy.String(),
 		CreatedAt:   e.EventTime,
 	}).Error
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func applyMembershipChanged(values map[string]interface{}, e domain.MembershipStatusChanged) {
@@ -213,5 +217,7 @@ func applyMembershipChanged(values map[string]interface{}, e domain.MembershipSt
 		values["is_owner"] = e.NewPermissions.IsOwner()
 		values["is_member"] = e.NewPermissions.IsMember()
 	}
+
+	values["status"] = e.NewStatus
 
 }

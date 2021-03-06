@@ -1,9 +1,7 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/pkg/auth/models"
-	"github.com/commonpool/backend/pkg/group"
-	"github.com/commonpool/backend/pkg/group/domain"
+	"github.com/commonpool/backend/pkg/group/readmodels"
 	"time"
 )
 
@@ -21,17 +19,17 @@ type Membership struct {
 	UserName       string    `json:"userName"`
 }
 
-func NewMembership(membership *domain.Membership, groupNames group.Names, names models.UserNames) Membership {
+func NewMembership(membership *readmodels.MembershipReadModel) Membership {
 	return Membership{
-		UserID:         membership.Key.UserKey.String(),
-		GroupID:        membership.Key.GroupKey.String(),
-		IsAdmin:        membership.IsAdmin(),
-		IsMember:       membership.IsMember(),
-		IsOwner:        membership.IsOwner(),
-		GroupConfirmed: membership.HasGroupConfirmed(),
-		UserConfirmed:  membership.HasUserConfirmed(),
-		CreatedAt:      membership.CreatedAt,
-		GroupName:      groupNames[membership.GetGroupKey()],
-		UserName:       names[membership.GetUserKey()],
+		UserID:         membership.UserKey,
+		GroupID:        membership.GroupKey,
+		IsAdmin:        membership.IsAdmin,
+		IsMember:       membership.IsMember,
+		IsOwner:        membership.IsOwner,
+		GroupConfirmed: membership.GroupConfirmed,
+		UserConfirmed:  membership.UserConfirmed,
+		// TODO: CreatedAt:      membership.CreatedAt,
+		GroupName: membership.GroupName,
+		UserName:  membership.UserName,
 	}
 }

@@ -9,18 +9,21 @@ import (
 	"github.com/commonpool/backend/pkg/eventstore"
 	"github.com/satori/go.uuid"
 	"gorm.io/gorm"
+	"sync"
 	"time"
 )
 
 type PostgresEventStore struct {
 	db          *gorm.DB
 	eventMapper *eventsource.EventMapper
+	mu          sync.Mutex
 }
 
 func NewPostgresEventStore(db *gorm.DB, eventMapper *eventsource.EventMapper) *PostgresEventStore {
 	return &PostgresEventStore{
 		db:          db,
 		eventMapper: eventMapper,
+		mu:          sync.Mutex{},
 	}
 }
 
@@ -30,7 +33,7 @@ func (p *PostgresEventStore) MigrateDatabase() error {
 	return p.db.AutoMigrate(&eventstore.StreamEvent{}, &eventstore.Stream{})
 }
 
-func (p PostgresEventStore) Load(ctx context.Context, streamKey eventstore.StreamKey) ([]eventsource.Event, error) {
+func (p *PostgresEventStore) Load(ctx context.Context, streamKey eventstore.StreamKey) ([]eventsource.Event, error) {
 	var events []*eventstore.StreamEvent
 	if err := p.db.
 		Where("stream_type = ? AND stream_id = ?", streamKey.StreamType, streamKey.StreamID).
@@ -47,7 +50,7 @@ func (p PostgresEventStore) Load(ctx context.Context, streamKey eventstore.Strea
 	return mappedEvents, nil
 }
 
-func (p PostgresEventStore) mapEvents(events []*eventstore.StreamEvent) ([]eventsource.Event, error) {
+func (p *PostgresEventStore) mapEvents(events []*eventstore.StreamEvent) ([]eventsource.Event, error) {
 	var mappedEvents = make([]eventsource.Event, len(events))
 	for i, event := range events {
 		mappedEvent, err := p.eventMapper.Map(event.EventType, []byte(event.Body))
@@ -111,9 +114,30 @@ func eventTimeValueOrDefault(defaultValue time.Time, key string, tempStruct map[
 	return value
 }
 
-func (p PostgresEventStore) Save(ctx context.Context, streamKey eventstore.StreamKey, expectedRevision int, events []eventsource.Event) error {
+func (p *PostgresEventStore) Save(ctx context.Context, streamKey eventstore.StreamKey, expectedRevision int, events []eventsource.Event) ([]eventsource.Event, error) {
 
-	return p.db.Transaction(func(tx *gorm.DB) error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	var publishedEvents = make([]eventsource.Event, len(events))
+
+	var stream eventstore.Stream
+	query := p.db.Model(eventstore.Stream{}).Find(&stream, "stream_id = ? and stream_type = ?", streamKey.StreamID, streamKey.StreamType)
+	if err := query.Error; err != nil {
+		return nil, err
+	}
+	if query.RowsAffected == 0 {
+		stream = eventstore.Stream{
+			StreamID:      streamKey.StreamID,
+			StreamType:    streamKey.StreamType,
+			LatestVersion: 0,
+		}
+		if err := p.db.Create(stream).Error; err != nil {
+			return nil, err
+		}
+	}
+
+	err := p.db.Transaction(func(tx *gorm.DB) error {
 
 		now := time.Now().UTC()
 
@@ -131,16 +155,8 @@ func (p PostgresEventStore) Save(ctx context.Context, streamKey eventstore.Strea
 			return err
 		}
 		if query.RowsAffected == 0 {
-			stream = eventstore.Stream{
-				StreamID:      streamKey.StreamID,
-				StreamType:    streamKey.StreamType,
-				LatestVersion: 0,
-			}
-			if err := tx.Create(stream).Error; err != nil {
-				return err
-			}
+			return fmt.Errorf("stream not found")
 		}
-
 		if stream.LatestVersion != expectedRevision {
 			return fmt.Errorf("could not save events: version mismatch: expected version %d but was %d", expectedRevision, stream.LatestVersion)
 		}
@@ -172,6 +188,12 @@ func (p PostgresEventStore) Save(ctx context.Context, streamKey eventstore.Strea
 			if err != nil {
 				return err
 			}
+
+			publishedEvent, err := p.eventMapper.Map(event.GetEventType(), eventBody)
+			if err != nil {
+				return err
+			}
+			publishedEvents[i] = publishedEvent
 
 			streamEvent := &eventstore.StreamEvent{
 				SequenceNo:    evtRevision,
@@ -206,6 +228,8 @@ func (p PostgresEventStore) Save(ctx context.Context, streamKey eventstore.Strea
 	}, &sql.TxOptions{
 		Isolation: sql.LevelSerializable,
 	})
+
+	return publishedEvents, err
 }
 
 func (p PostgresEventStore) ReplayEventsByType(

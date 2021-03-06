@@ -4,20 +4,36 @@ import (
 	"github.com/commonpool/backend/pkg/auth/authenticator"
 	"github.com/commonpool/backend/pkg/auth/service"
 	group "github.com/commonpool/backend/pkg/group"
+	"github.com/commonpool/backend/pkg/group/queries"
 	"github.com/labstack/echo/v4"
 )
 
 type Handler struct {
-	groupService group.Service
-	userService  service.Service
-	auth         authenticator.Authenticator
+	groupService        group.Service
+	userService         service.Service
+	auth                authenticator.Authenticator
+	getGroup            *queries.GetGroup
+	getMembership       *queries.GetMembershipReadModel
+	getGroupMemberships *queries.GetGroupMemberships
+	getUserMemberships  *queries.GetUserMemberships
 }
 
-func NewHandler(groupService group.Service, userService service.Service, auth authenticator.Authenticator) *Handler {
+func NewHandler(
+	groupService group.Service,
+	userService service.Service,
+	auth authenticator.Authenticator,
+	getGroup *queries.GetGroup,
+	getMembership *queries.GetMembershipReadModel,
+	getGroupMemberships *queries.GetGroupMemberships,
+	getUserMemberships *queries.GetUserMemberships) *Handler {
 	return &Handler{
-		groupService: groupService,
-		userService:  userService,
-		auth:         auth,
+		groupService:        groupService,
+		userService:         userService,
+		auth:                auth,
+		getGroup:            getGroup,
+		getMembership:       getMembership,
+		getGroupMemberships: getGroupMemberships,
+		getUserMemberships:  getUserMemberships,
 	}
 }
 

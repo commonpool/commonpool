@@ -18,7 +18,7 @@ func NewEventSourcedGroupRepository(eventStore eventstore.EventStore) *EventSour
 }
 
 func (e EventSourcedGroupRepository) Load(ctx context.Context, groupKey keys.GroupKey) (*domain.Group, error) {
-	events, err := e.eventStore.Load(ctx, eventstore.NewStreamKey("offer", groupKey.String()))
+	events, err := e.eventStore.Load(ctx, eventstore.NewStreamKey("group", groupKey.String()))
 	if err != nil {
 		return nil, err
 	}
@@ -27,7 +27,7 @@ func (e EventSourcedGroupRepository) Load(ctx context.Context, groupKey keys.Gro
 
 func (e *EventSourcedGroupRepository) Save(ctx context.Context, group *domain.Group) error {
 	streamKey := eventstore.NewStreamKey("group", group.GetKey().String())
-	if err := e.eventStore.Save(ctx, streamKey, group.GetVersion(), group.GetChanges()); err != nil {
+	if _, err := e.eventStore.Save(ctx, streamKey, group.GetVersion(), group.GetChanges()); err != nil {
 		return err
 	}
 	group.MarkAsCommitted()

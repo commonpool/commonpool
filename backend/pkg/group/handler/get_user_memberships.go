@@ -2,9 +2,8 @@ package handler
 
 import (
 	"github.com/commonpool/backend/pkg/auth/authenticator/oidc"
-	"github.com/commonpool/backend/pkg/auth/models"
-	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/group/domain"
+	"github.com/commonpool/backend/pkg/group/readmodels"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/labstack/echo/v4"
@@ -15,10 +14,10 @@ type GetUserMembershipsResponse struct {
 	Memberships []Membership `json:"memberships"`
 }
 
-func NewGetUserMembershipsResponse(memberships *domain.Memberships, groupNames group.Names, userNames models.UserNames) GetUserMembershipsResponse {
-	responseMemberships := make([]Membership, len(memberships.Items))
-	for i, membership := range memberships.Items {
-		responseMemberships[i] = NewMembership(membership, groupNames, userNames)
+func NewGetUserMembershipsResponse(memberships []*readmodels.MembershipReadModel) GetUserMembershipsResponse {
+	responseMemberships := make([]Membership, len(memberships))
+	for i, membership := range memberships {
+		responseMemberships[i] = NewMembership(membership)
 	}
 	return GetUserMembershipsResponse{
 		Memberships: responseMemberships,
@@ -62,22 +61,12 @@ func (h *Handler) GetUserMemberships(c echo.Context) error {
 		userKey = keys.NewUserKey(userIdStr)
 	}
 
-	memberships, err := h.groupService.GetUserMemberships(ctx, group.NewGetMembershipsForUserRequest(userKey, membershipStatus))
+	m, err := h.getUserMemberships.Get(ctx, userKey, membershipStatus)
 	if err != nil {
 		return err
 	}
 
-	groupNames, err := h.getGroupNamesForMemberships(ctx, memberships.Memberships)
-	if err != nil {
-		return err
-	}
-
-	userNames, err := h.getUserNamesForMemberships(ctx, memberships.Memberships)
-	if err != nil {
-		return err
-	}
-
-	response := NewGetUserMembershipsResponse(memberships.Memberships, groupNames, userNames)
+	response := NewGetUserMembershipsResponse(m)
 	return c.JSON(http.StatusOK, response)
 
 }

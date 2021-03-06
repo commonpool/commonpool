@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/commonpool/backend/pkg/auth/authenticator"
 	"github.com/commonpool/backend/pkg/auth/models"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/mq"
-	"github.com/commonpool/backend/pkg/server"
 	"github.com/labstack/echo/v4"
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
@@ -15,27 +15,27 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"sync"
 	"testing"
 )
 
 var requestMu = sync.Mutex{}
 
-func NewRequest(ctx context.Context, session *models.UserSession, method, target string, req interface{}) (echo.Context, *httptest.ResponseRecorder) {
+func NewRequest(ctx context.Context, session *models.UserSession, method, target string, req interface{}) (*http.Request, *httptest.ResponseRecorder) {
 	requestMu.Lock()
-	e := server.NewRouter()
 	httpRequest := httptest.NewRequest(method, target, read(req))
 	httpRequest = httpRequest.WithContext(ctx)
 	httpRequest.Header.Set("Content-Type", "application/json")
-	recorder := httptest.NewRecorder()
-	c := e.NewContext(httpRequest, recorder)
 	if session != nil {
-		setAuthenticatedUser(c, session.Username, session.Subject, session.Email)
-	} else {
-		setUnauthenticated(c)
+		httpRequest.Header.Set("X-Debug-Username", session.Username)
+		httpRequest.Header.Set("X-Debug-Email", session.Email)
+		httpRequest.Header.Set("X-Debug-User-Id", session.Subject)
+		httpRequest.Header.Set("X-Debug-Is-Authenticated", strconv.FormatBool(session.IsAuthenticated))
 	}
+	recorder := httptest.NewRecorder()
 	requestMu.Unlock()
-	return c, recorder
+	return httpRequest, recorder
 }
 
 func ReadResponse(t *testing.T, recorder *httptest.ResponseRecorder, output interface{}) *http.Response {
@@ -54,28 +54,28 @@ func read(intf interface{}) io.Reader {
 }
 
 func setAuthenticatedUser(c echo.Context, username, subject, email string) {
-	c.Set(models.IsAuthenticatedKey, true)
-	c.Set(models.SubjectUsernameKey, username)
-	c.Set(models.SubjectEmailKey, email)
-	c.Set(models.SubjectKey, subject)
+	c.Set(authenticator.IsAuthenticatedKey, true)
+	c.Set(authenticator.SubjectUsernameKey, username)
+	c.Set(authenticator.SubjectEmailKey, email)
+	c.Set(authenticator.SubjectKey, subject)
 }
 func setUnauthenticated(c echo.Context) {
-	c.Set(models.IsAuthenticatedKey, false)
+	c.Set(authenticator.IsAuthenticatedKey, false)
 }
 
-func ListenOnUserExchange(t *testing.T, ctx context.Context, userKey keys.UserKey) *UserExchangeListener {
+func (s *IntegrationTestSuite) ListenOnUserExchange(t *testing.T, ctx context.Context, userKey keys.UserKey) *UserExchangeListener {
 
 	randomStr := uuid.NewV4().String()
-	amqpChan, err := AmqpClient.GetChannel()
-	assert.NoError(t, err)
-	_, err = ChatService.CreateUserExchange(ctx, userKey)
-	assert.NoError(t, err)
+	amqpChan, err := s.server.AmqpClient.GetChannel()
+	assert.NoError(s.T(), err)
+	_, err = s.server.ChatService.CreateUserExchange(ctx, userKey)
+	assert.NoError(s.T(), err)
 	err = amqpChan.QueueDeclare(ctx, randomStr, false, true, false, false, nil)
-	assert.NoError(t, err)
+	assert.NoError(s.T(), err)
 	err = amqpChan.QueueBind(ctx, randomStr, "", userKey.GetExchangeName(), false, nil)
-	assert.NoError(t, err)
+	assert.NoError(s.T(), err)
 	delivery, err := amqpChan.Consume(ctx, randomStr, randomStr, false, false, false, false, nil)
-	assert.NoError(t, err)
+	assert.NoError(s.T(), err)
 
 	del := make(chan mq.Delivery)
 
@@ -102,14 +102,29 @@ func (l *UserExchangeListener) Close() error {
 	return l.Channel.Close()
 }
 
-func AssertStatusCreated(t *testing.T, httpResponse *http.Response) {
-	assert.Equal(t, http.StatusCreated, httpResponse.StatusCode)
+func AssertStatusCreated(t *testing.T, httpResponse *http.Response) bool {
+	return assert.NotNil(t, httpResponse) && assert.Equal(t, http.StatusCreated, httpResponse.StatusCode)
 }
 
-func AssertStatusNoContent(t *testing.T, httpResponse *http.Response) {
-	assert.Equal(t, http.StatusNoContent, httpResponse.StatusCode)
+func AssertStatusNoContent(t *testing.T, httpResponse *http.Response) bool {
+	return assert.NotNil(t, httpResponse) && assert.Equal(t, http.StatusNoContent, httpResponse.StatusCode)
 }
 
-func AssertOK(t *testing.T, httpResponse *http.Response) {
-	assert.Equal(t, http.StatusOK, httpResponse.StatusCode)
+func AssertOK(t *testing.T, httpResponse *http.Response) bool {
+	return assert.NotNil(t, httpResponse) && assert.Equal(t, http.StatusOK, httpResponse.StatusCode)
+}
+
+func AssertStatusUnauthorized(t *testing.T, httpResponse *http.Response) bool {
+	return assert.NotNil(t, httpResponse) && assert.Equal(t, http.StatusUnauthorized, httpResponse.StatusCode)
+}
+func AssertStatusForbidden(t *testing.T, httpResponse *http.Response) bool {
+	return assert.NotNil(t, httpResponse) && assert.Equal(t, http.StatusForbidden, httpResponse.StatusCode)
+}
+
+func AssertStatusBadRequest(t *testing.T, httpResponse *http.Response) bool {
+	return assert.NotNil(t, httpResponse) && assert.Equal(t, http.StatusBadRequest, httpResponse.StatusCode)
+}
+
+func AssertStatusAccepted(t *testing.T, httpResponse *http.Response) bool {
+	return assert.NotNil(t, httpResponse) && assert.Equal(t, http.StatusAccepted, httpResponse.StatusCode)
 }

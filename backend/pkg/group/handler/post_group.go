@@ -1,12 +1,12 @@
 package handler
 
 import (
+	retry "github.com/avast/retry-go"
 	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/pkg/group"
+	"github.com/commonpool/backend/pkg/group/readmodels"
 	"github.com/commonpool/backend/pkg/handler"
-	"github.com/commonpool/backend/pkg/keys"
 	"github.com/labstack/echo/v4"
-	"github.com/satori/go.uuid"
 	"net/http"
 	"strings"
 )
@@ -20,7 +20,7 @@ type CreateGroupResponse struct {
 	Group *Group `json:"group"`
 }
 
-func NewCreateGroupResponse(group *group.Group) CreateGroupResponse {
+func NewCreateGroupResponse(group *readmodels.GroupReadModel) CreateGroupResponse {
 	return CreateGroupResponse{
 		Group: NewGroup(group),
 	}
@@ -53,14 +53,32 @@ func (h *Handler) CreateGroup(c echo.Context) error {
 		return exceptions.ErrValidation("name is required")
 	}
 
-	var groupKey = keys.NewGroupKey(uuid.NewV4())
-
-	createGroupResponse, err := h.groupService.CreateGroup(ctx, group.NewCreateGroupRequest(groupKey, req.Name, req.Description))
+	groupKey, err := h.groupService.CreateGroup(ctx, group.NewCreateGroupRequest(req.Name, req.Description))
 	if err != nil {
 		return err
 	}
 
-	var response = NewCreateGroupResponse(createGroupResponse.Group)
-	return c.JSON(http.StatusCreated, response)
+	errChan := make(chan error)
+	grpChan := make(chan *readmodels.GroupReadModel)
+
+	go func() {
+		err = retry.Do(func() error {
+			grp, err := h.groupService.GetGroup(ctx, groupKey)
+			if err != nil {
+				return err
+			}
+			grpChan <- grp
+			return nil
+		})
+		errChan <- err
+	}()
+
+	select {
+	case err := <-errChan:
+		return err
+	case grp := <-grpChan:
+		var response = NewCreateGroupResponse(grp)
+		return c.JSON(http.StatusCreated, response)
+	}
 
 }

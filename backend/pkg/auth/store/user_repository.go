@@ -29,7 +29,7 @@ func (e EventSourcedUserRepository) Load(ctx context.Context, userKey keys.UserK
 
 func (e EventSourcedUserRepository) Save(ctx context.Context, user *userdomain.User) error {
 	streamKey := eventstore.NewStreamKey("user", user.GetKey().String())
-	if err := e.eventStore.Save(ctx, streamKey, user.GetVersion(), user.GetChanges()); err != nil {
+	if _, err := e.eventStore.Save(ctx, streamKey, user.GetVersion(), user.GetChanges()); err != nil {
 		return err
 	}
 	user.MarkAsCommitted()

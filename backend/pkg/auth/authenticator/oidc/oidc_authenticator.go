@@ -18,6 +18,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 )
 
@@ -81,6 +82,22 @@ func (a *OidcAuthenticator) Authenticate(redirectOnError bool) echo.MiddlewareFu
 	return func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 
 		return func(c echo.Context) error {
+
+			if os.Getenv("DEBUG") == "true" {
+				username := c.Request().Header.Get("X-Debug-Username")
+				email := c.Request().Header.Get("X-Debug-Email")
+				id := c.Request().Header.Get("X-Debug-User-Id")
+				isAuthenticated := c.Request().Header.Get("X-Debug-Is-Authenticated")
+				if username != "" && email != "" && id != "" && isAuthenticated == "true" {
+					if isAuthenticated == "true" {
+						if err := SaveAuthenticatedUser(c, a.authStore, id, username, email); err != nil {
+							l.Error("could not save authenticated used", zap.Error(err))
+							return err
+						}
+						return handlerFunc(c)
+					}
+				}
+			}
 
 			SetIsAuthenticated(c, false)
 

@@ -27,7 +27,7 @@ func (e EventSourcedOfferRepository) Load(ctx context.Context, offerKey keys.Off
 
 func (e EventSourcedOfferRepository) Save(ctx context.Context, offer *domain.Offer) error {
 	streamKey := eventstore.NewStreamKey("offer", offer.GetKey().String())
-	if err := e.eventStore.Save(ctx, streamKey, offer.GetSequenceNo(), offer.GetChanges()); err != nil {
+	if _, err := e.eventStore.Save(ctx, streamKey, offer.GetSequenceNo(), offer.GetChanges()); err != nil {
 		return err
 	}
 	offer.MarkAsCommitted()

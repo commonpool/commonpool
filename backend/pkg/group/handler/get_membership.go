@@ -1,9 +1,8 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/pkg/auth/models"
-	group "github.com/commonpool/backend/pkg/group"
-	"github.com/commonpool/backend/pkg/group/domain"
+	"github.com/avast/retry-go"
+	"github.com/commonpool/backend/pkg/group/readmodels"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/labstack/echo/v4"
@@ -14,9 +13,9 @@ type GetMembershipResponse struct {
 	Membership Membership `json:"membership"`
 }
 
-func NewGetMembershipResponse(membership *domain.Membership, groupNames group.Names, userNames models.UserNames) *GetMembershipResponse {
+func NewGetMembershipResponse(membership *readmodels.MembershipReadModel) *GetMembershipResponse {
 	return &GetMembershipResponse{
-		Membership: NewMembership(membership, groupNames, userNames),
+		Membership: NewMembership(membership),
 	}
 }
 
@@ -43,24 +42,34 @@ func (h *Handler) GetMembership(c echo.Context) error {
 		return err
 	}
 
-	getMemberships, err := h.groupService.GetMembership(ctx, group.NewGetMembershipRequest(keys.NewMembershipKey(groupKey, userKey)))
+	membershipKey := keys.NewMembershipKey(groupKey, userKey)
+	var membership *readmodels.MembershipReadModel
+	err = retry.Do(func() error {
+		var err error
+		membership, err = h.getMembership.Get(ctx, membershipKey)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}
 
-	var memberships = domain.NewMemberships([]*domain.Membership{getMemberships.Membership})
-
-	groupNames, err := h.getGroupNamesForMemberships(ctx, memberships)
-	if err != nil {
-		return err
+	resp := &GetMembershipResponse{
+		Membership: Membership{
+			UserID:         membership.UserKey,
+			GroupID:        membership.GroupKey,
+			IsAdmin:        membership.IsAdmin,
+			IsMember:       membership.IsMember,
+			IsOwner:        membership.IsOwner,
+			GroupConfirmed: membership.GroupConfirmed,
+			UserConfirmed:  membership.UserConfirmed,
+			GroupName:      membership.GroupName,
+			UserName:       membership.UserName,
+		},
 	}
 
-	userNames, err := h.getUserNamesForMemberships(ctx, memberships)
-	if err != nil {
-		return err
-	}
-
-	response := NewGetMembershipResponse(getMemberships.Membership, groupNames, userNames)
-	return c.JSON(http.StatusOK, response)
+	return c.JSON(http.StatusOK, resp)
 
 }

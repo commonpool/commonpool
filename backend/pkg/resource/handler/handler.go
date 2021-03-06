@@ -4,23 +4,31 @@ import (
 	"github.com/commonpool/backend/pkg/auth/authenticator"
 	"github.com/commonpool/backend/pkg/auth/service"
 	"github.com/commonpool/backend/pkg/group"
+	"github.com/commonpool/backend/pkg/group/queries"
 	"github.com/commonpool/backend/pkg/resource"
 	"github.com/labstack/echo/v4"
 )
 
 type ResourceHandler struct {
-	resourceService resource.Service
-	groupService    group.Service
-	userService     service.Service
-	authorization   authenticator.Authenticator
+	resourceService    resource.Service
+	groupService       group.Service
+	userService        service.Service
+	authorization      authenticator.Authenticator
+	getUserMemberships *queries.GetUserMemberships
 }
 
-func NewHandler(resourceService resource.Service, groupService group.Service, userService service.Service, authenticator authenticator.Authenticator) *ResourceHandler {
+func NewHandler(
+	resourceService resource.Service,
+	groupService group.Service,
+	userService service.Service,
+	authenticator authenticator.Authenticator,
+	getUserMemberships *queries.GetUserMemberships) *ResourceHandler {
 	return &ResourceHandler{
-		resourceService: resourceService,
-		groupService:    groupService,
-		userService:     userService,
-		authorization:   authenticator,
+		resourceService:    resourceService,
+		groupService:       groupService,
+		userService:        userService,
+		authorization:      authenticator,
+		getUserMemberships: getUserMemberships,
 	}
 }
 

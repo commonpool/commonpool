@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
+	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/bsm/redislock v0.7.0
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/go-openapi/spec v0.20.3 // indirect
@@ -24,7 +25,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.6 // indirect
 	github.com/mitchellh/mapstructure v1.4.1
 	github.com/neo4j/neo4j-go-driver/v4 v4.2.3
-	github.com/opentracing/opentracing-go v1.2.0
+	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pquerna/cachecontrol v0.0.0-20201205024021-ac21108117ac // indirect
 	github.com/satori/go.uuid v1.2.0

@@ -24,11 +24,13 @@ func (p PublishEventStore) Load(ctx context.Context, streamKey eventstore.Stream
 	return p.eventStore.Load(ctx, streamKey)
 }
 
-func (p PublishEventStore) Save(ctx context.Context, streamKey eventstore.StreamKey, expectedRevision int, events []eventsource.Event) error {
-	if err := p.eventStore.Save(ctx, streamKey, expectedRevision, events); err != nil {
-		return err
+func (p PublishEventStore) Save(ctx context.Context, streamKey eventstore.StreamKey, expectedRevision int, events []eventsource.Event) ([]eventsource.Event, error) {
+	publishedEvents, err := p.eventStore.Save(ctx, streamKey, expectedRevision, events)
+	if err != nil {
+		return nil, err
 	}
-	return p.eventPublisher.PublishEvents(ctx, events)
+	err = p.eventPublisher.PublishEvents(ctx, publishedEvents)
+	return publishedEvents, err
 }
 
 func (p PublishEventStore) ReplayEventsByType(ctx context.Context, eventTypes []string, timestamp time.Time, replayFunc func(events []eventsource.Event) error, options ...eventstore.ReplayEventsByTypeOptions) error {

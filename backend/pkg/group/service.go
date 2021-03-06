@@ -3,12 +3,13 @@ package group
 import (
 	"context"
 	"github.com/commonpool/backend/pkg/group/domain"
+	"github.com/commonpool/backend/pkg/group/readmodels"
 	"github.com/commonpool/backend/pkg/keys"
 )
 
 type Service interface {
-	CreateGroup(ctx context.Context, request *CreateGroupRequest) (*CreateGroupResponse, error)
-	GetGroup(ctx context.Context, request *GetGroupRequest) (*GetGroupResult, error)
+	CreateGroup(ctx context.Context, request *CreateGroupRequest) (keys.GroupKey, error)
+	GetGroup(ctx context.Context, key keys.GroupKey) (*readmodels.GroupReadModel, error)
 	GetGroups(ctx context.Context, request *GetGroupsRequest) (*GetGroupsResult, error)
 	GetGroupsByKeys(ctx context.Context, groupKeys *keys.GroupKeys) (*Groups, error)
 	GetMembership(ctx context.Context, request *GetMembershipRequest) (*GetMembershipResponse, error)

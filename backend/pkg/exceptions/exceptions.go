@@ -57,7 +57,7 @@ var ErrInvalidSkipQueryParam = NewWebServiceException("query parameter 'skip' is
 var ErrInvalidBeforeQueryParam = NewWebServiceException("query parameter 'before' is invalid", "ErrInvalidBeforeQueryParam", http.StatusBadRequest)
 var ErrInvalidGroupId = NewWebServiceException("invalid group id", "ErrInvalidGroupId", http.StatusBadRequest)
 var ErrMembershipPartyUnauthorized = NewWebServiceException("not allowed to manage other people memberships", "ErrMembershipPartyUnauthorized", http.StatusForbidden)
-var ErrManageMembershipsNotAdmin = NewWebServiceException("don't have sufficient privilegtes", "ErrManageMembershipsNotAdmin", http.StatusForbidden)
+var ErrManageMembershipsNotAdmin = NewWebServiceException("don't have sufficient privileges", "ErrManageMembershipsNotAdmin", http.StatusForbidden)
 
 func ErrQueryParamRequired(queryParameter string) error {
 	return NewWebServiceException(fmt.Sprintf("query parameter '%s' is required", queryParameter), "ErrQueryParamRequired", http.StatusBadRequest)
@@ -82,9 +82,8 @@ type ValidErrors struct {
 }
 
 var (
-	ErrValidation = func(msg string) *ErrorResponse {
-		err := NewError("validation error: "+msg, "ErrValidation", http.StatusBadRequest)
-		return &err
+	ErrValidation = func(msg string) error {
+		return NewWebServiceException(msg, "ErrValidation", http.StatusBadRequest)
 	}
 	ErrInvalidResourceKey = func(key string) ErrorResponse {
 		return NewError(fmt.Sprintf("invalid resource key: '%s'", key), "ErrInvalidResourceKey", http.StatusBadRequest)

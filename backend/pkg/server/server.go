@@ -23,6 +23,7 @@ import (
 	"github.com/commonpool/backend/pkg/graph"
 	groupdomain "github.com/commonpool/backend/pkg/group/domain"
 	grouphandler "github.com/commonpool/backend/pkg/group/handler"
+	listeners2 "github.com/commonpool/backend/pkg/group/listeners"
 	groupqueries "github.com/commonpool/backend/pkg/group/queries"
 	groupservice "github.com/commonpool/backend/pkg/group/service"
 	groupstore "github.com/commonpool/backend/pkg/group/store"
@@ -45,6 +46,7 @@ import (
 	transactionstore "github.com/commonpool/backend/pkg/transaction/store"
 	"github.com/go-redis/redis/v8"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	echoSwagger "github.com/swaggo/echo-swagger"
 	"golang.org/x/sync/errgroup"
 	"gorm.io/driver/postgres"
@@ -95,6 +97,8 @@ type Server struct {
 	EventMapper        *eventsource.EventMapper
 	Group              Group
 	User               *module.Module
+	ErrGroup           *errgroup.Group
+	Ctx                context.Context
 }
 
 func getEnv(key, defaultValue string) string {
@@ -108,7 +112,6 @@ func getEnv(key, defaultValue string) string {
 func NewServer() (*Server, error) {
 
 	ctx := context.Background()
-
 	g, ctx := errgroup.WithContext(ctx)
 
 	appConfig, err := config.GetAppConfig(os.LookupEnv, ioutil.ReadFile)
@@ -160,6 +163,9 @@ func NewServer() (*Server, error) {
 	if err := authdomain.RegisterEvents(eventMapper); err != nil {
 		panic(err)
 	}
+	if err := groupdomain.RegisterEvents(eventMapper); err != nil {
+		panic(err)
+	}
 
 	eventPublisher := eventbus.NewAmqpPublisher(amqpCli)
 	eventStore := publish.NewPublishEventStore(postgres2.NewPostgresEventStore(db, eventMapper), eventPublisher)
@@ -183,11 +189,13 @@ func NewServer() (*Server, error) {
 	getGroupByKeys := groupqueries.NewGetGroupByKeys(db)
 	getGroup := groupqueries.NewGetGroupReadModel(db)
 	getMembership := groupqueries.NewGetMembership(db)
+	getUserMemberships := groupqueries.NewGetUserMemberships(db)
+	getGroupMemberships := groupqueries.NewGetGroupMemberships(db)
 
 	r := NewRouter()
 	r.HTTPErrorHandler = handler2.HttpErrorHandler
 	r.GET("/api/swagger/*", echoSwagger.WrapHandler)
-	v1 := r.Group("/api/v1")
+	v1 := r.Group("/api/v1", middleware.Recover())
 
 	userModule := module.NewUserModule(appConfig, db, driver)
 	userModule.Register(v1)
@@ -203,7 +211,7 @@ func NewServer() (*Server, error) {
 
 	groupStore := groupstore.NewGroupStore(driver)
 	groupRepo := groupstore.NewEventSourcedGroupRepository(eventStore)
-	groupService := groupservice.NewGroupService(groupStore, amqpCli, chatService, userModule.Store, groupRepo, getGroup, getGroupByKeys)
+	groupService := groupservice.NewGroupService(groupStore, amqpCli, chatService, userModule.Store, groupRepo, getGroup, getGroupByKeys, getGroupMemberships)
 
 	offerRepository := tradingstore.NewEventSourcedOfferRepository(eventStore)
 
@@ -221,10 +229,10 @@ func NewServer() (*Server, error) {
 	chatHandler := chathandler.NewHandler(chatService, tradingService, appConfig, userModule.Authenticator)
 	chatHandler.Register(v1)
 
-	groupHandler := grouphandler.NewHandler(groupService, userModule.Service, userModule.Authenticator)
+	groupHandler := grouphandler.NewHandler(groupService, userModule.Service, userModule.Authenticator, getGroup, getMembership, getGroupMemberships, getUserMemberships)
 	groupHandler.Register(v1)
 
-	resourceHandler := resourcehandler.NewHandler(resourceService, groupService, userModule.Service, userModule.Authenticator)
+	resourceHandler := resourcehandler.NewHandler(resourceService, groupService, userModule.Service, userModule.Authenticator, getUserMemberships)
 	resourceHandler.Register(v1)
 
 	realtimeHandler := realtime.NewRealtimeHandler(amqpCli, chatService, userModule.Authenticator)
@@ -252,18 +260,28 @@ func NewServer() (*Server, error) {
 	}
 
 	handler := listeners.NewTransactionHistoryHandler(db, catchUpListenerFactory)
-	go func() {
+	g.Go(func() error {
 		if err := handler.Start(ctx); err != nil {
-			panic(err)
+			return err
 		}
-	}()
+		return nil
+	})
 
 	offerRm := listeners.NewOfferReadModelHandler(db, catchUpListenerFactory)
-	go func() {
+	g.Go(func() error {
 		if err := offerRm.Start(ctx); err != nil {
-			panic(err)
+			return err
 		}
-	}()
+		return nil
+	})
+
+	groupRm := listeners2.NewGroupReadModelListener(catchUpListenerFactory, db)
+	g.Go(func() error {
+		if err := groupRm.Start(ctx); err != nil {
+			return err
+		}
+		return nil
+	})
 
 	return &Server{
 		AppConfig:          appConfig,
@@ -281,17 +299,14 @@ func NewServer() (*Server, error) {
 		ChatHandler:        chatHandler,
 		ResourceHandler:    resourceHandler,
 		RealTimeHandler:    realtimeHandler,
+		Router:             r,
 		NukeHandler:        nukeHandler,
 		TradingHandler:     tradingHandler,
-		Router:             r,
-		ClusterLocker:      clusterLocker,
 		RedisClient:        redisClient,
-		CommandBus:         commandBus,
+		ClusterLocker:      clusterLocker,
 		CommandMapper:      commandMapper,
+		CommandBus:         commandBus,
 		EventMapper:        eventMapper,
-
-		User: userModule,
-
 		Group: Group{
 			Handler:    groupHandler,
 			Service:    groupService,
@@ -304,6 +319,9 @@ func NewServer() (*Server, error) {
 				GetOfferKeyForOfferItem: getOfferKeyForOfferItemKeyQry,
 			},
 		},
+		User:     userModule,
+		ErrGroup: g,
+		Ctx:      ctx,
 	}, nil
 
 }

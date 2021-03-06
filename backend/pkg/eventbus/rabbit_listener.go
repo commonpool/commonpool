@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/commonpool/backend/logging"
 	"github.com/commonpool/backend/pkg/eventsource"
 	"github.com/commonpool/backend/pkg/eventstore"
 	"github.com/commonpool/backend/pkg/mq"
@@ -56,25 +57,32 @@ func (s *RabbitMQListener) Initialize(ctx context.Context, name string, eventTyp
 
 func (s *RabbitMQListener) Listen(ctx context.Context, listenerFunc ListenerFunc) error {
 
+	l := logging.WithContext(ctx)
+	l = l.Named("RabbitMQListener")
+
 	if !s.initialized {
 		return fmt.Errorf("not initialized")
 	}
 
+	l.Debug("creating channel...")
 	channel, err := s.amqpClient.GetChannel()
 	if err != nil {
 		return err
 	}
+	l.Debug("creating channel... done!")
 	defer channel.Close()
 
 	errChan := make(chan error)
 
 	go func() {
 
+		l.Debug("consuming RabbitMQ messages...")
 		msgs, err := channel.Consume(ctx, s.name, "", false, false, false, false, map[string]interface{}{})
 		if err != nil {
 			errChan <- err
 			return
 		}
+		l.Debug("consuming RabbitMQ messages... consuming!")
 
 		for {
 			select {

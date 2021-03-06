@@ -236,12 +236,12 @@ func (o *Group) AssignPermission(grantedBy keys.UserKey, grantedTo keys.UserKey,
 
 	grantedByMembership, ok := o.GetMembership(grantedBy)
 	if !ok {
-		return fmt.Errorf("member not found")
+		return exceptions.ErrMembershipNotFound
 	}
 
 	grantedToMembership, ok := o.GetMembership(grantedTo)
 	if !ok {
-		return fmt.Errorf("member not found")
+		return exceptions.ErrMembershipNotFound
 	}
 
 	if permission > grantedByMembership.PermissionLevel {
@@ -299,7 +299,7 @@ func (o *Group) assertIsActive(key keys.UserKey) error {
 func (o *Group) assertIsAdmin(userKey keys.UserKey) error {
 	m, ok := o.GetMembership(userKey)
 	if !ok {
-		return fmt.Errorf("member not found")
+		return exceptions.ErrMembershipNotFound
 	}
 	if !m.IsAdmin() {
 		return exceptions.ErrForbidden
@@ -315,9 +315,6 @@ func validateGroupInfo(groupInfo GroupInfo) (GroupInfo, error) {
 
 	if groupInfo.Name == "" {
 		return GroupInfo{}, fmt.Errorf("group name must not be empty")
-	}
-	if groupInfo.Description == "" {
-		return GroupInfo{}, fmt.Errorf("group description must not be empty")
 	}
 	if len(groupInfo.Name) > 64 {
 		return GroupInfo{}, fmt.Errorf("group name is too long")

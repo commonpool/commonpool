@@ -1,7 +1,6 @@
 package handler
 
 import (
-	group2 "github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/group/domain"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/keys"
@@ -15,8 +14,7 @@ func (h *ResourceHandler) ensureResourceIsSharedWithGroupsTheUserIsActiveMemberO
 	ctx, l := handler.GetEchoContext(c, "ensureResourceIsSharedWithGroupsTheUserIsActiveMemberOf")
 
 	var membershipStatus = domain.ApprovedMembershipStatus
-
-	userMemberships, err := h.groupService.GetUserMemberships(ctx, group2.NewGetMembershipsForUserRequest(loggedInUserKey, &membershipStatus))
+	userMemberships, err := h.getUserMemberships.Get(ctx, loggedInUserKey, &membershipStatus)
 	if err != nil {
 		l.Error("could not get user memberships", zap.Error(err))
 		return err, true
@@ -24,8 +22,13 @@ func (h *ResourceHandler) ensureResourceIsSharedWithGroupsTheUserIsActiveMemberO
 
 	// Checking if resource is shared with groups the user is part of
 	for _, sharedWith := range sharedWithGroups.Items {
-		hasMembershipInGroup := userMemberships.Memberships.ContainsMembershipForGroup(sharedWith)
-		if !hasMembershipInGroup {
+		found := false
+		for _, membership := range userMemberships {
+			if membership.GroupKey == sharedWith.String() {
+				found = true
+			}
+		}
+		if !found {
 			return c.String(http.StatusBadRequest, "cannot share resource with a group you are not part of"), true
 		}
 	}

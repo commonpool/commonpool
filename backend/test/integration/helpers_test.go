@@ -2,27 +2,28 @@ package integration
 
 import (
 	"context"
+	"fmt"
 	"github.com/commonpool/backend/pkg/auth/models"
 	"github.com/commonpool/backend/pkg/group/handler"
-	"net/http"
+	"io/ioutil"
 	"strconv"
 	"testing"
 )
 
-func testUser(t *testing.T) (*models.UserSession, func()) {
+func (s *IntegrationTestSuite) testUser(t *testing.T) (*models.UserSession, func()) {
 	t.Helper()
 
-	createUserLock.Lock()
+	s.createUserLock.Lock()
 
-	u := NewUser()
-	upsertError := AuthStore.Upsert(u.GetUserKey(), u.Email, u.Username)
+	u := s.NewUser()
+	upsertError := s.server.User.Store.Upsert(u.GetUserKey(), u.Email, u.Username)
 
 	var userXchangeErr error
 	if upsertError != nil {
-		_, userXchangeErr = ChatService.CreateUserExchange(context.TODO(), u.GetUserKey())
+		_, userXchangeErr = s.server.ChatService.CreateUserExchange(context.TODO(), u.GetUserKey())
 	}
 
-	createUserLock.Unlock()
+	s.createUserLock.Unlock()
 
 	if upsertError != nil {
 		t.Fatalf("upsert error: %s", upsertError)
@@ -34,7 +35,7 @@ func testUser(t *testing.T) (*models.UserSession, func()) {
 
 	return u, func(user *models.UserSession) func() {
 		return func() {
-			session := Driver.GetSession()
+			session := s.server.GraphDriver.GetSession()
 			defer session.Close()
 			result, err := session.Run(`MATCH (u:User{id:$id}) detach delete u`, map[string]interface{}{
 				"id": user.Subject,
@@ -49,32 +50,47 @@ func testUser(t *testing.T) (*models.UserSession, func()) {
 	}(u)
 }
 
-var groupCounter = 0
+func (s *IntegrationTestSuite) testGroup(t *testing.T, owner *models.UserSession, members ...*models.UserSession) (*handler.Group, error) {
 
-func testGroup(t *testing.T, owner *models.UserSession, members ...*models.UserSession) *handler.Group {
 	ctx := context.Background()
-	groupCounter++
-	response, httpResponse, err := CreateGroup(t, ctx, owner, &handler.CreateGroupRequest{
-		Name:        "group-" + strconv.Itoa(groupCounter),
-		Description: "group-" + strconv.Itoa(groupCounter),
+	s.groupCounter++
+
+	response, httpResponse := s.CreateGroup(t, ctx, owner, &handler.CreateGroupRequest{
+		Name:        "group-" + strconv.Itoa(s.groupCounter),
+		Description: "group-" + strconv.Itoa(s.groupCounter),
 	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if httpResponse.StatusCode != http.StatusCreated {
-		t.Fatalf("could not create group")
+	if !AssertStatusCreated(t, httpResponse) {
+		bytes, bytesErr := ioutil.ReadAll(httpResponse.Body)
+		if bytesErr != nil {
+			return nil, bytesErr
+		}
+		return nil, fmt.Errorf(string(bytes))
 	}
 
 	for _, member := range members {
-		CreateOrAcceptInvitation(t, ctx, owner, &handler.CreateOrAcceptInvitationRequest{
+		_, httpResponse = s.CreateOrAcceptInvitation(t, ctx, owner, &handler.CreateOrAcceptInvitationRequest{
 			UserID:  member.Subject,
 			GroupID: response.Group.ID,
 		})
-		CreateOrAcceptInvitation(t, ctx, member, &handler.CreateOrAcceptInvitationRequest{
+		if !AssertStatusAccepted(t, httpResponse) {
+			bytes, bytesErr := ioutil.ReadAll(httpResponse.Body)
+			if bytesErr != nil {
+				return nil, bytesErr
+			}
+			return nil, fmt.Errorf(string(bytes))
+		}
+		_, httpResponse = s.CreateOrAcceptInvitation(t, ctx, member, &handler.CreateOrAcceptInvitationRequest{
 			UserID:  member.Subject,
 			GroupID: response.Group.ID,
 		})
+		if !AssertStatusAccepted(t, httpResponse) {
+			bytes, bytesErr := ioutil.ReadAll(httpResponse.Body)
+			if bytesErr != nil {
+				return nil, bytesErr
+			}
+			return nil, fmt.Errorf(string(bytes))
+		}
 	}
 
-	return response.Group
+	return response.Group, nil
 }

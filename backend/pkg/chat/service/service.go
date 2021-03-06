@@ -23,6 +23,7 @@ type Service interface {
 	SendGroupMessage(ctx ctx.Context, request *SendGroupMessage) (*SendGroupMessageResponse, error)
 	CreateUserExchange(ctx context.Context, userKey keys.UserKey) (string, error)
 	GetUserExchangeName(ctx context.Context, userKey keys.UserKey) string
+	GetConversationChannelKey(ctx context.Context, participants *keys.UserKeys) (keys.ChannelKey, error)
 }
 type GetOrCreateConversationChannelResponse struct {
 	Channel *chat.Channel

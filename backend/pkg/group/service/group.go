@@ -12,13 +12,14 @@ import (
 var _ group2.Service = &GroupService{}
 
 type GroupService struct {
-	groupStore  group2.Store
-	amqpClient  mq.Client
-	chatService service.Service
-	authStore   store.Store
-	groupRepo   domain.GroupRepository
-	getByKeys   *queries.GetGroupByKeys
-	getGroup    *queries.GetGroup
+	groupStore          group2.Store
+	amqpClient          mq.Client
+	chatService         service.Service
+	authStore           store.Store
+	groupRepo           domain.GroupRepository
+	getByKeys           *queries.GetGroupByKeys
+	getGroup            *queries.GetGroup
+	getGroupMemberships *queries.GetGroupMemberships
 }
 
 func NewGroupService(
@@ -28,14 +29,16 @@ func NewGroupService(
 	authStore store.Store,
 	groupRepo domain.GroupRepository,
 	getGroup *queries.GetGroup,
-	getByKeys *queries.GetGroupByKeys) *GroupService {
+	getByKeys *queries.GetGroupByKeys,
+	getGroupMemberships *queries.GetGroupMemberships) *GroupService {
 	return &GroupService{
-		groupStore:  groupStore,
-		amqpClient:  amqpClient,
-		chatService: chatService,
-		authStore:   authStore,
-		groupRepo:   groupRepo,
-		getByKeys:   getByKeys,
-		getGroup:    getGroup,
+		groupStore:          groupStore,
+		amqpClient:          amqpClient,
+		chatService:         chatService,
+		authStore:           authStore,
+		groupRepo:           groupRepo,
+		getByKeys:           getByKeys,
+		getGroup:            getGroup,
+		getGroupMemberships: getGroupMemberships,
 	}
 }

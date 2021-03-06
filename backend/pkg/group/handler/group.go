@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/pkg/group"
+	"github.com/commonpool/backend/pkg/group/readmodels"
 	"time"
 )
 
@@ -12,9 +12,9 @@ type Group struct {
 	Description string    `json:"description"`
 }
 
-func NewGroup(group *group.Group) *Group {
+func NewGroup(group *readmodels.GroupReadModel) *Group {
 	return &Group{
-		ID:          group.Key.String(),
+		ID:          group.GroupKey,
 		CreatedAt:   group.CreatedAt,
 		Name:        group.Name,
 		Description: group.Description,

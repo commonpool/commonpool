@@ -3,6 +3,7 @@ package group
 import (
 	"context"
 	"github.com/commonpool/backend/pkg/group/domain"
+	"github.com/commonpool/backend/pkg/group/readmodels"
 	"github.com/commonpool/backend/pkg/keys"
 )
 
@@ -30,7 +31,6 @@ type Store interface {
 }
 
 type CreateGroupRequest struct {
-	GroupKey    keys.GroupKey
 	Name        string
 	Description string
 }
@@ -40,9 +40,8 @@ type CreateGroupResponse struct {
 	Membership *domain.Membership
 }
 
-func NewCreateGroupRequest(key keys.GroupKey, name string, description string) *CreateGroupRequest {
+func NewCreateGroupRequest(name string, description string) *CreateGroupRequest {
 	return &CreateGroupRequest{
-		GroupKey:    key,
 		Name:        name,
 		Description: description,
 	}
@@ -102,7 +101,7 @@ func NewGetMembershipsForGroupRequest(groupKey keys.GroupKey, status *domain.Mem
 }
 
 type GetMembershipsForGroupResponse struct {
-	Memberships *domain.Memberships
+	Memberships []*readmodels.MembershipReadModel
 }
 
 type GetMembershipRequest struct {

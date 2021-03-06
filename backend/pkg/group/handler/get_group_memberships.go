@@ -1,9 +1,8 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/pkg/auth/models"
-	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/group/domain"
+	"github.com/commonpool/backend/pkg/group/readmodels"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/labstack/echo/v4"
@@ -14,10 +13,10 @@ type GetGroupMembershipsResponse struct {
 	Memberships []Membership `json:"memberships"`
 }
 
-func NewGetGroupMembershipsResponse(memberships *domain.Memberships, groupNames group.Names, userNames models.UserNames) GetUserMembershipsResponse {
-	responseMemberships := make([]Membership, len(memberships.Items))
-	for i, membership := range memberships.Items {
-		responseMemberships[i] = NewMembership(membership, groupNames, userNames)
+func NewGetGroupMembershipsResponse(memberships []*readmodels.MembershipReadModel) GetUserMembershipsResponse {
+	responseMemberships := make([]Membership, len(memberships))
+	for i, membership := range memberships {
+		responseMemberships[i] = NewMembership(membership)
 	}
 	return GetUserMembershipsResponse{
 		Memberships: responseMemberships,
@@ -55,27 +54,12 @@ func (h *Handler) GetGroupMemberships(c echo.Context) error {
 		return err
 	}
 
-	_, err = h.groupService.GetGroup(ctx, group.NewGetGroupRequest(groupKey))
+	m, err := h.getGroupMemberships.Get(ctx, groupKey, membershipStatus)
 	if err != nil {
 		return err
 	}
 
-	getGroupMemberships, err := h.groupService.GetGroupMemberships(ctx, group.NewGetMembershipsForGroupRequest(groupKey, membershipStatus))
-	if err != nil {
-		return err
-	}
-
-	userNames, err := h.getUserNamesForMemberships(ctx, getGroupMemberships.Memberships)
-	if err != nil {
-		return err
-	}
-
-	groupNames, err := h.getGroupNamesForMemberships(ctx, getGroupMemberships.Memberships)
-	if err != nil {
-		return err
-	}
-
-	response := NewGetGroupMembershipsResponse(getGroupMemberships.Memberships, groupNames, userNames)
+	response := NewGetGroupMembershipsResponse(m)
 	return c.JSON(http.StatusOK, response)
 
 }

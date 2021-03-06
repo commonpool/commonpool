@@ -7,12 +7,13 @@ import (
 
 func (g GroupService) GetGroupMemberships(ctx context.Context, request *group.GetMembershipsForGroupRequest) (*group.GetMembershipsForGroupResponse, error) {
 
-	memberships, err := g.groupStore.GetMembershipsForGroup(ctx, request.GroupKey, request.MembershipStatus)
+	m, err := g.getGroupMemberships.Get(ctx, request.GroupKey, request.MembershipStatus)
 	if err != nil {
 		return nil, err
 	}
 
 	return &group.GetMembershipsForGroupResponse{
-		Memberships: memberships,
+		Memberships: m,
 	}, nil
+
 }
