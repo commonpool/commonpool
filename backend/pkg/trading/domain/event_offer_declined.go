@@ -1,29 +1,26 @@
 package domain
 
 import (
+	"github.com/commonpool/backend/pkg/eventsource"
 	"github.com/commonpool/backend/pkg/keys"
 )
 
-type OfferDeclined struct {
-	Type       OfferEvent   `json:"type"`
+type OfferDeclinedPayload struct {
 	DeclinedBy keys.UserKey `json:"declined_by"`
-	Version    int          `json:"version"`
+}
+
+type OfferDeclined struct {
+	eventsource.EventEnvelope
+	OfferDeclinedPayload `json:"payload"`
 }
 
 func NewOfferDeclined(declinedBy keys.UserKey) *OfferDeclined {
 	return &OfferDeclined{
-		Type:       OfferDeclinedEvent,
-		DeclinedBy: declinedBy,
-		Version:    1,
+		eventsource.NewEventEnvelope(OfferDeclinedEvent, 1),
+		OfferDeclinedPayload{
+			declinedBy,
+		},
 	}
 }
 
-func (o *OfferDeclined) GetType() OfferEvent {
-	return o.Type
-}
-
-func (o *OfferDeclined) GetVersion() int {
-	return o.Version
-}
-
-var _ Event = &OfferDeclined{}
+var _ eventsource.Event = &OfferDeclined{}

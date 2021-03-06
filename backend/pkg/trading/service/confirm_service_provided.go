@@ -5,7 +5,6 @@ import (
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/pkg/keys"
-	"github.com/commonpool/backend/pkg/trading"
 )
 
 func (t TradingService) ConfirmServiceProvided(ctx context.Context, confirmedItemKey keys.OfferItemKey) error {
@@ -16,39 +15,44 @@ func (t TradingService) ConfirmServiceProvided(ctx context.Context, confirmedIte
 	}
 	loggedInUserKey := loggedInUser.GetUserKey()
 
-	offerItem, err := t.tradingStore.GetOfferItem(nil, confirmedItemKey)
+	offerKey, err := t.getOfferKeyFromOfferItemKey.Get(confirmedItemKey)
 	if err != nil {
 		return err
 	}
 
-	if !offerItem.IsServiceProviding() {
-		return exceptions.ErrWrongOfferItemType
-	}
-
-	serviceProvided := offerItem.(*trading.ProvideServiceItem)
-
-	receivingApprovers, err := t.tradingStore.FindReceivingApproversForOfferItem(offerItem.GetKey())
+	offer, err := t.offerRepo.Load(ctx, offerKey)
 	if err != nil {
 		return err
 	}
 
-	givingApprovers, err := t.tradingStore.FindGivingApproversForOfferItem(offerItem.GetKey())
+	receivingApprovers, err := t.tradingStore.FindReceivingApproversForOfferItem(confirmedItemKey)
+	if err != nil {
+		return err
+	}
+	givingApprovers, err := t.tradingStore.FindGivingApproversForOfferItem(confirmedItemKey)
 	if err != nil {
 		return err
 	}
 
-	if receivingApprovers.Contains(loggedInUserKey) {
-		serviceProvided.ServiceReceivedConfirmation = true
-	}
-	if givingApprovers.Contains(loggedInUserKey) {
-		serviceProvided.ServiceGivenConfirmation = true
+	isReceiver := receivingApprovers.Contains(loggedInUserKey)
+	isGiver := givingApprovers.Contains(loggedInUserKey)
+
+	if !isGiver && !isReceiver {
+		return exceptions.ErrForbidden
 	}
 
-	err = t.tradingStore.UpdateOfferItem(ctx, serviceProvided)
-	if err != nil {
-		return err
+	if isReceiver {
+		if err := offer.NotifyServiceReceived(loggedInUserKey, confirmedItemKey); err != nil {
+			return err
+		}
 	}
 
-	return t.checkIfAllItemsCompleted(ctx, loggedInUser, offerItem)
+	if isGiver {
+		if err := offer.NotifyServiceGiven(loggedInUserKey, confirmedItemKey); err != nil {
+			return err
+		}
+	}
+
+	return t.offerRepo.Save(ctx, offer)
 
 }

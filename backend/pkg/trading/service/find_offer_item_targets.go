@@ -2,19 +2,20 @@ package service
 
 import (
 	group2 "github.com/commonpool/backend/pkg/group"
+	"github.com/commonpool/backend/pkg/group/domain"
 	"github.com/commonpool/backend/pkg/keys"
-	"github.com/commonpool/backend/pkg/trading"
+	domain2 "github.com/commonpool/backend/pkg/trading/domain"
 	"golang.org/x/net/context"
 )
 
 func (t TradingService) FindTargetsForOfferItem(
 	ctx context.Context,
 	groupKey keys.GroupKey,
-	itemType trading.OfferItemType,
-	from *trading.Target,
-	to *trading.Target) (*trading.Targets, error) {
+	itemType domain2.OfferItemType,
+	from *domain2.Target,
+	to *domain2.Target) (*domain2.Targets, error) {
 
-	membershipStatus := group2.ApprovedMembershipStatus
+	membershipStatus := domain.ApprovedMembershipStatus
 	membershipsForGroup, err := t.groupService.GetGroupMemberships(ctx, &group2.GetMembershipsForGroupRequest{
 		GroupKey:         groupKey,
 		MembershipStatus: &membershipStatus,
@@ -30,20 +31,20 @@ func (t TradingService) FindTargetsForOfferItem(
 		return nil, err
 	}
 
-	var targets []*trading.Target
+	var targets []*domain2.Target
 
-	groupTarget := trading.NewGroupTarget(group.Group.Key)
+	groupTarget := domain2.NewGroupTarget(group.Group.Key)
 
 	if to == nil || !to.Equals(groupTarget) {
 		targets = append(targets, groupTarget)
 	}
 
 	for _, membership := range membershipsForGroup.Memberships.Items {
-		userTarget := trading.NewUserTarget(membership.GetUserKey())
+		userTarget := domain2.NewUserTarget(membership.GetUserKey())
 		if to == nil || !to.Equals(userTarget) {
 			targets = append(targets, userTarget)
 		}
 	}
 
-	return trading.NewTargets(targets), nil
+	return domain2.NewTargets(targets), nil
 }

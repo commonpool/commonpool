@@ -7,19 +7,24 @@ import (
 	"github.com/bsm/redislock"
 	_ "github.com/commonpool/backend/docs"
 	"github.com/commonpool/backend/pkg/auth"
+	authdomain "github.com/commonpool/backend/pkg/auth/domain"
 	authhandler "github.com/commonpool/backend/pkg/auth/handler"
+	"github.com/commonpool/backend/pkg/auth/store"
 	"github.com/commonpool/backend/pkg/chat"
 	chathandler "github.com/commonpool/backend/pkg/chat/handler"
 	chatservice "github.com/commonpool/backend/pkg/chat/service"
 	chatstore "github.com/commonpool/backend/pkg/chat/store"
 	"github.com/commonpool/backend/pkg/clusterlock"
+	"github.com/commonpool/backend/pkg/commands"
 	"github.com/commonpool/backend/pkg/config"
 	db2 "github.com/commonpool/backend/pkg/db"
 	"github.com/commonpool/backend/pkg/eventbus"
+	"github.com/commonpool/backend/pkg/eventsource"
 	postgres2 "github.com/commonpool/backend/pkg/eventstore/postgres"
 	"github.com/commonpool/backend/pkg/eventstore/publish"
 	"github.com/commonpool/backend/pkg/graph"
 	grouphandler "github.com/commonpool/backend/pkg/group/handler"
+	groupqueries "github.com/commonpool/backend/pkg/group/queries"
 	groupservice "github.com/commonpool/backend/pkg/group/service"
 	groupstore "github.com/commonpool/backend/pkg/group/store"
 	handler2 "github.com/commonpool/backend/pkg/handler"
@@ -34,6 +39,7 @@ import (
 	"github.com/commonpool/backend/pkg/trading"
 	tradinghandler "github.com/commonpool/backend/pkg/trading/handler"
 	"github.com/commonpool/backend/pkg/trading/listeners"
+	"github.com/commonpool/backend/pkg/trading/queries"
 	tradingservice "github.com/commonpool/backend/pkg/trading/service"
 	tradingstore "github.com/commonpool/backend/pkg/trading/store"
 	"github.com/commonpool/backend/pkg/transaction"
@@ -46,6 +52,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/labstack/echo/v4"
 	echoSwagger "github.com/swaggo/echo-swagger"
+	"golang.org/x/sync/errgroup"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"io/ioutil"
@@ -81,6 +88,8 @@ type Server struct {
 	TradingHandler     *tradinghandler.TradingHandler
 	RedisClient        *redis.Client
 	ClusterLocker      clusterlock.Locker
+	CommandMapper      *commands.CommandMapper
+	CommandBus         commands.CommandBus
 }
 
 func getEnv(key, defaultValue string) string {
@@ -94,6 +103,8 @@ func getEnv(key, defaultValue string) string {
 func NewServer() (*Server, error) {
 
 	ctx := context.Background()
+
+	g, ctx := errgroup.WithContext(ctx)
 
 	appConfig, err := config.GetAppConfig(os.LookupEnv, ioutil.ReadFile)
 	if err != nil {
@@ -139,8 +150,33 @@ func NewServer() (*Server, error) {
 	db := getDb(appConfig)
 	db2.AutoMigrate(db)
 
+	// events
+	eventMapper := eventsource.NewEventMapper()
+	if err := authdomain.RegisterEvents(eventMapper); err != nil {
+		panic(err)
+	}
+
 	eventPublisher := eventbus.NewAmqpPublisher(amqpCli)
-	eventStore := publish.NewPublishEventStore(postgres2.NewPostgresEventStore(db), eventPublisher)
+	eventStore := publish.NewPublishEventStore(postgres2.NewPostgresEventStore(db, eventMapper), eventPublisher)
+
+	// commands
+	commandMapper := commands.NewCommandMapper()
+	commandBus := commands.NewRabbitCommandBus(amqpCli, commandMapper)
+	authdomain.RegisterCommands(commandMapper)
+
+	userRepo := store.NewEventSourcedUserRepository(eventStore)
+	authCmdHandler := authdomain.NewUserCommandHandler(userRepo)
+
+	if err := commandBus.RegisterHandler(authCmdHandler); err != nil {
+		panic(err)
+	}
+
+	g.Go(func() error { return commandBus.Start(ctx) })
+
+	// queries
+	getOfferKeyForOfferItemKeyQry := queries.NewGetOfferKeyForOfferItemKey(db)
+	getGroupByKeys := groupqueries.NewGetGroupByKeys(db)
+	getGroup := groupqueries.NewGetGroupReadModel(db)
 
 	transactionStore := transactionstore.NewTransactionStore(db)
 	transactionService := transactionservice.NewTransactionService(transactionStore)
@@ -155,7 +191,8 @@ func NewServer() (*Server, error) {
 	chatService := chatservice.NewChatService(userStore, amqpCli, chatStore)
 
 	groupStore := groupstore.NewGroupStore(driver)
-	groupService := groupservice.NewGroupService(groupStore, amqpCli, chatService, userStore)
+	groupRepo := groupstore.NewEventSourcedGroupRepository(eventStore)
+	groupService := groupservice.NewGroupService(groupStore, amqpCli, chatService, userStore, groupRepo, getGroup, getGroupByKeys)
 
 	offerRepository := tradingstore.NewEventSourcedOfferRepository(eventStore)
 
@@ -167,7 +204,8 @@ func NewServer() (*Server, error) {
 		chatService,
 		groupService,
 		transactionService,
-		offerRepository)
+		offerRepository,
+		getOfferKeyForOfferItemKeyQry)
 
 	r := NewRouter()
 	r.HTTPErrorHandler = handler2.HttpErrorHandler
@@ -220,12 +258,16 @@ func NewServer() (*Server, error) {
 
 	handler := listeners.NewTransactionHistoryHandler(db, catchUpListenerFactory)
 	go func() {
-		handler.Start(ctx)
+		if err := handler.Start(ctx); err != nil {
+			panic(err)
+		}
 	}()
 
 	offerRm := listeners.NewOfferReadModelHandler(db, catchUpListenerFactory)
 	go func() {
-		offerRm.Start(ctx)
+		if err := offerRm.Start(ctx); err != nil {
+			panic(err)
+		}
 	}()
 
 	return &Server{
@@ -256,6 +298,8 @@ func NewServer() (*Server, error) {
 		Router:             r,
 		ClusterLocker:      clusterLocker,
 		RedisClient:        redisClient,
+		CommandBus:         commandBus,
+		CommandMapper:      commandMapper,
 	}, nil
 
 }

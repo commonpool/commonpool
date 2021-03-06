@@ -121,7 +121,7 @@ type ChatService struct {
 		CreateUserExchange []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
-			// UserKey is the userKey argument value.
+			// MemberKey is the userKey argument value.
 			UserKey keys.UserKey
 		}
 		// DeleteGroupChannel holds details about calls to the DeleteGroupChannel method.
@@ -169,7 +169,7 @@ type ChatService struct {
 		GetUserExchangeName []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
-			// UserKey is the userKey argument value.
+			// MemberKey is the userKey argument value.
 			UserKey keys.UserKey
 		}
 		// SendConversationMessage holds details about calls to the SendConversationMessage method.

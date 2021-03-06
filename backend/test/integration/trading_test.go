@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/commonpool/backend/pkg/keys"
+	"github.com/commonpool/backend/pkg/trading/domain"
 
 	"github.com/commonpool/backend/pkg/auth"
 	handler2 "github.com/commonpool/backend/pkg/resource/handler"
@@ -543,7 +544,6 @@ func TestCanGetTradingHistory(t *testing.T) {
 	assert.NoError(t, UsersAcceptOffer(t, ctx, offer2.Offer, []*auth.UserSession{user1, user2}))
 	assert.NoError(t, UsersConfirmResourceTransferred(t, ctx, offer2.Offer, []*auth.UserSession{user1, user2}))
 
-
 }
 
 //
@@ -598,7 +598,7 @@ func TestCanGetTradingHistory(t *testing.T) {
 func UsersConfirmResourceTransferred(t *testing.T, ctx context.Context, offer *handler.Offer, users []*auth.UserSession) error {
 	for _, offerItem := range offer.Items {
 
-		if offerItem.Type != trading.ResourceTransfer {
+		if offerItem.Type != domain.ResourceTransfer {
 			continue
 		}
 

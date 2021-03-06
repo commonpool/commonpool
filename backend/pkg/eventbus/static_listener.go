@@ -3,15 +3,15 @@ package eventbus
 import (
 	"context"
 	"fmt"
-	"github.com/commonpool/backend/pkg/eventstore"
+	"github.com/commonpool/backend/pkg/eventsource"
 )
 
 type StaticListener struct {
-	events      []*eventstore.StreamEvent
+	events      []eventsource.Event
 	initialized bool
 }
 
-func NewStaticListener(events []*eventstore.StreamEvent) *StaticListener {
+func NewStaticListener(events []eventsource.Event) *StaticListener {
 	return &StaticListener{
 		events: events,
 	}

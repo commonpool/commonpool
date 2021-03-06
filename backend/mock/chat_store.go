@@ -100,7 +100,7 @@ type ChatStore struct {
 		CreateSubscription []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
-			// Key is the key argument value.
+			// GroupKey is the key argument value.
 			Key keys.ChannelSubscriptionKey
 			// Name is the name argument value.
 			Name string
@@ -109,7 +109,7 @@ type ChatStore struct {
 		DeleteSubscription []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
-			// Key is the key argument value.
+			// GroupKey is the key argument value.
 			Key keys.ChannelSubscriptionKey
 		}
 		// GetChannel holds details about calls to the GetChannel method.

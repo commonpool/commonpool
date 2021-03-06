@@ -6,6 +6,7 @@ import (
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/trading"
+	"github.com/commonpool/backend/pkg/trading/domain"
 	"github.com/commonpool/backend/pkg/user"
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
@@ -17,15 +18,15 @@ func (t *tradingTestSuite) TestAcceptOffer() {
 	offerKey := keys.NewOfferKey(uuid.NewV4())
 	groupKey := keys.NewGroupKey(uuid.NewV4())
 	userKey := keys.NewUserKey("user")
-	userTarget := trading.NewUserTarget(userKey)
-	groupTarget := trading.NewGroupTarget(groupKey)
+	userTarget := domain.NewUserTarget(userKey)
+	groupTarget := domain.NewGroupTarget(groupKey)
 	offerItemKey := keys.NewOfferItemKey(uuid.NewV4())
 	offer := &trading.Offer{
 		Key:      offerKey,
 		GroupKey: groupKey,
 	}
-	offerItems := trading.NewOfferItems([]trading.OfferItem{
-		trading.NewCreditTransferItem(offerKey, offerItemKey, userTarget, groupTarget, time.Hour, trading.NewCreditTransferItemOptions{
+	offerItems := domain.NewOfferItems([]domain.OfferItem{
+		domain.NewCreditTransferItem(offerKey, offerItemKey, userTarget, groupTarget, time.Hour, domain.NewCreditTransferItemOptions{
 			GiverAccepted:    false,
 			ReceiverAccepted: false,
 		}),
@@ -50,7 +51,7 @@ func (t *tradingTestSuite) TestAcceptOffer() {
 
 	tradingStore := &mock.TradingStore{
 		GetOfferFunc: func(key keys.OfferKey) (*trading.Offer, error) { return offer, nil },
-		GetOfferItemsForOfferFunc: func(key keys.OfferKey) (*trading.OfferItems, error) {
+		GetOfferItemsForOfferFunc: func(key keys.OfferKey) (*domain.OfferItems, error) {
 			return offerItems, nil
 		},
 		FindApproversForOfferFunc: func(offerKey keys.OfferKey) (trading.Approvers, error) {

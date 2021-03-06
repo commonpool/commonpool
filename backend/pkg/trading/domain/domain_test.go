@@ -43,15 +43,9 @@ func TestSubmitOffer(t *testing.T) {
 	user1Key := keys.NewUserKey("user1")
 	user2Key := keys.NewUserKey("user2")
 
-	err := offer.Submit(groupKey, OfferItems{
-		Items: []OfferItem{
-			CreditTransferItem{
-				OfferItemKey: offerItemKey,
-				Amount:       time.Hour * 2,
-				From:         NewUserTarget(user1Key),
-				To:           NewUserTarget(user2Key),
-			}},
-	})
+	err := offer.Submit(user1Key, groupKey, NewOfferItems([]OfferItem{
+		NewCreditTransferItem(offer.key, offerItemKey, NewUserTarget(user1Key), NewUserTarget(user2Key), time.Hour*2),
+	}))
 
 	assert.NoError(t, err)
 	assert.Len(t, offer.changes, 1)
@@ -86,15 +80,9 @@ func TestCannotApprove(t *testing.T) {
 	user1Key := keys.NewUserKey("user1")
 	user2Key := keys.NewUserKey("user2")
 
-	err := offer.Submit(groupKey, OfferItems{
-		Items: []OfferItem{
-			CreditTransferItem{
-				OfferItemKey: offerItemKey,
-				Amount:       time.Hour * 2,
-				From:         NewUserTarget(user1Key),
-				To:           NewUserTarget(user2Key),
-			}},
-	})
+	err := offer.Submit(user1Key, groupKey, NewOfferItems([]OfferItem{
+		NewCreditTransferItem(offer.key, offerItemKey, NewUserTarget(user1Key), NewUserTarget(user2Key), time.Hour*2),
+	}))
 
 	assert.NoError(t, err)
 	assert.Len(t, offer.changes, 1)
@@ -114,15 +102,9 @@ func TestApproveTwiceIdempotent(t *testing.T) {
 	user1Key := keys.NewUserKey("user1")
 	user2Key := keys.NewUserKey("user2")
 
-	err := offer.Submit(groupKey, OfferItems{
-		Items: []OfferItem{
-			CreditTransferItem{
-				OfferItemKey: offerItemKey,
-				Amount:       time.Hour * 2,
-				From:         NewUserTarget(user1Key),
-				To:           NewUserTarget(user2Key),
-			}},
-	})
+	err := offer.Submit(user1Key, groupKey, NewOfferItems([]OfferItem{
+		NewCreditTransferItem(offer.key, offerItemKey, NewUserTarget(user1Key), NewUserTarget(user2Key), time.Hour*2),
+	}))
 
 	assert.NoError(t, err)
 	assert.Len(t, offer.changes, 1)
@@ -146,15 +128,9 @@ func TestApproveDeclinedOfferShouldThrow(t *testing.T) {
 	user1Key := keys.NewUserKey("user1")
 	user2Key := keys.NewUserKey("user2")
 
-	err := offer.Submit(groupKey, OfferItems{
-		Items: []OfferItem{
-			CreditTransferItem{
-				OfferItemKey: offerItemKey,
-				Amount:       time.Hour * 2,
-				From:         NewUserTarget(user1Key),
-				To:           NewUserTarget(user2Key),
-			}},
-	})
+	err := offer.Submit(user1Key, groupKey, NewOfferItems([]OfferItem{
+		NewCreditTransferItem(offer.key, offerItemKey, NewUserTarget(user1Key), NewUserTarget(user2Key), time.Hour*2),
+	}))
 
 	err = offer.DeclineOffer(user1Key)
 	assert.NoError(t, err)
@@ -192,28 +168,16 @@ func TestSubmitTwiceShouldThrow(t *testing.T) {
 	user1Key := keys.NewUserKey("user1")
 	user2Key := keys.NewUserKey("user2")
 
-	err := offer.Submit(groupKey, OfferItems{
-		Items: []OfferItem{
-			CreditTransferItem{
-				OfferItemKey: offerItemKey,
-				Amount:       time.Hour * 2,
-				From:         NewUserTarget(user1Key),
-				To:           NewUserTarget(user2Key),
-			}},
-	})
+	err := offer.Submit(user1Key, groupKey, NewOfferItems([]OfferItem{
+		NewCreditTransferItem(offer.key, offerItemKey, NewUserTarget(user1Key), NewUserTarget(user2Key), time.Hour*2),
+	}))
 
 	assert.NoError(t, err)
 	assert.Len(t, offer.changes, 1)
 
-	err = offer.Submit(groupKey, OfferItems{
-		Items: []OfferItem{
-			CreditTransferItem{
-				OfferItemKey: offerItemKey,
-				Amount:       time.Hour * 2,
-				From:         NewUserTarget(user1Key),
-				To:           NewUserTarget(user2Key),
-			}},
-	})
+	err = offer.Submit(user1Key, groupKey, NewOfferItems([]OfferItem{
+		NewCreditTransferItem(offer.key, offerItemKey, NewUserTarget(user1Key), NewUserTarget(user2Key), time.Hour*2),
+	}))
 
 	assertError(t, "cannot submit offer: offer has already been submitted", err)
 	assert.Len(t, offer.changes, 1)
@@ -229,18 +193,11 @@ func TestReceiveServiceCompletesOffer(t *testing.T) {
 	resourceKey := keys.NewResourceKey(uuid.NewV4())
 
 	user1Key := keys.NewUserKey("user1")
-	user2Key := keys.NewUserKey("user2")
 
-	err := offer.Submit(groupKey, OfferItems{
-		Items: []OfferItem{
-			&ServiceOfferItem{
-				OfferItemKey: offerItemKey,
-				Duration:     2 * time.Hour,
-				From:         NewUserTarget(user1Key),
-				To:           NewUserTarget(user2Key),
-				ResourceKey:  resourceKey,
-			}},
-	})
+	err := offer.Submit(user1Key, groupKey, NewOfferItems([]OfferItem{
+		NewProvideServiceItem(offer.key, offerItemKey, NewUserTarget(user1Key), resourceKey, time.Hour*2),
+	}))
+
 	assert.NoError(t, err)
 	changeCount = assertChangeCount(t, offer, changeCount+1)
 
@@ -269,18 +226,11 @@ func TestGiveServiceCompletesOffer(t *testing.T) {
 	resourceKey := keys.NewResourceKey(uuid.NewV4())
 
 	user1Key := keys.NewUserKey("user1")
-	user2Key := keys.NewUserKey("user2")
 
-	err := offer.Submit(groupKey, OfferItems{
-		Items: []OfferItem{
-			&ServiceOfferItem{
-				OfferItemKey: offerItemKey,
-				Duration:     2 * time.Hour,
-				From:         NewUserTarget(user1Key),
-				To:           NewUserTarget(user2Key),
-				ResourceKey:  resourceKey,
-			}},
-	})
+	err := offer.Submit(user1Key, groupKey, NewOfferItems([]OfferItem{
+		NewProvideServiceItem(offer.key, offerItemKey, NewUserTarget(user1Key), resourceKey, time.Hour*2),
+	}))
+
 	assert.NoError(t, err)
 	changeCount = assertChangeCount(t, offer, changeCount+1)
 
@@ -309,16 +259,11 @@ func TestReceiveResourceCompletesOffer(t *testing.T) {
 	resourceKey := keys.NewResourceKey(uuid.NewV4())
 
 	user1Key := keys.NewUserKey("user1")
-	user2Key := keys.NewUserKey("user2")
 
-	err := offer.Submit(groupKey, OfferItems{
-		Items: []OfferItem{
-			&ResourceTransferItem{
-				OfferItemKey: offerItemKey,
-				To:           NewUserTarget(user2Key),
-				ResourceKey:  resourceKey,
-			}},
-	})
+	err := offer.Submit(user1Key, groupKey, NewOfferItems([]OfferItem{
+		NewResourceTransferItem(offer.key, offerItemKey, NewUserTarget(user1Key), resourceKey),
+	}))
+
 	assert.NoError(t, err)
 	changeCount = assertChangeCount(t, offer, changeCount+1)
 
@@ -349,16 +294,11 @@ func TestGiveResourceCompletesOffer(t *testing.T) {
 	resourceKey := keys.NewResourceKey(uuid.NewV4())
 
 	user1Key := keys.NewUserKey("user1")
-	user2Key := keys.NewUserKey("user2")
 
-	err := offer.Submit(groupKey, OfferItems{
-		Items: []OfferItem{
-			&ResourceTransferItem{
-				OfferItemKey: offerItemKey,
-				To:           NewUserTarget(user2Key),
-				ResourceKey:  resourceKey,
-			}},
-	})
+	err := offer.Submit(user1Key, groupKey, NewOfferItems([]OfferItem{
+		NewResourceTransferItem(offer.key, offerItemKey, NewUserTarget(user1Key), resourceKey),
+	}))
+
 	assert.NoError(t, err)
 	changeCount = assertChangeCount(t, offer, changeCount+1)
 
@@ -389,17 +329,11 @@ func TestBorrowItem(t *testing.T) {
 	resourceKey := keys.NewResourceKey(uuid.NewV4())
 
 	user1Key := keys.NewUserKey("user1")
-	user2Key := keys.NewUserKey("user2")
 
-	err := offer.Submit(groupKey, OfferItems{
-		Items: []OfferItem{
-			&ResourceBorrowItem{
-				OfferItemKey: offerItemKey,
-				To:           NewUserTarget(user2Key),
-				ResourceKey:  resourceKey,
-				Duration:     2 * time.Hour,
-			}},
-	})
+	err := offer.Submit(user1Key, groupKey, NewOfferItems([]OfferItem{
+		NewBorrowResourceItem(offer.key, offerItemKey, resourceKey, NewUserTarget(user1Key), time.Hour*2),
+	}))
+
 	assert.NoError(t, err)
 	changeCount = assertChangeCount(t, offer, changeCount+1)
 
@@ -437,17 +371,11 @@ func TestCannotReturnItemBeforeBorrowingIt(t *testing.T) {
 	offerItemKey := keys.NewOfferItemKey(uuid.NewV4())
 	resourceKey := keys.NewResourceKey(uuid.NewV4())
 	user1Key := keys.NewUserKey("user1")
-	user2Key := keys.NewUserKey("user2")
 
-	err := offer.Submit(groupKey, OfferItems{
-		Items: []OfferItem{
-			&ResourceBorrowItem{
-				OfferItemKey: offerItemKey,
-				To:           NewUserTarget(user2Key),
-				ResourceKey:  resourceKey,
-				Duration:     2 * time.Hour,
-			}},
-	})
+	err := offer.Submit(user1Key, groupKey, NewOfferItems([]OfferItem{
+		NewBorrowResourceItem(offer.key, offerItemKey, resourceKey, NewUserTarget(user1Key), time.Hour*2),
+	}))
+
 	assert.NoError(t, err)
 	changeCount = assertChangeCount(t, offer, changeCount+1)
 
@@ -474,17 +402,11 @@ func TestCannotReceiveItemBeforeBorrowingIt(t *testing.T) {
 	resourceKey := keys.NewResourceKey(uuid.NewV4())
 
 	user1Key := keys.NewUserKey("user1")
-	user2Key := keys.NewUserKey("user2")
 
-	err := offer.Submit(groupKey, OfferItems{
-		Items: []OfferItem{
-			&ResourceBorrowItem{
-				OfferItemKey: offerItemKey,
-				To:           NewUserTarget(user2Key),
-				ResourceKey:  resourceKey,
-				Duration:     2 * time.Hour,
-			}},
-	})
+	err := offer.Submit(user1Key, groupKey, NewOfferItems([]OfferItem{
+		NewBorrowResourceItem(offer.key, offerItemKey, resourceKey, NewUserTarget(user1Key), time.Hour*2),
+	}))
+
 	assert.NoError(t, err)
 	changeCount = assertChangeCount(t, offer, changeCount+1)
 
@@ -509,19 +431,13 @@ func TestFromEvents(t *testing.T) {
 	offerItemKey := keys.NewOfferItemKey(uuid.NewV4())
 	resourceKey := keys.NewResourceKey(uuid.NewV4())
 	user1Key := keys.NewUserKey("user1")
-	user2Key := keys.NewUserKey("user2")
 
-	assert.NoError(t, offer.Submit(groupKey, OfferItems{
-		Items: []OfferItem{
-			&ResourceBorrowItem{
-				OfferItemKey: offerItemKey,
-				To:           NewUserTarget(user2Key),
-				ResourceKey:  resourceKey,
-				Duration:     2 * time.Hour,
-			}},
+	err := offer.Submit(user1Key, groupKey, NewOfferItems([]OfferItem{
+		NewBorrowResourceItem(offer.key, offerItemKey, resourceKey, NewUserTarget(user1Key), time.Hour*2),
 	}))
-	assert.NoError(t, offer.ApproveOfferItem(user1Key, offerItemKey, Inbound, approveAllMatrix))
+	assert.NoError(t, err)
 
+	assert.NoError(t, offer.ApproveOfferItem(user1Key, offerItemKey, Inbound, approveAllMatrix))
 	assert.NoError(t, offer.ApproveOfferItem(user1Key, offerItemKey, Outbound, approveAllMatrix))
 
 	assert.NoError(t, offer.NotifyResourceBorrowed(user1Key, offerItemKey))

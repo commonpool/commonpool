@@ -2,28 +2,22 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/pkg/keys"
-	"github.com/commonpool/backend/pkg/trading"
 )
 
 func (t TradingService) DeclineOffer(ctx context.Context, offerKey keys.OfferKey) error {
 
-	user, err := auth.GetLoggedInUser(ctx)
+	loggedInUser, err := auth.GetLoggedInUser(ctx)
 	if err != nil {
 		return err
 	}
-	loggedInUserKey := user.GetUserKey()
+	loggedInUserKey := loggedInUser.GetUserKey()
 
-	offer, err := t.tradingStore.GetOffer(offerKey)
+	domainOffer, err := t.offerRepo.Load(ctx, offerKey)
 	if err != nil {
 		return err
-	}
-
-	if offer.Status != trading.PendingOffer {
-		return fmt.Errorf("could not decline a offer that is not pending")
 	}
 
 	approvers, err := t.tradingStore.FindApproversForOffer(offerKey)
@@ -31,12 +25,15 @@ func (t TradingService) DeclineOffer(ctx context.Context, offerKey keys.OfferKey
 		return err
 	}
 
-	if !approvers.HasAnyOfferItemsToApprove(loggedInUserKey) {
+	if !approvers.AllUserKeys().Contains(loggedInUserKey) {
 		return exceptions.ErrForbidden
 	}
 
-	err = t.tradingStore.UpdateOfferStatus(offerKey, trading.DeclinedOffer)
-	if err != nil {
+	if err = domainOffer.DeclineOffer(loggedInUserKey); err != nil {
+		return err
+	}
+
+	if err := t.offerRepo.Save(ctx, domainOffer); err != nil {
 		return err
 	}
 

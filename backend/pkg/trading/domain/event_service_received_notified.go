@@ -1,29 +1,28 @@
 package domain
 
-import "github.com/commonpool/backend/pkg/keys"
+import (
+	"github.com/commonpool/backend/pkg/eventsource"
+	"github.com/commonpool/backend/pkg/keys"
+)
 
-type ServiceReceivedNotified struct {
-	Type         OfferEvent        `json:"type"`
+type ServiceReceivedNotifiedPayload struct {
 	NotifiedBy   keys.UserKey      `json:"notified_by"`
 	OfferItemKey keys.OfferItemKey `json:"offer_item_key"`
-	Version      int               `json:"version"`
+}
+
+type ServiceReceivedNotified struct {
+	eventsource.EventEnvelope
+	ServiceReceivedNotifiedPayload `json:"payload"`
 }
 
 func NewServiceReceivedNotified(notifiedBy keys.UserKey, serviceOfferItemKey keys.OfferItemKey) *ServiceReceivedNotified {
 	return &ServiceReceivedNotified{
-		Type:         ServiceReceivedNotifiedEvent,
-		NotifiedBy:   notifiedBy,
-		OfferItemKey: serviceOfferItemKey,
-		Version:      1,
+		eventsource.NewEventEnvelope(ServiceReceivedNotifiedEvent, 1),
+		ServiceReceivedNotifiedPayload{
+			notifiedBy,
+			serviceOfferItemKey,
+		},
 	}
 }
 
-func (o *ServiceReceivedNotified) GetType() OfferEvent {
-	return o.Type
-}
-
-func (o *ServiceReceivedNotified) GetVersion() int {
-	return o.Version
-}
-
-var _ Event = &ServiceReceivedNotified{}
+var _ eventsource.Event = &ServiceReceivedNotified{}

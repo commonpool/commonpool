@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"github.com/commonpool/backend/pkg/config"
 	"github.com/commonpool/backend/pkg/eventstore"
+	"github.com/commonpool/backend/pkg/test"
 	"github.com/go-redis/redis/v8"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
@@ -52,7 +53,7 @@ func TestRedisDeduplicator(t *testing.T) {
 	d := NewRedisDeduplicator(10, redisClient, key)
 
 	var calls []*eventstore.StreamEvent
-	if !assert.NoError(t, d.Deduplicate(context.TODO(), evts(
+	if !assert.NoError(t, d.Deduplicate(context.TODO(), test.NewMockEvents(
 		evt("t1", "1"),
 		evt("t1", "2"),
 		evt("t1", "1"),
@@ -71,7 +72,7 @@ func TestRedisDeduplicator(t *testing.T) {
 
 	calls = []*eventstore.StreamEvent{}
 
-	if !assert.NoError(t, d.Deduplicate(context.TODO(), evts(
+	if !assert.NoError(t, d.Deduplicate(context.TODO(), test.NewMockEvents(
 		evt("t1", "1"),
 		evt("t1", "2"),
 		evt("t1", "1"),

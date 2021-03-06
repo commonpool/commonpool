@@ -122,7 +122,7 @@ type AmqpChannel struct {
 			Ctx context.Context
 			// Destination is the destination argument value.
 			Destination string
-			// Key is the key argument value.
+			// GroupKey is the key argument value.
 			Key string
 			// Source is the source argument value.
 			Source string
@@ -167,7 +167,7 @@ type AmqpChannel struct {
 			Ctx context.Context
 			// Destination is the destination argument value.
 			Destination string
-			// Key is the key argument value.
+			// GroupKey is the key argument value.
 			Key string
 			// Source is the source argument value.
 			Source string
@@ -182,7 +182,7 @@ type AmqpChannel struct {
 			Ctx context.Context
 			// Exchange is the exchange argument value.
 			Exchange string
-			// Key is the key argument value.
+			// GroupKey is the key argument value.
 			Key string
 			// Mandatory is the mandatory argument value.
 			Mandatory bool
@@ -197,7 +197,7 @@ type AmqpChannel struct {
 			Ctx context.Context
 			// Name is the name argument value.
 			Name string
-			// Key is the key argument value.
+			// GroupKey is the key argument value.
 			Key string
 			// Exchange is the exchange argument value.
 			Exchange string
@@ -242,7 +242,7 @@ type AmqpChannel struct {
 			Ctx context.Context
 			// Name is the name argument value.
 			Name string
-			// Key is the key argument value.
+			// GroupKey is the key argument value.
 			Key string
 			// Exchange is the exchange argument value.
 			Exchange string

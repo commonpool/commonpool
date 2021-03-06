@@ -3,15 +3,16 @@ package eventbus
 import (
 	"context"
 	"github.com/commonpool/backend/pkg/eventstore"
+	"github.com/commonpool/backend/pkg/test"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestSequenceListener(t *testing.T) {
 
-	l1 := NewStaticListener(evts(evt("typ1", "1")))
-	l2 := NewStaticListener(evts(evt("typ1", "2")))
-	l3 := NewStaticListener(evts(evt("typ1", "3"), evt("typ1", "4")))
+	l1 := NewStaticListener(test.NewMockEvents(evt("typ1", "1")))
+	l2 := NewStaticListener(test.NewMockEvents(evt("typ1", "2")))
+	l3 := NewStaticListener(test.NewMockEvents(evt("typ1", "3"), evt("typ1", "4")))
 
 	l := NewSequenceListener([]Listener{l1, l2, l3})
 

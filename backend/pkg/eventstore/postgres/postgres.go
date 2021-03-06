@@ -3,7 +3,9 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"github.com/commonpool/backend/pkg/eventsource"
 	"github.com/commonpool/backend/pkg/eventstore"
 	"github.com/satori/go.uuid"
 	"gorm.io/gorm"
@@ -11,18 +13,24 @@ import (
 )
 
 type PostgresEventStore struct {
-	db *gorm.DB
+	db          *gorm.DB
+	eventMapper *eventsource.EventMapper
 }
 
-func NewPostgresEventStore(db *gorm.DB) *PostgresEventStore {
+func NewPostgresEventStore(db *gorm.DB, eventMapper *eventsource.EventMapper) *PostgresEventStore {
 	return &PostgresEventStore{
-		db: db,
+		db:          db,
+		eventMapper: eventMapper,
 	}
 }
 
 var _ eventstore.EventStore = &PostgresEventStore{}
 
-func (p PostgresEventStore) Load(ctx context.Context, streamKey eventstore.StreamKey) ([]*eventstore.StreamEvent, error) {
+func (p *PostgresEventStore) MigrateDatabase() error {
+	return p.db.AutoMigrate(&eventstore.StreamEvent{}, &eventstore.Stream{})
+}
+
+func (p PostgresEventStore) Load(ctx context.Context, streamKey eventstore.StreamKey) ([]eventsource.Event, error) {
 	var events []*eventstore.StreamEvent
 	if err := p.db.
 		Where("stream_type = ? AND stream_id = ?", streamKey.StreamType, streamKey.StreamID).
@@ -30,10 +38,78 @@ func (p PostgresEventStore) Load(ctx context.Context, streamKey eventstore.Strea
 		Find(&events).Error; err != nil {
 		return nil, err
 	}
-	return events, nil
+
+	mappedEvents, err := p.mapEvents(events)
+	if err != nil {
+		return nil, err
+	}
+
+	return mappedEvents, nil
 }
 
-func (p PostgresEventStore) Save(ctx context.Context, streamKey eventstore.StreamKey, expectedRevision int, events []*eventstore.StreamEvent) error {
+func (p PostgresEventStore) mapEvents(events []*eventstore.StreamEvent) ([]eventsource.Event, error) {
+	var mappedEvents = make([]eventsource.Event, len(events))
+	for i, event := range events {
+		mappedEvent, err := p.eventMapper.Map(event.EventType, []byte(event.Body))
+		if err != nil {
+			return nil, err
+		}
+		mappedEvents[i] = mappedEvent
+	}
+	return mappedEvents, nil
+}
+
+func eventStringValueOrDefault(defaultValue string, key string, tempStruct map[string]interface{}) string {
+	var value = defaultValue
+	tempValue, ok := tempStruct[key]
+	if !ok {
+		tempStruct[key] = value
+	} else {
+		valueStr, ok := tempValue.(string)
+		if !ok {
+			tempStruct[key] = value
+		} else if valueStr == "" {
+			tempStruct[key] = value
+		} else {
+			value = valueStr
+		}
+	}
+	return value
+}
+
+func eventTimeValueOrDefault(defaultValue time.Time, key string, tempStruct map[string]interface{}) time.Time {
+	var value = defaultValue
+	tempValue, ok := tempStruct[key]
+	if !ok {
+		tempStruct[key] = value
+	} else {
+		valueStr, ok := tempValue.(string)
+		if !ok {
+			tempStruct[key] = value
+			return value
+		}
+
+		valueTime, err := time.Parse(time.RFC3339Nano, valueStr)
+		if err != nil {
+			tempStruct[key] = value
+			return value
+		}
+
+		if (valueTime == time.Time{}) {
+			tempStruct[key] = value
+			return value
+		}
+
+		if valueTime != valueTime.UTC() {
+			tempStruct[key] = valueTime.UTC()
+			return valueTime.UTC()
+		}
+
+	}
+	return value
+}
+
+func (p PostgresEventStore) Save(ctx context.Context, streamKey eventstore.StreamKey, expectedRevision int, events []eventsource.Event) error {
 
 	return p.db.Transaction(func(tx *gorm.DB) error {
 
@@ -67,25 +143,54 @@ func (p PostgresEventStore) Save(ctx context.Context, streamKey eventstore.Strea
 			return fmt.Errorf("could not save events: version mismatch: expected version %d but was %d", expectedRevision, stream.LatestVersion)
 		}
 
+		var streamEvents = make([]*eventstore.StreamEvent, len(events))
+
 		for i, event := range events {
-			event.SequenceNo = expectedRevision + i
-			if event.CorrelationID == "" {
-				event.CorrelationID = correlationID
+
+			evtJson, err := json.Marshal(event)
+			if err != nil {
+				return err
 			}
-			if (event.EventTime == time.Time{}) {
-				event.EventTime = now
-			} else {
-				event.EventTime = event.EventTime.UTC()
+
+			var tempStruct map[string]interface{}
+			err = json.Unmarshal(evtJson, &tempStruct)
+			if err != nil {
+				return err
 			}
-			if event.StreamKey() != streamKey {
+
+			evtCorrelationId := eventStringValueOrDefault(correlationID, "correlation_id", tempStruct)
+			evtAggregateType := eventStringValueOrDefault(streamKey.StreamType, "aggregate_type", tempStruct)
+			evtAggregateId := eventStringValueOrDefault(streamKey.StreamID, "aggregate_id", tempStruct)
+			evtEventId := eventStringValueOrDefault(uuid.NewV4().String(), "event_id", tempStruct)
+			evtTime := eventTimeValueOrDefault(now, "event_time", tempStruct)
+			evtRevision := expectedRevision + i
+			tempStruct["sequence_no"] = evtRevision
+
+			eventBody, err := json.Marshal(tempStruct)
+			if err != nil {
+				return err
+			}
+
+			streamEvent := &eventstore.StreamEvent{
+				SequenceNo:    evtRevision,
+				EventTime:     evtTime,
+				CorrelationID: evtCorrelationId,
+				StreamID:      evtAggregateId,
+				StreamType:    evtAggregateType,
+				EventID:       evtEventId,
+				EventType:     event.GetEventType(),
+				EventVersion:  event.GetEventVersion(),
+				Body:          string(eventBody),
+			}
+
+			if streamEvent.StreamKey() != streamKey {
 				return fmt.Errorf("event streamKey != streamKey")
 			}
-			if event.EventID == "" {
-				event.EventID = uuid.NewV4().String()
-			}
+
+			streamEvents[i] = streamEvent
 		}
 
-		if err := tx.Create(events).Error; err != nil {
+		if err := tx.Create(streamEvents).Error; err != nil {
 			return fmt.Errorf("could not save events: %v", err)
 		}
 
@@ -105,7 +210,7 @@ func (p PostgresEventStore) ReplayEventsByType(
 	ctx context.Context,
 	eventTypes []string,
 	timestamp time.Time,
-	replayFunc func(events []*eventstore.StreamEvent) error,
+	replayFunc func(events []eventsource.Event) error,
 	options ...eventstore.ReplayEventsByTypeOptions) error {
 
 	var streamEvents []*eventstore.StreamEvent
@@ -146,7 +251,12 @@ func (p PostgresEventStore) ReplayEventsByType(
 		resultSize := len(streamEvents)
 
 		if resultSize > 0 {
-			if err := replayFunc(streamEvents); err != nil {
+
+			evts, err := p.mapEvents(streamEvents)
+			if err != nil {
+				return err
+			}
+			if err := replayFunc(evts); err != nil {
 				return err
 			}
 		}

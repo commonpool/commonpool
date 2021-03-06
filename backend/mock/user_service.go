@@ -67,12 +67,12 @@ type UserService struct {
 		}
 		// GetUser holds details about calls to the GetUser method.
 		GetUser []struct {
-			// UserKey is the userKey argument value.
+			// MemberKey is the userKey argument value.
 			UserKey keys.UserKey
 		}
 		// GetUsername holds details about calls to the GetUsername method.
 		GetUsername []struct {
-			// UserKey is the userKey argument value.
+			// MemberKey is the userKey argument value.
 			UserKey keys.UserKey
 		}
 	}

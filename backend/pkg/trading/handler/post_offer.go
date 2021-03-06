@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/keys"
-	"github.com/commonpool/backend/pkg/trading"
+	"github.com/commonpool/backend/pkg/trading/domain"
 	"github.com/labstack/echo/v4"
 	"github.com/satori/go.uuid"
 	"go.uber.org/zap"
@@ -22,12 +22,12 @@ type SendOfferPayload struct {
 }
 
 type SendOfferPayloadItem struct {
-	Type       trading.OfferItemType `json:"type"`
-	To         OfferItemTarget       `json:"to" validate:"required,uuid"`
-	From       *OfferItemTarget      `json:"from" validate:"required,uuid"`
-	ResourceId *string               `json:"resourceId" validate:"required,uuid"`
-	Duration   *string               `json:"duration"`
-	Amount     *string               `json:"amount"`
+	Type       domain.OfferItemType `json:"type"`
+	To         OfferItemTarget      `json:"to" validate:"required,uuid"`
+	From       *OfferItemTarget     `json:"from" validate:"required,uuid"`
+	ResourceId *string              `json:"resourceId" validate:"required,uuid"`
+	Duration   *string              `json:"duration"`
+	Amount     *string              `json:"amount"`
 }
 
 func (h *TradingHandler) HandleSendOffer(c echo.Context) error {
@@ -48,7 +48,7 @@ func (h *TradingHandler) HandleSendOffer(c echo.Context) error {
 	}
 
 	l.Debug("mapping offer items")
-	var tradingOfferItems []trading.OfferItem
+	var tradingOfferItems []domain.OfferItem
 	for i, tradingOfferItem := range req.Offer.Items {
 
 		l.Debug("generating new key for offerItem")
@@ -71,7 +71,7 @@ func (h *TradingHandler) HandleSendOffer(c echo.Context) error {
 	}
 
 	l.Debug("sending offer")
-	offer, offerItems, err := h.tradingService.SendOffer(ctx, groupKey, trading.NewOfferItems(tradingOfferItems), "")
+	offer, offerItems, err := h.tradingService.SendOffer(ctx, groupKey, domain.NewOfferItems(tradingOfferItems), "")
 	if err != nil {
 		return err
 	}

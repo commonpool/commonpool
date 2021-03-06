@@ -2,6 +2,7 @@ package eventstore
 
 import (
 	"context"
+	"github.com/commonpool/backend/pkg/eventsource"
 	"time"
 )
 
@@ -10,9 +11,9 @@ type ReplayEventsByTypeOptions struct {
 }
 
 type EventStore interface {
-	Load(ctx context.Context, streamKey StreamKey) ([]*StreamEvent, error)
-	Save(ctx context.Context, streamKey StreamKey, expectedRevision int, events []*StreamEvent) error
-	ReplayEventsByType(ctx context.Context, eventTypes []string, timestamp time.Time, replayFunc func(events []*StreamEvent) error, options ...ReplayEventsByTypeOptions) error
+	Load(ctx context.Context, streamKey StreamKey) ([]eventsource.Event, error)
+	Save(ctx context.Context, streamKey StreamKey, expectedRevision int, events []eventsource.Event) error
+	ReplayEventsByType(ctx context.Context, eventTypes []string, timestamp time.Time, replayFunc func(events []eventsource.Event) error, options ...ReplayEventsByTypeOptions) error
 }
 
 type StreamEventKey struct {
@@ -31,12 +32,12 @@ type StreamEvent struct {
 	SequenceNo    int       `gorm:"index:idx_stream_event,sort:asc,priority:3;not null;primaryKey;check:sequence_no >= 0"`
 	EventTime     time.Time `gorm:"not null"`
 	CorrelationID string    `gorm:"not null;type:varchar(128)"`
-	Payload       string    `gorm:"not null;type:jsonb"`
 	StreamID      string    `gorm:"index:idx_stream_event,priority:1;not null;type:varchar(128);primaryKey"`
 	StreamType    string    `gorm:"index:idx_stream_event,priority:2;not null;type:varchar(128);primaryKey"`
 	EventID       string    `gorm:"not null;type:varchar(128);primaryKey"`
 	EventType     string    `gorm:"not null;type:varchar(128)"`
 	EventVersion  int       `gorm:"not null"`
+	Body          string    `gorm:"not null;type:jsonb"`
 }
 
 func (s *StreamEvent) StreamKey() StreamKey {
@@ -63,7 +64,7 @@ func NewStreamEvent(streamKey StreamKey, streamEventKey StreamEventKey, payload 
 	streamEvent := &StreamEvent{
 		EventID:      streamEventKey.EventID,
 		EventType:    streamEventKey.EventType,
-		Payload:      payload,
+		Body:         payload,
 		StreamID:     streamKey.StreamID,
 		StreamType:   streamKey.StreamType,
 		EventVersion: 1,

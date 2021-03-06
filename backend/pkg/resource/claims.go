@@ -2,7 +2,7 @@ package resource
 
 import (
 	"github.com/commonpool/backend/pkg/keys"
-	"github.com/commonpool/backend/pkg/trading"
+	"github.com/commonpool/backend/pkg/trading/domain"
 )
 
 type Claims struct {
@@ -47,7 +47,7 @@ func (c *Claims) GroupHasClaim(groupKey keys.GroupKey, resourceKey keys.Resource
 	return false
 }
 
-func (c *Claims) HasClaim(target *trading.Target, resourceKey keys.ResourceKey, claimType ClaimType) bool {
+func (c *Claims) HasClaim(target *domain.Target, resourceKey keys.ResourceKey, claimType ClaimType) bool {
 	for _, claim := range c.Items {
 		if claim.ClaimType == claimType &&
 			claim.ResourceKey == resourceKey &&

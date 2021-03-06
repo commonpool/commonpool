@@ -3,7 +3,9 @@ package postgres
 import (
 	"context"
 	"github.com/commonpool/backend/pkg/db"
+	"github.com/commonpool/backend/pkg/eventsource"
 	"github.com/commonpool/backend/pkg/eventstore"
+	"github.com/commonpool/backend/pkg/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"gorm.io/gorm"
@@ -23,8 +25,13 @@ func (s *EventStoreSuite) SetupSuite() {
 	if err := s.testDB.AutoMigrate(&eventstore.StreamEvent{}, &eventstore.Stream{}); err != nil {
 		s.T().FailNow()
 	}
+	eventMapper := eventsource.NewEventMapper()
+	if err := test.RegisterMockEvents(eventMapper); err != nil {
+		s.FailNow(err.Error())
+	}
 	s.eventStore = &PostgresEventStore{
-		db: s.testDB,
+		db:          s.testDB,
+		eventMapper: eventMapper,
 	}
 	s.ctx = context.Background()
 }
@@ -41,7 +48,7 @@ func (s *EventStoreSuite) SetupTest() {
 }
 
 func (s *EventStoreSuite) TestLoadEventsFromEmptyEventStore() {
-	streamKey := eventstore.NewStreamKey("stream", "id1")
+	streamKey := eventstore.NewStreamKey("mock", "mock-id")
 	events, err := s.eventStore.Load(s.ctx, streamKey)
 	assert.NoError(s.T(), err)
 	assert.Empty(s.T(), events)
@@ -49,12 +56,16 @@ func (s *EventStoreSuite) TestLoadEventsFromEmptyEventStore() {
 
 func (s *EventStoreSuite) TestSaveEventsShouldStoreEvents() {
 
-	streamKey := eventstore.NewStreamKey("stream", "id1")
+	streamKey := eventstore.NewStreamKey("mock", "mock-id")
 
-	evt1 := eventstore.NewStreamEvent(streamKey, eventstore.NewStreamEventKey("event_type", "evt-1"), "payload")
-	evt2 := eventstore.NewStreamEvent(streamKey, eventstore.NewStreamEventKey("event_type", "evt-2"), "payload")
+	evt1 := test.NewMockEvent("1")
+	evt2 := test.NewMockEvent("2")
+	events := test.NewMockEvents(
+		evt1,
+		evt2,
+	)
 
-	if !assert.NoError(s.T(), s.eventStore.Save(s.ctx, streamKey, 0, []*eventstore.StreamEvent{evt1, evt2})) {
+	if !assert.NoError(s.T(), s.eventStore.Save(s.ctx, streamKey, 0, events)) {
 		return
 	}
 
@@ -66,48 +77,52 @@ func (s *EventStoreSuite) TestSaveEventsShouldStoreEvents() {
 }
 
 func (s *EventStoreSuite) TestSaveShouldThrowWhenEmptyStreamIsNotExpectedVersion() {
-	streamKey := eventstore.NewStreamKey("stream", "id1")
-	evt := eventstore.NewStreamEvent(streamKey, eventstore.NewStreamEventKey("event_type", "evt-1"), "payload")
-	createEvents := []*eventstore.StreamEvent{evt}
-	assert.Error(s.T(), s.eventStore.Save(s.ctx, streamKey, 1, createEvents))
+	streamKey := eventstore.NewStreamKey("mock", "mock-id")
+	events := test.NewMockEvents(
+		test.NewMockEvent("1"),
+		test.NewMockEvent("2"),
+	)
+	assert.Error(s.T(), s.eventStore.Save(s.ctx, streamKey, 1, events))
 }
 
 func (s *EventStoreSuite) TestSaveShouldThrowWhenStreamIsNotExpectedVersion() {
-	streamKey := eventstore.NewStreamKey("stream", "id1")
-	evt1 := eventstore.NewStreamEvent(streamKey, eventstore.NewStreamEventKey("event_type", "evt-1"), "payload")
-	assert.NoError(s.T(), s.eventStore.Save(s.ctx, streamKey, 0, []*eventstore.StreamEvent{evt1}))
-	evt2 := eventstore.NewStreamEvent(streamKey, eventstore.NewStreamEventKey("event_type", "evt-2"), "payload")
-	assert.Error(s.T(), s.eventStore.Save(s.ctx, streamKey, 0, []*eventstore.StreamEvent{evt2}))
+	streamKey := eventstore.NewStreamKey("mock", "mock-id")
+	evt1 := test.NewMockEvent("1")
+	evt2 := test.NewMockEvent("2")
+	assert.NoError(s.T(), s.eventStore.Save(s.ctx, streamKey, 0, test.NewMockEvents(evt1)))
+	assert.Error(s.T(), s.eventStore.Save(s.ctx, streamKey, 0, test.NewMockEvents(evt2)))
 }
 
 func (s *EventStoreSuite) TestSaveShouldThrowWhenEventsHaveSameID() {
-	streamKey := eventstore.NewStreamKey("stream", "id1")
-	evt1 := eventstore.NewStreamEvent(streamKey, eventstore.NewStreamEventKey("event_type", "evt-1"), "payload")
-	assert.NoError(s.T(), s.eventStore.Save(s.ctx, streamKey, 0, []*eventstore.StreamEvent{evt1}))
-	evt2 := eventstore.NewStreamEvent(streamKey, eventstore.NewStreamEventKey("event_type", "evt-1"), "payload")
-	assert.Error(s.T(), s.eventStore.Save(s.ctx, streamKey, 0, []*eventstore.StreamEvent{evt2}))
+	streamKey := eventstore.NewStreamKey("mock", "mock-id")
+	evt1 := test.NewMockEvent("1")
+	evt2 := test.NewMockEvent("2")
+	assert.NoError(s.T(), s.eventStore.Save(s.ctx, streamKey, 0, test.NewMockEvents(evt1)))
+	assert.Error(s.T(), s.eventStore.Save(s.ctx, streamKey, 0, test.NewMockEvents(evt2)))
 }
 
 func (s *EventStoreSuite) TestGetEventsByType() {
 
 	now := time.Now()
 
-	streamKey := eventstore.NewStreamKey("stream", "id1")
+	streamKey := eventstore.NewStreamKey("mock", "mock-id")
 
-	evt1 := eventstore.NewStreamEvent(streamKey, eventstore.NewStreamEventKey("event_type", "evt-1"), "payload", eventstore.NewStreamEventOptions{
-		EventTime: now.Add(-4 * time.Hour),
-	})
-	evt2 := eventstore.NewStreamEvent(streamKey, eventstore.NewStreamEventKey("event_type", "evt-2"), "payload", eventstore.NewStreamEventOptions{
-		EventTime: now.Add(-2 * time.Hour),
-	})
-	evt3 := eventstore.NewStreamEvent(streamKey, eventstore.NewStreamEventKey("event_type", "evt-3"), "payload", eventstore.NewStreamEventOptions{
-		EventTime: now.Add(-1 * time.Hour),
-	})
-	evts := []*eventstore.StreamEvent{evt1, evt2, evt3}
-	assert.NoError(s.T(), s.eventStore.Save(s.ctx, streamKey, 0, evts))
+	evt1 := test.NewMockEvent("1")
+	evt2 := test.NewMockEvent("2")
+	evt3 := test.NewMockEvent("3")
+	evt1.EventTime = now.Add(-4 * time.Hour)
+	evt2.EventTime = now.Add(-2 * time.Hour)
+	evt3.EventTime = now.Add(-1 * time.Hour)
+	events := test.NewMockEvents(
+		evt1,
+		evt2,
+		evt3,
+	)
 
-	var loaded []*eventstore.StreamEvent
-	err := s.eventStore.ReplayEventsByType(s.ctx, []string{"event_type"}, now.Add(-3*time.Hour), func(events []*eventstore.StreamEvent) error {
+	assert.NoError(s.T(), s.eventStore.Save(s.ctx, streamKey, 0, events))
+
+	var loaded []eventsource.Event
+	err := s.eventStore.ReplayEventsByType(s.ctx, []string{"mock"}, now.Add(-3*time.Hour), func(events []eventsource.Event) error {
 		for _, streamEvent := range events {
 			loaded = append(loaded, streamEvent)
 		}

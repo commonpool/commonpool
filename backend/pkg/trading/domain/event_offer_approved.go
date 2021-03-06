@@ -1,23 +1,20 @@
 package domain
 
+import "github.com/commonpool/backend/pkg/eventsource"
+
+type OfferApprovedPayload struct {
+}
+
 type OfferApproved struct {
-	Type    OfferEvent `json:"type"`
-	Version int        `json:"version"`
+	eventsource.EventEnvelope
+	OfferApprovedPayload `json:"payload"`
 }
 
 func NewOfferApproved() *OfferApproved {
 	return &OfferApproved{
-		Type:    OfferApprovedEvent,
-		Version: 1,
+		eventsource.NewEventEnvelope(OfferApprovedEvent, 1),
+		OfferApprovedPayload{},
 	}
 }
 
-func (o *OfferApproved) GetType() OfferEvent {
-	return o.Type
-}
-
-func (o *OfferApproved) GetVersion() int {
-	return o.Version
-}
-
-var _ Event = &OfferApproved{}
+var _ eventsource.Event = &OfferApproved{}

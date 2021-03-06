@@ -5,7 +5,6 @@ import (
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/pkg/keys"
-	"github.com/commonpool/backend/pkg/trading"
 )
 
 func (t TradingService) ConfirmBorrowedResourceReturned(ctx context.Context, confirmedItemKey keys.OfferItemKey) error {
@@ -16,42 +15,44 @@ func (t TradingService) ConfirmBorrowedResourceReturned(ctx context.Context, con
 	}
 	loggedInUserKey := loggedInUser.GetUserKey()
 
-	offerItem, err := t.tradingStore.GetOfferItem(nil, confirmedItemKey)
+	offerKey, err := t.getOfferKeyFromOfferItemKey.Get(confirmedItemKey)
 	if err != nil {
 		return err
 	}
 
-	if !offerItem.IsBorrowingResource() {
-		return exceptions.ErrWrongOfferItemType
-	}
-
-	resourceTransfer := offerItem.(*trading.BorrowResourceItem)
-
-	receivingApprovers, err := t.tradingStore.FindReceivingApproversForOfferItem(offerItem.GetKey())
+	offer, err := t.offerRepo.Load(ctx, offerKey)
 	if err != nil {
 		return err
 	}
 
-	givingApprovers, err := t.tradingStore.FindGivingApproversForOfferItem(offerItem.GetKey())
+	receivingApprovers, err := t.tradingStore.FindReceivingApproversForOfferItem(confirmedItemKey)
+	if err != nil {
+		return err
+	}
+	givingApprovers, err := t.tradingStore.FindGivingApproversForOfferItem(confirmedItemKey)
 	if err != nil {
 		return err
 	}
 
-	if receivingApprovers.Contains(loggedInUserKey) {
-		resourceTransfer.ItemTaken = true
-		resourceTransfer.ItemReturnedBack = true
+	isReceiver := receivingApprovers.Contains(loggedInUserKey)
+	isGiver := givingApprovers.Contains(loggedInUserKey)
+
+	if !isGiver && !isReceiver {
+		return exceptions.ErrForbidden
 	}
 
-	if givingApprovers.Contains(loggedInUserKey) {
-		resourceTransfer.ItemGiven = true
-		resourceTransfer.ItemReceivedBack = true
+	if isReceiver {
+		if err := offer.NotifyBorrowerReturnedResource(loggedInUserKey, confirmedItemKey); err != nil {
+			return err
+		}
 	}
 
-	err = t.tradingStore.UpdateOfferItem(ctx, resourceTransfer)
-	if err != nil {
-		return err
+	if isGiver {
+		if err := offer.NotifyLenderReceivedBackResource(loggedInUserKey, confirmedItemKey); err != nil {
+			return err
+		}
 	}
 
-	return t.checkIfAllItemsCompleted(ctx, loggedInUser, offerItem)
+	return t.offerRepo.Save(ctx, offer)
 
 }

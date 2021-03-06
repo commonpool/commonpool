@@ -74,7 +74,7 @@ type OfferApprovers struct {
 		}
 		// GetInboundOfferItems holds details about calls to the GetInboundOfferItems method.
 		GetInboundOfferItems []struct {
-			// UserKey is the userKey argument value.
+			// MemberKey is the userKey argument value.
 			UserKey keys.UserKey
 		}
 		// GetOutboundApprovers holds details about calls to the GetOutboundApprovers method.
@@ -84,12 +84,12 @@ type OfferApprovers struct {
 		}
 		// GetOutboundOfferItems holds details about calls to the GetOutboundOfferItems method.
 		GetOutboundOfferItems []struct {
-			// UserKey is the userKey argument value.
+			// MemberKey is the userKey argument value.
 			UserKey keys.UserKey
 		}
 		// HasAnyOfferItemsToApprove holds details about calls to the HasAnyOfferItemsToApprove method.
 		HasAnyOfferItemsToApprove []struct {
-			// UserKey is the userKey argument value.
+			// MemberKey is the userKey argument value.
 			UserKey keys.UserKey
 		}
 	}

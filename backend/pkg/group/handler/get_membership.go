@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/commonpool/backend/pkg/auth"
 	group "github.com/commonpool/backend/pkg/group"
+	"github.com/commonpool/backend/pkg/group/domain"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/labstack/echo/v4"
@@ -13,7 +14,7 @@ type GetMembershipResponse struct {
 	Membership Membership `json:"membership"`
 }
 
-func NewGetMembershipResponse(membership *group.Membership, groupNames group.Names, userNames auth.UserNames) *GetMembershipResponse {
+func NewGetMembershipResponse(membership *domain.Membership, groupNames group.Names, userNames auth.UserNames) *GetMembershipResponse {
 	return &GetMembershipResponse{
 		Membership: NewMembership(membership, groupNames, userNames),
 	}
@@ -47,7 +48,7 @@ func (h *Handler) GetMembership(c echo.Context) error {
 		return err
 	}
 
-	var memberships = group.NewMemberships([]*group.Membership{getMemberships.Membership})
+	var memberships = domain.NewMemberships([]*domain.Membership{getMemberships.Membership})
 
 	groupNames, err := h.getGroupNamesForMemberships(ctx, memberships)
 	if err != nil {

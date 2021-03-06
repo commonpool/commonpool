@@ -24,7 +24,7 @@ func (g GroupService) CancelOrDeclineInvitation(ctx context.Context, request *gr
 		return err
 	}
 
-	wasMember := membership.UserConfirmed && membership.GroupConfirmed
+	wasMember := membership.HasBothPartiesConfirmed()
 
 	if membership.GetUserKey() == userSession.GetUserKey() {
 		// user is declining invitaiton from group
@@ -45,7 +45,7 @@ func (g GroupService) CancelOrDeclineInvitation(ctx context.Context, request *gr
 			return err
 		}
 
-		if !adminMembership.IsAdmin {
+		if !adminMembership.IsAdmin() {
 			err := fmt.Errorf("cannot decline invitation if not admin")
 			return err
 		}

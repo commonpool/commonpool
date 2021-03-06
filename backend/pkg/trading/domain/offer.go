@@ -3,6 +3,7 @@ package domain
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/commonpool/backend/pkg/eventsource"
 	"github.com/commonpool/backend/pkg/keys"
 	uuid "github.com/satori/go.uuid"
 )
@@ -11,7 +12,7 @@ type Offer struct {
 	aggregateType                       string
 	key                                 keys.OfferKey
 	groupKey                            keys.GroupKey
-	changes                             []Event
+	changes                             []eventsource.Event
 	version                             int
 	offerItemMap                        map[keys.OfferItemKey]OfferItem
 	offerItemCount                      int
@@ -23,16 +24,17 @@ type Offer struct {
 	isNew                               bool
 	serviceGivenMap                     ApprovalMap
 	serviceReceivedMap                  ApprovalMap
-	serviceItemMap                      map[keys.OfferItemKey]*ServiceOfferItem
+	serviceItemMap                      map[keys.OfferItemKey]*ProvideServiceItem
 	resourceTransferGivenMap            ApprovalMap
 	resourceTransferReceivedMap         ApprovalMap
 	resourceTransferItemMap             map[keys.OfferItemKey]*ResourceTransferItem
 	creditTransferItemMap               map[keys.OfferItemKey]*CreditTransferItem
-	resourceBorrowItemMap               map[keys.OfferItemKey]*ResourceBorrowItem
+	resourceBorrowItemMap               map[keys.OfferItemKey]*BorrowResourceItem
 	resourceBorrowedMap                 ApprovalMap
 	resourceLentMap                     ApprovalMap
 	lenderReceivedBackBorrowedResource  ApprovalMap
 	borrowerReturnedBorrowedResourceMap ApprovalMap
+	SubmittedBy                         keys.UserKey
 }
 
 type ApprovalMap map[keys.OfferItemKey]bool
@@ -66,21 +68,21 @@ func NewOffer() *Offer {
 		isNew:                               true,
 		serviceGivenMap:                     ApprovalMap{},
 		serviceReceivedMap:                  ApprovalMap{},
-		serviceItemMap:                      map[keys.OfferItemKey]*ServiceOfferItem{},
+		serviceItemMap:                      map[keys.OfferItemKey]*ProvideServiceItem{},
 		resourceTransferItemMap:             map[keys.OfferItemKey]*ResourceTransferItem{},
 		resourceTransferGivenMap:            ApprovalMap{},
 		resourceTransferReceivedMap:         ApprovalMap{},
-		resourceBorrowItemMap:               map[keys.OfferItemKey]*ResourceBorrowItem{},
+		resourceBorrowItemMap:               map[keys.OfferItemKey]*BorrowResourceItem{},
 		resourceBorrowedMap:                 ApprovalMap{},
 		resourceLentMap:                     ApprovalMap{},
 		lenderReceivedBackBorrowedResource:  ApprovalMap{},
 		borrowerReturnedBorrowedResourceMap: ApprovalMap{},
 		creditTransferItemMap:               map[keys.OfferItemKey]*CreditTransferItem{},
-		changes:                             []Event{},
+		changes:                             []eventsource.Event{},
 	}
 }
 
-func NewFromEvents(key keys.OfferKey, events []Event) *Offer {
+func NewFromEvents(key keys.OfferKey, events []eventsource.Event) *Offer {
 	offer := NewOffer()
 	offer.key = key
 	for _, event := range events {
@@ -89,7 +91,7 @@ func NewFromEvents(key keys.OfferKey, events []Event) *Offer {
 	return offer
 }
 
-func (o *Offer) GetType() string {
+func (o *Offer) GetEventType() string {
 	return o.aggregateType
 }
 
@@ -97,7 +99,7 @@ func (o *Offer) GetType() string {
 // //  Commands  //
 // ////////////////
 
-func (o *Offer) Submit(groupKey keys.GroupKey, offerItems OfferItems) error {
+func (o *Offer) Submit(submittedBy keys.UserKey, groupKey keys.GroupKey, offerItems *OfferItems) error {
 
 	if err := o.assertNew(); err != nil {
 		return fmt.Errorf("cannot submit offer: %v", err)
@@ -107,8 +109,24 @@ func (o *Offer) Submit(groupKey keys.GroupKey, offerItems OfferItems) error {
 		return fmt.Errorf("cannot submit offer: must have at least one offerItem")
 	}
 
-	o.raise(NewOfferSubmitted(offerItems, groupKey))
+	o.raise(NewOfferSubmitted(submittedBy, offerItems, groupKey))
 
+	return nil
+}
+
+func (o *Offer) ApproveAll(approver keys.UserKey, permissionMatrix PermissionMatrix) error {
+	for offerItemKey, item := range o.offerItemMap {
+		if permissionMatrix(approver, item, Inbound) {
+			if err := o.ApproveOfferItem(approver, offerItemKey, Inbound, permissionMatrix); err != nil {
+				return err
+			}
+		}
+		if permissionMatrix(approver, item, Outbound) {
+			if err := o.ApproveOfferItem(approver, offerItemKey, Outbound, permissionMatrix); err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
 
@@ -138,10 +156,10 @@ func (o *Offer) ApproveOfferItem(approver keys.UserKey, offerItemKey keys.OfferI
 	o.raise(NewOfferItemApproved(approver, offerItemKey, direction))
 
 	for _, item := range o.offerItemMap {
-		if !o.outboundApproved[item.Key()] {
+		if !o.outboundApproved[item.GetKey()] {
 			return nil
 		}
-		if !o.inboundApproved[item.Key()] {
+		if !o.inboundApproved[item.GetKey()] {
 			return nil
 		}
 	}
@@ -186,7 +204,7 @@ func (o *Offer) NotifyServiceReceived(notifiedBy keys.UserKey, serviceOfferItemK
 		return fmt.Errorf("cannot notify service received: %v", err)
 	}
 
-	alreadyReceived := o.serviceReceivedMap[offerItem.Key()]
+	alreadyReceived := o.serviceReceivedMap[offerItem.GetKey()]
 	if alreadyReceived {
 		return nil
 	}
@@ -196,7 +214,7 @@ func (o *Offer) NotifyServiceReceived(notifiedBy keys.UserKey, serviceOfferItemK
 		return fmt.Errorf("cannot notify service received: offer item is not of `ServiceOfferItem` type")
 	}
 
-	o.raise(NewServiceReceivedNotified(notifiedBy, serviceItem.Key()))
+	o.raise(NewServiceReceivedNotified(notifiedBy, serviceItem.GetKey()))
 
 	o.CheckOfferCompleted()
 
@@ -219,7 +237,7 @@ func (o *Offer) NotifyServiceGiven(notifiedBy keys.UserKey, serviceOfferItemKey 
 		return fmt.Errorf("cannot notify service given: %v", err)
 	}
 
-	alreadyGiven := o.serviceGivenMap[offerItem.Key()]
+	alreadyGiven := o.serviceGivenMap[offerItem.GetKey()]
 	if alreadyGiven {
 		return nil
 	}
@@ -229,7 +247,7 @@ func (o *Offer) NotifyServiceGiven(notifiedBy keys.UserKey, serviceOfferItemKey 
 		return fmt.Errorf("cannot notify service given: offer item is not of `ServiceOfferItem` type")
 	}
 
-	o.raise(NewServiceGivenNotified(notifiedBy, serviceItem.Key()))
+	o.raise(NewServiceGivenNotified(notifiedBy, serviceItem.GetKey()))
 
 	o.CheckOfferCompleted()
 
@@ -252,7 +270,7 @@ func (o *Offer) NotifyResourceReceived(notifiedBy keys.UserKey, resourceOfferIte
 		return fmt.Errorf("cannot notify resource received: %v", err)
 	}
 
-	alreadyReceived := o.resourceTransferReceivedMap[offerItem.Key()]
+	alreadyReceived := o.resourceTransferReceivedMap[offerItem.GetKey()]
 	if alreadyReceived {
 		return nil
 	}
@@ -262,7 +280,7 @@ func (o *Offer) NotifyResourceReceived(notifiedBy keys.UserKey, resourceOfferIte
 		return fmt.Errorf("cannot notify resource received: offer item is not of `ResourceTransferItem` type")
 	}
 
-	o.raise(NewResourceReceivedNotified(notifiedBy, resourceItem.Key()))
+	o.raise(NewResourceReceivedNotified(notifiedBy, resourceItem.GetKey()))
 
 	o.CheckOfferCompleted()
 
@@ -285,7 +303,7 @@ func (o *Offer) NotifyResourceGiven(notifiedBy keys.UserKey, resourceOfferItemKe
 		return fmt.Errorf("cannot notify resource given: %v", err)
 	}
 
-	alreadyGiven := o.resourceTransferGivenMap[offerItem.Key()]
+	alreadyGiven := o.resourceTransferGivenMap[offerItem.GetKey()]
 	if alreadyGiven {
 		return nil
 	}
@@ -295,7 +313,7 @@ func (o *Offer) NotifyResourceGiven(notifiedBy keys.UserKey, resourceOfferItemKe
 		return fmt.Errorf("cannot notify resource given: offer item is not of `ResourceTransferItem` type")
 	}
 
-	o.raise(NewResourceGivenNotified(notifiedBy, resourceItem.Key()))
+	o.raise(NewResourceGivenNotified(notifiedBy, resourceItem.GetKey()))
 
 	o.CheckOfferCompleted()
 
@@ -318,7 +336,7 @@ func (o *Offer) NotifyResourceBorrowed(notifiedBy keys.UserKey, resourceOfferIte
 		return fmt.Errorf("cannot notify resource borrowed: %v", err)
 	}
 
-	alreadyBorrowed := o.resourceBorrowedMap[offerItem.Key()]
+	alreadyBorrowed := o.resourceBorrowedMap[offerItem.GetKey()]
 	if alreadyBorrowed {
 		return nil
 	}
@@ -328,7 +346,7 @@ func (o *Offer) NotifyResourceBorrowed(notifiedBy keys.UserKey, resourceOfferIte
 		return fmt.Errorf("cannot notify resource borrowed: offer item is not of `ResourceBorrowItem` type")
 	}
 
-	o.raise(NewResourceBorrowedNotified(notifiedBy, resourceItem.Key()))
+	o.raise(NewResourceBorrowedNotified(notifiedBy, resourceItem.GetKey()))
 
 	o.CheckOfferCompleted()
 
@@ -351,7 +369,7 @@ func (o *Offer) NotifyResourceLent(notifiedBy keys.UserKey, resourceOfferItemKey
 		return fmt.Errorf("cannot notify resource lent: %v", err)
 	}
 
-	alreadyLent := o.resourceLentMap[offerItem.Key()]
+	alreadyLent := o.resourceLentMap[offerItem.GetKey()]
 	if alreadyLent {
 		return nil
 	}
@@ -361,7 +379,7 @@ func (o *Offer) NotifyResourceLent(notifiedBy keys.UserKey, resourceOfferItemKey
 		return fmt.Errorf("cannot notify resource lent: offer item is not of `ResourceBorrowItem` type")
 	}
 
-	o.raise(NewResourceLentNotified(notifiedBy, resourceItem.Key()))
+	o.raise(NewResourceLentNotified(notifiedBy, resourceItem.GetKey()))
 
 	o.CheckOfferCompleted()
 
@@ -384,12 +402,12 @@ func (o *Offer) NotifyBorrowerReturnedResource(notifiedBy keys.UserKey, resource
 		return fmt.Errorf("cannot notify borrower returned resource: %v", err)
 	}
 
-	alreadyReturned := o.borrowerReturnedBorrowedResourceMap[offerItem.Key()]
+	alreadyReturned := o.borrowerReturnedBorrowedResourceMap[offerItem.GetKey()]
 	if alreadyReturned {
 		return nil
 	}
 
-	alreadyBorrowed := o.resourceBorrowedMap[offerItem.Key()]
+	alreadyBorrowed := o.resourceBorrowedMap[offerItem.GetKey()]
 	if !alreadyBorrowed {
 		return fmt.Errorf("cannot notify borrower returned resource: item has not been borrowed")
 	}
@@ -399,7 +417,7 @@ func (o *Offer) NotifyBorrowerReturnedResource(notifiedBy keys.UserKey, resource
 		return fmt.Errorf("cannot notify borrower returned resource: offer item is not of `ResourceBorrowItem` type")
 	}
 
-	o.raise(NewBorrowerReturnedResource(notifiedBy, resourceItem.Key()))
+	o.raise(NewBorrowerReturnedResource(notifiedBy, resourceItem.GetKey()))
 
 	o.CheckOfferCompleted()
 
@@ -422,12 +440,12 @@ func (o *Offer) NotifyLenderReceivedBackResource(notifiedBy keys.UserKey, resour
 		return fmt.Errorf("cannot notify lender received back resource: %v", err)
 	}
 
-	alreadyReceivedBack := o.lenderReceivedBackBorrowedResource[offerItem.Key()]
+	alreadyReceivedBack := o.lenderReceivedBackBorrowedResource[offerItem.GetKey()]
 	if alreadyReceivedBack {
 		return nil
 	}
 
-	alreadyBorrowed := o.resourceLentMap[offerItem.Key()]
+	alreadyBorrowed := o.resourceLentMap[offerItem.GetKey()]
 	if !alreadyBorrowed {
 		return fmt.Errorf("cannot notify borrower returned resource: item has not been lent")
 	}
@@ -437,7 +455,7 @@ func (o *Offer) NotifyLenderReceivedBackResource(notifiedBy keys.UserKey, resour
 		return fmt.Errorf("cannot notify lender received back resource: offer item is not of `ResourceBorrowItem` type")
 	}
 
-	o.raise(NewLenderReceivedBackResource(notifiedBy, resourceItem.Key()))
+	o.raise(NewLenderReceivedBackResource(notifiedBy, resourceItem.GetKey()))
 
 	o.CheckOfferCompleted()
 
@@ -523,11 +541,11 @@ func (o *Offer) CheckOfferCompleted() {
 
 func (o *Offer) MarkAsCommitted() {
 	o.version = o.version + len(o.changes)
-	o.changes = []Event{}
+	o.changes = []eventsource.Event{}
 }
 
-func (o *Offer) GetChanges() []Event {
-	tmp := make([]Event, len(o.changes))
+func (o *Offer) GetChanges() []eventsource.Event {
+	tmp := make([]eventsource.Event, len(o.changes))
 	copy(tmp, o.changes)
 	return tmp
 }
@@ -536,14 +554,14 @@ func (o *Offer) GetKey() keys.OfferKey {
 	return o.key
 }
 
-func (o *Offer) GetVersion() int {
+func (o *Offer) GetSequenceNo() int {
 	return o.version
 }
 
 func (o *Offer) MarshalJSON() ([]byte, error) {
 
 	type OfferLogger struct {
-		Changes          []Event             `json:"changes"`
+		Changes          []eventsource.Event `json:"changes"`
 		Version          int                 `json:"version"`
 		OfferItems       []OfferItem         `json:"offer_items"`
 		OfferItemMap     OfferItemMap        `json:"offer_item_map"`
@@ -600,34 +618,39 @@ func (o *Offer) assertOfferItemExists(offerItemKey keys.OfferItemKey) (OfferItem
 	return offerItem, nil
 }
 
-func (o *Offer) raise(event Event) {
+func (o *Offer) raise(event eventsource.Event) {
 	o.changes = append(o.changes, event)
 	o.on(event, true)
 }
 
-func (o *Offer) on(evt Event, isNew bool) {
+func (o *Offer) on(evt eventsource.Event, isNew bool) {
 	switch e := evt.(type) {
 	case *OfferSubmitted:
 		o.isNew = false
 		o.groupKey = e.GroupKey
 		o.offerItemCount = len(e.OfferItems.Items)
+		o.SubmittedBy = e.SubmittedBy
 		for _, item := range e.OfferItems.Items {
-			o.outboundApproved[item.Key()] = false
-			o.inboundApproved[item.Key()] = false
-			o.offerItemMap[item.Key()] = item
+			o.outboundApproved[item.GetKey()] = false
+			o.inboundApproved[item.GetKey()] = false
+			o.offerItemMap[item.GetKey()] = item
 
-			if service, ok := item.(*ServiceOfferItem); ok {
-				o.serviceItemMap[item.Key()] = service
+			if service, ok := item.AsProvideService(); ok {
+				o.serviceItemMap[service.GetKey()] = service
 			}
-			if resourceTransfer, ok := item.(*ResourceTransferItem); ok {
-				o.resourceTransferItemMap[item.Key()] = resourceTransfer
+
+			if resourceTransfer, ok := item.AsResourceTransfer(); ok {
+				o.resourceTransferItemMap[resourceTransfer.GetKey()] = resourceTransfer
 			}
-			if creditTransfer, ok := item.(*CreditTransferItem); ok {
-				o.creditTransferItemMap[item.Key()] = creditTransfer
+
+			if creditTransfer, ok := item.AsCreditTransfer(); ok {
+				o.creditTransferItemMap[creditTransfer.GetKey()] = creditTransfer
 			}
-			if resourceBorrow, ok := item.(*ResourceBorrowItem); ok {
-				o.resourceBorrowItemMap[item.Key()] = resourceBorrow
+
+			if resourceBorrow, ok := item.AsBorrowResource(); ok {
+				o.resourceBorrowItemMap[resourceBorrow.GetKey()] = resourceBorrow
 			}
+
 		}
 	case *OfferItemApproved:
 		o.approvals = append(o.approvals, OfferItemApproval{

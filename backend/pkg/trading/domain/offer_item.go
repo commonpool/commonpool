@@ -4,16 +4,21 @@ import (
 	"github.com/commonpool/backend/pkg/keys"
 )
 
-type OfferItemType string
-
-const (
-	CreditTransferItemType   OfferItemType = "credit_transfer"
-	BorrowResourceItemType   OfferItemType = "borrow_resource"
-	ResourceTransferItemType OfferItemType = "transfer_resource"
-	ProvideServiceItemType   OfferItemType = "provide_service"
-)
-
-type OfferItem2 interface {
-	Key() keys.OfferItemKey
+type OfferItem interface {
 	Type() OfferItemType
+	GetOfferKey() keys.OfferKey
+	GetKey() keys.OfferItemKey
+	IsCreditTransfer() bool
+	IsServiceProviding() bool
+	IsBorrowingResource() bool
+	IsResourceTransfer() bool
+	IsCompleted() bool
+	IsAccepted() bool
+	IsInboundApproved() bool
+	IsOutboundApproved() bool
+	GetReceiverKey() *Target
+	AsCreditTransfer() (*CreditTransferItem, bool)
+	AsProvideService() (*ProvideServiceItem, bool)
+	AsBorrowResource() (*BorrowResourceItem, bool)
+	AsResourceTransfer() (*ResourceTransferItem, bool)
 }

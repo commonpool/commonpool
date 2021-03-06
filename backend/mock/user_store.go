@@ -66,7 +66,7 @@ type UserStore struct {
 		}
 		// GetByKey holds details about calls to the GetByKey method.
 		GetByKey []struct {
-			// UserKey is the userKey argument value.
+			// MemberKey is the userKey argument value.
 			UserKey keys.UserKey
 		}
 		// GetByKeys holds details about calls to the GetByKeys method.
@@ -78,12 +78,12 @@ type UserStore struct {
 		}
 		// GetUsername holds details about calls to the GetUsername method.
 		GetUsername []struct {
-			// UserKey is the userKey argument value.
+			// MemberKey is the userKey argument value.
 			UserKey keys.UserKey
 		}
 		// Upsert holds details about calls to the Upsert method.
 		Upsert []struct {
-			// UserKey is the userKey argument value.
+			// MemberKey is the userKey argument value.
 			UserKey keys.UserKey
 			// Email is the email argument value.
 			Email string

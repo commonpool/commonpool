@@ -1,30 +1,58 @@
 package domain
 
-import "github.com/commonpool/backend/pkg/keys"
-
-type OfferItemTargetType string
-
-const (
-	GroupTarget OfferItemTargetType = "group"
-	UserTarget  OfferItemTargetType = "user"
+import (
+	"github.com/commonpool/backend/pkg/keys"
 )
 
-type OfferItemTarget struct {
-	Type     OfferItemTargetType `json:"type"`
-	UserKey  *keys.UserKey       `json:"user_key,omitempty"`
-	GroupKey *keys.GroupKey      `json:"group_key,omitempty"`
+type Target struct {
+	UserKey  *keys.UserKey  `json:"userId,omitempty"`
+	GroupKey *keys.GroupKey `json:"groupId,omitempty"`
+	Type     TargetType     `json:"type"`
 }
 
-func NewGroupTarget(groupKey keys.GroupKey) *OfferItemTarget {
-	return &OfferItemTarget{
-		Type:     GroupTarget,
-		GroupKey: &groupKey,
+func (t Target) Equals(target *Target) bool {
+
+	if t.Type != target.Type {
+		return false
+	}
+
+	if t.Type == GroupTarget {
+		return *t.GroupKey == *target.GroupKey
+	}
+
+	return *t.UserKey == *target.UserKey
+}
+
+func (t Target) IsForGroup() bool {
+	return t.Type == GroupTarget
+}
+
+func (t Target) IsForUser() bool {
+	return t.Type == UserTarget
+}
+
+func (t Target) GetGroupKey() keys.GroupKey {
+	return *t.GroupKey
+}
+func (t Target) GetUserKey() keys.UserKey {
+	return *t.UserKey
+}
+func (t Target) GetKeyAsString() string {
+	if t.IsForGroup() {
+		return t.GroupKey.String()
+	} else {
+		return t.UserKey.String()
 	}
 }
-
-func NewUserTarget(userKey keys.UserKey) *OfferItemTarget {
-	return &OfferItemTarget{
-		Type:    UserTarget,
+func NewUserTarget(userKey keys.UserKey) *Target {
+	return &Target{
 		UserKey: &userKey,
+		Type:    UserTarget,
+	}
+}
+func NewGroupTarget(groupKey keys.GroupKey) *Target {
+	return &Target{
+		GroupKey: &groupKey,
+		Type:     GroupTarget,
 	}
 }

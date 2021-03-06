@@ -56,10 +56,6 @@ func evt(eventType string, id string) *eventstore.StreamEvent {
 		`{"type":"hello"}`)
 }
 
-func evts(events ...*eventstore.StreamEvent) []*eventstore.StreamEvent {
-	return events
-}
-
 func anEvent(eventType string) *eventstore.StreamEvent {
 	streamKey := eventstore.NewStreamKey("test-stream", "1")
 	streamEventKey := eventstore.NewStreamEventKey(eventType, "1")

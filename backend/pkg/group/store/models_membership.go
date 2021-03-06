@@ -2,7 +2,7 @@ package store
 
 import (
 	"fmt"
-	"github.com/commonpool/backend/pkg/group"
+	"github.com/commonpool/backend/pkg/group/domain"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/mitchellh/mapstructure"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
@@ -18,7 +18,7 @@ type Membership struct {
 	UserConfirmed  bool   `mapstructure:"userConfirmed"`
 }
 
-func mapMembership(record *neo4j.Record, key string) (*group.Membership, error) {
+func mapMembership(record *neo4j.Record, key string) (*domain.Membership, error) {
 
 	graphMembership := Membership{}
 	field, ok := record.Get(key)
@@ -39,13 +39,28 @@ func mapMembership(record *neo4j.Record, key string) (*group.Membership, error) 
 
 	membershipKey := keys.NewMembershipKey(groupKey, userKey)
 
-	return &group.Membership{
-		Key:            membershipKey,
-		IsMember:       graphMembership.IsMember,
-		IsAdmin:        graphMembership.IsAdmin,
-		IsOwner:        graphMembership.IsOwner,
-		GroupConfirmed: graphMembership.GroupConfirmed,
-		UserConfirmed:  graphMembership.UserConfirmed,
+	var permission domain.PermissionLevel
+	if graphMembership.IsOwner {
+		permission = domain.Owner
+	} else if graphMembership.IsAdmin {
+		permission = domain.Admin
+	} else if graphMembership.IsMember {
+		permission = domain.Member
+	}
+
+	var status domain.MembershipStatus
+	if graphMembership.UserConfirmed && graphMembership.GroupConfirmed {
+		status = domain.ApprovedMembershipStatus
+	} else if graphMembership.UserConfirmed {
+		status = domain.PendingGroupMembershipStatus
+	} else if graphMembership.GroupConfirmed {
+		status = domain.PendingUserMembershipStatus
+	}
+
+	return &domain.Membership{
+		Key:             membershipKey,
+		PermissionLevel: permission,
+		Status:          status,
 	}, nil
 
 }

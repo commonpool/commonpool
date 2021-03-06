@@ -3,38 +3,38 @@ package handler
 import (
 	"fmt"
 	"github.com/commonpool/backend/pkg/keys"
-	"github.com/commonpool/backend/pkg/trading"
+	"github.com/commonpool/backend/pkg/trading/domain"
 )
 
 type OfferItemTarget struct {
-	UserID  *string            `json:"userId"`
-	GroupID *string            `json:"groupId" validatde:"uuid"`
-	Type    trading.TargetType `json:"type"`
+	UserID  *string           `json:"userId"`
+	GroupID *string           `json:"groupId" validatde:"uuid"`
+	Type    domain.TargetType `json:"type"`
 }
 
-func MapWebOfferItemTarget(target OfferItemTarget) (*trading.Target, error) {
-	if target.Type == trading.UserTarget {
+func MapWebOfferItemTarget(target OfferItemTarget) (*domain.Target, error) {
+	if target.Type == domain.UserTarget {
 		userKey := keys.NewUserKey(*target.UserID)
-		return &trading.Target{
+		return &domain.Target{
 			UserKey:  &userKey,
 			GroupKey: nil,
-			Type:     trading.UserTarget,
+			Type:     domain.UserTarget,
 		}, nil
-	} else if target.Type == trading.GroupTarget {
+	} else if target.Type == domain.GroupTarget {
 		groupKey, err := keys.ParseGroupKey(*target.GroupID)
 		if err != nil {
 			return nil, err
 		}
-		return &trading.Target{
+		return &domain.Target{
 			UserKey:  nil,
 			GroupKey: &groupKey,
-			Type:     trading.GroupTarget,
+			Type:     domain.GroupTarget,
 		}, nil
 	}
 	return nil, fmt.Errorf("invalid target")
 }
 
-func MapOfferItemTarget(target *trading.Target) (*OfferItemTarget, error) {
+func MapOfferItemTarget(target *domain.Target) (*OfferItemTarget, error) {
 
 	if target == nil {
 		return nil, nil
@@ -44,7 +44,7 @@ func MapOfferItemTarget(target *trading.Target) (*OfferItemTarget, error) {
 		return &OfferItemTarget{
 			UserID:  nil,
 			GroupID: &groupId,
-			Type:    trading.GroupTarget,
+			Type:    domain.GroupTarget,
 		}, nil
 
 	} else if target.IsForUser() {
@@ -52,7 +52,7 @@ func MapOfferItemTarget(target *trading.Target) (*OfferItemTarget, error) {
 		return &OfferItemTarget{
 			UserID:  &userId,
 			GroupID: nil,
-			Type:    trading.UserTarget,
+			Type:    domain.UserTarget,
 		}, nil
 	} else {
 		return nil, fmt.Errorf("unexpected offer item type")
@@ -60,29 +60,29 @@ func MapOfferItemTarget(target *trading.Target) (*OfferItemTarget, error) {
 
 }
 
-func (t OfferItemTarget) Parse() (*trading.Target, error) {
-	if t.Type == trading.GroupTarget {
+func (t OfferItemTarget) Parse() (*domain.Target, error) {
+	if t.Type == domain.GroupTarget {
 		groupKey, err := keys.ParseGroupKey(*t.GroupID)
 		if err != nil {
 			return nil, err
 		}
-		return &trading.Target{
+		return &domain.Target{
 			UserKey:  nil,
 			GroupKey: &groupKey,
-			Type:     trading.GroupTarget,
+			Type:     domain.GroupTarget,
 		}, nil
-	} else if t.Type == trading.UserTarget {
+	} else if t.Type == domain.UserTarget {
 		userKey := keys.NewUserKey(*t.UserID)
-		return &trading.Target{
+		return &domain.Target{
 			UserKey:  &userKey,
 			GroupKey: nil,
-			Type:     trading.UserTarget,
+			Type:     domain.UserTarget,
 		}, nil
 	}
 	return nil, fmt.Errorf("unexpected target type: %s", t.Type)
 }
 
-func NewWebOfferItemTarget(offerItemTarget *trading.Target) *OfferItemTarget {
+func NewWebOfferItemTarget(offerItemTarget *domain.Target) *OfferItemTarget {
 
 	var userId *string = nil
 	var groupId *string = nil
@@ -107,7 +107,7 @@ func NewGroupTarget(group string) *OfferItemTarget {
 	return &OfferItemTarget{
 		UserID:  nil,
 		GroupID: &group,
-		Type:    trading.GroupTarget,
+		Type:    domain.GroupTarget,
 	}
 }
 
@@ -115,6 +115,6 @@ func NewUserTarget(user string) *OfferItemTarget {
 	return &OfferItemTarget{
 		UserID:  &user,
 		GroupID: nil,
-		Type:    trading.UserTarget,
+		Type:    domain.UserTarget,
 	}
 }

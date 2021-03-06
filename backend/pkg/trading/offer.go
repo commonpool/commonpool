@@ -2,18 +2,19 @@ package trading
 
 import (
 	"github.com/commonpool/backend/pkg/keys"
+	tradingdomain "github.com/commonpool/backend/pkg/trading/domain"
 	"time"
 )
 
 type Offer struct {
-	Key            keys.OfferKey `json:"id"`
-	GroupKey       keys.GroupKey `json:"groupId"`
-	CreatedByKey   keys.UserKey  `json:"createdById"`
-	Status         OfferStatus   `json:"status"`
-	CreatedAt      time.Time     `json:"createdAt"`
-	ExpirationTime time.Time     `json:"expirationTime"`
-	CompletedAt    time.Time     `json:"completedAt"`
-	Message        string        `json:"message"`
+	Key            keys.OfferKey             `json:"id"`
+	GroupKey       keys.GroupKey             `json:"groupId"`
+	CreatedByKey   keys.UserKey              `json:"createdById"`
+	Status         tradingdomain.OfferStatus `json:"status"`
+	CreatedAt      time.Time                 `json:"createdAt"`
+	ExpirationTime time.Time                 `json:"expirationTime"`
+	CompletedAt    time.Time                 `json:"completedAt"`
+	Message        string                    `json:"message"`
 }
 
 func NewOffer(offerKey keys.OfferKey, groupKey keys.GroupKey, author keys.UserKey, message string, expiration time.Time) *Offer {
@@ -21,7 +22,7 @@ func NewOffer(offerKey keys.OfferKey, groupKey keys.GroupKey, author keys.UserKe
 		Key:            offerKey,
 		GroupKey:       groupKey,
 		CreatedByKey:   author,
-		Status:         PendingOffer,
+		Status:         tradingdomain.Pending,
 		ExpirationTime: expiration,
 		Message:        message,
 		CreatedAt:      time.Now().UTC(),
@@ -37,5 +38,5 @@ func (o *Offer) GetAuthorKey() keys.UserKey {
 }
 
 func (o *Offer) IsPending() bool {
-	return o.Status == PendingOffer
+	return o.Status == tradingdomain.Pending
 }

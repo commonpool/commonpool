@@ -2,6 +2,7 @@ package handler
 
 import (
 	group2 "github.com/commonpool/backend/pkg/group"
+	"github.com/commonpool/backend/pkg/group/domain"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/labstack/echo/v4"
@@ -13,7 +14,7 @@ func (h *ResourceHandler) ensureResourceIsSharedWithGroupsTheUserIsActiveMemberO
 
 	ctx, l := handler.GetEchoContext(c, "ensureResourceIsSharedWithGroupsTheUserIsActiveMemberOf")
 
-	var membershipStatus = group2.ApprovedMembershipStatus
+	var membershipStatus = domain.ApprovedMembershipStatus
 
 	userMemberships, err := h.groupService.GetUserMemberships(ctx, group2.NewGetMembershipsForUserRequest(loggedInUserKey, &membershipStatus))
 	if err != nil {

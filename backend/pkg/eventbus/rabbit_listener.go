@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/commonpool/backend/pkg/eventsource"
 	"github.com/commonpool/backend/pkg/eventstore"
 	"github.com/commonpool/backend/pkg/mq"
 	"github.com/labstack/gommon/log"
@@ -14,9 +15,10 @@ type RabbitMQListener struct {
 	name        string
 	eventTypes  []string
 	initialized bool
+	eventMapper eventsource.EventMapper
 }
 
-type ListenerFunc func(events []*eventstore.StreamEvent) error
+type ListenerFunc func(events []eventsource.Event) error
 
 func NewRabbitMqListener(amqpClient mq.Client) *RabbitMQListener {
 	return &RabbitMQListener{
@@ -84,7 +86,13 @@ func (s *RabbitMQListener) Listen(ctx context.Context, listenerFunc ListenerFunc
 					log.Printf("could not unmarshal event: %v", err)
 					continue
 				}
-				err = listenerFunc([]*eventstore.StreamEvent{&streamEvent})
+
+				evt, err := s.eventMapper.Map(msg.Type, msg.Body)
+				if err != nil {
+					continue
+				}
+
+				err = listenerFunc([]eventsource.Event{evt})
 				if err != nil {
 					log.Printf("listener error: %v", err)
 					continue

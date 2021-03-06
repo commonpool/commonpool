@@ -4,11 +4,12 @@ import (
 	"context"
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/group"
+	"github.com/commonpool/backend/pkg/group/domain"
 	"github.com/commonpool/backend/pkg/handler"
 	"go.uber.org/zap"
 )
 
-func (h *Handler) getUserNamesForMemberships(ctx context.Context, memberships *group.Memberships) (auth.UserNames, error) {
+func (h *Handler) getUserNamesForMemberships(ctx context.Context, memberships *domain.Memberships) (auth.UserNames, error) {
 
 	ctx, l := handler.GetCtx(ctx, "getUserNamesForMemberships")
 
@@ -28,7 +29,7 @@ func (h *Handler) getUserNamesForMemberships(ctx context.Context, memberships *g
 	return userNames, nil
 }
 
-func (h *Handler) getGroupNamesForMemberships(ctx context.Context, memberships *group.Memberships) (group.Names, error) {
+func (h *Handler) getGroupNamesForMemberships(ctx context.Context, memberships *domain.Memberships) (group.Names, error) {
 
 	ctx, l := handler.GetCtx(ctx, "getGroupNamesForMemberships")
 

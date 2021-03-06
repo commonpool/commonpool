@@ -24,7 +24,7 @@ package service
 // 		return nil, err
 // 	}
 //
-// 	userKeys := usermodel.NewUserKeys([]usermodel.UserKey{loggedInUserKey, resourceOwnerKey})
+// 	userKeys := usermodel.NewUserKeys([]usermodel.MemberKey{loggedInUserKey, resourceOwnerKey})
 //
 // 	_, err = c.SendConversationMessage(ctx, chat.NewSendConversationMessage(
 // 		loggedInUserKey,

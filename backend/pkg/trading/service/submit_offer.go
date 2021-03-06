@@ -6,24 +6,20 @@ import (
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/chat"
 	"github.com/commonpool/backend/pkg/exceptions"
+	"github.com/commonpool/backend/pkg/group"
+	domain2 "github.com/commonpool/backend/pkg/group/domain"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/resource"
 	"github.com/commonpool/backend/pkg/trading"
 	"github.com/commonpool/backend/pkg/trading/domain"
-	"github.com/satori/go.uuid"
 	"golang.org/x/net/context"
 	"strings"
 	"time"
 )
 
-func (t TradingService) SendOffer(ctx context.Context, groupKey keys.GroupKey, offerItems *trading.OfferItems, message string) (*trading.Offer, *trading.OfferItems, error) {
+func (t TradingService) SendOffer(ctx context.Context, groupKey keys.GroupKey, offerItems *domain.OfferItems, message string) (*trading.Offer, *domain.OfferItems, error) {
 
 	l := logging.WithContext(ctx)
-
-	o := domain.NewOffer()
-	var domainOfferItems []*domain.OfferItem
-
-	o.Submit(groupKey)
 
 	l.Debug("getting logged in user")
 	userSession, err := auth.GetLoggedInUser(ctx)
@@ -31,92 +27,118 @@ func (t TradingService) SendOffer(ctx context.Context, groupKey keys.GroupKey, o
 		return nil, nil, exceptions.ErrUnauthorized
 	}
 
-	l.Debug("making sure resources appear only once in the offer")
-	// The ownership of a resource can only be moved once in an offer
-	if err := assertResourcesAreTransferredOnlyOnce(offerItems); err != nil {
-		return nil, nil, err
-	}
-
-	l.Debug("making sure offer have positive time values")
-	// All time based offers must have positive time values. No negative time
-	if err := assertTimeOfferItemsHavePositiveTimeValue(offerItems); err != nil {
-		return nil, nil, err
-	}
-
-	l.Debug("retrieving resources in offer")
-	resources, err := t.resourceStore.GetByKeys(ctx, offerItems.GetResourceKeys())
+	membershipStatus := domain2.ApprovedMembershipStatus
+	userMemberships, err := t.groupService.GetUserMemberships(ctx, &group.GetMembershipsForUserRequest{
+		UserKey:          userSession.GetUserKey(),
+		MembershipStatus: &membershipStatus,
+	})
 	if err != nil {
 		return nil, nil, err
 	}
 
-	l.Debug("checking that resources are viewable by the group")
-	// Checking that the offer's group can actually 'see' the resource
-	if err := t.assertResourcesAreViewableByGroup(resources, groupKey); err != nil {
-		return nil, nil, err
+	if !userMemberships.Memberships.ContainsMembershipForGroup(groupKey) {
+		return nil, nil, exceptions.ErrForbidden
 	}
 
-	l.Debug("checking that the offer does not include transferring a resource to its current owner")
-	// Checking that an offer does not include transferring a resource to its current owner
-	if err := t.assertResourcesAreNotTransferredToTheirCurrentOwner(resources, offerItems); err != nil {
-		return nil, nil, err
-	}
-
-	l.Debug("checking that resource_transfer offerItems refer to object-typed resources")
-	// Checking that resource_transfer offerItems refer to object-typed resources
-	if err := t.assertResourceTransferOfferItemsReferToObjectResources(resources, offerItems); err != nil {
-		return nil, nil, err
-	}
-
-	l.Debug("checking that service_provision offer-items actually point to a service-typed resource")
-	// Checking that service_provision offer-items actually point to a service-typed resource
-	if err := t.assertProvideServiceItemsAreForServiceResources(resources, offerItems); err != nil {
-		return nil, nil, err
-	}
-
-	l.Debug("checking that borrowal offer-items actually point to a object-typed resource")
-	// Checking that borrowal offer-items actually point to a object-typed resource
-	if err := t.assertBorrowOfferItemPointToObjectTypedResource(resources, offerItems); err != nil {
-		return nil, nil, err
-	}
-
-	l.Debug("generating new offer key")
-	offerKey := keys.NewOfferKey(uuid.NewV4())
-
-	l.Debug("creating new offer object")
-	offer := trading.NewOffer(offerKey, groupKey, userSession.GetUserKey(), message, time.Time{})
-
-	l.Debug("saving offer in store")
-	err = t.tradingStore.SaveOffer(offer, offerItems)
+	o := domain.NewOffer()
+	err = o.Submit(userSession.GetUserKey(), groupKey, offerItems)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	l.Debug("getting offer from store")
-	offer, err = t.tradingStore.GetOffer(offerKey)
-	if err != nil {
+	if err := t.offerRepo.Save(ctx, o); err != nil {
 		return nil, nil, err
 	}
 
-	l.Debug("getting offer items")
-	offerItems, err = t.tradingStore.GetOfferItemsForOffer(offerKey)
-	if err != nil {
-		return nil, nil, err
-	}
+	return nil, nil, nil
 
-	l.Debug("sending accept/decline message")
-	if err := t.sendAcceptOrDeclineMessages(ctx, offerItems, offer, userSession); err != nil {
-		return nil, nil, err
-	}
-
-	l.Debug("sending custom offer message")
-	if err := t.sendCustomOfferMessage(ctx, userSession, offerItems.GetUserKeys(), message); err != nil {
-		return nil, nil, err
-	}
-
-	return offer, offerItems, nil
+	//
+	// l.Debug("making sure resources appear only once in the offer")
+	// // The ownership of a resource can only be moved once in an offer
+	// if err := assertResourcesAreTransferredOnlyOnce(offerItems); err != nil {
+	// 	return nil, nil, err
+	// }
+	//
+	// l.Debug("making sure offer have positive time values")
+	// // All time based offers must have positive time values. No negative time
+	// if err := assertTimeOfferItemsHavePositiveTimeValue(offerItems); err != nil {
+	// 	return nil, nil, err
+	// }
+	//
+	// l.Debug("retrieving resources in offer")
+	// resources, err := t.resourceStore.GetByKeys(ctx, offerItems.GetResourceKeys())
+	// if err != nil {
+	// 	return nil, nil, err
+	// }
+	//
+	// l.Debug("checking that resources are viewable by the group")
+	// // Checking that the offer's group can actually 'see' the resource
+	// if err := t.assertResourcesAreViewableByGroup(resources, groupKey); err != nil {
+	// 	return nil, nil, err
+	// }
+	//
+	// l.Debug("checking that the offer does not include transferring a resource to its current owner")
+	// // Checking that an offer does not include transferring a resource to its current owner
+	// if err := t.assertResourcesAreNotTransferredToTheirCurrentOwner(resources, offerItems); err != nil {
+	// 	return nil, nil, err
+	// }
+	//
+	// l.Debug("checking that resource_transfer offerItems refer to object-typed resources")
+	// // Checking that resource_transfer offerItems refer to object-typed resources
+	// if err := t.assertResourceTransferOfferItemsReferToObjectResources(resources, offerItems); err != nil {
+	// 	return nil, nil, err
+	// }
+	//
+	// l.Debug("checking that service_provision offer-items actually point to a service-typed resource")
+	// // Checking that service_provision offer-items actually point to a service-typed resource
+	// if err := t.assertProvideServiceItemsAreForServiceResources(resources, offerItems); err != nil {
+	// 	return nil, nil, err
+	// }
+	//
+	// l.Debug("checking that borrowal offer-items actually point to a object-typed resource")
+	// // Checking that borrowal offer-items actually point to a object-typed resource
+	// if err := t.assertBorrowOfferItemPointToObjectTypedResource(resources, offerItems); err != nil {
+	// 	return nil, nil, err
+	// }
+	//
+	// l.Debug("generating new offer key")
+	// offerKey := o.GetKey()
+	//
+	// l.Debug("creating new offer object")
+	// offer := trading.NewOffer(offerKey, groupKey, userSession.GetUserKey(), message, time.Time{})
+	//
+	// l.Debug("saving offer in store")
+	// err = t.tradingStore.SaveOffer(offer, offerItems)
+	// if err != nil {
+	// 	return nil, nil, err
+	// }
+	//
+	// l.Debug("getting offer from store")
+	// offer, err = t.tradingStore.GetOffer(offerKey)
+	// if err != nil {
+	// 	return nil, nil, err
+	// }
+	//
+	// l.Debug("getting offer items")
+	// offerItems, err = t.tradingStore.GetOfferItemsForOffer(offerKey)
+	// if err != nil {
+	// 	return nil, nil, err
+	// }
+	//
+	// l.Debug("sending accept/decline message")
+	// if err := t.sendAcceptOrDeclineMessages(ctx, offerItems, offer, userSession); err != nil {
+	// 	return nil, nil, err
+	// }
+	//
+	// l.Debug("sending custom offer message")
+	// if err := t.sendCustomOfferMessage(ctx, userSession, offerItems.GetUserKeys(), message); err != nil {
+	// 	return nil, nil, err
+	// }
+	//
+	// return offer, offerItems, nil
 }
 
-func (t TradingService) findAppropriateChannelForOffer(offer *trading.Offer, offerItems *trading.OfferItems, approvers *keys.UserKeys) (keys.ChannelKey, chat.ChannelType, error) {
+func (t TradingService) findAppropriateChannelForOffer(offer *trading.Offer, offerItems *domain.OfferItems, approvers *keys.UserKeys) (keys.ChannelKey, chat.ChannelType, error) {
 	if !offerItems.GetGroupKeys().IsEmpty() {
 		channelKey := keys.GetChannelKeyForGroup(offer.GroupKey)
 		return channelKey, chat.GroupChannel, nil
@@ -137,12 +159,12 @@ func (t TradingService) assertResourcesAreViewableByGroup(resources *resource.Ge
 	return nil
 }
 
-func (t TradingService) assertResourcesAreNotTransferredToTheirCurrentOwner(resources *resource.GetResourceByKeysResponse, items *trading.OfferItems) error {
+func (t TradingService) assertResourcesAreNotTransferredToTheirCurrentOwner(resources *resource.GetResourceByKeysResponse, items *domain.OfferItems) error {
 	for _, offerItem := range items.Items {
 		if !offerItem.IsResourceTransfer() {
 			continue
 		}
-		resourceTransfer := offerItem.(*trading.ResourceTransferItem)
+		resourceTransfer := offerItem.(*domain.ResourceTransferItem)
 		if resources.Claims.HasClaim(resourceTransfer.To, resourceTransfer.ResourceKey, resource.OwnershipClaim) {
 			return exceptions.ErrCannotTransferResourceToItsOwner
 		}
@@ -150,12 +172,12 @@ func (t TradingService) assertResourcesAreNotTransferredToTheirCurrentOwner(reso
 	return nil
 }
 
-func (t TradingService) assertResourceTransferOfferItemsReferToObjectResources(resources *resource.GetResourceByKeysResponse, items *trading.OfferItems) error {
+func (t TradingService) assertResourceTransferOfferItemsReferToObjectResources(resources *resource.GetResourceByKeysResponse, items *domain.OfferItems) error {
 	for _, offerItem := range items.Items {
 		if !offerItem.IsResourceTransfer() {
 			continue
 		}
-		resourceTransfer := offerItem.(*trading.ResourceTransferItem)
+		resourceTransfer := offerItem.(*domain.ResourceTransferItem)
 		r, err := resources.Resources.GetResource(resourceTransfer.ResourceKey)
 		if err != nil {
 			return err
@@ -167,12 +189,12 @@ func (t TradingService) assertResourceTransferOfferItemsReferToObjectResources(r
 	return nil
 }
 
-func (t TradingService) assertProvideServiceItemsAreForServiceResources(resources *resource.GetResourceByKeysResponse, items *trading.OfferItems) error {
+func (t TradingService) assertProvideServiceItemsAreForServiceResources(resources *resource.GetResourceByKeysResponse, items *domain.OfferItems) error {
 	for _, offerItem := range items.Items {
 		if !offerItem.IsServiceProviding() {
 			continue
 		}
-		serviceProvision := offerItem.(*trading.ProvideServiceItem)
+		serviceProvision := offerItem.(*domain.ProvideServiceItem)
 		r, err := resources.Resources.GetResource(serviceProvision.ResourceKey)
 		if err != nil {
 			return err
@@ -184,12 +206,12 @@ func (t TradingService) assertProvideServiceItemsAreForServiceResources(resource
 	return nil
 }
 
-func (t TradingService) assertBorrowOfferItemPointToObjectTypedResource(resources *resource.GetResourceByKeysResponse, items *trading.OfferItems) error {
+func (t TradingService) assertBorrowOfferItemPointToObjectTypedResource(resources *resource.GetResourceByKeysResponse, items *domain.OfferItems) error {
 	for _, offerItem := range items.Items {
 		if !offerItem.IsBorrowingResource() {
 			continue
 		}
-		itemBorrow := offerItem.(*trading.BorrowResourceItem)
+		itemBorrow := offerItem.(*domain.BorrowResourceItem)
 		r, err := resources.Resources.GetResource(itemBorrow.ResourceKey)
 		if err != nil {
 			return err
@@ -224,7 +246,7 @@ func (t TradingService) sendCustomOfferMessage(ctx context.Context, fromUser *au
 	return nil
 }
 
-func (t TradingService) sendAcceptOrDeclineMessages(ctx context.Context, offerItems *trading.OfferItems, offer *trading.Offer, userSession *auth.UserSession) error {
+func (t TradingService) sendAcceptOrDeclineMessages(ctx context.Context, offerItems *domain.OfferItems, offer *trading.Offer, userSession *auth.UserSession) error {
 
 	approvers, err := t.tradingStore.FindApproversForCandidateOffer(offer, offerItems)
 	if err != nil {
@@ -251,7 +273,7 @@ func (t TradingService) sendAcceptOrDeclineMessages(ctx context.Context, offerIt
 	return nil
 }
 
-func (t TradingService) buildAcceptOrDeclineChatMessage(recipientUserKey keys.UserKey, offer *trading.Offer, offerItems *trading.OfferItems) []chat.Block {
+func (t TradingService) buildAcceptOrDeclineChatMessage(recipientUserKey keys.UserKey, offer *trading.Offer, offerItems *domain.OfferItems) []chat.Block {
 
 	messageBlocks := []chat.Block{
 		*chat.NewHeaderBlock(
@@ -266,7 +288,7 @@ func (t TradingService) buildAcceptOrDeclineChatMessage(recipientUserKey keys.Us
 
 		if offerItem.IsResourceTransfer() {
 
-			resourceTransfer := offerItem.(*trading.ResourceTransferItem)
+			resourceTransfer := offerItem.(*domain.ResourceTransferItem)
 
 			if resourceTransfer.To.IsForUser() {
 
@@ -286,7 +308,7 @@ func (t TradingService) buildAcceptOrDeclineChatMessage(recipientUserKey keys.Us
 
 		} else if offerItem.IsServiceProviding() {
 
-			serviceProvision := offerItem.(*trading.ProvideServiceItem)
+			serviceProvision := offerItem.(*domain.ProvideServiceItem)
 
 			if serviceProvision.To.IsForGroup() {
 
@@ -308,7 +330,7 @@ func (t TradingService) buildAcceptOrDeclineChatMessage(recipientUserKey keys.Us
 
 		} else if offerItem.IsBorrowingResource() {
 
-			resourceBorrow := offerItem.(*trading.BorrowResourceItem)
+			resourceBorrow := offerItem.(*domain.BorrowResourceItem)
 
 			if resourceBorrow.To.IsForUser() {
 
@@ -330,7 +352,7 @@ func (t TradingService) buildAcceptOrDeclineChatMessage(recipientUserKey keys.Us
 
 		} else if offerItem.IsCreditTransfer() {
 
-			creditTransfer := offerItem.(*trading.CreditTransferItem)
+			creditTransfer := offerItem.(*domain.CreditTransferItem)
 
 			fromLink := ""
 			if creditTransfer.From.IsForGroup() {
@@ -382,16 +404,16 @@ func (t TradingService) buildAcceptOrDeclineChatMessage(recipientUserKey keys.Us
 
 }
 
-func assertTimeOfferItemsHavePositiveTimeValue(offerItems *trading.OfferItems) error {
+func assertTimeOfferItemsHavePositiveTimeValue(offerItems *domain.OfferItems) error {
 	for _, offerItem := range offerItems.Items {
 
 		var duration time.Duration
 		if offerItem.IsCreditTransfer() {
-			duration = offerItem.(*trading.CreditTransferItem).Amount
+			duration = offerItem.(*domain.CreditTransferItem).Amount
 		} else if offerItem.IsBorrowingResource() {
-			duration = offerItem.(*trading.BorrowResourceItem).Duration
+			duration = offerItem.(*domain.BorrowResourceItem).Duration
 		} else if offerItem.IsServiceProviding() {
-			duration = offerItem.(*trading.ProvideServiceItem).Duration
+			duration = offerItem.(*domain.ProvideServiceItem).Duration
 		} else {
 			continue
 		}
@@ -403,11 +425,11 @@ func assertTimeOfferItemsHavePositiveTimeValue(offerItems *trading.OfferItems) e
 	return nil
 }
 
-func assertResourcesAreTransferredOnlyOnce(offerItems *trading.OfferItems) error {
+func assertResourcesAreTransferredOnlyOnce(offerItems *domain.OfferItems) error {
 	var seenResourceKeys []keys.ResourceKey
 	for _, item := range offerItems.Items {
 		if item.IsResourceTransfer() {
-			resourceTransfer := item.(*trading.ResourceTransferItem)
+			resourceTransfer := item.(*domain.ResourceTransferItem)
 			resourceKey := resourceTransfer.ResourceKey
 			for _, seenResourceKey := range seenResourceKeys {
 				if seenResourceKey == resourceKey {

@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"github.com/commonpool/backend/pkg/eventsource"
 	"github.com/commonpool/backend/pkg/keys"
 )
 
@@ -11,30 +12,26 @@ const (
 	Outbound ApprovalDirection = "outbound"
 )
 
-type OfferItemApproved struct {
+type OfferItemApprovedPayload struct {
 	ApprovedBy   keys.UserKey      `json:"approved_by"`
 	OfferItemKey keys.OfferItemKey `json:"offer_item_key"`
 	Direction    ApprovalDirection `json:"direction"`
-	Type         OfferEvent        `json:"type"`
-	Version      int               `json:"version"`
+}
+
+type OfferItemApproved struct {
+	eventsource.EventEnvelope
+	OfferItemApprovedPayload `json:"payload"`
 }
 
 func NewOfferItemApproved(approvedBy keys.UserKey, offerItemKey keys.OfferItemKey, direction ApprovalDirection) *OfferItemApproved {
 	return &OfferItemApproved{
-		ApprovedBy:   approvedBy,
-		OfferItemKey: offerItemKey,
-		Direction:    direction,
-		Type:         OfferItemApprovedEvent,
-		Version:      1,
+		eventsource.NewEventEnvelope(OfferItemApprovedEvent, 1),
+		OfferItemApprovedPayload{
+			approvedBy,
+			offerItemKey,
+			direction,
+		},
 	}
 }
 
-func (o OfferItemApproved) GetType() OfferEvent {
-	return o.Type
-}
-
-func (o *OfferItemApproved) GetVersion() int {
-	return o.Version
-}
-
-var _ Event = &OfferItemApproved{}
+var _ eventsource.Event = &OfferItemApproved{}

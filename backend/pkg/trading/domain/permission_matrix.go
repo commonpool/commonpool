@@ -1,6 +1,8 @@
 package domain
 
-import "github.com/commonpool/backend/pkg/keys"
+import (
+	"github.com/commonpool/backend/pkg/keys"
+)
 
 type PermissionMatrix func(userKey keys.UserKey, offerItem OfferItem, direction ApprovalDirection) bool
 

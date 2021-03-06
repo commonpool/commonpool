@@ -2,15 +2,15 @@ package eventbus
 
 import (
 	"context"
-	"github.com/commonpool/backend/pkg/eventstore"
+	"github.com/commonpool/backend/pkg/eventsource"
 	"github.com/go-redis/redis/v8"
 )
 
 type EventDeduplicator interface {
 	Deduplicate(
 		ctx context.Context,
-		evts []*eventstore.StreamEvent,
-		do func(evt *eventstore.StreamEvent) error) error
+		evts []eventsource.Event,
+		do func(evt eventsource.Event) error) error
 }
 
 type MemoryDeduplicator struct {
@@ -26,12 +26,12 @@ func NewMemoryDeduplicator(bufferSize int) *MemoryDeduplicator {
 
 func (s *MemoryDeduplicator) Deduplicate(
 	ctx context.Context,
-	evts []*eventstore.StreamEvent,
-	do func(evt *eventstore.StreamEvent) error) error {
+	evts []eventsource.Event,
+	do func(evt eventsource.Event) error) error {
 	for _, evt := range evts {
 		found := false
 		for _, id := range s.lastIds {
-			if id == evt.EventID {
+			if id == evt.GetEventID() {
 				found = true
 				break
 			}
@@ -41,7 +41,7 @@ func (s *MemoryDeduplicator) Deduplicate(
 			if err != nil {
 				return err
 			}
-			s.lastIds = append(s.lastIds, evt.EventID)
+			s.lastIds = append(s.lastIds, evt.GetEventID())
 			lastIdLen := len(s.lastIds)
 			if lastIdLen > s.bufferSize {
 				s.lastIds = s.lastIds[lastIdLen-s.bufferSize : lastIdLen]
@@ -69,8 +69,8 @@ func NewRedisDeduplicator(bufferSize int, redisClient *redis.Client, key string)
 
 func (r RedisDeduplicator) Deduplicate(
 	ctx context.Context,
-	evts []*eventstore.StreamEvent,
-	do func(evt *eventstore.StreamEvent) error) error {
+	evts []eventsource.Event,
+	do func(evt eventsource.Event) error) error {
 
 	return r.redisClient.Watch(ctx, func(tx *redis.Tx) error {
 
@@ -90,7 +90,7 @@ func (r RedisDeduplicator) Deduplicate(
 		}
 
 		for _, evt := range evts {
-			if resultMap[evt.EventID] {
+			if resultMap[evt.GetEventID()] {
 				continue
 			}
 
@@ -99,7 +99,7 @@ func (r RedisDeduplicator) Deduplicate(
 				return err
 			}
 
-			if err := tx.RPush(ctx, r.key, evt.EventID).Err(); err != nil {
+			if err := tx.RPush(ctx, r.key, evt.GetEventID()).Err(); err != nil {
 				return err
 			}
 
@@ -107,7 +107,7 @@ func (r RedisDeduplicator) Deduplicate(
 				return err
 			}
 
-			resultMap[evt.EventID] = true
+			resultMap[evt.GetEventID()] = true
 
 		}
 

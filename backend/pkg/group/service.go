@@ -2,6 +2,7 @@ package group
 
 import (
 	"context"
+	"github.com/commonpool/backend/pkg/group/domain"
 	"github.com/commonpool/backend/pkg/keys"
 )
 
@@ -13,7 +14,7 @@ type Service interface {
 	GetMembership(ctx context.Context, request *GetMembershipRequest) (*GetMembershipResponse, error)
 	GetUserMemberships(ctx context.Context, request *GetMembershipsForUserRequest) (*GetMembershipsForUserResponse, error)
 	GetGroupMemberships(ctx context.Context, request *GetMembershipsForGroupRequest) (*GetMembershipsForGroupResponse, error)
-	CreateOrAcceptInvitation(ctx context.Context, request *CreateOrAcceptInvitationRequest) (*CreateOrAcceptInvitationResponse, error)
+	CreateOrAcceptInvitation(ctx context.Context, request *CreateOrAcceptInvitationRequest) error
 	CancelOrDeclineInvitation(ctx context.Context, request *CancelOrDeclineInvitationRequest) error
 }
 
@@ -28,7 +29,7 @@ func NewAcceptInvitationRequest(membershipKey keys.MembershipKey) *CreateOrAccep
 }
 
 type CreateOrAcceptInvitationResponse struct {
-	Membership *Membership
+	Membership *domain.Membership
 }
 
 type CancelOrDeclineInvitationRequest struct {

@@ -3,7 +3,7 @@ package listeners
 import (
 	"context"
 	"github.com/commonpool/backend/pkg/eventbus"
-	"github.com/commonpool/backend/pkg/eventstore"
+	"github.com/commonpool/backend/pkg/eventsource"
 	"github.com/commonpool/backend/pkg/trading/domain"
 	"gorm.io/gorm"
 	"time"
@@ -34,17 +34,17 @@ func (h *TransactionHistoryHandler) Start(ctx context.Context) error {
 
 	listener := h.catchUpFactory("transaction-history", time.Second*10)
 	if err := listener.Initialize(ctx, "transaction-history", []string{
-		string(domain.OfferCompletedEvent),
+		domain.OfferCompletedEvent,
 	}); err != nil {
 		return err
 	}
-	return listener.Listen(ctx, func(events []*eventstore.StreamEvent) error {
+	return listener.Listen(ctx, func(events []eventsource.Event) error {
 		for _, event := range events {
-			if event.EventType != string(domain.OfferCompletedEvent) {
+			if event.GetEventType() != domain.OfferCompletedEvent {
 				continue
 			}
 
-			qry := h.db.Find(&CompletedOffer{}, "id = ?", event.StreamID)
+			qry := h.db.Find(&CompletedOffer{}, "id = ?", event.GetAggregateID())
 			if qry.Error != nil {
 				return qry.Error
 			}
@@ -54,7 +54,7 @@ func (h *TransactionHistoryHandler) Start(ctx context.Context) error {
 			}
 
 			newCompletedOffer := &CompletedOffer{
-				ID: event.StreamID,
+				ID: event.GetAggregateID(),
 			}
 			if err := h.db.Create(newCompletedOffer).Error; err != nil {
 				return err

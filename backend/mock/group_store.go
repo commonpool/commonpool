@@ -6,6 +6,7 @@ package mock
 import (
 	"context"
 	"github.com/commonpool/backend/pkg/group"
+	"github.com/commonpool/backend/pkg/group/domain"
 	"github.com/commonpool/backend/pkg/keys"
 	"sync"
 )
@@ -58,10 +59,10 @@ var _ group.Store = &GroupStore{}
 //     }
 type GroupStore struct {
 	// CreateGroupAndMembershipFunc mocks the CreateGroupAndMembership method.
-	CreateGroupAndMembershipFunc func(ctx context.Context, groupKey keys.GroupKey, createdBy keys.UserKey, name string, description string) (*group.Group, *group.Membership, error)
+	CreateGroupAndMembershipFunc func(ctx context.Context, groupKey keys.GroupKey, createdBy keys.UserKey, name string, description string) (*group.Group, *domain.Membership, error)
 
 	// CreateMembershipFunc mocks the CreateMembership method.
-	CreateMembershipFunc func(ctx context.Context, membershipKey keys.MembershipKey, isMember bool, isAdmin bool, isOwner bool, isDeactivated bool, groupConfirmed bool, userConfirmed bool) (*group.Membership, error)
+	CreateMembershipFunc func(ctx context.Context, membershipKey keys.MembershipKey, isMember bool, isAdmin bool, isOwner bool, isDeactivated bool, groupConfirmed bool, userConfirmed bool) (*domain.Membership, error)
 
 	// DeleteMembershipFunc mocks the DeleteMembership method.
 	DeleteMembershipFunc func(ctx context.Context, membershipKey keys.MembershipKey) error
@@ -76,13 +77,13 @@ type GroupStore struct {
 	GetGroupsByKeysFunc func(ctx context.Context, groupKeys *keys.GroupKeys) (*group.Groups, error)
 
 	// GetMembershipFunc mocks the GetMembership method.
-	GetMembershipFunc func(ctx context.Context, membershipKey keys.MembershipKey) (*group.Membership, error)
+	GetMembershipFunc func(ctx context.Context, membershipKey keys.MembershipKey) (*domain.Membership, error)
 
 	// GetMembershipsForGroupFunc mocks the GetMembershipsForGroup method.
-	GetMembershipsForGroupFunc func(ctx context.Context, groupKey keys.GroupKey, membershipStatus *group.MembershipStatus) (*group.Memberships, error)
+	GetMembershipsForGroupFunc func(ctx context.Context, groupKey keys.GroupKey, membershipStatus *domain.MembershipStatus) (*domain.Memberships, error)
 
 	// GetMembershipsForUserFunc mocks the GetMembershipsForUser method.
-	GetMembershipsForUserFunc func(ctx context.Context, userKey keys.UserKey, membershipStatus *group.MembershipStatus) (*group.Memberships, error)
+	GetMembershipsForUserFunc func(ctx context.Context, userKey keys.UserKey, membershipStatus *domain.MembershipStatus) (*domain.Memberships, error)
 
 	// MarkInvitationAsAcceptedFunc mocks the MarkInvitationAsAccepted method.
 	MarkInvitationAsAcceptedFunc func(ctx context.Context, membershipKey keys.MembershipKey, decisionFrom group.MembershipParty) error
@@ -163,7 +164,7 @@ type GroupStore struct {
 			// GroupKey is the groupKey argument value.
 			GroupKey keys.GroupKey
 			// MembershipStatus is the membershipStatus argument value.
-			MembershipStatus *group.MembershipStatus
+			MembershipStatus *domain.MembershipStatus
 		}
 		// GetMembershipsForUser holds details about calls to the GetMembershipsForUser method.
 		GetMembershipsForUser []struct {
@@ -172,7 +173,7 @@ type GroupStore struct {
 			// UserKey is the userKey argument value.
 			UserKey keys.UserKey
 			// MembershipStatus is the membershipStatus argument value.
-			MembershipStatus *group.MembershipStatus
+			MembershipStatus *domain.MembershipStatus
 		}
 		// MarkInvitationAsAccepted holds details about calls to the MarkInvitationAsAccepted method.
 		MarkInvitationAsAccepted []struct {
@@ -197,7 +198,7 @@ type GroupStore struct {
 }
 
 // CreateGroupAndMembership calls CreateGroupAndMembershipFunc.
-func (mock *GroupStore) CreateGroupAndMembership(ctx context.Context, groupKey keys.GroupKey, createdBy keys.UserKey, name string, description string) (*group.Group, *group.Membership, error) {
+func (mock *GroupStore) CreateGroupAndMembership(ctx context.Context, groupKey keys.GroupKey, createdBy keys.UserKey, name string, description string) (*group.Group, *domain.Membership, error) {
 	if mock.CreateGroupAndMembershipFunc == nil {
 		panic("GroupStore.CreateGroupAndMembershipFunc: method is nil but Store.CreateGroupAndMembership was just called")
 	}
@@ -244,7 +245,7 @@ func (mock *GroupStore) CreateGroupAndMembershipCalls() []struct {
 }
 
 // CreateMembership calls CreateMembershipFunc.
-func (mock *GroupStore) CreateMembership(ctx context.Context, membershipKey keys.MembershipKey, isMember bool, isAdmin bool, isOwner bool, isDeactivated bool, groupConfirmed bool, userConfirmed bool) (*group.Membership, error) {
+func (mock *GroupStore) CreateMembership(ctx context.Context, membershipKey keys.MembershipKey, isMember bool, isAdmin bool, isOwner bool, isDeactivated bool, groupConfirmed bool, userConfirmed bool) (*domain.Membership, error) {
 	if mock.CreateMembershipFunc == nil {
 		panic("GroupStore.CreateMembershipFunc: method is nil but Store.CreateMembership was just called")
 	}
@@ -443,7 +444,7 @@ func (mock *GroupStore) GetGroupsByKeysCalls() []struct {
 }
 
 // GetMembership calls GetMembershipFunc.
-func (mock *GroupStore) GetMembership(ctx context.Context, membershipKey keys.MembershipKey) (*group.Membership, error) {
+func (mock *GroupStore) GetMembership(ctx context.Context, membershipKey keys.MembershipKey) (*domain.Membership, error) {
 	if mock.GetMembershipFunc == nil {
 		panic("GroupStore.GetMembershipFunc: method is nil but Store.GetMembership was just called")
 	}
@@ -478,14 +479,14 @@ func (mock *GroupStore) GetMembershipCalls() []struct {
 }
 
 // GetMembershipsForGroup calls GetMembershipsForGroupFunc.
-func (mock *GroupStore) GetMembershipsForGroup(ctx context.Context, groupKey keys.GroupKey, membershipStatus *group.MembershipStatus) (*group.Memberships, error) {
+func (mock *GroupStore) GetMembershipsForGroup(ctx context.Context, groupKey keys.GroupKey, membershipStatus *domain.MembershipStatus) (*domain.Memberships, error) {
 	if mock.GetMembershipsForGroupFunc == nil {
 		panic("GroupStore.GetMembershipsForGroupFunc: method is nil but Store.GetMembershipsForGroup was just called")
 	}
 	callInfo := struct {
 		Ctx              context.Context
 		GroupKey         keys.GroupKey
-		MembershipStatus *group.MembershipStatus
+		MembershipStatus *domain.MembershipStatus
 	}{
 		Ctx:              ctx,
 		GroupKey:         groupKey,
@@ -503,12 +504,12 @@ func (mock *GroupStore) GetMembershipsForGroup(ctx context.Context, groupKey key
 func (mock *GroupStore) GetMembershipsForGroupCalls() []struct {
 	Ctx              context.Context
 	GroupKey         keys.GroupKey
-	MembershipStatus *group.MembershipStatus
+	MembershipStatus *domain.MembershipStatus
 } {
 	var calls []struct {
 		Ctx              context.Context
 		GroupKey         keys.GroupKey
-		MembershipStatus *group.MembershipStatus
+		MembershipStatus *domain.MembershipStatus
 	}
 	mock.lockGetMembershipsForGroup.RLock()
 	calls = mock.calls.GetMembershipsForGroup
@@ -517,14 +518,14 @@ func (mock *GroupStore) GetMembershipsForGroupCalls() []struct {
 }
 
 // GetMembershipsForUser calls GetMembershipsForUserFunc.
-func (mock *GroupStore) GetMembershipsForUser(ctx context.Context, userKey keys.UserKey, membershipStatus *group.MembershipStatus) (*group.Memberships, error) {
+func (mock *GroupStore) GetMembershipsForUser(ctx context.Context, userKey keys.UserKey, membershipStatus *domain.MembershipStatus) (*domain.Memberships, error) {
 	if mock.GetMembershipsForUserFunc == nil {
 		panic("GroupStore.GetMembershipsForUserFunc: method is nil but Store.GetMembershipsForUser was just called")
 	}
 	callInfo := struct {
 		Ctx              context.Context
 		UserKey          keys.UserKey
-		MembershipStatus *group.MembershipStatus
+		MembershipStatus *domain.MembershipStatus
 	}{
 		Ctx:              ctx,
 		UserKey:          userKey,
@@ -542,12 +543,12 @@ func (mock *GroupStore) GetMembershipsForUser(ctx context.Context, userKey keys.
 func (mock *GroupStore) GetMembershipsForUserCalls() []struct {
 	Ctx              context.Context
 	UserKey          keys.UserKey
-	MembershipStatus *group.MembershipStatus
+	MembershipStatus *domain.MembershipStatus
 } {
 	var calls []struct {
 		Ctx              context.Context
 		UserKey          keys.UserKey
-		MembershipStatus *group.MembershipStatus
+		MembershipStatus *domain.MembershipStatus
 	}
 	mock.lockGetMembershipsForUser.RLock()
 	calls = mock.calls.GetMembershipsForUser

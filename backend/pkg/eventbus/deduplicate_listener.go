@@ -2,7 +2,7 @@ package eventbus
 
 import (
 	"context"
-	"github.com/commonpool/backend/pkg/eventstore"
+	"github.com/commonpool/backend/pkg/eventsource"
 )
 
 type DeduplicateListener struct {
@@ -19,9 +19,9 @@ func NewDeduplicateListener(deduplicator EventDeduplicator, listener Listener) *
 }
 
 func (s *DeduplicateListener) Listen(ctx context.Context, listenerFunc ListenerFunc) error {
-	return s.listener.Listen(ctx, func(events []*eventstore.StreamEvent) error {
-		return s.deduplicator.Deduplicate(ctx, events, func(evt *eventstore.StreamEvent) error {
-			return listenerFunc([]*eventstore.StreamEvent{evt})
+	return s.listener.Listen(ctx, func(events []eventsource.Event) error {
+		return s.deduplicator.Deduplicate(ctx, events, func(evt eventsource.Event) error {
+			return listenerFunc([]eventsource.Event{evt})
 		})
 	})
 }

@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/commonpool/backend/pkg/auth"
 	"github.com/commonpool/backend/pkg/group"
+	"github.com/commonpool/backend/pkg/group/domain"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/labstack/echo/v4"
@@ -18,7 +19,7 @@ type CreateOrAcceptInvitationResponse struct {
 	Membership Membership `json:"membership"`
 }
 
-func NewCreateOrAcceptInvitationResponse(membership *group.Membership, groupNames group.Names, userNames auth.UserNames) *CreateOrAcceptInvitationResponse {
+func NewCreateOrAcceptInvitationResponse(membership *domain.Membership, groupNames group.Names, userNames auth.UserNames) *CreateOrAcceptInvitationResponse {
 	return &CreateOrAcceptInvitationResponse{
 		Membership: NewMembership(membership, groupNames, userNames),
 	}
@@ -50,24 +51,26 @@ func (h *Handler) CreateOrAcceptMembership(c echo.Context) error {
 	userKey := keys.NewUserKey(req.UserID)
 
 	membershipKey := keys.NewMembershipKey(groupKey, userKey)
-	acceptInvitationResponse, err := h.groupService.CreateOrAcceptInvitation(ctx, group.NewAcceptInvitationRequest(membershipKey))
+	err = h.groupService.CreateOrAcceptInvitation(ctx, group.NewAcceptInvitationRequest(membershipKey))
 	if err != nil {
 		return err
 	}
 
-	memberships := group.NewMemberships([]*group.Membership{acceptInvitationResponse.Membership})
+	return c.NoContent(http.StatusAccepted)
 
-	userNames, err := h.getUserNamesForMemberships(ctx, memberships)
-	if err != nil {
-		return err
-	}
-
-	groupNames, err := h.getGroupNamesForMemberships(ctx, memberships)
-	if err != nil {
-		return err
-	}
-
-	response := NewCreateOrAcceptInvitationResponse(acceptInvitationResponse.Membership, groupNames, userNames)
-	return c.JSON(http.StatusOK, response)
+	// memberships := domain.NewMemberships([]*domain.Membership{acceptInvitationResponse.Membership})
+	//
+	// userNames, err := h.getUserNamesForMemberships(ctx, memberships)
+	// if err != nil {
+	// 	return err
+	// }
+	//
+	// groupNames, err := h.getGroupNamesForMemberships(ctx, memberships)
+	// if err != nil {
+	// 	return err
+	// }
+	//
+	// response := NewCreateOrAcceptInvitationResponse(acceptInvitationResponse.Membership, groupNames, userNames)
+	// return c.JSON(http.StatusOK, response)
 
 }

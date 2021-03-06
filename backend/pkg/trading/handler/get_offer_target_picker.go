@@ -3,16 +3,16 @@ package handler
 import (
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/keys"
-	"github.com/commonpool/backend/pkg/trading"
+	"github.com/commonpool/backend/pkg/trading/domain"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
 
 type OfferGroupOrUserPickerItem struct {
-	Type    trading.TargetType `json:"type"`
-	UserID  *string            `json:"userId"`
-	GroupID *string            `json:"groupId"`
-	Name    string             `json:"name"`
+	Type    domain.TargetType `json:"type"`
+	UserID  *string           `json:"userId"`
+	GroupID *string           `json:"groupId"`
+	Name    string            `json:"name"`
 }
 
 type OfferGroupOrUserPickerResult struct {
@@ -28,7 +28,7 @@ func (h *TradingHandler) HandleOfferItemTargetPicker(c echo.Context) error {
 		return err
 	}
 
-	offerItemType, err := trading.ParseOfferItemType(c.QueryParams().Get("type"))
+	offerItemType, err := domain.ParseOfferItemType(c.QueryParams().Get("type"))
 	if err != nil {
 		return err
 	}
@@ -58,7 +58,7 @@ func (h *TradingHandler) HandleOfferItemTargetPicker(c echo.Context) error {
 	for _, group := range groups.Items {
 		groupId := group.GetKey().String()
 		items = append(items, OfferGroupOrUserPickerItem{
-			Type:    trading.GroupTarget,
+			Type:    domain.GroupTarget,
 			GroupID: &groupId,
 			Name:    group.Name,
 		})
@@ -72,7 +72,7 @@ func (h *TradingHandler) HandleOfferItemTargetPicker(c echo.Context) error {
 	for _, item := range users.Items {
 		userKey := item.GetUserKey().String()
 		items = append(items, OfferGroupOrUserPickerItem{
-			Type:   trading.UserTarget,
+			Type:   domain.UserTarget,
 			UserID: &userKey,
 			Name:   item.Username,
 		})

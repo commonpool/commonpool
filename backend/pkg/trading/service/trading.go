@@ -8,20 +8,22 @@ import (
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/resource"
 	trading2 "github.com/commonpool/backend/pkg/trading"
-	"github.com/commonpool/backend/pkg/trading/domain"
+	tradingdomain "github.com/commonpool/backend/pkg/trading/domain"
+	"github.com/commonpool/backend/pkg/trading/queries"
 	transaction2 "github.com/commonpool/backend/pkg/transaction"
 	"github.com/commonpool/backend/pkg/user"
 	"time"
 )
 
 type TradingService struct {
-	tradingStore       trading2.Store
-	transactionService transaction2.Service
-	groupService       group2.Service
-	resourceStore      resource.Store
-	userStore          user.Store
-	chatService        chat.Service
-	offerRepo          domain.OfferRepository
+	tradingStore                trading2.Store
+	transactionService          transaction2.Service
+	groupService                group2.Service
+	resourceStore               resource.Store
+	userStore                   user.Store
+	chatService                 chat.Service
+	offerRepo                   tradingdomain.OfferRepository
+	getOfferKeyFromOfferItemKey *queries.GetOfferKeyForOfferItemKey
 }
 
 var _ trading2.Service = &TradingService{}
@@ -33,15 +35,17 @@ func NewTradingService(
 	chatService chat.Service,
 	groupService group2.Service,
 	transactionService transaction2.Service,
-	offerRepo domain.OfferRepository) *TradingService {
+	offerRepo tradingdomain.OfferRepository,
+	getOfferKeyFromOfferItemKey *queries.GetOfferKeyForOfferItemKey) *TradingService {
 	return &TradingService{
-		tradingStore:       tradingStore,
-		resourceStore:      resourceStore,
-		userStore:          authStore,
-		chatService:        chatService,
-		groupService:       groupService,
-		transactionService: transactionService,
-		offerRepo:          offerRepo,
+		tradingStore:                tradingStore,
+		resourceStore:               resourceStore,
+		userStore:                   authStore,
+		chatService:                 chatService,
+		groupService:                groupService,
+		transactionService:          transactionService,
+		offerRepo:                   offerRepo,
+		getOfferKeyFromOfferItemKey: getOfferKeyFromOfferItemKey,
 	}
 }
 
@@ -49,35 +53,35 @@ func (t TradingService) checkOfferCompleted(
 	ctx context.Context,
 	groupKey keys.GroupKey,
 	offerKey keys.OfferKey,
-	offerItems *trading2.OfferItems,
+	offerItems *tradingdomain.OfferItems,
 	userConfirmingItem user.UserReference,
 	usersInOffer *user.Users) error {
 
 	if offerItems.AllApproved() && offerItems.AllUserActionsCompleted() {
 		for _, offerItem := range offerItems.Items {
 			if offerItem.IsCreditTransfer() {
-				creditTransfer := offerItem.(*trading2.CreditTransferItem)
+				creditTransfer := offerItem.(*tradingdomain.CreditTransferItem)
 				_, err := t.transactionService.TimeCreditsExchanged(groupKey, creditTransfer.From, creditTransfer.To, creditTransfer.Amount)
 				if err != nil {
 					return err
 				}
 			}
 			if offerItem.IsServiceProviding() {
-				serviceProvision := offerItem.(*trading2.ProvideServiceItem)
+				serviceProvision := offerItem.(*tradingdomain.ProvideServiceItem)
 				_, err := t.transactionService.ServiceWasProvided(groupKey, serviceProvision.ResourceKey, serviceProvision.Duration)
 				if err != nil {
 					return err
 				}
 			}
 			if offerItem.IsBorrowingResource() {
-				borrowResource := offerItem.(*trading2.BorrowResourceItem)
+				borrowResource := offerItem.(*tradingdomain.BorrowResourceItem)
 				_, err := t.transactionService.ResourceWasBorrowed(groupKey, borrowResource.ResourceKey, borrowResource.To, borrowResource.Duration)
 				if err != nil {
 					return err
 				}
 			}
 			if offerItem.IsResourceTransfer() {
-				transfer := offerItem.(*trading2.ResourceTransferItem)
+				transfer := offerItem.(*tradingdomain.ResourceTransferItem)
 				_, err := t.transactionService.ResourceWasTaken(groupKey, transfer.ResourceKey, transfer.To)
 				if err != nil {
 					return err
@@ -85,7 +89,7 @@ func (t TradingService) checkOfferCompleted(
 			}
 		}
 
-		err := t.tradingStore.UpdateOfferStatus(offerKey, trading2.CompletedOffer)
+		err := t.tradingStore.UpdateOfferStatus(offerKey, tradingdomain.Completed)
 		if err != nil {
 			return err
 		}
@@ -108,7 +112,7 @@ func (t TradingService) checkOfferCompleted(
 	return nil
 }
 
-func (t TradingService) buildOfferCompletedMessage(ctx context.Context, items *trading2.OfferItems, users *user.Users) ([]chat.Block, string, error) {
+func (t TradingService) buildOfferCompletedMessage(ctx context.Context, items *tradingdomain.OfferItems, users *user.Users) ([]chat.Block, string, error) {
 
 	var blocks []chat.Block
 
@@ -122,7 +126,7 @@ func (t TradingService) buildOfferCompletedMessage(ctx context.Context, items *t
 
 		if offerItem.IsCreditTransfer() {
 
-			creditTransfer := offerItem.(*trading2.CreditTransferItem)
+			creditTransfer := offerItem.(*tradingdomain.CreditTransferItem)
 
 			var toLink = ""
 			var fromLink = ""
@@ -156,7 +160,7 @@ func (t TradingService) buildOfferCompletedMessage(ctx context.Context, items *t
 
 }
 
-func (t TradingService) checkIfAllItemsCompleted(ctx context.Context, loggerInUser user.UserReference, offerItem trading2.OfferItem) error {
+func (t TradingService) checkIfAllItemsCompleted(ctx context.Context, loggerInUser user.UserReference, offerItem tradingdomain.OfferItem) error {
 
 	offer, err := t.tradingStore.GetOffer(offerItem.GetOfferKey())
 	if err != nil {

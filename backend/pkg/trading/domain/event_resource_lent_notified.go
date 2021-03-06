@@ -1,29 +1,28 @@
 package domain
 
-import "github.com/commonpool/backend/pkg/keys"
+import (
+	"github.com/commonpool/backend/pkg/eventsource"
+	"github.com/commonpool/backend/pkg/keys"
+)
 
-type ResourceLentNotified struct {
-	Type         OfferEvent        `json:"type"`
+type ResourceLentNotifiedPayload struct {
 	NotifiedBy   keys.UserKey      `json:"notified_by"`
 	OfferItemKey keys.OfferItemKey `json:"offer_item_key"`
-	Version      int               `json:"version"`
+}
+
+type ResourceLentNotified struct {
+	eventsource.EventEnvelope
+	ResourceLentNotifiedPayload `json:"payload"`
 }
 
 func NewResourceLentNotified(notifiedBy keys.UserKey, resourceOfferItemKey keys.OfferItemKey) *ResourceLentNotified {
 	return &ResourceLentNotified{
-		Type:         ResourceLentNotifiedEvent,
-		NotifiedBy:   notifiedBy,
-		OfferItemKey: resourceOfferItemKey,
-		Version:      1,
+		eventsource.NewEventEnvelope(ResourceLentNotifiedEvent, 1),
+		ResourceLentNotifiedPayload{
+			notifiedBy,
+			resourceOfferItemKey,
+		},
 	}
 }
 
-func (o *ResourceLentNotified) GetType() OfferEvent {
-	return o.Type
-}
-
-func (o *ResourceLentNotified) GetVersion() int {
-	return o.Version
-}
-
-var _ Event = &ResourceLentNotified{}
+var _ eventsource.Event = &ResourceLentNotified{}

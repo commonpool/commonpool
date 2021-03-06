@@ -7,6 +7,7 @@ import (
 	"context"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/trading"
+	"github.com/commonpool/backend/pkg/trading/domain"
 	"sync"
 )
 
@@ -97,16 +98,16 @@ type TradingService struct {
 	FindApproversForOffersFunc func(offers *keys.OfferKeys) (*trading.OffersApprovers, error)
 
 	// FindTargetsForOfferItemFunc mocks the FindTargetsForOfferItem method.
-	FindTargetsForOfferItemFunc func(ctx context.Context, groupKey keys.GroupKey, itemType trading.OfferItemType, from *trading.Target, to *trading.Target) (*trading.Targets, error)
+	FindTargetsForOfferItemFunc func(ctx context.Context, groupKey keys.GroupKey, itemType domain.OfferItemType, from *domain.Target, to *domain.Target) (*domain.Targets, error)
 
 	// GetOfferFunc mocks the GetOffer method.
 	GetOfferFunc func(offerKey keys.OfferKey) (*trading.Offer, error)
 
 	// GetOfferItemFunc mocks the GetOfferItem method.
-	GetOfferItemFunc func(ctx context.Context, offerItemKey keys.OfferItemKey) (trading.OfferItem, error)
+	GetOfferItemFunc func(ctx context.Context, offerItemKey keys.OfferItemKey) (domain.OfferItem, error)
 
 	// GetOfferItemsForOfferFunc mocks the GetOfferItemsForOffer method.
-	GetOfferItemsForOfferFunc func(offerKey keys.OfferKey) (*trading.OfferItems, error)
+	GetOfferItemsForOfferFunc func(offerKey keys.OfferKey) (*domain.OfferItems, error)
 
 	// GetOffersForUserFunc mocks the GetOffersForUser method.
 	GetOffersForUserFunc func(key keys.UserKey) (*trading.GetOffersResult, error)
@@ -115,7 +116,7 @@ type TradingService struct {
 	GetTradingHistoryFunc func(ctx context.Context, userIDs *keys.UserKeys) ([]trading.HistoryEntry, error)
 
 	// SendOfferFunc mocks the SendOffer method.
-	SendOfferFunc func(ctx context.Context, groupKey keys.GroupKey, offerItems *trading.OfferItems, message string) (*trading.Offer, *trading.OfferItems, error)
+	SendOfferFunc func(ctx context.Context, groupKey keys.GroupKey, offerItems *domain.OfferItems, message string) (*trading.Offer, *domain.OfferItems, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -178,11 +179,11 @@ type TradingService struct {
 			// GroupKey is the groupKey argument value.
 			GroupKey keys.GroupKey
 			// ItemType is the itemType argument value.
-			ItemType trading.OfferItemType
+			ItemType domain.OfferItemType
 			// From is the from argument value.
-			From *trading.Target
+			From *domain.Target
 			// To is the to argument value.
-			To *trading.Target
+			To *domain.Target
 		}
 		// GetOffer holds details about calls to the GetOffer method.
 		GetOffer []struct {
@@ -220,7 +221,7 @@ type TradingService struct {
 			// GroupKey is the groupKey argument value.
 			GroupKey keys.GroupKey
 			// OfferItems is the offerItems argument value.
-			OfferItems *trading.OfferItems
+			OfferItems *domain.OfferItems
 			// Message is the message argument value.
 			Message string
 		}
@@ -515,16 +516,16 @@ func (mock *TradingService) FindApproversForOffersCalls() []struct {
 }
 
 // FindTargetsForOfferItem calls FindTargetsForOfferItemFunc.
-func (mock *TradingService) FindTargetsForOfferItem(ctx context.Context, groupKey keys.GroupKey, itemType trading.OfferItemType, from *trading.Target, to *trading.Target) (*trading.Targets, error) {
+func (mock *TradingService) FindTargetsForOfferItem(ctx context.Context, groupKey keys.GroupKey, itemType domain.OfferItemType, from *domain.Target, to *domain.Target) (*domain.Targets, error) {
 	if mock.FindTargetsForOfferItemFunc == nil {
 		panic("TradingService.FindTargetsForOfferItemFunc: method is nil but Service.FindTargetsForOfferItem was just called")
 	}
 	callInfo := struct {
 		Ctx      context.Context
 		GroupKey keys.GroupKey
-		ItemType trading.OfferItemType
-		From     *trading.Target
-		To       *trading.Target
+		ItemType domain.OfferItemType
+		From     *domain.Target
+		To       *domain.Target
 	}{
 		Ctx:      ctx,
 		GroupKey: groupKey,
@@ -544,16 +545,16 @@ func (mock *TradingService) FindTargetsForOfferItem(ctx context.Context, groupKe
 func (mock *TradingService) FindTargetsForOfferItemCalls() []struct {
 	Ctx      context.Context
 	GroupKey keys.GroupKey
-	ItemType trading.OfferItemType
-	From     *trading.Target
-	To       *trading.Target
+	ItemType domain.OfferItemType
+	From     *domain.Target
+	To       *domain.Target
 } {
 	var calls []struct {
 		Ctx      context.Context
 		GroupKey keys.GroupKey
-		ItemType trading.OfferItemType
-		From     *trading.Target
-		To       *trading.Target
+		ItemType domain.OfferItemType
+		From     *domain.Target
+		To       *domain.Target
 	}
 	mock.lockFindTargetsForOfferItem.RLock()
 	calls = mock.calls.FindTargetsForOfferItem
@@ -593,7 +594,7 @@ func (mock *TradingService) GetOfferCalls() []struct {
 }
 
 // GetOfferItem calls GetOfferItemFunc.
-func (mock *TradingService) GetOfferItem(ctx context.Context, offerItemKey keys.OfferItemKey) (trading.OfferItem, error) {
+func (mock *TradingService) GetOfferItem(ctx context.Context, offerItemKey keys.OfferItemKey) (domain.OfferItem, error) {
 	if mock.GetOfferItemFunc == nil {
 		panic("TradingService.GetOfferItemFunc: method is nil but Service.GetOfferItem was just called")
 	}
@@ -628,7 +629,7 @@ func (mock *TradingService) GetOfferItemCalls() []struct {
 }
 
 // GetOfferItemsForOffer calls GetOfferItemsForOfferFunc.
-func (mock *TradingService) GetOfferItemsForOffer(offerKey keys.OfferKey) (*trading.OfferItems, error) {
+func (mock *TradingService) GetOfferItemsForOffer(offerKey keys.OfferKey) (*domain.OfferItems, error) {
 	if mock.GetOfferItemsForOfferFunc == nil {
 		panic("TradingService.GetOfferItemsForOfferFunc: method is nil but Service.GetOfferItemsForOffer was just called")
 	}
@@ -725,14 +726,14 @@ func (mock *TradingService) GetTradingHistoryCalls() []struct {
 }
 
 // SendOffer calls SendOfferFunc.
-func (mock *TradingService) SendOffer(ctx context.Context, groupKey keys.GroupKey, offerItems *trading.OfferItems, message string) (*trading.Offer, *trading.OfferItems, error) {
+func (mock *TradingService) SendOffer(ctx context.Context, groupKey keys.GroupKey, offerItems *domain.OfferItems, message string) (*trading.Offer, *domain.OfferItems, error) {
 	if mock.SendOfferFunc == nil {
 		panic("TradingService.SendOfferFunc: method is nil but Service.SendOffer was just called")
 	}
 	callInfo := struct {
 		Ctx        context.Context
 		GroupKey   keys.GroupKey
-		OfferItems *trading.OfferItems
+		OfferItems *domain.OfferItems
 		Message    string
 	}{
 		Ctx:        ctx,
@@ -752,13 +753,13 @@ func (mock *TradingService) SendOffer(ctx context.Context, groupKey keys.GroupKe
 func (mock *TradingService) SendOfferCalls() []struct {
 	Ctx        context.Context
 	GroupKey   keys.GroupKey
-	OfferItems *trading.OfferItems
+	OfferItems *domain.OfferItems
 	Message    string
 } {
 	var calls []struct {
 		Ctx        context.Context
 		GroupKey   keys.GroupKey
-		OfferItems *trading.OfferItems
+		OfferItems *domain.OfferItems
 		Message    string
 	}
 	mock.lockSendOffer.RLock()

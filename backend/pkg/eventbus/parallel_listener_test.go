@@ -2,7 +2,8 @@ package eventbus
 
 import (
 	"context"
-	"github.com/commonpool/backend/pkg/eventstore"
+	"github.com/commonpool/backend/pkg/eventsource"
+	"github.com/commonpool/backend/pkg/test"
 	"github.com/stretchr/testify/assert"
 	"strconv"
 	"sync"
@@ -19,10 +20,10 @@ func TestParallelListener(t *testing.T) {
 	batchSize := 20
 
 	for i := 0; i < listenerCount; i++ {
-		events := evts()
+		events := test.NewMockEvents()
 		for j := 0; j < batchSize; j++ {
 			evtId := "evt-" + strconv.Itoa(i*batchSize+j)
-			events = append(events, evt("type", evtId))
+			events = append(events, test.NewMockEvent(evtId))
 			evtCalledMap[evtId] = false
 			expectedEventIds = append(expectedEventIds, evtId)
 		}
@@ -35,12 +36,12 @@ func TestParallelListener(t *testing.T) {
 		return
 	}
 
-	var calls [][]*eventstore.StreamEvent
-	if !assert.NoError(t, p.Listen(context.TODO(), func(events []*eventstore.StreamEvent) error {
+	var calls [][]eventsource.Event
+	if !assert.NoError(t, p.Listen(context.TODO(), func(events []eventsource.Event) error {
 		calls = append(calls, events)
 		mu.Lock()
 		for _, event := range events {
-			evtCalledMap[event.EventID] = true
+			evtCalledMap[event.GetEventID()] = true
 		}
 		mu.Unlock()
 		return nil
