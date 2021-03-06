@@ -5,53 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7cd8279a-e3af-42a0-8513-69224f91376a" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/backend/pkg/group/queries/get_group_memberships.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/pkg/group/queries/get_user_memberships.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/backend/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/backend/go.sum" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/auth/authenticator/oidc/oidc_authenticator.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/auth/authenticator/oidc/oidc_authenticator.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/auth/store/user_repository.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/auth/store/user_repository.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/chat/service/service.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/chat/service/service.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/clusterlock/redis_lock.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/clusterlock/redis_lock.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/eventbus/rabbit_listener.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/eventbus/rabbit_listener.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/eventstore/eventstore.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/eventstore/eventstore.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/eventstore/postgres/postgres.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/eventstore/postgres/postgres.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/eventstore/publish/publish.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/eventstore/publish/publish.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/exceptions/exceptions.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/exceptions/exceptions.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/domain/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/domain/group.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/handler/get_group.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/handler/get_group.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/handler/get_group_memberships.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/handler/get_group_memberships.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/handler/get_membership.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/handler/get_membership.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/handler/get_user_memberships.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/handler/get_user_memberships.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/handler/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/handler/group.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/handler/handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/handler/handler.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/handler/helpers.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/handler/helpers.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/handler/membership.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/handler/membership.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/handler/post_group.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/handler/post_group.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/handler/post_membership.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/handler/post_membership.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/listeners/group_read_model.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/listeners/group_read_model.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/queries/get_group.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/queries/get_group.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/readmodels/readmodels.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/readmodels/readmodels.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/service.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/service.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/service/create_group.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/service/create_group.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/service/get_group.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/service/get_group.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/service/get_group_memberships.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/service/get_group_memberships.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/service/get_membership.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/service/get_membership.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/service/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/service/group.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/store.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/store.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/store/group_repo.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/store/group_repo.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/handler/assertions.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/handler/assertions.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/handler/handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/handler/handler.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/server/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/server/server.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/service/find_offer_item_targets.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/service/find_offer_item_targets.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/store/repository.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/store/repository.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/group/service/decline_invitation.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/service/decline_invitation.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/test/integration/group_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test/integration/group_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/test/integration/helpers_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test/integration/helpers_test.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/test/integration/main_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test/integration/main_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/test/integration/resource_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test/integration/resource_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/test/integration/trading_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test/integration/trading_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/test/integration/utils_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test/integration/utils_test.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -130,7 +87,7 @@
       <recent name="$PROJECT_DIR$/backend/pkg/chat/service" />
     </key>
   </component>
-  <component name="RunManager" selected="Go Test.go test integration">
+  <component name="RunManager" selected="Go Test.TestGroups in github.com/commonpool/backend/test/integration (1)">
     <configuration name="go build github.com/commonpool/backend" type="GoApplicationRunConfiguration" factoryName="Go Application" nameIsGenerated="true">
       <module name="commonpool" />
       <working_directory value="$PROJECT_DIR$/backend" />
@@ -174,30 +131,7 @@
       <pattern value="^\QTestIntegration\E$/^\QTestCannotCreateResourceTransferItemForResourceAlreadyOwned\E$" />
       <method v="2" />
     </configuration>
-    <configuration name="TestGroups in github.com/commonpool/backend/test/integration (3)" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
-      <module name="commonpool" />
-      <working_directory value="$PROJECT_DIR$/backend/test/integration" />
-      <parameters value=" -testify.m ^TestGroups$ -testify.m ^TestGroups$" />
-      <EXTENSION ID="net.ashald.envfile">
-        <option name="IS_ENABLED" value="true" />
-        <option name="IS_SUBST" value="false" />
-        <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
-        <option name="IS_IGNORE_MISSING_FILES" value="false" />
-        <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
-        <ENTRIES>
-          <ENTRY IS_ENABLED="true" PARSER="runconfig" />
-          <ENTRY IS_ENABLED="true" PARSER="env" PATH="backend/.env" />
-        </ENTRIES>
-      </EXTENSION>
-      <framework value="gotest" />
-      <kind value="PACKAGE" />
-      <package value="github.com/commonpool/backend/test/integration" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$" />
-      <pattern value="^\QTestIntegration\E$/^\QTestGroups\E$" />
-      <method v="2" />
-    </configuration>
-    <configuration name="TestGroups in github.com/commonpool/backend/test/integration (4)" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="TestGroups in github.com/commonpool/backend/test/integration (1)" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="commonpool" />
       <working_directory value="$PROJECT_DIR$/backend/test/integration" />
       <parameters value=" -testify.m ^TestGroups$" />
@@ -217,7 +151,30 @@
       <package value="github.com/commonpool/backend/test/integration" />
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
-      <pattern value="^\QTestIntegration\E$/^\QTestGroups\E$/^\QCreateGroup\E$" />
+      <pattern value="^\QTestIntegration\E$/^\QTestGroups\E$/^\QInviteeShouldBeAbleToDeclineInvitationFromOwner\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="TestGroups in github.com/commonpool/backend/test/integration" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="commonpool" />
+      <working_directory value="$PROJECT_DIR$/backend/test/integration" />
+      <parameters value=" -testify.m ^TestGroups$" />
+      <EXTENSION ID="net.ashald.envfile">
+        <option name="IS_ENABLED" value="true" />
+        <option name="IS_SUBST" value="false" />
+        <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
+        <option name="IS_IGNORE_MISSING_FILES" value="false" />
+        <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
+        <ENTRIES>
+          <ENTRY IS_ENABLED="true" PARSER="runconfig" />
+          <ENTRY IS_ENABLED="true" PARSER="env" PATH="backend/.env" />
+        </ENTRIES>
+      </EXTENSION>
+      <framework value="gotest" />
+      <kind value="PACKAGE" />
+      <package value="github.com/commonpool/backend/test/integration" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <pattern value="^\QTestIntegration\E$/^\QTestGroups\E$/^\QInviteeShouldBeAbleToAcceptInvitationFromOwner\E$" />
       <method v="2" />
     </configuration>
     <configuration name="TestIntegration/TestGroups/OwnerShouldBeAbleToInviteUser in github.com/commonpool/backend/test/integration" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
@@ -288,18 +245,18 @@
     <list>
       <item itemvalue="Go Build.go build github.com/commonpool/backend" />
       <item itemvalue="Go Test.go test integration" />
-      <item itemvalue="Go Test.TestGroups in github.com/commonpool/backend/test/integration (3)" />
       <item itemvalue="Go Test.TestIntegration/TestGroups/OwnerShouldBeAbleToInviteUser in github.com/commonpool/backend/test/integration" />
-      <item itemvalue="Go Test.TestGroups in github.com/commonpool/backend/test/integration (4)" />
       <item itemvalue="Go Test.TestCannotCreateResourceTransferItemForResourceAlreadyOwned in github.com/commonpool/backend/test/integration" />
+      <item itemvalue="Go Test.TestGroups in github.com/commonpool/backend/test/integration" />
+      <item itemvalue="Go Test.TestGroups in github.com/commonpool/backend/test/integration (1)" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Go Test.TestGroups in github.com/commonpool/backend/test/integration (1)" />
         <item itemvalue="Go Test.go test integration" />
+        <item itemvalue="Go Test.TestGroups in github.com/commonpool/backend/test/integration" />
         <item itemvalue="Go Test.TestCannotCreateResourceTransferItemForResourceAlreadyOwned in github.com/commonpool/backend/test/integration" />
         <item itemvalue="Go Test.TestIntegration/TestGroups/OwnerShouldBeAbleToInviteUser in github.com/commonpool/backend/test/integration" />
-        <item itemvalue="Go Test.TestGroups in github.com/commonpool/backend/test/integration (4)" />
-        <item itemvalue="Go Test.TestGroups in github.com/commonpool/backend/test/integration (3)" />
       </list>
     </recent_temporary>
   </component>
@@ -361,7 +318,14 @@
       <option name="project" value="LOCAL" />
       <updated>1615031850514</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="wrk">
+      <created>1615051739086</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1615051739086</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

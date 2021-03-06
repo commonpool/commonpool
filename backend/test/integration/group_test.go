@@ -32,7 +32,7 @@ func (s *IntegrationTestSuite) CreateOrAcceptInvitation(t *testing.T, ctx contex
 }
 
 func (s *IntegrationTestSuite) DeclineOrCancelInvitation(t *testing.T, ctx context.Context, userSession *models.UserSession, request *handler.CancelOrDeclineInvitationRequest) *http.Response {
-	req, recorder := NewRequest(ctx, userSession, http.MethodGet, "/api/v1/memberships", request)
+	req, recorder := NewRequest(ctx, userSession, http.MethodDelete, "/api/v1/memberships", request)
 	s.server.Router.ServeHTTP(recorder, req)
 	response := group2.CancelOrDeclineInvitationRequest{}
 	t.Log(recorder.Body.String())
@@ -238,29 +238,37 @@ func (s *IntegrationTestSuite) TestGroups() {
 		if !AssertStatusCreated(t, httpResponse) {
 			return
 		}
-		res, httpResponse := s.CreateOrAcceptInvitation(t, ctx, user1, &handler.CreateOrAcceptInvitationRequest{
+
+		_, httpResponse = s.CreateOrAcceptInvitation(t, ctx, user1, &handler.CreateOrAcceptInvitationRequest{
 			UserID:  user2.Subject,
 			GroupID: createGroup.Group.ID,
 		})
-		if !AssertStatusNoContent(t, httpResponse) {
+		if !AssertStatusAccepted(t, httpResponse) {
 			return
 		}
 
-		res, httpResponse = s.CreateOrAcceptInvitation(t, ctx, user2, &handler.CreateOrAcceptInvitationRequest{
+		_, httpResponse = s.CreateOrAcceptInvitation(t, ctx, user2, &handler.CreateOrAcceptInvitationRequest{
 			UserID:  user2.Subject,
 			GroupID: createGroup.Group.ID,
 		})
+		if !AssertStatusAccepted(t, httpResponse) {
+			return
+		}
+
+		time.Sleep(50 * time.Millisecond)
+
+		membership, httpResponse := s.GetMembership(t, ctx, user2, user2.Subject, createGroup.Group.ID)
 		if !AssertOK(t, httpResponse) {
 			return
 		}
 
-		assert.Equal(t, user2.Subject, res.Membership.UserID)
-		assert.Equal(t, false, res.Membership.IsAdmin)
-		assert.Equal(t, false, res.Membership.IsOwner)
-		assert.Equal(t, false, res.Membership.IsDeactivated)
-		assert.Equal(t, true, res.Membership.IsMember)
-		assert.Equal(t, true, res.Membership.GroupConfirmed)
-		assert.Equal(t, true, res.Membership.UserConfirmed)
+		assert.Equal(t, user2.Subject, membership.Membership.UserID)
+		assert.Equal(t, false, membership.Membership.IsAdmin)
+		assert.Equal(t, false, membership.Membership.IsOwner)
+		assert.Equal(t, false, membership.Membership.IsDeactivated)
+		assert.Equal(t, true, membership.Membership.IsMember)
+		assert.Equal(t, true, membership.Membership.GroupConfirmed)
+		assert.Equal(t, true, membership.Membership.UserConfirmed)
 	})
 
 	s.T().Run("InviteeShouldBeAbleToDeclineInvitationFromOwner", func(t *testing.T) {
@@ -277,7 +285,7 @@ func (s *IntegrationTestSuite) TestGroups() {
 			UserID:  user2.Subject,
 			GroupID: createGroup.Group.ID,
 		})
-		if !AssertOK(t, httpResponse) {
+		if !AssertStatusAccepted(t, httpResponse) {
 			return
 		}
 

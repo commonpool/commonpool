@@ -5,6 +5,7 @@ import (
 	"github.com/commonpool/backend/pkg/auth/models"
 	chatstore "github.com/commonpool/backend/pkg/chat/store"
 	"github.com/commonpool/backend/pkg/config"
+	"github.com/commonpool/backend/pkg/eventstore"
 	"github.com/commonpool/backend/pkg/server"
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/suite"
@@ -69,6 +70,8 @@ func (s *IntegrationTestSuite) cleanDb() {
 	s.server.Db.Delete(chatstore.Channel{}, "1 = 1")
 	s.server.Db.Delete(chatstore.ChannelSubscription{}, "1 = 1")
 	s.server.Db.Delete(chatstore.Message{}, "1 = 1")
+	s.server.Db.Delete(eventstore.StreamEvent{}, "1 = 1")
+	s.server.Db.Delete(eventstore.Stream{}, "1 = 1")
 }
 
 func getDb(appConfig *config.AppConfig) *gorm.DB {
