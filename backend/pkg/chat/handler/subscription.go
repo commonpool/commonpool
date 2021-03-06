@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/chat/service"
 	"time"
 )
 
@@ -38,7 +39,7 @@ func MapSubscription(channel *chat.Channel, subscription *chat.ChannelSubscripti
 	}
 }
 
-func MapSubscriptions(ctx context.Context, chatService chat.Service, subscriptions *chat.ChannelSubscriptions) ([]Subscription, error) {
+func MapSubscriptions(ctx context.Context, chatService service.Service, subscriptions *chat.ChannelSubscriptions) ([]Subscription, error) {
 	var items []Subscription
 	for _, subscription := range subscriptions.Items {
 		channel, err := chatService.GetChannel(ctx, subscription.GetChannelKey())

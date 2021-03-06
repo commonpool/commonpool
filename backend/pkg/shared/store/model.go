@@ -2,10 +2,10 @@ package store
 
 import (
 	"fmt"
+	store3 "github.com/commonpool/backend/pkg/auth/store"
 	store2 "github.com/commonpool/backend/pkg/group/store"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/trading/domain"
-	"github.com/commonpool/backend/pkg/user/store"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 )
 
@@ -31,7 +31,7 @@ func MapTargets(record *neo4j.Record, targetsFieldName string) (*domain.Targets,
 
 func MapOfferItemTarget(node neo4j.Node) (*domain.Target, error) {
 	isGroup := store2.IsGroupNode(node)
-	isUser := !isGroup && store.IsUserNode(node)
+	isUser := !isGroup && store3.IsUserNode(node)
 	if !isGroup && !isUser {
 		return nil, fmt.Errorf("target is neither user nor group")
 	}

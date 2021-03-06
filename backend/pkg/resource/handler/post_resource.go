@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/pkg/auth"
+	"github.com/commonpool/backend/pkg/auth/authenticator/oidc"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/resource"
@@ -61,7 +61,7 @@ func (h *ResourceHandler) CreateResource(c echo.Context) error {
 	req.Resource.Description = strings.TrimSpace(req.Resource.Description)
 
 	// get logged in user
-	loggedInUser, err := auth.GetLoggedInUser(ctx)
+	loggedInUser, err := oidc.GetLoggedInUser(ctx)
 	if err != nil {
 		return err
 	}

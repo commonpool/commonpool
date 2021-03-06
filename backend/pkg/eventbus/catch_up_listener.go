@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/commonpool/backend/pkg/clusterlock"
+	"github.com/commonpool/backend/pkg/eventsource"
 	"github.com/commonpool/backend/pkg/eventstore"
 	"github.com/commonpool/backend/pkg/mq"
 	"time"
@@ -19,6 +20,7 @@ type CatchUpListener struct {
 	lockOptions  *clusterlock.Options
 	initialized  bool
 	listener     Listener
+	eventMapper  *eventsource.EventMapper
 }
 
 func NewCatchUpListener(
@@ -28,7 +30,8 @@ func NewCatchUpListener(
 	deduplicator EventDeduplicator,
 	clusterLock clusterlock.Locker,
 	lockTTL time.Duration,
-	lockOptions *clusterlock.Options) *CatchUpListener {
+	lockOptions *clusterlock.Options,
+	eventMapper *eventsource.EventMapper) *CatchUpListener {
 	return &CatchUpListener{
 		eventStore:   eventStore,
 		getTimestamp: getTimestamp,
@@ -37,6 +40,7 @@ func NewCatchUpListener(
 		clusterLock:  clusterLock,
 		lockTTL:      lockTTL,
 		lockOptions:  lockOptions,
+		eventMapper:  eventMapper,
 	}
 }
 
@@ -56,7 +60,7 @@ func (c *CatchUpListener) Initialize(ctx context.Context, name string, eventType
 			NewSequenceListener(
 				[]Listener{
 					NewReplayListener(c.eventStore, c.getTimestamp),
-					NewRabbitMqListener(c.amqpClient),
+					NewRabbitMqListener(c.amqpClient, c.eventMapper),
 				}), c.clusterLock, c.lockTTL, c.lockOptions))
 
 	if err := listener.Initialize(ctx, name, eventTypes); err != nil {

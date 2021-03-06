@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"fmt"
+	"github.com/commonpool/backend/pkg/auth/store"
 	"github.com/commonpool/backend/pkg/exceptions"
 	graph2 "github.com/commonpool/backend/pkg/graph"
 	groupstore "github.com/commonpool/backend/pkg/group/store"
@@ -12,7 +13,6 @@ import (
 	sharedstore "github.com/commonpool/backend/pkg/shared/store"
 	"github.com/commonpool/backend/pkg/trading"
 	tradingdomain "github.com/commonpool/backend/pkg/trading/domain"
-	store2 "github.com/commonpool/backend/pkg/user/store"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"strconv"
 	"strings"
@@ -922,7 +922,7 @@ func MapOfferItem(offerKey keys.OfferKey, offerItemNode neo4j.Node, fromNode *ne
 	var err error
 
 	if fromNode != nil {
-		if groupstore.IsGroupNode(*fromNode) || store2.IsUserNode(*fromNode) {
+		if groupstore.IsGroupNode(*fromNode) || store.IsUserNode(*fromNode) {
 			fromTarget, err = sharedstore.MapOfferItemTarget(*fromNode)
 			if err != nil {
 				return nil, err
@@ -935,7 +935,7 @@ func MapOfferItem(offerKey keys.OfferKey, offerItemNode neo4j.Node, fromNode *ne
 		}
 	}
 	if toNode != nil {
-		if groupstore.IsGroupNode(*toNode) || store2.IsUserNode(*toNode) {
+		if groupstore.IsGroupNode(*toNode) || store.IsUserNode(*toNode) {
 			toTarget, err = sharedstore.MapOfferItemTarget(*toNode)
 			if err != nil {
 				return nil, err

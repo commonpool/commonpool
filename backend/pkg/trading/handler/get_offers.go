@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/pkg/auth"
+	"github.com/commonpool/backend/pkg/auth/authenticator/oidc"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -15,7 +15,7 @@ func (h *TradingHandler) HandleGetOffers(c echo.Context) error {
 
 	ctx, _ := handler.GetEchoContext(c, "HandleGetOffers")
 
-	loggedInUser, err := auth.GetLoggedInUser(ctx)
+	loggedInUser, err := oidc.GetLoggedInUser(ctx)
 	if err != nil {
 		return err
 	}

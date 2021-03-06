@@ -2,19 +2,20 @@ package service
 
 import (
 	"context"
-	"github.com/commonpool/backend/pkg/auth"
+	"github.com/commonpool/backend/pkg/auth/authenticator/oidc"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/chat/store"
 )
 
 func (c ChatService) GetSubscriptionsForUser(ctx context.Context, take int, skip int) (*chat.ChannelSubscriptions, error) {
 
-	loggedInUser, err := auth.GetLoggedInUser(ctx)
+	loggedInUser, err := oidc.GetLoggedInUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 	loggedInUserKey := loggedInUser.GetUserKey()
 
-	subs, err := c.chatStore.GetSubscriptionsForUser(ctx, &chat.GetSubscriptions{
+	subs, err := c.chatStore.GetSubscriptionsForUser(ctx, &store.GetSubscriptions{
 		Take:    take,
 		Skip:    skip,
 		UserKey: loggedInUserKey,

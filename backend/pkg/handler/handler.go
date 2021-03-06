@@ -3,7 +3,7 @@ package handler
 import (
 	"context"
 	"github.com/commonpool/backend/logging"
-	"github.com/commonpool/backend/pkg/auth"
+	"github.com/commonpool/backend/pkg/auth/authenticator"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 )
@@ -11,12 +11,12 @@ import (
 func GetContext(c echo.Context) context.Context {
 	ctx := c.Request().Context()
 
-	if isAuth, ok := c.Get(auth.IsAuthenticatedKey).(bool); ok {
+	if isAuth, ok := c.Get(authenticator.IsAuthenticatedKey).(bool); ok {
 		if isAuth {
-			ctx = context.WithValue(ctx, auth.IsAuthenticatedKey, true)
-			ctx = context.WithValue(ctx, auth.SubjectUsernameKey, c.Get(auth.SubjectUsernameKey))
-			ctx = context.WithValue(ctx, auth.SubjectEmailKey, c.Get(auth.SubjectEmailKey))
-			ctx = context.WithValue(ctx, auth.SubjectKey, c.Get(auth.SubjectKey))
+			ctx = context.WithValue(ctx, authenticator.IsAuthenticatedKey, true)
+			ctx = context.WithValue(ctx, authenticator.SubjectUsernameKey, c.Get(authenticator.SubjectUsernameKey))
+			ctx = context.WithValue(ctx, authenticator.SubjectEmailKey, c.Get(authenticator.SubjectEmailKey))
+			ctx = context.WithValue(ctx, authenticator.SubjectKey, c.Get(authenticator.SubjectKey))
 		}
 	}
 

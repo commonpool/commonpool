@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"github.com/commonpool/backend/pkg/auth"
+	"github.com/commonpool/backend/pkg/auth/models"
 	"github.com/commonpool/backend/pkg/chat"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/mq"
@@ -16,7 +16,7 @@ import (
 func (s *serviceTestSuite) TestSendMessage() {
 	ctx := context.TODO()
 
-	auth.SetContextAuthenticatedUser(ctx, "username", "user", "user@email.com")
+	models.SetContextAuthenticatedUser(ctx, "username", "user", "user@email.com")
 	channelKey := keys.NewChannelKey("channel-id")
 	messageKey := keys.NewMessageKey(uuid.FromStringOrNil("1370bb5e-4310-4d79-95f7-3923ba3f552a"))
 	timestamp := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)

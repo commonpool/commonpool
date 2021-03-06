@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/commonpool/backend/pkg/db"
+	"github.com/commonpool/backend/pkg/eventsource"
 	"github.com/commonpool/backend/pkg/eventstore"
 	"github.com/commonpool/backend/pkg/eventstore/postgres"
 	"github.com/commonpool/backend/pkg/keys"
@@ -29,7 +30,11 @@ func (s *RepositoryTestSuite) SetupSuite() {
 	if err := s.db.AutoMigrate(&eventstore.StreamEvent{}, eventstore.Stream{}); err != nil {
 		s.T().Fatal(err)
 	}
-	s.eventStore = postgres.NewPostgresEventStore(s.db)
+	eventMapper := eventsource.NewEventMapper()
+	if err := domain.RegisterEvents(eventMapper); !assert.NoError(s.T(), err) {
+		return
+	}
+	s.eventStore = postgres.NewPostgresEventStore(s.db, eventMapper)
 	s.repository = &EventSourcedOfferRepository{
 		eventStore: s.eventStore,
 	}
@@ -46,16 +51,9 @@ func (s *RepositoryTestSuite) TestSaveOffer() {
 	user2Target := domain.NewUserTarget(user2Key)
 
 	offer := domain.NewOffer()
-	assert.NoError(s.T(), offer.Submit(groupKey, domain.OfferItems{
-		Items: []domain.OfferItem{
-			&domain.CreditTransferItem{
-				OfferItemKey: offerItemKey,
-				Amount:       time.Hour * 3,
-				From:         user1Target,
-				To:           user2Target,
-			},
-		},
-	}))
+	assert.NoError(s.T(), offer.Submit(user1Key, groupKey, domain.NewOfferItems([]domain.OfferItem{
+		domain.NewCreditTransferItem(offer.GetKey(), offerItemKey, user1Target, user2Target, time.Hour*3),
+	})))
 
 	assert.NoError(s.T(), s.repository.Save(s.ctx, offer))
 

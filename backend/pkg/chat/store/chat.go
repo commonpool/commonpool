@@ -12,7 +12,7 @@ type ChatStore struct {
 	db *gorm.DB
 }
 
-var _ chat.Store = &ChatStore{}
+var _ Store = &ChatStore{}
 
 func NewChatStore(db *gorm.DB) *ChatStore {
 	return &ChatStore{

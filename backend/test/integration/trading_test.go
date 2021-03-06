@@ -3,10 +3,10 @@ package integration
 import (
 	"context"
 	"fmt"
+	"github.com/commonpool/backend/pkg/auth/models"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/trading/domain"
 
-	"github.com/commonpool/backend/pkg/auth"
 	handler2 "github.com/commonpool/backend/pkg/resource/handler"
 	"github.com/commonpool/backend/pkg/trading"
 	"github.com/commonpool/backend/pkg/trading/handler"
@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-func SubmitOffer(t *testing.T, ctx context.Context, userSession *auth.UserSession, request *handler.SendOfferRequest) (*handler.OfferResponse, *http.Response, error) {
+func SubmitOffer(t *testing.T, ctx context.Context, userSession *models.UserSession, request *handler.SendOfferRequest) (*handler.OfferResponse, *http.Response, error) {
 	c, recorder := NewRequest(ctx, userSession, http.MethodPost, "/api/v1/offers", request)
 	err := TradingHandler.HandleSendOffer(c)
 	if err != nil {
@@ -27,7 +27,7 @@ func SubmitOffer(t *testing.T, ctx context.Context, userSession *auth.UserSessio
 	return response, ReadResponse(t, recorder, response), nil
 }
 
-func AcceptOffer(t *testing.T, ctx context.Context, userSession *auth.UserSession, offerKey keys.OfferKey) *http.Response {
+func AcceptOffer(t *testing.T, ctx context.Context, userSession *models.UserSession, offerKey keys.OfferKey) *http.Response {
 	c, recorder := NewRequest(ctx, userSession, http.MethodPost, fmt.Sprintf("/api/v1/offers/%s/accept", offerKey.ID.String()), nil)
 	c.SetParamNames("id")
 	c.SetParamValues(offerKey.ID.String())
@@ -35,7 +35,7 @@ func AcceptOffer(t *testing.T, ctx context.Context, userSession *auth.UserSessio
 	return recorder.Result()
 }
 
-func ConfirmResourceTransfer(t *testing.T, ctx context.Context, userSession *auth.UserSession, offerItemKey keys.OfferItemKey) *http.Response {
+func ConfirmResourceTransfer(t *testing.T, ctx context.Context, userSession *models.UserSession, offerItemKey keys.OfferItemKey) *http.Response {
 	c, recorder := NewRequest(ctx, userSession, http.MethodPost, fmt.Sprintf("/api/v1/offer-items/%s/confirm/resource-transferred", offerItemKey.ID.String()), nil)
 	c.SetParamNames("id")
 	c.SetParamValues(offerItemKey.ID.String())
@@ -43,7 +43,7 @@ func ConfirmResourceTransfer(t *testing.T, ctx context.Context, userSession *aut
 	return recorder.Result()
 }
 
-func DeclineOffer(t *testing.T, ctx context.Context, userSession *auth.UserSession, offerKey keys.OfferKey) *http.Response {
+func DeclineOffer(t *testing.T, ctx context.Context, userSession *models.UserSession, offerKey keys.OfferKey) *http.Response {
 	c, recorder := NewRequest(ctx, userSession, http.MethodPost, fmt.Sprintf("/api/v1/offers/%s/decline", offerKey.ID.String()), nil)
 	c.SetParamNames("id")
 	c.SetParamValues(offerKey.ID.String())
@@ -185,7 +185,7 @@ func TestUserCanSubmitOfferBetweenGroupAndMultipleUsers(t *testing.T) {
 	assert.Equal(t, http.StatusCreated, httpOfferResp.StatusCode)
 	assert.Equal(t, 3, len(offerResp.Offer.Items))
 
-	UsersAcceptOffer(t, ctx, offerResp.Offer, []*auth.UserSession{user1, user2})
+	UsersAcceptOffer(t, ctx, offerResp.Offer, []*models.UserSession{user1, user2})
 
 }
 
@@ -527,8 +527,8 @@ func TestCanGetTradingHistory(t *testing.T) {
 	})
 	AssertStatusCreated(t, offer1Http)
 
-	assert.NoError(t, UsersAcceptOffer(t, ctx, offer1.Offer, []*auth.UserSession{user1, user2}))
-	assert.NoError(t, UsersConfirmResourceTransferred(t, ctx, offer1.Offer, []*auth.UserSession{user1, user2}))
+	assert.NoError(t, UsersAcceptOffer(t, ctx, offer1.Offer, []*models.UserSession{user1, user2}))
+	assert.NoError(t, UsersConfirmResourceTransferred(t, ctx, offer1.Offer, []*models.UserSession{user1, user2}))
 
 	offer2, offer2Http, _ := SubmitOffer(t, ctx, user1, &handler.SendOfferRequest{
 		Offer: handler.SendOfferPayload{
@@ -541,8 +541,8 @@ func TestCanGetTradingHistory(t *testing.T) {
 	})
 	AssertStatusCreated(t, offer2Http)
 
-	assert.NoError(t, UsersAcceptOffer(t, ctx, offer2.Offer, []*auth.UserSession{user1, user2}))
-	assert.NoError(t, UsersConfirmResourceTransferred(t, ctx, offer2.Offer, []*auth.UserSession{user1, user2}))
+	assert.NoError(t, UsersAcceptOffer(t, ctx, offer2.Offer, []*models.UserSession{user1, user2}))
+	assert.NoError(t, UsersConfirmResourceTransferred(t, ctx, offer2.Offer, []*models.UserSession{user1, user2}))
 
 }
 
@@ -595,7 +595,7 @@ func TestCanGetTradingHistory(t *testing.T) {
 //
 // }
 
-func UsersConfirmResourceTransferred(t *testing.T, ctx context.Context, offer *handler.Offer, users []*auth.UserSession) error {
+func UsersConfirmResourceTransferred(t *testing.T, ctx context.Context, offer *handler.Offer, users []*models.UserSession) error {
 	for _, offerItem := range offer.Items {
 
 		if offerItem.Type != domain.ResourceTransfer {
@@ -623,7 +623,7 @@ func UsersConfirmResourceTransferred(t *testing.T, ctx context.Context, offer *h
 	return nil
 }
 
-func UsersAcceptOffer(t *testing.T, ctx context.Context, offer *handler.Offer, users []*auth.UserSession) error {
+func UsersAcceptOffer(t *testing.T, ctx context.Context, offer *handler.Offer, users []*models.UserSession) error {
 
 	usersAccepted := map[keys.UserKey]bool{}
 
@@ -659,7 +659,7 @@ func UsersAcceptOffer(t *testing.T, ctx context.Context, offer *handler.Offer, u
 	return nil
 }
 
-func findUserSession(subject string, users []*auth.UserSession) (*auth.UserSession, error) {
+func findUserSession(subject string, users []*models.UserSession) (*models.UserSession, error) {
 	for _, user := range users {
 		if user.Subject == subject {
 			return user, nil

@@ -2,14 +2,14 @@ package service
 
 import (
 	"context"
-	"github.com/commonpool/backend/pkg/auth"
+	"github.com/commonpool/backend/pkg/auth/authenticator/oidc"
 	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/pkg/keys"
 )
 
 func (t TradingService) ConfirmResourceBorrowed(ctx context.Context, confirmedItemKey keys.OfferItemKey) error {
 
-	loggedInUser, err := auth.GetLoggedInUser(ctx)
+	loggedInUser, err := oidc.GetLoggedInUser(ctx)
 	if err != nil {
 		return err
 	}

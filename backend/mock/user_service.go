@@ -5,14 +5,16 @@ package mock
 
 import (
 	"context"
+	"github.com/commonpool/backend/pkg/auth/models"
+	"github.com/commonpool/backend/pkg/auth/service"
+	"github.com/commonpool/backend/pkg/auth/store"
 	"github.com/commonpool/backend/pkg/keys"
-	"github.com/commonpool/backend/pkg/user"
 	"sync"
 )
 
 // Ensure, that UserService does implement user.Service.
 // If this is not the case, regenerate this file with moq.
-var _ user.Service = &UserService{}
+var _ service.Service = &UserService{}
 
 // UserService is a mock implementation of user.Service.
 //
@@ -40,13 +42,13 @@ var _ user.Service = &UserService{}
 //     }
 type UserService struct {
 	// FindFunc mocks the Find method.
-	FindFunc func(query user.Query) (*user.Users, error)
+	FindFunc func(query store.Query) (*models.Users, error)
 
 	// GetByKeysFunc mocks the GetByKeys method.
-	GetByKeysFunc func(ctx context.Context, userKeys *keys.UserKeys) (*user.Users, error)
+	GetByKeysFunc func(ctx context.Context, userKeys *keys.UserKeys) (*models.Users, error)
 
 	// GetUserFunc mocks the GetUser method.
-	GetUserFunc func(userKey keys.UserKey) (*user.User, error)
+	GetUserFunc func(userKey keys.UserKey) (*models.User, error)
 
 	// GetUsernameFunc mocks the GetUsername method.
 	GetUsernameFunc func(userKey keys.UserKey) (string, error)
@@ -56,7 +58,7 @@ type UserService struct {
 		// Find holds details about calls to the Find method.
 		Find []struct {
 			// Query is the query argument value.
-			Query user.Query
+			Query store.Query
 		}
 		// GetByKeys holds details about calls to the GetByKeys method.
 		GetByKeys []struct {
@@ -83,12 +85,12 @@ type UserService struct {
 }
 
 // Find calls FindFunc.
-func (mock *UserService) Find(query user.Query) (*user.Users, error) {
+func (mock *UserService) Find(query store.Query) (*models.Users, error) {
 	if mock.FindFunc == nil {
 		panic("UserService.FindFunc: method is nil but Service.Find was just called")
 	}
 	callInfo := struct {
-		Query user.Query
+		Query store.Query
 	}{
 		Query: query,
 	}
@@ -102,10 +104,10 @@ func (mock *UserService) Find(query user.Query) (*user.Users, error) {
 // Check the length with:
 //     len(mockedService.FindCalls())
 func (mock *UserService) FindCalls() []struct {
-	Query user.Query
+	Query store.Query
 } {
 	var calls []struct {
-		Query user.Query
+		Query store.Query
 	}
 	mock.lockFind.RLock()
 	calls = mock.calls.Find
@@ -114,7 +116,7 @@ func (mock *UserService) FindCalls() []struct {
 }
 
 // GetByKeys calls GetByKeysFunc.
-func (mock *UserService) GetByKeys(ctx context.Context, userKeys *keys.UserKeys) (*user.Users, error) {
+func (mock *UserService) GetByKeys(ctx context.Context, userKeys *keys.UserKeys) (*models.Users, error) {
 	if mock.GetByKeysFunc == nil {
 		panic("UserService.GetByKeysFunc: method is nil but Service.GetByKeys was just called")
 	}
@@ -149,7 +151,7 @@ func (mock *UserService) GetByKeysCalls() []struct {
 }
 
 // GetUser calls GetUserFunc.
-func (mock *UserService) GetUser(userKey keys.UserKey) (*user.User, error) {
+func (mock *UserService) GetUser(userKey keys.UserKey) (*models.User, error) {
 	if mock.GetUserFunc == nil {
 		panic("UserService.GetUserFunc: method is nil but Service.GetUser was just called")
 	}

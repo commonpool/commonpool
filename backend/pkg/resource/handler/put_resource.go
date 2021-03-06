@@ -2,7 +2,7 @@ package handler
 
 import (
 	"fmt"
-	"github.com/commonpool/backend/pkg/auth"
+	"github.com/commonpool/backend/pkg/auth/authenticator/oidc"
 	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/keys"
@@ -74,7 +74,7 @@ func (h *ResourceHandler) UpdateResource(c echo.Context) error {
 
 	// make sure user is owner of resource
 
-	loggedInUser, err := auth.GetLoggedInUser(ctx)
+	loggedInUser, err := oidc.GetLoggedInUser(ctx)
 	if err != nil {
 		return exceptions.ErrUnauthorized
 	}

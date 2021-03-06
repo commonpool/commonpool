@@ -48,21 +48,19 @@ func (s *EventStoreSuite) SetupTest() {
 }
 
 func (s *EventStoreSuite) TestLoadEventsFromEmptyEventStore() {
-	streamKey := eventstore.NewStreamKey("mock", "mock-id")
+	streamKey := eventstore.NewStreamKey(test.MockAggregateType, "mock-id")
 	events, err := s.eventStore.Load(s.ctx, streamKey)
 	assert.NoError(s.T(), err)
 	assert.Empty(s.T(), events)
 }
 
-func (s *EventStoreSuite) TestSaveEventsShouldStoreEvents() {
+func (s *EventStoreSuite) TestSaveEventsShouldSetCorrelationID() {
 
-	streamKey := eventstore.NewStreamKey("mock", "mock-id")
+	streamKey := eventstore.NewStreamKey(test.MockAggregateType, "mock-id")
 
-	evt1 := test.NewMockEvent("1")
-	evt2 := test.NewMockEvent("2")
 	events := test.NewMockEvents(
-		evt1,
-		evt2,
+		test.NewMockEvent("1"),
+		test.NewMockEvent("2"),
 	)
 
 	if !assert.NoError(s.T(), s.eventStore.Save(s.ctx, streamKey, 0, events)) {
@@ -72,12 +70,72 @@ func (s *EventStoreSuite) TestSaveEventsShouldStoreEvents() {
 	loadedEvents, err := s.eventStore.Load(s.ctx, streamKey)
 	assert.NoError(s.T(), err)
 	assert.Len(s.T(), loadedEvents, 2)
-	assert.Equal(s.T(), evt1, loadedEvents[0])
-	assert.Equal(s.T(), evt2, loadedEvents[1])
+	assert.NotEmpty(s.T(), loadedEvents[0].GetCorrelationID())
+	assert.NotEmpty(s.T(), loadedEvents[1].GetCorrelationID())
+	assert.Equal(s.T(), loadedEvents[0].GetCorrelationID(), loadedEvents[1].GetCorrelationID())
+}
+func (s *EventStoreSuite) TestSaveEventsShouldSetEventID() {
+
+	streamKey := eventstore.NewStreamKey(test.MockAggregateType, "mock-id")
+
+	events := test.NewMockEvents(
+		test.NewMockEvent("1"),
+		test.NewMockEvent("2"),
+	)
+
+	if !assert.NoError(s.T(), s.eventStore.Save(s.ctx, streamKey, 0, events)) {
+		return
+	}
+
+	loadedEvents, err := s.eventStore.Load(s.ctx, streamKey)
+	assert.NoError(s.T(), err)
+	assert.Len(s.T(), loadedEvents, 2)
+	assert.NotEmpty(s.T(), loadedEvents[0].GetEventID())
+	assert.NotEmpty(s.T(), loadedEvents[1].GetEventID())
+	assert.NotEqual(s.T(), loadedEvents[0].GetEventID(), loadedEvents[1].GetEventID())
+}
+
+func (s *EventStoreSuite) TestSaveEventsShouldSetSequenceNoForNewStreams() {
+	streamKey := eventstore.NewStreamKey(test.MockAggregateType, "mock-id")
+	if !assert.NoError(s.T(), s.eventStore.Save(s.ctx, streamKey, 0, test.NewMockEvents(
+		test.NewMockEvent("1"),
+		test.NewMockEvent("2"),
+	))) {
+		return
+	}
+	loadedEvents, err := s.eventStore.Load(s.ctx, streamKey)
+	assert.NoError(s.T(), err)
+	assert.Len(s.T(), loadedEvents, 2)
+	assert.Equal(s.T(), 0, loadedEvents[0].GetSequenceNo())
+	assert.Equal(s.T(), 1, loadedEvents[1].GetSequenceNo())
+}
+
+func (s *EventStoreSuite) TestSaveEventsShouldSetSequenceNoForExistingStreams() {
+	streamKey := eventstore.NewStreamKey(test.MockAggregateType, "mock-id")
+
+	if !assert.NoError(s.T(), s.eventStore.Save(s.ctx, streamKey, 0, test.NewMockEvents(
+		test.NewMockEvent("1"),
+		test.NewMockEvent("2"),
+	))) {
+		return
+	}
+
+	if !assert.NoError(s.T(), s.eventStore.Save(s.ctx, streamKey, 2, test.NewMockEvents(
+		test.NewMockEvent("3"),
+	))) {
+		return
+	}
+
+	loadedEvents, err := s.eventStore.Load(s.ctx, streamKey)
+	assert.NoError(s.T(), err)
+	assert.Len(s.T(), loadedEvents, 3)
+	assert.Equal(s.T(), 0, loadedEvents[0].GetSequenceNo())
+	assert.Equal(s.T(), 1, loadedEvents[1].GetSequenceNo())
+	assert.Equal(s.T(), 2, loadedEvents[2].GetSequenceNo())
 }
 
 func (s *EventStoreSuite) TestSaveShouldThrowWhenEmptyStreamIsNotExpectedVersion() {
-	streamKey := eventstore.NewStreamKey("mock", "mock-id")
+	streamKey := eventstore.NewStreamKey(test.MockAggregateType, "mock-id")
 	events := test.NewMockEvents(
 		test.NewMockEvent("1"),
 		test.NewMockEvent("2"),
@@ -86,7 +144,7 @@ func (s *EventStoreSuite) TestSaveShouldThrowWhenEmptyStreamIsNotExpectedVersion
 }
 
 func (s *EventStoreSuite) TestSaveShouldThrowWhenStreamIsNotExpectedVersion() {
-	streamKey := eventstore.NewStreamKey("mock", "mock-id")
+	streamKey := eventstore.NewStreamKey(test.MockAggregateType, "mock-id")
 	evt1 := test.NewMockEvent("1")
 	evt2 := test.NewMockEvent("2")
 	assert.NoError(s.T(), s.eventStore.Save(s.ctx, streamKey, 0, test.NewMockEvents(evt1)))
@@ -94,7 +152,7 @@ func (s *EventStoreSuite) TestSaveShouldThrowWhenStreamIsNotExpectedVersion() {
 }
 
 func (s *EventStoreSuite) TestSaveShouldThrowWhenEventsHaveSameID() {
-	streamKey := eventstore.NewStreamKey("mock", "mock-id")
+	streamKey := eventstore.NewStreamKey(test.MockAggregateType, "mock-id")
 	evt1 := test.NewMockEvent("1")
 	evt2 := test.NewMockEvent("2")
 	assert.NoError(s.T(), s.eventStore.Save(s.ctx, streamKey, 0, test.NewMockEvents(evt1)))
@@ -105,7 +163,7 @@ func (s *EventStoreSuite) TestGetEventsByType() {
 
 	now := time.Now()
 
-	streamKey := eventstore.NewStreamKey("mock", "mock-id")
+	streamKey := eventstore.NewStreamKey(test.MockAggregateType, "mock-id")
 
 	evt1 := test.NewMockEvent("1")
 	evt2 := test.NewMockEvent("2")
@@ -122,7 +180,7 @@ func (s *EventStoreSuite) TestGetEventsByType() {
 	assert.NoError(s.T(), s.eventStore.Save(s.ctx, streamKey, 0, events))
 
 	var loaded []eventsource.Event
-	err := s.eventStore.ReplayEventsByType(s.ctx, []string{"mock"}, now.Add(-3*time.Hour), func(events []eventsource.Event) error {
+	err := s.eventStore.ReplayEventsByType(s.ctx, []string{test.MockEventType}, now.Add(-3*time.Hour), func(events []eventsource.Event) error {
 		for _, streamEvent := range events {
 			loaded = append(loaded, streamEvent)
 		}

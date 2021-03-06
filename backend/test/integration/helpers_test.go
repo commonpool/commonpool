@@ -2,14 +2,14 @@ package integration
 
 import (
 	"context"
-	"github.com/commonpool/backend/pkg/auth"
+	"github.com/commonpool/backend/pkg/auth/models"
 	"github.com/commonpool/backend/pkg/group/handler"
 	"net/http"
 	"strconv"
 	"testing"
 )
 
-func testUser(t *testing.T) (*auth.UserSession, func()) {
+func testUser(t *testing.T) (*models.UserSession, func()) {
 	t.Helper()
 
 	createUserLock.Lock()
@@ -32,7 +32,7 @@ func testUser(t *testing.T) (*auth.UserSession, func()) {
 		t.Fatalf("exchange error: %s", userXchangeErr)
 	}
 
-	return u, func(user *auth.UserSession) func() {
+	return u, func(user *models.UserSession) func() {
 		return func() {
 			session := Driver.GetSession()
 			defer session.Close()
@@ -51,7 +51,7 @@ func testUser(t *testing.T) (*auth.UserSession, func()) {
 
 var groupCounter = 0
 
-func testGroup(t *testing.T, owner *auth.UserSession, members ...*auth.UserSession) *handler.Group {
+func testGroup(t *testing.T, owner *models.UserSession, members ...*models.UserSession) *handler.Group {
 	ctx := context.Background()
 	groupCounter++
 	response, httpResponse, err := CreateGroup(t, ctx, owner, &handler.CreateGroupRequest{

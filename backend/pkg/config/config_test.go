@@ -43,6 +43,11 @@ func setup() {
 	env["CALLBACK_TOKEN"] = "cb-token"
 	env["AMQP_URL"] = "amqp-url"
 	env["SECURE_COOKIES"] = "sec-ckies"
+	env["REDIS_HOST"] = "sec-ckies"
+	env["REDIS_PASSWORD"] = "sec-ckies"
+	env["REDIS_PORT"] = "sec-ckies"
+	env["REDIS_ENABLE_TLS"] = "true"
+	env["REDIS_TLS_SKIP_VERIFY"] = "true"
 }
 
 func TestGetDbConfigShouldNotFail(t *testing.T) {

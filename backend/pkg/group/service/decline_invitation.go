@@ -3,8 +3,9 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/commonpool/backend/pkg/auth"
+	"github.com/commonpool/backend/pkg/auth/authenticator/oidc"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/chat/service"
 	group2 "github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/mq"
@@ -14,7 +15,7 @@ func (g GroupService) CancelOrDeclineInvitation(ctx context.Context, request *gr
 
 	membershipKey := request.MembershipKey
 
-	userSession, err := auth.GetLoggedInUser(ctx)
+	userSession, err := oidc.GetLoggedInUser(ctx)
 	if err != nil {
 		return err
 	}
@@ -95,7 +96,7 @@ func (g GroupService) CancelOrDeclineInvitation(ctx context.Context, request *gr
 			nil,
 		)
 
-		_, err = g.chatService.SendGroupMessage(ctx, chat.NewSendGroupMessage(request.MembershipKey.GroupKey, membershipKey.UserKey, usernameLeavingGroup, text, []chat.Block{*message}, []chat.Attachment{}, nil))
+		_, err = g.chatService.SendGroupMessage(ctx, service.NewSendGroupMessage(request.MembershipKey.GroupKey, membershipKey.UserKey, usernameLeavingGroup, text, []chat.Block{*message}, []chat.Attachment{}, nil))
 		if err != nil {
 			return err
 		}

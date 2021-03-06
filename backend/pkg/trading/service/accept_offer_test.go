@@ -3,11 +3,10 @@ package service
 import (
 	"context"
 	"github.com/commonpool/backend/mock"
-	"github.com/commonpool/backend/pkg/auth"
+	"github.com/commonpool/backend/pkg/auth/models"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/trading"
 	"github.com/commonpool/backend/pkg/trading/domain"
-	"github.com/commonpool/backend/pkg/user"
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 	"time"
@@ -63,8 +62,8 @@ func (t *tradingTestSuite) TestAcceptOffer() {
 	}
 
 	userStore := &mock.UserStore{
-		GetByKeysFunc: func(ctx context.Context, userKeys *keys.UserKeys) (*user.Users, error) {
-			return user.NewUsers([]*user.User{
+		GetByKeysFunc: func(ctx context.Context, userKeys *keys.UserKeys) (*models.Users, error) {
+			return models.NewUsers([]*models.User{
 				{
 					ID: userKey.String(),
 				},
@@ -78,7 +77,7 @@ func (t *tradingTestSuite) TestAcceptOffer() {
 	}
 
 	ctx := context.TODO()
-	ctx = auth.SetContextAuthenticatedUser(ctx, "user", "username", "user@email.com")
+	ctx = models.SetContextAuthenticatedUser(ctx, "user", "username", "user@email.com")
 
 	err := tradingService.AcceptOffer(ctx, offerKey)
 

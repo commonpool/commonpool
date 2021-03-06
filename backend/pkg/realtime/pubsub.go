@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/commonpool/backend/logging"
-	"github.com/commonpool/backend/pkg/auth"
-	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/auth/authenticator"
+	"github.com/commonpool/backend/pkg/auth/authenticator/oidc"
+	"github.com/commonpool/backend/pkg/chat/service"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/mq"
 	"github.com/commonpool/backend/pkg/utils"
@@ -24,11 +25,11 @@ var upgrader = websocket.Upgrader{
 
 type Handler struct {
 	amqp          mq.Client
-	chatService   chat.Service
-	authorization auth.Authenticator
+	chatService   service.Service
+	authorization authenticator.Authenticator
 }
 
-func NewRealtimeHandler(amqpClient mq.Client, chatService chat.Service, authorization auth.Authenticator) *Handler {
+func NewRealtimeHandler(amqpClient mq.Client, chatService service.Service, authorization authenticator.Authenticator) *Handler {
 	return &Handler{
 		amqp:          amqpClient,
 		chatService:   chatService,
@@ -88,7 +89,7 @@ func (h *Handler) Websocket(c echo.Context) error {
 		return true
 	}
 
-	userSession, err := auth.GetLoggedInUser(ctx)
+	userSession, err := oidc.GetLoggedInUser(ctx)
 	if err != nil {
 		return h.websocketAnonymous(ctx, c.Response(), c.Request())
 	}

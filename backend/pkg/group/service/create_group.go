@@ -2,15 +2,16 @@ package service
 
 import (
 	"context"
-	"github.com/commonpool/backend/pkg/auth"
+	"github.com/commonpool/backend/pkg/auth/authenticator/oidc"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/chat/service"
 	group "github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/keys"
 )
 
 func (g GroupService) CreateGroup(ctx context.Context, request *group.CreateGroupRequest) (*group.CreateGroupResponse, error) {
 
-	userSession, err := auth.GetLoggedInUser(ctx)
+	userSession, err := oidc.GetLoggedInUser(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +33,7 @@ func (g GroupService) CreateGroup(ctx context.Context, request *group.CreateGrou
 		return nil, err
 	}
 
-	_, err = g.chatService.SendGroupMessage(ctx, chat.NewSendGroupMessage(grp.GetKey(), userSession.GetUserKey(), "Commonpool", "Bienvenue!", []chat.Block{}, []chat.Attachment{}, nil))
+	_, err = g.chatService.SendGroupMessage(ctx, service.NewSendGroupMessage(grp.GetKey(), userSession.GetUserKey(), "Commonpool", "Bienvenue!", []chat.Block{}, []chat.Attachment{}, nil))
 	if err != nil {
 		return nil, err
 	}

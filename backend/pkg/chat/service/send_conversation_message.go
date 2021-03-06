@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func (c ChatService) SendConversationMessage(ctx context.Context, request *chat.SendConversationMessage) (*chat.SendConversationMessageResponse, error) {
+func (c ChatService) SendConversationMessage(ctx context.Context, request *SendConversationMessage) (*SendConversationMessageResponse, error) {
 
 	createdChannel, err := c.getOrCreateConversationChannel(ctx, request.ToUserKeys)
 	if err != nil {
@@ -74,7 +74,7 @@ func (c ChatService) SendConversationMessage(ctx context.Context, request *chat.
 		return nil, err
 	}
 
-	return &chat.SendConversationMessageResponse{
+	return &SendConversationMessageResponse{
 		Message: message,
 	}, nil
 }

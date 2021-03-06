@@ -21,15 +21,15 @@ func TestGroup(t *testing.T) {
 	}
 
 	assert.Len(t, group.changes, 2)
-	assert.IsType(t, &GroupCreated{}, group.changes[0])
-	evt1 := group.changes[0].(*GroupCreated)
+	assert.IsType(t, GroupCreated{}, group.changes[0])
+	evt1 := group.changes[0].(GroupCreated)
 	assert.Equal(t, groupInfo, evt1.GroupInfo)
 	assert.Equal(t, 1, evt1.EventVersion)
 	assert.Equal(t, GroupCreatedEvent, evt1.EventType)
 	assert.Equal(t, owner, evt1.CreatedBy)
 
-	assert.IsType(t, &MembershipStatusChanged{}, group.changes[1])
-	evt2 := group.changes[1].(*MembershipStatusChanged)
+	assert.IsType(t, MembershipStatusChanged{}, group.changes[1])
+	evt2 := group.changes[1].(MembershipStatusChanged)
 	assert.Equal(t, MembershipStatusChangedEvent, evt2.EventType)
 	assert.Equal(t, 1, evt2.EventVersion)
 	assert.Equal(t, None, evt2.OldPermissions)

@@ -1,25 +1,25 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/pkg/auth"
+	"github.com/commonpool/backend/pkg/auth/authenticator"
+	"github.com/commonpool/backend/pkg/auth/service"
 	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/trading"
-	"github.com/commonpool/backend/pkg/user"
 	"github.com/labstack/echo/v4"
 )
 
 type TradingHandler struct {
 	tradingService trading.Service
 	groupService   group.Service
-	userService    user.Service
-	authorization  auth.Authenticator
+	userService    service.Service
+	authorization  authenticator.Authenticator
 }
 
 func NewTradingHandler(
 	tradingService trading.Service,
 	groupService group.Service,
-	userService user.Service,
-	auth auth.Authenticator) *TradingHandler {
+	userService service.Service,
+	auth authenticator.Authenticator) *TradingHandler {
 	return &TradingHandler{
 		tradingService: tradingService,
 		groupService:   groupService,

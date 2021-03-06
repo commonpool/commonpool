@@ -3,7 +3,7 @@ package integration
 import (
 	"context"
 	"fmt"
-	"github.com/commonpool/backend/pkg/auth"
+	"github.com/commonpool/backend/pkg/auth/models"
 	"github.com/commonpool/backend/pkg/resource"
 	"github.com/commonpool/backend/pkg/resource/handler"
 	"github.com/stretchr/testify/assert"
@@ -14,7 +14,7 @@ import (
 
 var resourceCounter = 1
 
-func CreateResource(t *testing.T, ctx context.Context, userSession *auth.UserSession, opts ...*handler.CreateResourceRequest) (*handler.CreateResourceResponse, *http.Response) {
+func CreateResource(t *testing.T, ctx context.Context, userSession *models.UserSession, opts ...*handler.CreateResourceRequest) (*handler.CreateResourceResponse, *http.Response) {
 
 	resourceCounter++
 	var resourceName = "resource-" + strconv.Itoa(resourceCounter)
@@ -65,7 +65,7 @@ func CreateResource(t *testing.T, ctx context.Context, userSession *auth.UserSes
 	return response, ReadResponse(t, recorder, response)
 }
 
-func SearchResources(t *testing.T, ctx context.Context, userSession *auth.UserSession, take int, skip int, query string, resourceType resource.Type, sharedWithGroup *string) (*handler.SearchResourcesResponse, *http.Response) {
+func SearchResources(t *testing.T, ctx context.Context, userSession *models.UserSession, take int, skip int, query string, resourceType resource.Type, sharedWithGroup *string) (*handler.SearchResourcesResponse, *http.Response) {
 	c, recorder := NewRequest(ctx, userSession, http.MethodGet, "/api/v1/resources", nil)
 	c.QueryParams()["take"] = []string{strconv.Itoa(take)}
 	c.QueryParams()["skip"] = []string{strconv.Itoa(skip)}
@@ -80,7 +80,7 @@ func SearchResources(t *testing.T, ctx context.Context, userSession *auth.UserSe
 	return response, ReadResponse(t, recorder, response)
 }
 
-func GetResource(t *testing.T, ctx context.Context, userSession *auth.UserSession, resourceKey string) (*handler.GetResourceResponse, *http.Response) {
+func GetResource(t *testing.T, ctx context.Context, userSession *models.UserSession, resourceKey string) (*handler.GetResourceResponse, *http.Response) {
 	c, recorder := NewRequest(ctx, userSession, http.MethodPost, fmt.Sprintf("/api/v1/resources/%s", resourceKey), nil)
 	c.SetParamNames("id")
 	c.SetParamValues(resourceKey)
@@ -90,7 +90,7 @@ func GetResource(t *testing.T, ctx context.Context, userSession *auth.UserSessio
 	return response, ReadResponse(t, recorder, response)
 }
 
-func UpdateResource(t *testing.T, ctx context.Context, userSession *auth.UserSession, resourceKey string, request *handler.UpdateResourceRequest) (*handler.UpdateResourceResponse, *http.Response) {
+func UpdateResource(t *testing.T, ctx context.Context, userSession *models.UserSession, resourceKey string, request *handler.UpdateResourceRequest) (*handler.UpdateResourceResponse, *http.Response) {
 	c, recorder := NewRequest(ctx, userSession, http.MethodPut, fmt.Sprintf("/api/v1/resources/%s", resourceKey), request)
 	c.SetParamNames("id")
 	c.SetParamValues(resourceKey)

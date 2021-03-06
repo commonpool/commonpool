@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func (c ChatService) SendGroupMessage(ctx context.Context, request *chat.SendGroupMessage) (*chat.SendGroupMessageResponse, error) {
+func (c ChatService) SendGroupMessage(ctx context.Context, request *SendGroupMessage) (*SendGroupMessageResponse, error) {
 
 	channelKey := keys.GetChannelKeyForGroup(request.GroupKey)
 
@@ -72,6 +72,6 @@ func (c ChatService) SendGroupMessage(ctx context.Context, request *chat.SendGro
 	}
 
 	// todo
-	return &chat.SendGroupMessageResponse{}, nil
+	return &SendGroupMessageResponse{}, nil
 
 }

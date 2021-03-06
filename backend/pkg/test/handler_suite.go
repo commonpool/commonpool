@@ -4,10 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/commonpool/backend/mock"
-	"github.com/commonpool/backend/pkg/auth"
+	"github.com/commonpool/backend/pkg/auth/models"
 	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/pkg/handler"
-	"github.com/commonpool/backend/pkg/user"
 	"github.com/commonpool/backend/pkg/validation"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
@@ -29,7 +28,7 @@ type HandlerSuite struct {
 	Recorder      *httptest.ResponseRecorder
 	Context       echo.Context
 	Authenticator *mock.AuthenticatorMock
-	LoggedInUser  user.UserReference
+	LoggedInUser  models.UserReference
 }
 
 func (s *HandlerSuite) SetupTest() {
@@ -44,7 +43,7 @@ func (s *HandlerSuite) SetupTest() {
 				}
 			}
 		},
-		GetLoggedInUserFunc: func(ctx context.Context) (user.UserReference, error) {
+		GetLoggedInUserFunc: func(ctx context.Context) (models.UserReference, error) {
 			if s.LoggedInUser != nil {
 				return s.LoggedInUser, nil
 			}
@@ -97,7 +96,7 @@ func (s *HandlerSuite) NewContext(method string, target string, body interface{}
 }
 
 func (s *HandlerSuite) LoggedInAs(userKey string, username string, email string) {
-	s.LoggedInUser = &auth.UserSession{
+	s.LoggedInUser = &models.UserSession{
 		Username:        username,
 		Subject:         userKey,
 		Email:           email,

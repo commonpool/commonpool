@@ -15,14 +15,15 @@ type RabbitMQListener struct {
 	name        string
 	eventTypes  []string
 	initialized bool
-	eventMapper eventsource.EventMapper
+	eventMapper *eventsource.EventMapper
 }
 
 type ListenerFunc func(events []eventsource.Event) error
 
-func NewRabbitMqListener(amqpClient mq.Client) *RabbitMQListener {
+func NewRabbitMqListener(amqpClient mq.Client, eventMapper *eventsource.EventMapper) *RabbitMQListener {
 	return &RabbitMQListener{
-		amqpClient: amqpClient,
+		amqpClient:  amqpClient,
+		eventMapper: eventMapper,
 	}
 }
 
@@ -89,6 +90,7 @@ func (s *RabbitMQListener) Listen(ctx context.Context, listenerFunc ListenerFunc
 
 				evt, err := s.eventMapper.Map(msg.Type, msg.Body)
 				if err != nil {
+					log.Errorf("could not map event with type %s: %v", msg.Type, err)
 					continue
 				}
 

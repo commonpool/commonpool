@@ -5,7 +5,7 @@ import (
 	"github.com/commonpool/backend/pkg/chat"
 )
 
-func (cs *ChatStore) GetSubscription(ctx context.Context, request *chat.GetSubscription) (*chat.ChannelSubscription, error) {
+func (cs *ChatStore) GetSubscription(ctx context.Context, request *GetSubscription) (*chat.ChannelSubscription, error) {
 
 	subscription := chat.ChannelSubscription{}
 

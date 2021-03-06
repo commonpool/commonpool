@@ -1,18 +1,18 @@
 package handler
 
 import (
+	handler2 "github.com/commonpool/backend/pkg/auth/handler"
+	"github.com/commonpool/backend/pkg/auth/store"
 	"github.com/commonpool/backend/pkg/keys"
-	"github.com/commonpool/backend/pkg/user"
-	"github.com/commonpool/backend/pkg/user/handler"
 	"github.com/commonpool/backend/pkg/utils"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
 
 type GetUsersForGroupInvitePickerResponse struct {
-	Users []handler.UserInfoResponse `json:"users"`
-	Take  int                        `json:"take"`
-	Skip  int                        `json:"skip"`
+	Users []handler2.UserInfoResponse `json:"users"`
+	Take  int                         `json:"take"`
+	Skip  int                         `json:"skip"`
 }
 
 // GetGroup godoc
@@ -44,7 +44,7 @@ func (h *Handler) GetUsersForGroupInvitePicker(c echo.Context) error {
 		return err
 	}
 
-	userQuery := user.Query{
+	userQuery := store.Query{
 		Query:      qry,
 		Skip:       skip,
 		Take:       take,
@@ -56,9 +56,9 @@ func (h *Handler) GetUsersForGroupInvitePicker(c echo.Context) error {
 		return err
 	}
 
-	responseItems := make([]handler.UserInfoResponse, len(users.Items))
+	responseItems := make([]handler2.UserInfoResponse, len(users.Items))
 	for i, u := range users.Items {
-		responseItems[i] = handler.UserInfoResponse{
+		responseItems[i] = handler2.UserInfoResponse{
 			Id:       u.ID,
 			Username: u.Username,
 		}

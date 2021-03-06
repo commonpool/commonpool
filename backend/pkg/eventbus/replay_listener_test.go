@@ -3,8 +3,10 @@ package eventbus
 import (
 	"context"
 	"github.com/commonpool/backend/pkg/db"
+	"github.com/commonpool/backend/pkg/eventsource"
 	"github.com/commonpool/backend/pkg/eventstore"
 	"github.com/commonpool/backend/pkg/eventstore/postgres"
+	"github.com/commonpool/backend/pkg/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"gorm.io/gorm"
@@ -25,7 +27,11 @@ func (s *ReplayListenerTestSuite) SetupSuite() {
 	if err := s.db.AutoMigrate(&eventstore.StreamEvent{}, eventstore.Stream{}); err != nil {
 		s.T().Fatal(err)
 	}
-	s.eventStore = postgres.NewPostgresEventStore(s.db)
+	eventMapper := eventsource.NewEventMapper()
+	if err := test.RegisterMockEvents(eventMapper); !assert.NoError(s.T(), err) {
+		return
+	}
+	s.eventStore = postgres.NewPostgresEventStore(s.db, eventMapper)
 }
 
 func (s *ReplayListenerTestSuite) SetupTest() {
@@ -45,43 +51,26 @@ func (s *ReplayListenerTestSuite) TestReplayListener() {
 			return now.Add(-3 * time.Hour)
 		})
 
-	if !assert.NoError(s.T(), listener.Initialize(ctx, "replay-listener", []string{"test-replay-listener-evt"})) {
+	if !assert.NoError(s.T(), listener.Initialize(ctx, "replay-listener", []string{test.MockEventType})) {
 		return
 	}
 
-	streamKey := eventstore.NewStreamKey("stream", "id1")
+	events := test.NewMockEvents(
+		test.NewMockEvent("evt1", test.MockEventTime(now.Add(-4*time.Hour))),
+		test.NewMockEvent("evt2", test.MockEventTime(now.Add(-2*time.Hour))),
+		test.NewMockEvent("evt3", test.MockEventTime(now.Add(-1*time.Hour))),
+	)
 
-	evt1 := eventstore.NewStreamEvent(
-		streamKey,
-		eventstore.NewStreamEventKey("test-replay-listener-evt", "evt-1"),
-		"payload",
-		eventstore.NewStreamEventOptions{
-			EventTime: now.Add(-4 * time.Hour),
-		})
+	err := s.eventStore.Save(ctx, test.MockStreamKey, 0, events)
+	if !assert.NoError(s.T(), err) {
+		return
+	}
 
-	evt2 := eventstore.NewStreamEvent(
-		streamKey,
-		eventstore.NewStreamEventKey("test-replay-listener-evt", "evt-2"),
-		"payload",
-		eventstore.NewStreamEventOptions{
-			EventTime: now.Add(-2 * time.Hour),
-		})
-
-	evt3 := eventstore.NewStreamEvent(
-		streamKey,
-		eventstore.NewStreamEventKey("test-replay-listener-evt", "evt-3"),
-		"payload",
-		eventstore.NewStreamEventOptions{
-			EventTime: now.Add(-1 * time.Hour),
-		})
-
-	assert.NoError(s.T(), s.eventStore.Save(ctx, streamKey, 0, []*eventstore.StreamEvent{evt1, evt2, evt3}))
-
-	var loaded []*eventstore.StreamEvent
-	err := listener.Listen(ctx, func(events []*eventstore.StreamEvent) error {
+	var loaded []eventsource.Event
+	err = listener.Listen(ctx, func(events []eventsource.Event) error {
 		for _, loadedEvent := range events {
 			loaded = append(loaded, loadedEvent)
-			s.T().Logf("event received: %s", loadedEvent.EventID)
+			s.T().Logf("event received: %s", loadedEvent.GetEventID())
 		}
 		go func() {
 			if len(loaded) == 3 {
@@ -96,10 +85,12 @@ func (s *ReplayListenerTestSuite) TestReplayListener() {
 		return
 	}
 
-	assert.Len(s.T(), loaded, 2)
+	if !assert.Len(s.T(), loaded, 2) {
+		return
+	}
 
-	assert.Equal(s.T(), "evt-2", loaded[0].EventID)
-	assert.Equal(s.T(), "evt-3", loaded[1].EventID)
+	assert.Equal(s.T(), "evt2", loaded[0].GetEventID())
+	assert.Equal(s.T(), "evt3", loaded[1].GetEventID())
 
 }
 

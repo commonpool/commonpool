@@ -3,10 +3,10 @@ package service
 import (
 	"context"
 	"errors"
+	"github.com/commonpool/backend/pkg/auth/models"
 	"github.com/commonpool/backend/pkg/chat"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/mq"
-	"github.com/commonpool/backend/pkg/user"
 	"sort"
 	"strings"
 )
@@ -14,7 +14,7 @@ import (
 // getOrCreateConversationChannel Will retrieve or create the conversation channel for a given set of users
 // If the channel is not already created, it will automatically be created and the users will be subscribed to it.
 // It also sets up RabbitMQ routing so that messages to this channel will find the user's exchange.
-func (c ChatService) getOrCreateConversationChannel(ctx context.Context, userKeys *keys.UserKeys) (*chat.GetOrCreateConversationChannelResponse, error) {
+func (c ChatService) getOrCreateConversationChannel(ctx context.Context, userKeys *keys.UserKeys) (*GetOrCreateConversationChannelResponse, error) {
 
 	channelKey, err := c.GetConversationChannelKey(ctx, userKeys)
 	if err != nil {
@@ -58,7 +58,7 @@ func (c ChatService) getOrCreateConversationChannel(ctx context.Context, userKey
 
 	}
 
-	return &chat.GetOrCreateConversationChannelResponse{
+	return &GetOrCreateConversationChannelResponse{
 		Channel: channel,
 	}, nil
 
@@ -89,8 +89,8 @@ func (c ChatService) createSubscriptionsAndMqBindingsForUserConversation(ctx con
 
 func (c ChatService) createSubscriptionAndMqBindingForUserConversation(
 	ctx context.Context,
-	user *user.User,
-	conversationUsers *user.Users,
+	user *models.User,
+	conversationUsers *models.Users,
 	channelKey keys.ChannelKey,
 ) (*chat.ChannelSubscription, error) {
 
@@ -127,14 +127,14 @@ func (c ChatService) createSubscriptionAndMqBindingForUserConversation(
 // Mark would see "Dana, Joe"
 func (c ChatService) getConversationNameForUser(
 	ctx context.Context,
-	us *user.Users,
-	u *user.User,
+	us *models.Users,
+	u *models.User,
 ) string {
 
 	// First, sort the user names
 	userList := us.Items
 
-	copied := make([]*user.User, len(userList))
+	copied := make([]*models.User, len(userList))
 	copy(copied, userList)
 	sort.Slice(copied, func(i, j int) bool {
 		return copied[i].Username > copied[j].Username

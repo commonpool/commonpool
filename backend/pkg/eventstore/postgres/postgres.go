@@ -105,6 +105,8 @@ func eventTimeValueOrDefault(defaultValue time.Time, key string, tempStruct map[
 			return valueTime.UTC()
 		}
 
+		value = valueTime
+
 	}
 	return value
 }

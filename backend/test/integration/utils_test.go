@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/commonpool/backend/pkg/auth"
+	"github.com/commonpool/backend/pkg/auth/models"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/mq"
 	"github.com/commonpool/backend/pkg/server"
@@ -21,7 +21,7 @@ import (
 
 var requestMu = sync.Mutex{}
 
-func NewRequest(ctx context.Context, session *auth.UserSession, method, target string, req interface{}) (echo.Context, *httptest.ResponseRecorder) {
+func NewRequest(ctx context.Context, session *models.UserSession, method, target string, req interface{}) (echo.Context, *httptest.ResponseRecorder) {
 	requestMu.Lock()
 	e := server.NewRouter()
 	httpRequest := httptest.NewRequest(method, target, read(req))
@@ -54,13 +54,13 @@ func read(intf interface{}) io.Reader {
 }
 
 func setAuthenticatedUser(c echo.Context, username, subject, email string) {
-	c.Set(auth.IsAuthenticatedKey, true)
-	c.Set(auth.SubjectUsernameKey, username)
-	c.Set(auth.SubjectEmailKey, email)
-	c.Set(auth.SubjectKey, subject)
+	c.Set(models.IsAuthenticatedKey, true)
+	c.Set(models.SubjectUsernameKey, username)
+	c.Set(models.SubjectEmailKey, email)
+	c.Set(models.SubjectKey, subject)
 }
 func setUnauthenticated(c echo.Context) {
-	c.Set(auth.IsAuthenticatedKey, false)
+	c.Set(models.IsAuthenticatedKey, false)
 }
 
 func ListenOnUserExchange(t *testing.T, ctx context.Context, userKey keys.UserKey) *UserExchangeListener {

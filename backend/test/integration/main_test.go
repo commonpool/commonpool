@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/commonpool/backend/mock"
-	"github.com/commonpool/backend/pkg/auth"
 	authhandler "github.com/commonpool/backend/pkg/auth/handler"
+	"github.com/commonpool/backend/pkg/auth/models"
+	service2 "github.com/commonpool/backend/pkg/auth/service"
+	"github.com/commonpool/backend/pkg/auth/store"
 	chathandler "github.com/commonpool/backend/pkg/chat/handler"
 	chatservice "github.com/commonpool/backend/pkg/chat/service"
 	chatstore "github.com/commonpool/backend/pkg/chat/store"
@@ -25,9 +27,6 @@ import (
 	tradingstore "github.com/commonpool/backend/pkg/trading/store"
 	transactionservice "github.com/commonpool/backend/pkg/transaction/service"
 	transactionstore "github.com/commonpool/backend/pkg/transaction/store"
-	userhandler "github.com/commonpool/backend/pkg/user/handler"
-	userservice "github.com/commonpool/backend/pkg/user/service"
-	userstore "github.com/commonpool/backend/pkg/user/store"
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -41,7 +40,7 @@ import (
 var Db *gorm.DB
 var AmqpClient mq.Client
 var ResourceStore resourcestore.ResourceStore
-var AuthStore userstore.UserStore
+var AuthStore store.UserStore
 var ChatStore chatstore.ChatStore
 var TradingStore tradingstore.TradingStore
 var GroupStore groupstore.GroupStore
@@ -52,14 +51,14 @@ var Authorizer *mock.AuthenticatorMock
 var Driver *graph2.Neo4jGraphDriver
 var TransactionStore *transactionstore.TransactionStore
 var TransactionService *transactionservice.TransactionService
-var UserService *userservice.UserService
+var UserService *service2.UserService
 var ResourceService *service.ResourceService
 var AuthHandler *authhandler.AuthHandler
 var SessionHandler *session.Handler
 var ChatHandler *chathandler.Handler
 var GroupHandler *grouphandler.Handler
 var ResourceHandler *resourcehandler.ResourceHandler
-var UserHandler *userhandler.UserHandler
+var UserHandler *authhandler.UserHandler
 var TradingHandler *tradinghandler.TradingHandler
 
 func TestMain(m *testing.M) {
@@ -94,17 +93,17 @@ func TestMain(m *testing.M) {
 	TransactionStore = transactionstore.NewTransactionStore(Db)
 	TransactionService = transactionservice.NewTransactionService(TransactionStore)
 	ResourceStore = *resourcestore.NewResourceStore(Driver, TransactionService)
-	AuthStore = *userstore.NewUserStore(Driver)
+	AuthStore = *store.NewUserStore(Driver)
 	ChatStore = *chatstore.NewChatStore(Db)
 	TradingStore = *tradingstore.NewTradingStore(Driver)
 	GroupStore = *groupstore.NewGroupStore(Driver)
 	ChatService = *chatservice.NewChatService(&AuthStore, AmqpClient, &ChatStore)
 	GroupService = *groupservice.NewGroupService(&GroupStore, AmqpClient, ChatService, &AuthStore)
 	TradingService = *tradingservice.NewTradingService(TradingStore, &ResourceStore, &AuthStore, ChatService, GroupService, TransactionService)
-	UserService = userservice.NewUserService(&AuthStore)
+	UserService = service2.NewUserService(&AuthStore)
 	ResourceService = service.NewResourceService(&ResourceStore)
 
-	AuthHandler = authhandler.NewHandler(Authorizer)
+	AuthHandler = authhandler.NewAuthHandler(Authorizer)
 	//authHandler.Register(v1)
 
 	SessionHandler = session.NewHandler(Authorizer)
@@ -119,7 +118,7 @@ func TestMain(m *testing.M) {
 	ResourceHandler = resourcehandler.NewHandler(ResourceService, GroupService, UserService, Authorizer)
 	//resourceHandler.Register(v1)
 
-	UserHandler = userhandler.NewHandler(UserService, Authorizer)
+	UserHandler = authhandler.NewAuthHandler(UserService, Authorizer)
 	//userHandler.Register(v1)
 
 	TradingHandler = tradinghandler.NewTradingHandler(TradingService, GroupService, UserService, Authorizer)
@@ -147,7 +146,7 @@ func TestMain(m *testing.M) {
 var userIncrementer = 0
 var userIncrementerMu sync.Mutex
 
-func NewUser() *auth.UserSession {
+func NewUser() *models.UserSession {
 	userIncrementerMu.Lock()
 	defer func() {
 		userIncrementerMu.Unlock()
@@ -156,7 +155,7 @@ func NewUser() *auth.UserSession {
 	var userId = uuid.NewV4().String()
 	userEmail := fmt.Sprintf("user%d@email.com", userIncrementer)
 	userName := fmt.Sprintf("user%d", userIncrementer)
-	return &auth.UserSession{
+	return &models.UserSession{
 		Username:        userName,
 		Subject:         userId,
 		Email:           userEmail,

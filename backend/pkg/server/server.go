@@ -6,11 +6,9 @@ import (
 	"fmt"
 	"github.com/bsm/redislock"
 	_ "github.com/commonpool/backend/docs"
-	"github.com/commonpool/backend/pkg/auth"
 	authdomain "github.com/commonpool/backend/pkg/auth/domain"
-	authhandler "github.com/commonpool/backend/pkg/auth/handler"
+	"github.com/commonpool/backend/pkg/auth/module"
 	"github.com/commonpool/backend/pkg/auth/store"
-	"github.com/commonpool/backend/pkg/chat"
 	chathandler "github.com/commonpool/backend/pkg/chat/handler"
 	chatservice "github.com/commonpool/backend/pkg/chat/service"
 	chatstore "github.com/commonpool/backend/pkg/chat/store"
@@ -23,6 +21,7 @@ import (
 	postgres2 "github.com/commonpool/backend/pkg/eventstore/postgres"
 	"github.com/commonpool/backend/pkg/eventstore/publish"
 	"github.com/commonpool/backend/pkg/graph"
+	groupdomain "github.com/commonpool/backend/pkg/group/domain"
 	grouphandler "github.com/commonpool/backend/pkg/group/handler"
 	groupqueries "github.com/commonpool/backend/pkg/group/queries"
 	groupservice "github.com/commonpool/backend/pkg/group/service"
@@ -35,7 +34,6 @@ import (
 	resourcehandler "github.com/commonpool/backend/pkg/resource/handler"
 	"github.com/commonpool/backend/pkg/resource/service"
 	resourcestore "github.com/commonpool/backend/pkg/resource/store"
-	"github.com/commonpool/backend/pkg/session"
 	"github.com/commonpool/backend/pkg/trading"
 	tradinghandler "github.com/commonpool/backend/pkg/trading/handler"
 	"github.com/commonpool/backend/pkg/trading/listeners"
@@ -45,10 +43,6 @@ import (
 	"github.com/commonpool/backend/pkg/transaction"
 	transactionservice "github.com/commonpool/backend/pkg/transaction/service"
 	transactionstore "github.com/commonpool/backend/pkg/transaction/store"
-	"github.com/commonpool/backend/pkg/user"
-	userhandler "github.com/commonpool/backend/pkg/user/handler"
-	userservice "github.com/commonpool/backend/pkg/user/service"
-	userstore "github.com/commonpool/backend/pkg/user/store"
 	"github.com/go-redis/redis/v8"
 	"github.com/labstack/echo/v4"
 	echoSwagger "github.com/swaggo/echo-swagger"
@@ -60,6 +54,21 @@ import (
 	"time"
 )
 
+type Group struct {
+	Handler    *grouphandler.Handler
+	Repository groupdomain.GroupRepository
+	Queries    GroupQueries
+	Service    *groupservice.GroupService
+	Store      *groupstore.GroupStore
+}
+
+type GroupQueries struct {
+	GetGroup                *groupqueries.GetGroup
+	GetGroupByKeys          *groupqueries.GetGroupByKeys
+	GetMembership           *groupqueries.GetMembershipReadModel
+	GetOfferKeyForOfferItem *queries.GetOfferKeyForOfferItemKey
+}
+
 type Server struct {
 	AppConfig          *config.AppConfig
 	AmqpClient         mq.Client
@@ -67,22 +76,15 @@ type Server struct {
 	Db                 *gorm.DB
 	TransactionStore   transaction.Store
 	TransactionService transaction.Service
-	UserStore          user.Store
-	UserService        user.Service
 	ResourceStore      resource.Store
 	ResourceService    resource.Service
-	ChatStore          chat.Store
-	ChatService        chat.Service
+	ChatStore          chatstore.Store
+	ChatService        chatservice.Service
 	TradingStore       trading.Store
 	TradingService     trading.Service
-	AuthHandler        *authhandler.AuthHandler
-	SessionHandler     *session.Handler
 	ChatHandler        *chathandler.Handler
-	GroupHandler       *grouphandler.Handler
 	ResourceHandler    *resourcehandler.ResourceHandler
-	UserHandler        *userhandler.UserHandler
 	RealTimeHandler    *realtime.Handler
-	Authenticator      auth.Authenticator
 	Router             *echo.Echo
 	NukeHandler        *nukehandler.Handler
 	TradingHandler     *tradinghandler.TradingHandler
@@ -90,6 +92,9 @@ type Server struct {
 	ClusterLocker      clusterlock.Locker
 	CommandMapper      *commands.CommandMapper
 	CommandBus         commands.CommandBus
+	EventMapper        *eventsource.EventMapper
+	Group              Group
+	User               *module.Module
 }
 
 func getEnv(key, defaultValue string) string {
@@ -177,22 +182,28 @@ func NewServer() (*Server, error) {
 	getOfferKeyForOfferItemKeyQry := queries.NewGetOfferKeyForOfferItemKey(db)
 	getGroupByKeys := groupqueries.NewGetGroupByKeys(db)
 	getGroup := groupqueries.NewGetGroupReadModel(db)
+	getMembership := groupqueries.NewGetMembership(db)
+
+	r := NewRouter()
+	r.HTTPErrorHandler = handler2.HttpErrorHandler
+	r.GET("/api/swagger/*", echoSwagger.WrapHandler)
+	v1 := r.Group("/api/v1")
+
+	userModule := module.NewUserModule(appConfig, db, driver)
+	userModule.Register(v1)
 
 	transactionStore := transactionstore.NewTransactionStore(db)
 	transactionService := transactionservice.NewTransactionService(transactionStore)
-
-	userStore := userstore.NewUserStore(driver)
-	userService := userservice.NewUserService(userStore)
 
 	resourceStore := resourcestore.NewResourceStore(driver, transactionService)
 	resourceService := service.NewResourceService(resourceStore)
 
 	chatStore := chatstore.NewChatStore(db)
-	chatService := chatservice.NewChatService(userStore, amqpCli, chatStore)
+	chatService := chatservice.NewChatService(userModule.Store, amqpCli, chatStore)
 
 	groupStore := groupstore.NewGroupStore(driver)
 	groupRepo := groupstore.NewEventSourcedGroupRepository(eventStore)
-	groupService := groupservice.NewGroupService(groupStore, amqpCli, chatService, userStore, groupRepo, getGroup, getGroupByKeys)
+	groupService := groupservice.NewGroupService(groupStore, amqpCli, chatService, userModule.Store, groupRepo, getGroup, getGroupByKeys)
 
 	offerRepository := tradingstore.NewEventSourcedOfferRepository(eventStore)
 
@@ -200,43 +211,26 @@ func NewServer() (*Server, error) {
 	tradingService := tradingservice.NewTradingService(
 		tradingStore,
 		resourceStore,
-		userStore,
+		userModule.Store,
 		chatService,
 		groupService,
 		transactionService,
 		offerRepository,
 		getOfferKeyForOfferItemKeyQry)
 
-	r := NewRouter()
-	r.HTTPErrorHandler = handler2.HttpErrorHandler
-	r.GET("/api/swagger/*", echoSwagger.WrapHandler)
-
-	v1 := r.Group("/api/v1")
-
-	authorization := auth.NewAuth(v1, appConfig, "/api/v1", userStore)
-
-	authHandler := authhandler.NewHandler(authorization)
-	authHandler.Register(v1)
-
-	sessionHandler := session.NewHandler(authorization)
-	sessionHandler.Register(v1)
-
-	chatHandler := chathandler.NewHandler(chatService, tradingService, appConfig, authorization)
+	chatHandler := chathandler.NewHandler(chatService, tradingService, appConfig, userModule.Authenticator)
 	chatHandler.Register(v1)
 
-	groupHandler := grouphandler.NewHandler(groupService, userService, authorization)
+	groupHandler := grouphandler.NewHandler(groupService, userModule.Service, userModule.Authenticator)
 	groupHandler.Register(v1)
 
-	resourceHandler := resourcehandler.NewHandler(resourceService, groupService, userService, authorization)
+	resourceHandler := resourcehandler.NewHandler(resourceService, groupService, userModule.Service, userModule.Authenticator)
 	resourceHandler.Register(v1)
 
-	userHandler := userhandler.NewHandler(userService, authorization)
-	userHandler.Register(v1)
-
-	realtimeHandler := realtime.NewRealtimeHandler(amqpCli, chatService, authorization)
+	realtimeHandler := realtime.NewRealtimeHandler(amqpCli, chatService, userModule.Authenticator)
 	realtimeHandler.Register(v1)
 
-	tradingHandler := tradinghandler.NewTradingHandler(tradingService, groupService, userService, authorization)
+	tradingHandler := tradinghandler.NewTradingHandler(tradingService, groupService, userModule.Service, userModule.Authenticator)
 	tradingHandler.Register(v1)
 
 	nukeHandler := nukehandler.NewHandler(db, amqpCli, driver)
@@ -253,6 +247,7 @@ func NewServer() (*Server, error) {
 			&clusterlock.Options{
 				RetryStrategy: clusterlock.EverySecond,
 			},
+			eventMapper,
 		)
 	}
 
@@ -277,29 +272,38 @@ func NewServer() (*Server, error) {
 		Db:                 db,
 		TransactionStore:   transactionStore,
 		TransactionService: transactionService,
-		UserStore:          userStore,
-		UserService:        userService,
 		ResourceStore:      resourceStore,
 		ResourceService:    resourceService,
 		ChatStore:          chatStore,
 		ChatService:        chatService,
 		TradingStore:       tradingStore,
 		TradingService:     tradingService,
-		AuthHandler:        authHandler,
-		SessionHandler:     sessionHandler,
 		ChatHandler:        chatHandler,
-		GroupHandler:       groupHandler,
 		ResourceHandler:    resourceHandler,
-		UserHandler:        userHandler,
 		RealTimeHandler:    realtimeHandler,
 		NukeHandler:        nukeHandler,
-		Authenticator:      authorization,
 		TradingHandler:     tradingHandler,
 		Router:             r,
 		ClusterLocker:      clusterLocker,
 		RedisClient:        redisClient,
 		CommandBus:         commandBus,
 		CommandMapper:      commandMapper,
+		EventMapper:        eventMapper,
+
+		User: userModule,
+
+		Group: Group{
+			Handler:    groupHandler,
+			Service:    groupService,
+			Repository: groupRepo,
+			Store:      groupStore,
+			Queries: GroupQueries{
+				GetGroup:                getGroup,
+				GetGroupByKeys:          getGroupByKeys,
+				GetMembership:           getMembership,
+				GetOfferKeyForOfferItem: getOfferKeyForOfferItemKeyQry,
+			},
+		},
 	}, nil
 
 }

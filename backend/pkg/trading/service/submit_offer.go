@@ -3,8 +3,10 @@ package service
 import (
 	"fmt"
 	"github.com/commonpool/backend/logging"
-	"github.com/commonpool/backend/pkg/auth"
+	"github.com/commonpool/backend/pkg/auth/authenticator/oidc"
+	"github.com/commonpool/backend/pkg/auth/models"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/chat/service"
 	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/pkg/group"
 	domain2 "github.com/commonpool/backend/pkg/group/domain"
@@ -22,7 +24,7 @@ func (t TradingService) SendOffer(ctx context.Context, groupKey keys.GroupKey, o
 	l := logging.WithContext(ctx)
 
 	l.Debug("getting logged in user")
-	userSession, err := auth.GetLoggedInUser(ctx)
+	userSession, err := oidc.GetLoggedInUser(ctx)
 	if err != nil {
 		return nil, nil, exceptions.ErrUnauthorized
 	}
@@ -223,13 +225,13 @@ func (t TradingService) assertBorrowOfferItemPointToObjectTypedResource(resource
 	return nil
 }
 
-func (t TradingService) sendCustomOfferMessage(ctx context.Context, fromUser *auth.UserSession, userKeys *keys.UserKeys, message string) error {
+func (t TradingService) sendCustomOfferMessage(ctx context.Context, fromUser *models.UserSession, userKeys *keys.UserKeys, message string) error {
 
 	if strings.TrimSpace(message) == "" {
 		return nil
 	}
 
-	sendMsgRequest := chat.NewSendConversationMessage(
+	sendMsgRequest := service.NewSendConversationMessage(
 		fromUser.GetUserKey(),
 		fromUser.GetUsername(),
 		userKeys,
@@ -246,7 +248,7 @@ func (t TradingService) sendCustomOfferMessage(ctx context.Context, fromUser *au
 	return nil
 }
 
-func (t TradingService) sendAcceptOrDeclineMessages(ctx context.Context, offerItems *domain.OfferItems, offer *trading.Offer, userSession *auth.UserSession) error {
+func (t TradingService) sendAcceptOrDeclineMessages(ctx context.Context, offerItems *domain.OfferItems, offer *trading.Offer, userSession *models.UserSession) error {
 
 	approvers, err := t.tradingStore.FindApproversForCandidateOffer(offer, offerItems)
 	if err != nil {
@@ -255,7 +257,7 @@ func (t TradingService) sendAcceptOrDeclineMessages(ctx context.Context, offerIt
 
 	for _, userKey := range approvers.Items {
 		chatMessage := t.buildAcceptOrDeclineChatMessage(userKey, offer, offerItems)
-		sendMsgRequest := chat.NewSendConversationMessage(
+		sendMsgRequest := service.NewSendConversationMessage(
 			userSession.GetUserKey(),
 			userSession.GetUsername(),
 			approvers,

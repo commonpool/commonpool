@@ -2,18 +2,18 @@ package handler
 
 import (
 	"context"
-	"github.com/commonpool/backend/pkg/auth"
+	"github.com/commonpool/backend/pkg/auth/models"
 	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/group/domain"
 	"github.com/commonpool/backend/pkg/handler"
 	"go.uber.org/zap"
 )
 
-func (h *Handler) getUserNamesForMemberships(ctx context.Context, memberships *domain.Memberships) (auth.UserNames, error) {
+func (h *Handler) getUserNamesForMemberships(ctx context.Context, memberships *domain.Memberships) (models.UserNames, error) {
 
 	ctx, l := handler.GetCtx(ctx, "getUserNamesForMemberships")
 
-	var userNames = auth.UserNames{}
+	var userNames = models.UserNames{}
 	for _, membership := range memberships.Items {
 		userKey := membership.GetUserKey()
 		_, ok := userNames[userKey]

@@ -5,7 +5,7 @@ import (
 	"github.com/commonpool/backend/pkg/chat"
 )
 
-func (cs *ChatStore) GetMessages(ctx context.Context, request *chat.GetMessages) (*chat.GetMessagesResponse, error) {
+func (cs *ChatStore) GetMessages(ctx context.Context, request *GetMessages) (*GetMessagesResponse, error) {
 
 	var messages []Message
 
@@ -54,7 +54,7 @@ func (cs *ChatStore) GetMessages(ctx context.Context, request *chat.GetMessages)
 
 	messageLst := chat.NewMessages(mappedMessages)
 
-	return &chat.GetMessagesResponse{
+	return &GetMessagesResponse{
 		Messages: messageLst,
 		HasMore:  messageCount > request.Take,
 	}, nil

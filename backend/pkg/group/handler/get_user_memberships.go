@@ -1,7 +1,8 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/pkg/auth"
+	"github.com/commonpool/backend/pkg/auth/authenticator/oidc"
+	"github.com/commonpool/backend/pkg/auth/models"
 	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/group/domain"
 	"github.com/commonpool/backend/pkg/handler"
@@ -14,7 +15,7 @@ type GetUserMembershipsResponse struct {
 	Memberships []Membership `json:"memberships"`
 }
 
-func NewGetUserMembershipsResponse(memberships *domain.Memberships, groupNames group.Names, userNames auth.UserNames) GetUserMembershipsResponse {
+func NewGetUserMembershipsResponse(memberships *domain.Memberships, groupNames group.Names, userNames models.UserNames) GetUserMembershipsResponse {
 	responseMemberships := make([]Membership, len(memberships.Items))
 	for i, membership := range memberships.Items {
 		responseMemberships[i] = NewMembership(membership, groupNames, userNames)
@@ -50,7 +51,7 @@ func (h *Handler) GetUserMemberships(c echo.Context) error {
 		membershipStatus = &ms
 	}
 
-	loggedInUser, err := auth.GetLoggedInUser(ctx)
+	loggedInUser, err := oidc.GetLoggedInUser(ctx)
 	if err != nil {
 		return err
 	}

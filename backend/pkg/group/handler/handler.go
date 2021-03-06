@@ -1,19 +1,19 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/pkg/auth"
+	"github.com/commonpool/backend/pkg/auth/authenticator"
+	"github.com/commonpool/backend/pkg/auth/service"
 	group "github.com/commonpool/backend/pkg/group"
-	"github.com/commonpool/backend/pkg/user"
 	"github.com/labstack/echo/v4"
 )
 
 type Handler struct {
 	groupService group.Service
-	userService  user.Service
-	auth         auth.Authenticator
+	userService  service.Service
+	auth         authenticator.Authenticator
 }
 
-func NewHandler(groupService group.Service, userService user.Service, auth auth.Authenticator) *Handler {
+func NewHandler(groupService group.Service, userService service.Service, auth authenticator.Authenticator) *Handler {
 	return &Handler{
 		groupService: groupService,
 		userService:  userService,

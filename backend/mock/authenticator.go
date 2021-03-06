@@ -5,8 +5,8 @@ package mock
 
 import (
 	"context"
-	"github.com/commonpool/backend/pkg/auth"
-	"github.com/commonpool/backend/pkg/user"
+	"github.com/commonpool/backend/pkg/auth/authenticator"
+	"github.com/commonpool/backend/pkg/auth/models"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"sync"
@@ -14,7 +14,7 @@ import (
 
 // Ensure, that AuthenticatorMock does implement auth.Authenticator.
 // If this is not the case, regenerate this file with moq.
-var _ auth.Authenticator = &AuthenticatorMock{}
+var _ authenticator.Authenticator = &AuthenticatorMock{}
 
 // AuthenticatorMock is a mock implementation of auth.Authenticator.
 //
@@ -48,10 +48,10 @@ type AuthenticatorMock struct {
 	AuthenticateFunc func(redirectOnError bool) echo.MiddlewareFunc
 
 	// GetLoggedInUserFunc mocks the GetLoggedInUser method.
-	GetLoggedInUserFunc func(ctx context.Context) (user.UserReference, error)
+	GetLoggedInUserFunc func(ctx context.Context) (models.UserReference, error)
 
 	// GetRedirectResponseFunc mocks the GetRedirectResponse method.
-	GetRedirectResponseFunc func(request *http.Request) (*auth.RedirectResponse, error)
+	GetRedirectResponseFunc func(request *http.Request) (*authenticator.RedirectResponse, error)
 
 	// LoginFunc mocks the Login method.
 	LoginFunc func() echo.HandlerFunc
@@ -122,7 +122,7 @@ func (mock *AuthenticatorMock) AuthenticateCalls() []struct {
 }
 
 // GetLoggedInUser calls GetLoggedInUserFunc.
-func (mock *AuthenticatorMock) GetLoggedInUser(ctx context.Context) (user.UserReference, error) {
+func (mock *AuthenticatorMock) GetLoggedInUser(ctx context.Context) (models.UserReference, error) {
 	if mock.GetLoggedInUserFunc == nil {
 		panic("AuthenticatorMock.GetLoggedInUserFunc: method is nil but Authenticator.GetLoggedInUser was just called")
 	}
@@ -153,7 +153,7 @@ func (mock *AuthenticatorMock) GetLoggedInUserCalls() []struct {
 }
 
 // GetRedirectResponse calls GetRedirectResponseFunc.
-func (mock *AuthenticatorMock) GetRedirectResponse(request *http.Request) (*auth.RedirectResponse, error) {
+func (mock *AuthenticatorMock) GetRedirectResponse(request *http.Request) (*authenticator.RedirectResponse, error) {
 	if mock.GetRedirectResponseFunc == nil {
 		panic("AuthenticatorMock.GetRedirectResponseFunc: method is nil but Authenticator.GetRedirectResponse was just called")
 	}

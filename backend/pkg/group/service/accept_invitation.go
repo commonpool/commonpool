@@ -2,13 +2,13 @@ package service
 
 import (
 	"context"
-	"github.com/commonpool/backend/pkg/auth"
+	"github.com/commonpool/backend/pkg/auth/authenticator/oidc"
 	group2 "github.com/commonpool/backend/pkg/group"
 )
 
 func (g GroupService) CreateOrAcceptInvitation(ctx context.Context, request *group2.CreateOrAcceptInvitationRequest) error {
 
-	userSession, err := auth.GetLoggedInUser(ctx)
+	userSession, err := oidc.GetLoggedInUser(ctx)
 	if err != nil {
 		return err
 	}

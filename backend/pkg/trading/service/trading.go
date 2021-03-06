@@ -3,7 +3,10 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/commonpool/backend/pkg/auth/models"
+	"github.com/commonpool/backend/pkg/auth/store"
 	"github.com/commonpool/backend/pkg/chat"
+	"github.com/commonpool/backend/pkg/chat/service"
 	group2 "github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/resource"
@@ -11,7 +14,6 @@ import (
 	tradingdomain "github.com/commonpool/backend/pkg/trading/domain"
 	"github.com/commonpool/backend/pkg/trading/queries"
 	transaction2 "github.com/commonpool/backend/pkg/transaction"
-	"github.com/commonpool/backend/pkg/user"
 	"time"
 )
 
@@ -20,8 +22,8 @@ type TradingService struct {
 	transactionService          transaction2.Service
 	groupService                group2.Service
 	resourceStore               resource.Store
-	userStore                   user.Store
-	chatService                 chat.Service
+	userStore                   store.Store
+	chatService                 service.Service
 	offerRepo                   tradingdomain.OfferRepository
 	getOfferKeyFromOfferItemKey *queries.GetOfferKeyForOfferItemKey
 }
@@ -31,8 +33,8 @@ var _ trading2.Service = &TradingService{}
 func NewTradingService(
 	tradingStore trading2.Store,
 	resourceStore resource.Store,
-	authStore user.Store,
-	chatService chat.Service,
+	authStore store.Store,
+	chatService service.Service,
 	groupService group2.Service,
 	transactionService transaction2.Service,
 	offerRepo tradingdomain.OfferRepository,
@@ -54,8 +56,8 @@ func (t TradingService) checkOfferCompleted(
 	groupKey keys.GroupKey,
 	offerKey keys.OfferKey,
 	offerItems *tradingdomain.OfferItems,
-	userConfirmingItem user.UserReference,
-	usersInOffer *user.Users) error {
+	userConfirmingItem models.UserReference,
+	usersInOffer *models.Users) error {
 
 	if offerItems.AllApproved() && offerItems.AllUserActionsCompleted() {
 		for _, offerItem := range offerItems.Items {
@@ -99,7 +101,7 @@ func (t TradingService) checkOfferCompleted(
 			return err
 		}
 
-		_, err = t.chatService.SendConversationMessage(ctx, chat.NewSendConversationMessage(
+		_, err = t.chatService.SendConversationMessage(ctx, service.NewSendConversationMessage(
 			userConfirmingItem.GetUserKey(),
 			userConfirmingItem.GetUsername(),
 			usersInOffer.GetUserKeys(),
@@ -112,7 +114,7 @@ func (t TradingService) checkOfferCompleted(
 	return nil
 }
 
-func (t TradingService) buildOfferCompletedMessage(ctx context.Context, items *tradingdomain.OfferItems, users *user.Users) ([]chat.Block, string, error) {
+func (t TradingService) buildOfferCompletedMessage(ctx context.Context, items *tradingdomain.OfferItems, users *models.Users) ([]chat.Block, string, error) {
 
 	var blocks []chat.Block
 
@@ -160,7 +162,7 @@ func (t TradingService) buildOfferCompletedMessage(ctx context.Context, items *t
 
 }
 
-func (t TradingService) checkIfAllItemsCompleted(ctx context.Context, loggerInUser user.UserReference, offerItem tradingdomain.OfferItem) error {
+func (t TradingService) checkIfAllItemsCompleted(ctx context.Context, loggerInUser models.UserReference, offerItem tradingdomain.OfferItem) error {
 
 	offer, err := t.tradingStore.GetOffer(offerItem.GetOfferKey())
 	if err != nil {

@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/pkg/auth"
+	"github.com/commonpool/backend/pkg/auth/models"
 	group "github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/group/domain"
 	"github.com/commonpool/backend/pkg/handler"
@@ -14,7 +14,7 @@ type GetMembershipResponse struct {
 	Membership Membership `json:"membership"`
 }
 
-func NewGetMembershipResponse(membership *domain.Membership, groupNames group.Names, userNames auth.UserNames) *GetMembershipResponse {
+func NewGetMembershipResponse(membership *domain.Membership, groupNames group.Names, userNames models.UserNames) *GetMembershipResponse {
 	return &GetMembershipResponse{
 		Membership: NewMembership(membership, groupNames, userNames),
 	}
