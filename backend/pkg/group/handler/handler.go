@@ -9,13 +9,14 @@ import (
 )
 
 type Handler struct {
-	groupService        group.Service
-	userService         service.Service
-	auth                authenticator.Authenticator
-	getGroup            *queries.GetGroup
-	getMembership       *queries.GetMembershipReadModel
-	getGroupMemberships *queries.GetGroupMemberships
-	getUserMemberships  *queries.GetUserMemberships
+	groupService                 group.Service
+	userService                  service.Service
+	auth                         authenticator.Authenticator
+	getGroup                     *queries.GetGroup
+	getMembership                *queries.GetMembershipReadModel
+	getGroupMemberships          *queries.GetGroupMemberships
+	getUserMemberships           *queries.GetUserMemberships
+	getUsersForGroupInvitePicker *queries.GetUsersForGroupInvite
 }
 
 func NewHandler(
@@ -25,15 +26,17 @@ func NewHandler(
 	getGroup *queries.GetGroup,
 	getMembership *queries.GetMembershipReadModel,
 	getGroupMemberships *queries.GetGroupMemberships,
-	getUserMemberships *queries.GetUserMemberships) *Handler {
+	getUserMemberships *queries.GetUserMemberships,
+	getUsersForGroupInvitePicker *queries.GetUsersForGroupInvite) *Handler {
 	return &Handler{
-		groupService:        groupService,
-		userService:         userService,
-		auth:                auth,
-		getGroup:            getGroup,
-		getMembership:       getMembership,
-		getGroupMemberships: getGroupMemberships,
-		getUserMemberships:  getUserMemberships,
+		groupService:                 groupService,
+		userService:                  userService,
+		auth:                         auth,
+		getGroup:                     getGroup,
+		getMembership:                getMembership,
+		getGroupMemberships:          getGroupMemberships,
+		getUserMemberships:           getUserMemberships,
+		getUsersForGroupInvitePicker: getUsersForGroupInvitePicker,
 	}
 }
 

@@ -42,7 +42,7 @@ func NewChatStore(db *gorm.DB) *ChatStore {
 //
 // 		var title = ""
 // 		if request.Type == chat.GroupChannel {
-// 			title = request.Group.Name
+// 			title = request.Group.ResourceName
 // 		}
 //
 // 		channel = &chat.Channel{
@@ -112,7 +112,7 @@ func NewChatStore(db *gorm.DB) *ChatStore {
 // 		}
 //
 // 		subscription := chat.ChannelSubscription{
-// 			Name:          strings.Join(userNames, " "),
+// 			ResourceName:          strings.Join(userNames, " "),
 // 			UserID:        key.String(),
 // 			ChannelID:     channelKey.String(),
 // 			LastMessageAt: time.Unix(0, 0),

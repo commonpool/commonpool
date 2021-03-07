@@ -44,7 +44,7 @@ func (g GroupService) CreateOrAcceptInvitation(ctx context.Context, request *gro
 	// 	channelKey := keys.GetChannelKeyForGroup(request.MembershipKey.GroupKey)
 	//
 	// 	channelSubscriptionKey := keys.NewChannelSubscriptionKey(channelKey, acceptedMembership.GetUserKey())
-	// 	_, err = g.chatService.SubscribeToChannel(ctx, channelSubscriptionKey, grp.Name)
+	// 	_, err = g.chatService.SubscribeToChannel(ctx, channelSubscriptionKey, grp.ResourceName)
 	// 	if err != nil {
 	// 		return nil, err
 	// 	}
@@ -63,7 +63,7 @@ func (g GroupService) CreateOrAcceptInvitation(ctx context.Context, request *gro
 	// 		return nil, err
 	// 	}
 	//
-	// 	text := fmt.Sprintf("%s has joined #%s", usernameJoiningGroup, grp.Name)
+	// 	text := fmt.Sprintf("%s has joined #%s", usernameJoiningGroup, grp.ResourceName)
 	// 	message := chat.NewContextBlock([]chat.BlockElement{
 	// 		chat.NewMarkdownObject(text)},
 	// 		nil,

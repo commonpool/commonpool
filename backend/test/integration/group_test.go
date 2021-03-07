@@ -376,7 +376,7 @@ func (s *IntegrationTestSuite) TestGroups() {
 			return
 		}
 
-		res, httpResponse := s.CreateOrAcceptInvitation(t, ctx, user2, &handler.CreateOrAcceptInvitationRequest{
+		_, httpResponse = s.CreateOrAcceptInvitation(t, ctx, user2, &handler.CreateOrAcceptInvitationRequest{
 			UserID:  user2.Subject,
 			GroupID: grp.Group.ID,
 		})
@@ -384,17 +384,22 @@ func (s *IntegrationTestSuite) TestGroups() {
 			return
 		}
 
-		assert.Equal(t, user2.Subject, res.Membership.UserID)
-		assert.Equal(t, false, res.Membership.IsAdmin)
-		assert.Equal(t, false, res.Membership.IsOwner)
-		assert.Equal(t, false, res.Membership.IsDeactivated)
-		assert.Equal(t, false, res.Membership.IsMember)
-		assert.Equal(t, false, res.Membership.GroupConfirmed)
-		assert.Equal(t, true, res.Membership.UserConfirmed)
+		membership, httpResponse := s.GetMembership(t, ctx, user2, user2.Subject, grp.Group.ID)
+		if !AssertOK(t, httpResponse) {
+			return
+		}
+
+		assert.Equal(t, user2.Subject, membership.Membership.UserID)
+		assert.Equal(t, false, membership.Membership.IsAdmin)
+		assert.Equal(t, false, membership.Membership.IsOwner)
+		assert.Equal(t, false, membership.Membership.IsDeactivated)
+		assert.Equal(t, false, membership.Membership.IsMember)
+		assert.Equal(t, false, membership.Membership.GroupConfirmed)
+		assert.Equal(t, true, membership.Membership.UserConfirmed)
 
 	})
 
-	s.T().Run("", func(t *testing.T) {
+	s.T().Run("OwnerShouldBeAbleToAcceptInvitationRequest", func(t *testing.T) {
 
 		ctx := context.Background()
 		grp, httpResponse := s.CreateGroup(t, ctx, user1, &handler.CreateGroupRequest{
@@ -405,7 +410,7 @@ func (s *IntegrationTestSuite) TestGroups() {
 			return
 		}
 
-		res, httpResponse := s.CreateOrAcceptInvitation(t, ctx, user2, &handler.CreateOrAcceptInvitationRequest{
+		_, httpResponse = s.CreateOrAcceptInvitation(t, ctx, user2, &handler.CreateOrAcceptInvitationRequest{
 			UserID:  user2.Subject,
 			GroupID: grp.Group.ID,
 		})
@@ -413,7 +418,7 @@ func (s *IntegrationTestSuite) TestGroups() {
 			return
 		}
 
-		res, httpResponse = s.CreateOrAcceptInvitation(t, ctx, user1, &handler.CreateOrAcceptInvitationRequest{
+		_, httpResponse = s.CreateOrAcceptInvitation(t, ctx, user1, &handler.CreateOrAcceptInvitationRequest{
 			UserID:  user2.Subject,
 			GroupID: grp.Group.ID,
 		})
@@ -421,13 +426,18 @@ func (s *IntegrationTestSuite) TestGroups() {
 			return
 		}
 
-		assert.Equal(t, user2.Subject, res.Membership.UserID)
-		assert.Equal(t, false, res.Membership.IsAdmin)
-		assert.Equal(t, false, res.Membership.IsOwner)
-		assert.Equal(t, false, res.Membership.IsDeactivated)
-		assert.Equal(t, true, res.Membership.IsMember)
-		assert.Equal(t, true, res.Membership.GroupConfirmed)
-		assert.Equal(t, true, res.Membership.UserConfirmed)
+		membership, httpResponse := s.GetMembership(t, ctx, user2, user2.Subject, grp.Group.ID)
+		if !AssertOK(t, httpResponse) {
+			return
+		}
+
+		assert.Equal(t, user2.Subject, membership.Membership.UserID)
+		assert.Equal(t, false, membership.Membership.IsAdmin)
+		assert.Equal(t, false, membership.Membership.IsOwner)
+		assert.Equal(t, false, membership.Membership.IsDeactivated)
+		assert.Equal(t, true, membership.Membership.IsMember)
+		assert.Equal(t, true, membership.Membership.GroupConfirmed)
+		assert.Equal(t, true, membership.Membership.UserConfirmed)
 	})
 
 	s.T().Run("GroupShouldReceiveMessageWhenUserJoined", func(t *testing.T) {
@@ -606,10 +616,13 @@ func (s *IntegrationTestSuite) TestGroups() {
 		assert.Equal(s.T(), 0, len(getMemberships.Memberships))
 	})
 
-	s.T().Run("", func(t *testing.T) {
+	s.T().Run("TestGetLoggedInUserMembershipsWithGroup", func(t *testing.T) {
+
+		user, delUser := s.testUser(s.T())
+		defer delUser()
 
 		ctx := context.Background()
-		createGroup, httpResponse := s.CreateGroup(t, ctx, user1, &handler.CreateGroupRequest{
+		createGroup, httpResponse := s.CreateGroup(t, ctx, user, &handler.CreateGroupRequest{
 			Name:        "sample",
 			Description: "description",
 		})
@@ -617,7 +630,7 @@ func (s *IntegrationTestSuite) TestGroups() {
 			return
 		}
 
-		getMemberships, httpResponse := s.GetLoggedInUserMemberships(t, ctx, user1)
+		getMemberships, httpResponse := s.GetLoggedInUserMemberships(t, ctx, user)
 		if !AssertOK(t, httpResponse) {
 			return
 		}
@@ -627,8 +640,8 @@ func (s *IntegrationTestSuite) TestGroups() {
 		}
 		assert.Equal(t, createGroup.Group.ID, getMemberships.Memberships[0].GroupID)
 		assert.Equal(t, "sample", getMemberships.Memberships[0].GroupName)
-		assert.Equal(t, user1.Subject, getMemberships.Memberships[0].UserID)
-		assert.Equal(t, user1.Username, getMemberships.Memberships[0].UserName)
+		assert.Equal(t, user.Subject, getMemberships.Memberships[0].UserID)
+		assert.Equal(t, user.Username, getMemberships.Memberships[0].UserName)
 		assert.Equal(t, true, getMemberships.Memberships[0].UserConfirmed)
 		assert.Equal(t, true, getMemberships.Memberships[0].GroupConfirmed)
 		assert.Equal(t, true, getMemberships.Memberships[0].IsMember)

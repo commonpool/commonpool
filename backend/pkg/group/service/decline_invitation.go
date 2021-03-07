@@ -108,7 +108,7 @@ func (g GroupService) CancelOrDeclineInvitation(ctx context.Context, request *gr
 	// 		return err
 	// 	}
 	//
-	// 	text := fmt.Sprintf("%s has left #%s", usernameLeavingGroup, grp.Name)
+	// 	text := fmt.Sprintf("%s has left #%s", usernameLeavingGroup, grp.ResourceName)
 	// 	message := chat.NewContextBlock([]chat.BlockElement{
 	// 		chat.NewMarkdownObject(text)},
 	// 		nil,

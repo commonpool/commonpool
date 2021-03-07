@@ -63,7 +63,8 @@ func (s *EventStoreSuite) TestSaveEventsShouldSetCorrelationID() {
 		test.NewMockEvent("2"),
 	)
 
-	if !assert.NoError(s.T(), s.eventStore.Save(s.ctx, streamKey, 0, events)) {
+	_, err := s.eventStore.Save(s.ctx, streamKey, 0, events)
+	if !assert.NoError(s.T(), err) {
 		return
 	}
 
@@ -83,7 +84,8 @@ func (s *EventStoreSuite) TestSaveEventsShouldSetEventID() {
 		test.NewMockEvent("2"),
 	)
 
-	if !assert.NoError(s.T(), s.eventStore.Save(s.ctx, streamKey, 0, events)) {
+	_, err := s.eventStore.Save(s.ctx, streamKey, 0, events)
+	if !assert.NoError(s.T(), err) {
 		return
 	}
 
@@ -97,10 +99,11 @@ func (s *EventStoreSuite) TestSaveEventsShouldSetEventID() {
 
 func (s *EventStoreSuite) TestSaveEventsShouldSetSequenceNoForNewStreams() {
 	streamKey := eventstore.NewStreamKey(test.MockAggregateType, "mock-id")
-	if !assert.NoError(s.T(), s.eventStore.Save(s.ctx, streamKey, 0, test.NewMockEvents(
+	_, err := s.eventStore.Save(s.ctx, streamKey, 0, test.NewMockEvents(
 		test.NewMockEvent("1"),
 		test.NewMockEvent("2"),
-	))) {
+	))
+	if !assert.NoError(s.T(), err) {
 		return
 	}
 	loadedEvents, err := s.eventStore.Load(s.ctx, streamKey)
@@ -113,16 +116,18 @@ func (s *EventStoreSuite) TestSaveEventsShouldSetSequenceNoForNewStreams() {
 func (s *EventStoreSuite) TestSaveEventsShouldSetSequenceNoForExistingStreams() {
 	streamKey := eventstore.NewStreamKey(test.MockAggregateType, "mock-id")
 
-	if !assert.NoError(s.T(), s.eventStore.Save(s.ctx, streamKey, 0, test.NewMockEvents(
+	_, err := s.eventStore.Save(s.ctx, streamKey, 0, test.NewMockEvents(
 		test.NewMockEvent("1"),
 		test.NewMockEvent("2"),
-	))) {
+	))
+	if !assert.NoError(s.T(), err) {
 		return
 	}
 
-	if !assert.NoError(s.T(), s.eventStore.Save(s.ctx, streamKey, 2, test.NewMockEvents(
+	_, err = s.eventStore.Save(s.ctx, streamKey, 2, test.NewMockEvents(
 		test.NewMockEvent("3"),
-	))) {
+	))
+	if !assert.NoError(s.T(), err) {
 		return
 	}
 
@@ -140,23 +145,28 @@ func (s *EventStoreSuite) TestSaveShouldThrowWhenEmptyStreamIsNotExpectedVersion
 		test.NewMockEvent("1"),
 		test.NewMockEvent("2"),
 	)
-	assert.Error(s.T(), s.eventStore.Save(s.ctx, streamKey, 1, events))
+	_, err := s.eventStore.Save(s.ctx, streamKey, 1, events)
+	assert.Error(s.T(), err)
 }
 
 func (s *EventStoreSuite) TestSaveShouldThrowWhenStreamIsNotExpectedVersion() {
 	streamKey := eventstore.NewStreamKey(test.MockAggregateType, "mock-id")
 	evt1 := test.NewMockEvent("1")
 	evt2 := test.NewMockEvent("2")
-	assert.NoError(s.T(), s.eventStore.Save(s.ctx, streamKey, 0, test.NewMockEvents(evt1)))
-	assert.Error(s.T(), s.eventStore.Save(s.ctx, streamKey, 0, test.NewMockEvents(evt2)))
+	_, err := s.eventStore.Save(s.ctx, streamKey, 0, test.NewMockEvents(evt1))
+	assert.NoError(s.T(), err)
+	_, err = s.eventStore.Save(s.ctx, streamKey, 0, test.NewMockEvents(evt2))
+	assert.Error(s.T(), err)
 }
 
 func (s *EventStoreSuite) TestSaveShouldThrowWhenEventsHaveSameID() {
 	streamKey := eventstore.NewStreamKey(test.MockAggregateType, "mock-id")
 	evt1 := test.NewMockEvent("1")
 	evt2 := test.NewMockEvent("2")
-	assert.NoError(s.T(), s.eventStore.Save(s.ctx, streamKey, 0, test.NewMockEvents(evt1)))
-	assert.Error(s.T(), s.eventStore.Save(s.ctx, streamKey, 0, test.NewMockEvents(evt2)))
+	_, err := s.eventStore.Save(s.ctx, streamKey, 0, test.NewMockEvents(evt1))
+	assert.NoError(s.T(), err)
+	_, err = s.eventStore.Save(s.ctx, streamKey, 0, test.NewMockEvents(evt2))
+	assert.Error(s.T(), err)
 }
 
 func (s *EventStoreSuite) TestGetEventsByType() {
@@ -177,10 +187,11 @@ func (s *EventStoreSuite) TestGetEventsByType() {
 		evt3,
 	)
 
-	assert.NoError(s.T(), s.eventStore.Save(s.ctx, streamKey, 0, events))
+	_, err := s.eventStore.Save(s.ctx, streamKey, 0, events)
+	assert.NoError(s.T(), err)
 
 	var loaded []eventsource.Event
-	err := s.eventStore.ReplayEventsByType(s.ctx, []string{test.MockEventType}, now.Add(-3*time.Hour), func(events []eventsource.Event) error {
+	err = s.eventStore.ReplayEventsByType(s.ctx, []string{test.MockEventType}, now.Add(-3*time.Hour), func(events []eventsource.Event) error {
 		for _, streamEvent := range events {
 			loaded = append(loaded, streamEvent)
 		}

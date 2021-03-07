@@ -5,10 +5,41 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7cd8279a-e3af-42a0-8513-69224f91376a" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/backend/pkg/group/queries/get_group_invitation_picker_users.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/domain/evt_resource_deleted.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/domain/evt_resource_group_sharing_changed.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/domain/evt_resource_info_changed.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/domain/evt_resource_registered.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/domain/evt_types.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/domain/resource.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/domain/resource_test.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/domain/resource_type.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/domain/vo_resource_info.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/domain/vo_resource_sharing.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/listeners/readmodel.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/listeners/readmodel_test.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/queries/get_resource.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/readmodel/resource.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/readmodel/sharing.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/auth/authenticator/oidc/context.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/auth/authenticator/oidc/context.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/auth/authenticator/oidc/middleware.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/auth/authenticator/oidc/middleware.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/auth/authenticator/oidc/oidc_authenticator.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/auth/authenticator/oidc/oidc_authenticator.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/auth/authenticator/oidc/utils.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/auth/authenticator/oidc/utils.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/auth/module/module.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/auth/module/module.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/chat/store/chat.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/chat/store/chat.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/eventstore/postgres/eventstore_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/eventstore/postgres/eventstore_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/eventstore/postgres/postgres.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/eventstore/postgres/postgres.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/group/domain/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/domain/group.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/group/handler/get_group_invite_picker.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/handler/get_group_invite_picker.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/group/handler/handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/handler/handler.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/group/service/accept_invitation.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/service/accept_invitation.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/group/service/create_group.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/service/create_group.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/pkg/group/service/decline_invitation.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/service/decline_invitation.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/server/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/server/server.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/test/integration/group_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test/integration/group_test.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/test/integration/main_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test/integration/main_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/test/integration/resource_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test/integration/resource_test.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -67,11 +98,11 @@
   </component>
   <component name="RecentsManager">
     <key name="GoMoveDeclarationDialog.RECENT_KEY">
+      <recent name="$PROJECT_DIR$/backend/pkg/resource/listeners" />
       <recent name="$PROJECT_DIR$/backend/pkg/auth/authenticator" />
       <recent name="$PROJECT_DIR$/backend/pkg/test" />
       <recent name="$PROJECT_DIR$/backend/pkg/group/readmodels" />
       <recent name="$PROJECT_DIR$/backend/pkg/group/domain" />
-      <recent name="$PROJECT_DIR$/backend/pkg/eventsource" />
     </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/backend/pkg/group/queries" />
@@ -87,7 +118,7 @@
       <recent name="$PROJECT_DIR$/backend/pkg/chat/service" />
     </key>
   </component>
-  <component name="RunManager" selected="Go Test.TestGroups in github.com/commonpool/backend/test/integration (1)">
+  <component name="RunManager" selected="Go Test.go test github.com/commonpool/backend/pkg/resource/listeners">
     <configuration name="go build github.com/commonpool/backend" type="GoApplicationRunConfiguration" factoryName="Go Application" nameIsGenerated="true">
       <module name="commonpool" />
       <working_directory value="$PROJECT_DIR$/backend" />
@@ -108,10 +139,10 @@
       <directory value="$PROJECT_DIR$/backend" />
       <method v="2" />
     </configuration>
-    <configuration name="TestCannotCreateResourceTransferItemForResourceAlreadyOwned in github.com/commonpool/backend/test/integration" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="TestShouldCreateResourceWhenResourceCreated in github.com/commonpool/backend/pkg/resource/listeners" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="commonpool" />
-      <working_directory value="$PROJECT_DIR$/backend/test/integration" />
-      <parameters value=" -testify.m ^TestCannotCreateResourceTransferItemForResourceAlreadyOwned$" />
+      <working_directory value="$PROJECT_DIR$/backend/pkg/resource/listeners" />
+      <parameters value=" -testify.m ^TestShouldCreateResourceWhenResourceCreated$" />
       <EXTENSION ID="net.ashald.envfile">
         <option name="IS_ENABLED" value="true" />
         <option name="IS_SUBST" value="false" />
@@ -125,16 +156,16 @@
       </EXTENSION>
       <framework value="gotest" />
       <kind value="PACKAGE" />
-      <package value="github.com/commonpool/backend/test/integration" />
+      <package value="github.com/commonpool/backend/pkg/resource/listeners" />
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
-      <pattern value="^\QTestIntegration\E$/^\QTestCannotCreateResourceTransferItemForResourceAlreadyOwned\E$" />
+      <pattern value="^\QTestReadModelSuite\E$/^\QTestShouldCreateResourceWhenResourceCreated\E$" />
       <method v="2" />
     </configuration>
-    <configuration name="TestGroups in github.com/commonpool/backend/test/integration (1)" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="TestShouldDeleteReadModelWhenResourceDeleted in github.com/commonpool/backend/pkg/resource/listeners" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="commonpool" />
-      <working_directory value="$PROJECT_DIR$/backend/test/integration" />
-      <parameters value=" -testify.m ^TestGroups$" />
+      <working_directory value="$PROJECT_DIR$/backend/pkg/resource/listeners" />
+      <parameters value=" -testify.m ^TestShouldDeleteReadModelWhenResourceDeleted$" />
       <EXTENSION ID="net.ashald.envfile">
         <option name="IS_ENABLED" value="true" />
         <option name="IS_SUBST" value="false" />
@@ -148,16 +179,16 @@
       </EXTENSION>
       <framework value="gotest" />
       <kind value="PACKAGE" />
-      <package value="github.com/commonpool/backend/test/integration" />
+      <package value="github.com/commonpool/backend/pkg/resource/listeners" />
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
-      <pattern value="^\QTestIntegration\E$/^\QTestGroups\E$/^\QInviteeShouldBeAbleToDeclineInvitationFromOwner\E$" />
+      <pattern value="^\QTestReadModelSuite\E$/^\QTestShouldDeleteReadModelWhenResourceDeleted\E$" />
       <method v="2" />
     </configuration>
-    <configuration name="TestGroups in github.com/commonpool/backend/test/integration" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="TestShouldUpdateSharings in github.com/commonpool/backend/pkg/resource/listeners" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="commonpool" />
-      <working_directory value="$PROJECT_DIR$/backend/test/integration" />
-      <parameters value=" -testify.m ^TestGroups$" />
+      <working_directory value="$PROJECT_DIR$/backend/pkg/resource/listeners" />
+      <parameters value=" -testify.m ^TestShouldUpdateSharings$" />
       <EXTENSION ID="net.ashald.envfile">
         <option name="IS_ENABLED" value="true" />
         <option name="IS_SUBST" value="false" />
@@ -171,16 +202,16 @@
       </EXTENSION>
       <framework value="gotest" />
       <kind value="PACKAGE" />
-      <package value="github.com/commonpool/backend/test/integration" />
+      <package value="github.com/commonpool/backend/pkg/resource/listeners" />
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
-      <pattern value="^\QTestIntegration\E$/^\QTestGroups\E$/^\QInviteeShouldBeAbleToAcceptInvitationFromOwner\E$" />
+      <pattern value="^\QTestReadModelSuite\E$/^\QTestShouldUpdateSharings\E$" />
       <method v="2" />
     </configuration>
-    <configuration name="TestIntegration/TestGroups/OwnerShouldBeAbleToInviteUser in github.com/commonpool/backend/test/integration" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="TestShouldUpdateUserWhenUserInfoChange in github.com/commonpool/backend/pkg/resource/listeners" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="commonpool" />
-      <working_directory value="$PROJECT_DIR$/backend/test/integration" />
-      <parameters value=" -testify.m ^TestGroups$ -test.cpu 4" />
+      <working_directory value="$PROJECT_DIR$/backend/pkg/resource/listeners" />
+      <parameters value=" -testify.m ^TestShouldUpdateUserWhenUserInfoChange$" />
       <EXTENSION ID="net.ashald.envfile">
         <option name="IS_ENABLED" value="true" />
         <option name="IS_SUBST" value="false" />
@@ -194,10 +225,10 @@
       </EXTENSION>
       <framework value="gotest" />
       <kind value="PACKAGE" />
-      <package value="github.com/commonpool/backend/test/integration" />
+      <package value="github.com/commonpool/backend/pkg/resource/listeners" />
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
-      <pattern value="^\QTestIntegration\E$/^\QTestGroups\E$/^\QOwnerShouldBeAbleToInviteUser\E$" />
+      <pattern value="^\QTestReadModelSuite\E$/^\QTestShouldUpdateUserWhenUserInfoChange\E$" />
       <method v="2" />
     </configuration>
     <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
@@ -221,10 +252,9 @@
       <filePath value="$PROJECT_DIR$" />
       <method v="2" />
     </configuration>
-    <configuration name="go test integration" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="go test github.com/commonpool/backend/pkg/resource/listeners" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="commonpool" />
-      <working_directory value="$PROJECT_DIR$/backend/test/integration" />
-      <parameters value="-test.cpu 4" />
+      <working_directory value="$PROJECT_DIR$/backend/pkg/resource/listeners" />
       <EXTENSION ID="net.ashald.envfile">
         <option name="IS_ENABLED" value="true" />
         <option name="IS_SUBST" value="false" />
@@ -237,26 +267,27 @@
         </ENTRIES>
       </EXTENSION>
       <framework value="gotest" />
-      <kind value="DIRECTORY" />
-      <directory value="$PROJECT_DIR$/backend/test/integration" />
+      <kind value="PACKAGE" />
+      <package value="github.com/commonpool/backend/pkg/resource/listeners" />
+      <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
       <method v="2" />
     </configuration>
     <list>
       <item itemvalue="Go Build.go build github.com/commonpool/backend" />
-      <item itemvalue="Go Test.go test integration" />
-      <item itemvalue="Go Test.TestIntegration/TestGroups/OwnerShouldBeAbleToInviteUser in github.com/commonpool/backend/test/integration" />
-      <item itemvalue="Go Test.TestCannotCreateResourceTransferItemForResourceAlreadyOwned in github.com/commonpool/backend/test/integration" />
-      <item itemvalue="Go Test.TestGroups in github.com/commonpool/backend/test/integration" />
-      <item itemvalue="Go Test.TestGroups in github.com/commonpool/backend/test/integration (1)" />
+      <item itemvalue="Go Test.go test github.com/commonpool/backend/pkg/resource/listeners" />
+      <item itemvalue="Go Test.TestShouldCreateResourceWhenResourceCreated in github.com/commonpool/backend/pkg/resource/listeners" />
+      <item itemvalue="Go Test.TestShouldUpdateUserWhenUserInfoChange in github.com/commonpool/backend/pkg/resource/listeners" />
+      <item itemvalue="Go Test.TestShouldDeleteReadModelWhenResourceDeleted in github.com/commonpool/backend/pkg/resource/listeners" />
+      <item itemvalue="Go Test.TestShouldUpdateSharings in github.com/commonpool/backend/pkg/resource/listeners" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Go Test.TestGroups in github.com/commonpool/backend/test/integration (1)" />
-        <item itemvalue="Go Test.go test integration" />
-        <item itemvalue="Go Test.TestGroups in github.com/commonpool/backend/test/integration" />
-        <item itemvalue="Go Test.TestCannotCreateResourceTransferItemForResourceAlreadyOwned in github.com/commonpool/backend/test/integration" />
-        <item itemvalue="Go Test.TestIntegration/TestGroups/OwnerShouldBeAbleToInviteUser in github.com/commonpool/backend/test/integration" />
+        <item itemvalue="Go Test.go test github.com/commonpool/backend/pkg/resource/listeners" />
+        <item itemvalue="Go Test.TestShouldUpdateSharings in github.com/commonpool/backend/pkg/resource/listeners" />
+        <item itemvalue="Go Test.TestShouldDeleteReadModelWhenResourceDeleted in github.com/commonpool/backend/pkg/resource/listeners" />
+        <item itemvalue="Go Test.TestShouldUpdateUserWhenUserInfoChange in github.com/commonpool/backend/pkg/resource/listeners" />
+        <item itemvalue="Go Test.TestShouldCreateResourceWhenResourceCreated in github.com/commonpool/backend/pkg/resource/listeners" />
       </list>
     </recent_temporary>
   </component>
@@ -325,7 +356,14 @@
       <option name="project" value="LOCAL" />
       <updated>1615051739086</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="wrk">
+      <created>1615052653822</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1615052653822</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -364,20 +402,24 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/backend/pkg/server/server.go</url>
-          <line>282</line>
+          <line>293</line>
           <option name="timeStamp" value="221" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/backend/pkg/server/server.go</url>
-          <line>280</line>
+          <line>291</line>
           <option name="timeStamp" value="222" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/backend/pkg/group/domain/group.go</url>
-          <line>301</line>
-          <option name="timeStamp" value="225" />
+          <url>file://$PROJECT_DIR$/backend/test/integration/group_test.go</url>
+          <line>606</line>
+          <option name="timeStamp" value="242" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/commonpool$go_test_github_com_commonpool_backend_pkg_resource_domain.out" NAME="go test github.com/commonpool/backend/pkg/resource/domain Coverage Results" MODIFIED="1615071081849" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="GoCoverage" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
+    <SUITE FILE_PATH="coverage/commonpool$go_test_github_com_commonpool_backend_pkg_resource_listeners.out" NAME="go test github.com/commonpool/backend/pkg/resource/listeners Coverage Results" MODIFIED="1615080908722" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="GoCoverage" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
   </component>
 </project>

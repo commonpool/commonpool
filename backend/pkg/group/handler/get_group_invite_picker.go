@@ -2,7 +2,7 @@ package handler
 
 import (
 	handler2 "github.com/commonpool/backend/pkg/auth/handler"
-	"github.com/commonpool/backend/pkg/auth/store"
+	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/utils"
 	"github.com/labstack/echo/v4"
@@ -27,6 +27,8 @@ type GetUsersForGroupInvitePickerResponse struct {
 // @Failure 400 {object} utils.Error
 // @Router /groups/:id/invite-member-picker [get]
 func (h *Handler) GetUsersForGroupInvitePicker(c echo.Context) error {
+	ctx := handler.GetContext(c)
+
 	skip, err := utils.ParseSkip(c)
 	if err != nil {
 		return err
@@ -44,22 +46,15 @@ func (h *Handler) GetUsersForGroupInvitePicker(c echo.Context) error {
 		return err
 	}
 
-	userQuery := store.Query{
-		Query:      qry,
-		Skip:       skip,
-		Take:       take,
-		NotInGroup: &groupKey,
-	}
-
-	users, err := h.userService.Find(userQuery)
+	users, err := h.getUsersForGroupInvitePicker.Get(ctx, groupKey, qry, skip, take)
 	if err != nil {
 		return err
 	}
 
-	responseItems := make([]handler2.UserInfoResponse, len(users.Items))
-	for i, u := range users.Items {
+	responseItems := make([]handler2.UserInfoResponse, len(users))
+	for i, u := range users {
 		responseItems[i] = handler2.UserInfoResponse{
-			Id:       u.ID,
+			Id:       u.UserKey,
 			Username: u.Username,
 		}
 	}

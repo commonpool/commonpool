@@ -116,6 +116,10 @@ func eventTimeValueOrDefault(defaultValue time.Time, key string, tempStruct map[
 
 func (p *PostgresEventStore) Save(ctx context.Context, streamKey eventstore.StreamKey, expectedRevision int, events []eventsource.Event) ([]eventsource.Event, error) {
 
+	if len(events) == 0 {
+		return []eventsource.Event{}, nil
+	}
+
 	p.mu.Lock()
 	defer p.mu.Unlock()
 

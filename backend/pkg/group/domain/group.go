@@ -6,7 +6,6 @@ import (
 	"github.com/commonpool/backend/pkg/eventsource"
 	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/pkg/keys"
-	uuid "github.com/satori/go.uuid"
 	"strings"
 )
 
@@ -20,10 +19,10 @@ type Group struct {
 	memberships   *Memberships
 }
 
-func NewGroup() *Group {
+func NewGroup(key keys.GroupKey) *Group {
 	return &Group{
 		aggregateType: "group",
-		key:           keys.NewGroupKey(uuid.NewV4()),
+		key:           key,
 		changes:       []eventsource.Event{},
 		version:       0,
 		isNew:         true,
@@ -33,7 +32,7 @@ func NewGroup() *Group {
 }
 
 func NewFromEvents(key keys.GroupKey, events []eventsource.Event) *Group {
-	group := NewGroup()
+	group := NewGroup(key)
 	group.key = key
 	for _, event := range events {
 		group.on(event, false)
@@ -298,10 +297,7 @@ func (o *Group) assertIsActive(key keys.UserKey) error {
 
 func (o *Group) assertIsAdmin(userKey keys.UserKey) error {
 	m, ok := o.GetMembership(userKey)
-	if !ok {
-		return exceptions.ErrMembershipNotFound
-	}
-	if !m.IsAdmin() {
+	if !ok || !m.IsAdmin() {
 		return exceptions.ErrForbidden
 	}
 	return nil

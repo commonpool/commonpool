@@ -31,7 +31,7 @@ func (g GroupService) CreateGroup(ctx context.Context, request *group.CreateGrou
 
 	//
 	//
-	// grp, membership, err := g.groupStore.CreateGroupAndMembership(ctx, request.GroupKey, userSession.GetUserKey(), request.Name, request.Description)
+	// grp, membership, err := g.groupStore.CreateGroupAndMembership(ctx, request.GroupKey, userSession.GetUserKey(), request.ResourceName, request.Description)
 	// if err != nil {
 	// 	return nil, err
 	// }
@@ -43,7 +43,7 @@ func (g GroupService) CreateGroup(ctx context.Context, request *group.CreateGrou
 	// }
 	//
 	// channelSubscriptionKey := keys.NewChannelSubscriptionKey(channel.GetKey(), userSession.GetUserKey())
-	// _, err = g.chatService.SubscribeToChannel(ctx, channelSubscriptionKey, grp.Name)
+	// _, err = g.chatService.SubscribeToChannel(ctx, channelSubscriptionKey, grp.ResourceName)
 	// if err != nil {
 	// 	return nil, err
 	// }

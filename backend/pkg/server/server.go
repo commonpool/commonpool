@@ -7,6 +7,7 @@ import (
 	"github.com/bsm/redislock"
 	_ "github.com/commonpool/backend/docs"
 	authdomain "github.com/commonpool/backend/pkg/auth/domain"
+	listeners3 "github.com/commonpool/backend/pkg/auth/listeners"
 	"github.com/commonpool/backend/pkg/auth/module"
 	"github.com/commonpool/backend/pkg/auth/store"
 	chathandler "github.com/commonpool/backend/pkg/chat/handler"
@@ -191,13 +192,14 @@ func NewServer() (*Server, error) {
 	getMembership := groupqueries.NewGetMembership(db)
 	getUserMemberships := groupqueries.NewGetUserMemberships(db)
 	getGroupMemberships := groupqueries.NewGetGroupMemberships(db)
+	getUsersForGroupInvite := groupqueries.NewGetUsersForGroupInvite(db)
 
 	r := NewRouter()
 	r.HTTPErrorHandler = handler2.HttpErrorHandler
 	r.GET("/api/swagger/*", echoSwagger.WrapHandler)
 	v1 := r.Group("/api/v1", middleware.Recover())
 
-	userModule := module.NewUserModule(appConfig, db, driver)
+	userModule := module.NewUserModule(appConfig, db, driver, eventStore)
 	userModule.Register(v1)
 
 	transactionStore := transactionstore.NewTransactionStore(db)
@@ -229,7 +231,16 @@ func NewServer() (*Server, error) {
 	chatHandler := chathandler.NewHandler(chatService, tradingService, appConfig, userModule.Authenticator)
 	chatHandler.Register(v1)
 
-	groupHandler := grouphandler.NewHandler(groupService, userModule.Service, userModule.Authenticator, getGroup, getMembership, getGroupMemberships, getUserMemberships)
+	groupHandler := grouphandler.NewHandler(
+		groupService,
+		userModule.Service,
+		userModule.Authenticator,
+		getGroup,
+		getMembership,
+		getGroupMemberships,
+		getUserMemberships,
+		getUsersForGroupInvite)
+
 	groupHandler.Register(v1)
 
 	resourceHandler := resourcehandler.NewHandler(resourceService, groupService, userModule.Service, userModule.Authenticator, getUserMemberships)
@@ -278,6 +289,14 @@ func NewServer() (*Server, error) {
 	groupRm := listeners2.NewGroupReadModelListener(catchUpListenerFactory, db)
 	g.Go(func() error {
 		if err := groupRm.Start(ctx); err != nil {
+			return err
+		}
+		return nil
+	})
+
+	userRm := listeners3.NewUserReadModelListener(db, catchUpListenerFactory)
+	g.Go(func() error {
+		if err := userRm.Start(ctx); err != nil {
 			return err
 		}
 		return nil

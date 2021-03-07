@@ -83,7 +83,7 @@ func (s *IntegrationTestSuite) SearchResources(t *testing.T, ctx context.Context
 }
 
 func (s *IntegrationTestSuite) GetResource(t *testing.T, ctx context.Context, userSession *models.UserSession, resourceKey string) (*handler.GetResourceResponse, *http.Response) {
-	httpReq, recorder := NewRequest(ctx, userSession, http.MethodPost, fmt.Sprintf("/api/v1/resources/%s", resourceKey), nil)
+	httpReq, recorder := NewRequest(ctx, userSession, http.MethodGet, fmt.Sprintf("/api/v1/resources/%s", resourceKey), nil)
 	s.server.Router.ServeHTTP(recorder, httpReq)
 	response := &handler.GetResourceResponse{}
 	t.Log(recorder.Body.String())

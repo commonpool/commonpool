@@ -2,6 +2,7 @@ package oidc
 
 import (
 	"context"
+	"github.com/commonpool/backend/pkg/auth/domain"
 	"github.com/commonpool/backend/pkg/auth/store"
 	"github.com/commonpool/backend/pkg/config"
 	"github.com/coreos/go-oidc"
@@ -10,7 +11,7 @@ import (
 const oauthCallbackPath = "/oauth2/callback"
 
 // NewAuth Setup auth middleware
-func NewAuth(appConfig *config.AppConfig, groupPrefix string, as store.Store) *OidcAuthenticator {
+func NewAuth(appConfig *config.AppConfig, groupPrefix string, as store.Store, userRepo domain.UserRepository) *OidcAuthenticator {
 
 	ctx := context.Background()
 
@@ -35,6 +36,7 @@ func NewAuth(appConfig *config.AppConfig, groupPrefix string, as store.Store) *O
 		oidcProvider: provider,
 		verifier:     verifier,
 		authStore:    as,
+		userRepo:     userRepo,
 	}
 
 	return &authz
