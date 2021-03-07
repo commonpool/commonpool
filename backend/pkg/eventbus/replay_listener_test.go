@@ -61,7 +61,7 @@ func (s *ReplayListenerTestSuite) TestReplayListener() {
 		test.NewMockEvent("evt3", test.MockEventTime(now.Add(-1*time.Hour))),
 	)
 
-	err := s.eventStore.Save(ctx, test.MockStreamKey, 0, events)
+	_, err := s.eventStore.Save(ctx, test.MockStreamKey, 0, events)
 	if !assert.NoError(s.T(), err) {
 		return
 	}

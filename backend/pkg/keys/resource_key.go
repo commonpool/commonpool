@@ -34,15 +34,15 @@ func ParseResourceKey(key string) (ResourceKey, error) {
 	return resourceKey, nil
 }
 
-func (r *ResourceKey) GetUUID() uuid.UUID {
+func (r ResourceKey) GetUUID() uuid.UUID {
 	return r.ID
 }
 
-func (r *ResourceKey) String() string {
+func (r ResourceKey) String() string {
 	return r.ID.String()
 }
 
-func (r *ResourceKey) GetFrontendLink() string {
+func (r ResourceKey) GetFrontendLink() string {
 	return fmt.Sprintf("<commonpool-resource id='%s'><commonpool-resource>", r.String())
 }
 

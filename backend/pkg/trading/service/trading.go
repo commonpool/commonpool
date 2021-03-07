@@ -9,7 +9,6 @@ import (
 	"github.com/commonpool/backend/pkg/chat/service"
 	group2 "github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/keys"
-	"github.com/commonpool/backend/pkg/resource"
 	trading2 "github.com/commonpool/backend/pkg/trading"
 	tradingdomain "github.com/commonpool/backend/pkg/trading/domain"
 	"github.com/commonpool/backend/pkg/trading/queries"
@@ -21,7 +20,6 @@ type TradingService struct {
 	tradingStore                trading2.Store
 	transactionService          transaction2.Service
 	groupService                group2.Service
-	resourceStore               resource.Store
 	userStore                   store.Store
 	chatService                 service.Service
 	offerRepo                   tradingdomain.OfferRepository
@@ -32,7 +30,6 @@ var _ trading2.Service = &TradingService{}
 
 func NewTradingService(
 	tradingStore trading2.Store,
-	resourceStore resource.Store,
 	authStore store.Store,
 	chatService service.Service,
 	groupService group2.Service,
@@ -41,7 +38,6 @@ func NewTradingService(
 	getOfferKeyFromOfferItemKey *queries.GetOfferKeyForOfferItemKey) *TradingService {
 	return &TradingService{
 		tradingStore:                tradingStore,
-		resourceStore:               resourceStore,
 		userStore:                   authStore,
 		chatService:                 chatService,
 		groupService:                groupService,

@@ -15,7 +15,9 @@ type ResourceValueEstimation struct {
 }
 
 type ResourceInfo struct {
-	Value       ResourceValueEstimation `json:"value"`
-	Name        string                  `json:"name"`
-	Description string                  `json:"description"`
+	Value        ResourceValueEstimation `json:"value"`
+	Name         string                  `json:"name"`
+	Description  string                  `json:"description"`
+	CallType     CallType                `json:"call_type"`
+	ResourceType ResourceType            `json:"resource_type"`
 }

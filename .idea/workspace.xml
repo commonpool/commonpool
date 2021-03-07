@@ -5,9 +5,39 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7cd8279a-e3af-42a0-8513-69224f91376a" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/queries/get_sharings.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/domain/repository.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/queries/get_resources_sharings.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/queries/search_resources.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/store/resource_repo.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/eventbus/replay_listener_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/eventbus/replay_listener_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/exceptions/exceptions.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/exceptions/exceptions.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/group/service/create_group.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/service/create_group.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/keys/resource_key.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/keys/resource_key.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/keys/resource_keys.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/keys/resource_keys.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/domain/evt_resource_registered.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/domain/evt_resource_registered.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/domain/resource.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/domain/resource.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/domain/resource_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/domain/resource_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/domain/resource_type.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/domain/resource_type.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/domain/vo_resource_info.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/domain/vo_resource_info.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/handler/assertions.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/handler/get_resource.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/handler/get_resource.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/handler/get_resources.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/handler/get_resources.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/handler/handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/handler/handler.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/handler/post_resource.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/handler/post_resource.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/handler/put_resource.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/handler/put_resource.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/handler/resource.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/handler/resource.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/listeners/readmodel.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/listeners/readmodel.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/pkg/resource/listeners/readmodel_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/listeners/readmodel_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/queries/get_sharings.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/queries/get_resource_sharings.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/readmodel/resource.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/readmodel/resource.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/service.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/service/service.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/store.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/store/resource.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/store/resource.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/server/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/server/server.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/service/submit_offer.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/service/submit_offer.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/service/trading.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/service/trading.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -60,7 +90,7 @@
     <property name="go.sdk.automatically.set" value="true" />
     <property name="go.tried.to.enable.integration.vgo.integrator" value="true" />
     <property name="go.vendoring.notification.had.been.shown" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/backend/pkg/group/queries" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/backend/pkg/resource/queries" />
     <property name="settings.editor.selected.configurable" value="com.intellij.kubernetes.view.ui.settings.KubernetesViewConfigurable" />
     <property name="two.files.diff.last.used.file" value="$PROJECT_DIR$/backend/pkg/trading/domain/repository_test" />
   </component>
@@ -73,6 +103,7 @@
       <recent name="$PROJECT_DIR$/backend/pkg/group/domain" />
     </key>
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/backend/pkg/resource/queries" />
       <recent name="$PROJECT_DIR$/backend/pkg/group/queries" />
       <recent name="$PROJECT_DIR$/backend/pkg/eventbus" />
       <recent name="$PROJECT_DIR$/backend/pkg/trading/domain" />
@@ -86,7 +117,7 @@
       <recent name="$PROJECT_DIR$/backend/pkg/chat/service" />
     </key>
   </component>
-  <component name="RunManager" selected="Go Test.go test github.com/commonpool/backend/pkg/resource/listeners">
+  <component name="RunManager" selected="Go Build.go build github.com/commonpool/backend">
     <configuration name="go build github.com/commonpool/backend" type="GoApplicationRunConfiguration" factoryName="Go Application" nameIsGenerated="true">
       <module name="commonpool" />
       <working_directory value="$PROJECT_DIR$/backend" />
@@ -175,29 +206,6 @@
       <pattern value="^\QTestReadModelSuite\E$/^\QTestShouldUpdateSharings\E$" />
       <method v="2" />
     </configuration>
-    <configuration name="TestShouldUpdateUserWhenUserInfoChange in github.com/commonpool/backend/pkg/resource/listeners" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
-      <module name="commonpool" />
-      <working_directory value="$PROJECT_DIR$/backend/pkg/resource/listeners" />
-      <parameters value=" -testify.m ^TestShouldUpdateUserWhenUserInfoChange$" />
-      <EXTENSION ID="net.ashald.envfile">
-        <option name="IS_ENABLED" value="true" />
-        <option name="IS_SUBST" value="false" />
-        <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
-        <option name="IS_IGNORE_MISSING_FILES" value="false" />
-        <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
-        <ENTRIES>
-          <ENTRY IS_ENABLED="true" PARSER="runconfig" />
-          <ENTRY IS_ENABLED="true" PARSER="env" PATH="backend/.env" />
-        </ENTRIES>
-      </EXTENSION>
-      <framework value="gotest" />
-      <kind value="PACKAGE" />
-      <package value="github.com/commonpool/backend/pkg/resource/listeners" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$" />
-      <pattern value="^\QTestReadModelSuite\E$/^\QTestShouldUpdateUserWhenUserInfoChange\E$" />
-      <method v="2" />
-    </configuration>
     <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
       <module name="commonpool" />
       <working_directory value="$PROJECT_DIR$" />
@@ -215,6 +223,27 @@
       </EXTENSION>
       <framework value="gotest" />
       <kind value="DIRECTORY" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="go test github.com/commonpool/backend/pkg/resource/domain" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="commonpool" />
+      <working_directory value="$PROJECT_DIR$/backend/pkg/resource/domain" />
+      <EXTENSION ID="net.ashald.envfile">
+        <option name="IS_ENABLED" value="true" />
+        <option name="IS_SUBST" value="false" />
+        <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
+        <option name="IS_IGNORE_MISSING_FILES" value="false" />
+        <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
+        <ENTRIES>
+          <ENTRY IS_ENABLED="true" PARSER="runconfig" />
+          <ENTRY IS_ENABLED="true" PARSER="env" PATH="backend/.env" />
+        </ENTRIES>
+      </EXTENSION>
+      <framework value="gotest" />
+      <kind value="PACKAGE" />
+      <package value="github.com/commonpool/backend/pkg/resource/domain" />
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
       <method v="2" />
@@ -243,18 +272,18 @@
     <list>
       <item itemvalue="Go Build.go build github.com/commonpool/backend" />
       <item itemvalue="Go Test.go test github.com/commonpool/backend/pkg/resource/listeners" />
-      <item itemvalue="Go Test.TestShouldUpdateUserWhenUserInfoChange in github.com/commonpool/backend/pkg/resource/listeners" />
       <item itemvalue="Go Test.TestShouldDeleteReadModelWhenResourceDeleted in github.com/commonpool/backend/pkg/resource/listeners" />
       <item itemvalue="Go Test.TestShouldUpdateSharings in github.com/commonpool/backend/pkg/resource/listeners" />
       <item itemvalue="Go Test.TestReadModelSuite in github.com/commonpool/backend/pkg/resource/listeners" />
+      <item itemvalue="Go Test.go test github.com/commonpool/backend/pkg/resource/domain" />
     </list>
     <recent_temporary>
       <list>
         <item itemvalue="Go Test.go test github.com/commonpool/backend/pkg/resource/listeners" />
+        <item itemvalue="Go Test.go test github.com/commonpool/backend/pkg/resource/domain" />
         <item itemvalue="Go Test.TestReadModelSuite in github.com/commonpool/backend/pkg/resource/listeners" />
         <item itemvalue="Go Test.TestShouldUpdateSharings in github.com/commonpool/backend/pkg/resource/listeners" />
         <item itemvalue="Go Test.TestShouldDeleteReadModelWhenResourceDeleted in github.com/commonpool/backend/pkg/resource/listeners" />
-        <item itemvalue="Go Test.TestShouldUpdateUserWhenUserInfoChange in github.com/commonpool/backend/pkg/resource/listeners" />
       </list>
     </recent_temporary>
   </component>
@@ -337,7 +366,14 @@
       <option name="project" value="LOCAL" />
       <updated>1615104754185</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="wrk">
+      <created>1615107587185</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1615107587185</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -376,12 +412,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/backend/pkg/server/server.go</url>
-          <line>293</line>
-          <option name="timeStamp" value="221" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/backend/pkg/server/server.go</url>
-          <line>291</line>
+          <line>307</line>
           <option name="timeStamp" value="222" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">

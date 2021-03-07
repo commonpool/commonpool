@@ -6,20 +6,22 @@ import (
 )
 
 type ResourceReadModel struct {
-	ResourceKey      string `gorm:"type:varchar(128);primaryKey;not null"`
-	ResourceName     string `gorm:"not null;type:varchar(128)"`
-	Description      string `gorm:"not null"`
-	CreatedBy        string `gorm:"not null;type:varchar(128)"`
-	CreatedByVersion int
-	CreatedByName    string    `gorm:"not null;type:varchar(128)"`
-	CreatedAt        time.Time `gorm:"not null"`
-	UpdatedBy        string    `gorm:"not null;type:varchar(128)"`
-	UpdatedByVersion int
-	UpdatedByName    string    `gorm:"not null;type:varchar(128)"`
-	UpdatedAt        time.Time `gorm:"not null"`
+	ResourceKey       string              `gorm:"type:varchar(128);primaryKey;not null"`
+	ResourceName      string              `gorm:"not null;type:varchar(128)"`
+	Description       string              `gorm:"not null"`
+	CreatedBy         string              `gorm:"not null;type:varchar(128)"`
+	CreatedByVersion  int                 `gorm:"not null"`
+	CreatedByName     string              `gorm:"not null;type:varchar(128)"`
+	CreatedAt         time.Time           `gorm:"not null"`
+	UpdatedBy         string              `gorm:"not null;type:varchar(128)"`
+	UpdatedByVersion  int                 `gorm:"not null"`
+	UpdatedByName     string              `gorm:"not null;type:varchar(128)"`
+	UpdatedAt         time.Time           `gorm:"not null"`
+	GroupSharingCount int                 `gorm:"not null"`
+	Version           int                 `gorm:"not null"`
+	CallType          domain.CallType     `gorm:"not null"`
+	ResourceType      domain.ResourceType `gorm:"not null"`
 	domain.ResourceValueEstimation
-	GroupSharingCount int `gorm:"not null"`
-	Version           int `gorm:"not null"`
 }
 
 type ResourceSharingReadModel struct {
@@ -27,7 +29,7 @@ type ResourceSharingReadModel struct {
 	GroupKey     string `gorm:"primaryKey"`
 	GroupName    string `gorm:"not null;type:varchar(128)"`
 	Version      int    `gorm:"not null"`
-	GroupVersion int
+	GroupVersion int    `gorm:"not null"`
 }
 
 type ResourceUserNameReadModel struct {

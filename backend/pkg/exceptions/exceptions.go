@@ -85,6 +85,9 @@ var (
 	ErrValidation = func(msg string) error {
 		return NewWebServiceException(msg, "ErrValidation", http.StatusBadRequest)
 	}
+	ErrBadRequest = func(msg string) error {
+		return NewWebServiceException(msg, "ErrBadRequest", http.StatusBadRequest)
+	}
 	ErrInvalidResourceKey = func(key string) ErrorResponse {
 		return NewError(fmt.Sprintf("invalid resource key: '%s'", key), "ErrInvalidResourceKey", http.StatusBadRequest)
 	}

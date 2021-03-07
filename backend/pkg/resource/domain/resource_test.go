@@ -40,8 +40,10 @@ func (s *ResourceTestSuite) SetupTest() {
 			ValueFromDuration: 3 * time.Hour,
 			ValueToDuration:   5 * time.Hour,
 		},
-		Name:        "resource",
-		Description: "description",
+		Name:         "resource",
+		Description:  "description",
+		CallType:     Offer,
+		ResourceType: ServiceResource,
 	}
 	err := r.Register(s.user, s.userTarget, ServiceResource, s.resourceInfo, *keys.NewEmptyGroupKeys())
 	if !assert.NoError(s.T(), err) {
@@ -93,8 +95,10 @@ func (s *ResourceTestSuite) TestChangeInfo() {
 			ValueFromDuration: 100 * time.Hour,
 			ValueToDuration:   200 * time.Hour,
 		},
-		Name:        "TestChangeInfo",
-		Description: "TestChangeInfo-description",
+		Name:         "TestChangeInfo",
+		Description:  "TestChangeInfo-description",
+		ResourceType: ObjectResource,
+		CallType:     Offer,
 	}
 	err := s.resource.ChangeInfo(s.user2, newInfo)
 	if !assert.NoError(s.T(), err) {

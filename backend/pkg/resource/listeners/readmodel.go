@@ -31,6 +31,8 @@ func (l *ResourceReadModelHandler) Start(ctx context.Context) error {
 	eventTypes := domain.AllEventTypes
 	eventTypes = append(eventTypes, userdomain.UserDiscoveredEvent)
 	eventTypes = append(eventTypes, userdomain.UserInfoChangedEvent)
+	eventTypes = append(eventTypes, groupdomain.GroupCreatedEvent)
+	eventTypes = append(eventTypes, groupdomain.GroupInfoChangedEvent)
 	err := listener.Initialize(ctx, "readmodels.resource", eventTypes)
 	if err != nil {
 		return err
@@ -204,6 +206,8 @@ func (l *ResourceReadModelHandler) handleResourceRegistered(e domain.ResourceReg
 		ResourceValueEstimation: e.ResourceInfo.Value,
 		GroupSharingCount:       0,
 		Version:                 e.SequenceNo,
+		CallType:                e.ResourceInfo.CallType,
+		ResourceType:            e.ResourceInfo.ResourceType,
 	}).Error
 
 }

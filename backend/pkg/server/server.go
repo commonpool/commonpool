@@ -32,9 +32,10 @@ import (
 	"github.com/commonpool/backend/pkg/mq"
 	nukehandler "github.com/commonpool/backend/pkg/nuke/handler"
 	"github.com/commonpool/backend/pkg/realtime"
-	"github.com/commonpool/backend/pkg/resource"
+	resourcedomain "github.com/commonpool/backend/pkg/resource/domain"
 	resourcehandler "github.com/commonpool/backend/pkg/resource/handler"
-	"github.com/commonpool/backend/pkg/resource/service"
+	listeners4 "github.com/commonpool/backend/pkg/resource/listeners"
+	resourcequeries "github.com/commonpool/backend/pkg/resource/queries"
 	resourcestore "github.com/commonpool/backend/pkg/resource/store"
 	"github.com/commonpool/backend/pkg/trading"
 	tradinghandler "github.com/commonpool/backend/pkg/trading/handler"
@@ -79,8 +80,6 @@ type Server struct {
 	Db                 *gorm.DB
 	TransactionStore   transaction.Store
 	TransactionService transaction.Service
-	ResourceStore      resource.Store
-	ResourceService    resource.Service
 	ChatStore          chatstore.Store
 	ChatService        chatservice.Service
 	TradingStore       trading.Store
@@ -167,6 +166,9 @@ func NewServer() (*Server, error) {
 	if err := groupdomain.RegisterEvents(eventMapper); err != nil {
 		panic(err)
 	}
+	if err := resourcedomain.RegisterEvents(eventMapper); err != nil {
+		panic(err)
+	}
 
 	eventPublisher := eventbus.NewAmqpPublisher(amqpCli)
 	eventStore := publish.NewPublishEventStore(postgres2.NewPostgresEventStore(db, eventMapper), eventPublisher)
@@ -193,6 +195,10 @@ func NewServer() (*Server, error) {
 	getUserMemberships := groupqueries.NewGetUserMemberships(db)
 	getGroupMemberships := groupqueries.NewGetGroupMemberships(db)
 	getUsersForGroupInvite := groupqueries.NewGetUsersForGroupInvite(db)
+	getResource := resourcequeries.NewGetResource(db)
+	searchResources := resourcequeries.NewSearchResources(db)
+	getResourceSharings := resourcequeries.NewGetResourceSharings(db)
+	getResourcesSharings := resourcequeries.NewGetResourcesSharings(db)
 
 	r := NewRouter()
 	r.HTTPErrorHandler = handler2.HttpErrorHandler
@@ -205,8 +211,7 @@ func NewServer() (*Server, error) {
 	transactionStore := transactionstore.NewTransactionStore(db)
 	transactionService := transactionservice.NewTransactionService(transactionStore)
 
-	resourceStore := resourcestore.NewResourceStore(driver, transactionService)
-	resourceService := service.NewResourceService(resourceStore)
+	resourceRepository := resourcestore.NewEventSourcedResourceRepository(eventStore)
 
 	chatStore := chatstore.NewChatStore(db)
 	chatService := chatservice.NewChatService(userModule.Store, amqpCli, chatStore)
@@ -220,7 +225,6 @@ func NewServer() (*Server, error) {
 	tradingStore := tradingstore.NewTradingStore(driver)
 	tradingService := tradingservice.NewTradingService(
 		tradingStore,
-		resourceStore,
 		userModule.Store,
 		chatService,
 		groupService,
@@ -243,7 +247,16 @@ func NewServer() (*Server, error) {
 
 	groupHandler.Register(v1)
 
-	resourceHandler := resourcehandler.NewHandler(resourceService, groupService, userModule.Service, userModule.Authenticator, getUserMemberships)
+	resourceHandler := resourcehandler.NewHandler(
+		groupService,
+		userModule.Service,
+		userModule.Authenticator,
+		resourceRepository,
+		getUserMemberships,
+		getResource,
+		getResourceSharings,
+		getResourcesSharings,
+		searchResources)
 	resourceHandler.Register(v1)
 
 	realtimeHandler := realtime.NewRealtimeHandler(amqpCli, chatService, userModule.Authenticator)
@@ -302,6 +315,14 @@ func NewServer() (*Server, error) {
 		return nil
 	})
 
+	resourceRm := listeners4.NewResourceReadModelHandler(db, catchUpListenerFactory)
+	g.Go(func() error {
+		if err := resourceRm.Start(ctx); err != nil {
+			return err
+		}
+		return nil
+	})
+
 	return &Server{
 		AppConfig:          appConfig,
 		AmqpClient:         amqpCli,
@@ -309,8 +330,6 @@ func NewServer() (*Server, error) {
 		Db:                 db,
 		TransactionStore:   transactionStore,
 		TransactionService: transactionService,
-		ResourceStore:      resourceStore,
-		ResourceService:    resourceService,
 		ChatStore:          chatStore,
 		ChatService:        chatService,
 		TradingStore:       tradingStore,

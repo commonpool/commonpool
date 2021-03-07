@@ -3,8 +3,10 @@ package domain
 import (
 	"fmt"
 	"github.com/commonpool/backend/pkg/eventsource"
+	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/trading/domain"
+	"strings"
 )
 
 type Resource struct {
@@ -13,7 +15,6 @@ type Resource struct {
 	changes      []eventsource.Event
 	name         string
 	description  string
-	resourceType ResourceType
 	isNew        bool
 	isDeleted    bool
 	registeredBy keys.UserKey
@@ -39,11 +40,31 @@ func NewFromEvents(key keys.ResourceKey, events []eventsource.Event) *Resource {
 	return r
 }
 
-func (r *Resource) Register(registeredBy keys.UserKey, registeredFor domain.Target, resourceType ResourceType, resourceInfo ResourceInfo, resourceSharings keys.GroupKeys) error {
+func (r *Resource) Register(registeredBy keys.UserKey, registeredFor domain.Target, resourceInfo ResourceInfo, resourceSharings keys.GroupKeys) error {
 	if err := r.assertIsNew(); err != nil {
 		return err
 	}
-	evt := NewResourceRegistered(registeredBy, registeredFor, resourceType, resourceInfo)
+
+	switch resourceInfo.CallType {
+	case Offer:
+	case Request:
+	default:
+		return exceptions.ErrValidation("invalid resource call type")
+	}
+
+	switch resourceInfo.ResourceType {
+	case ServiceResource:
+	case ObjectResource:
+	default:
+		return exceptions.ErrValidation("invalid resource type")
+	}
+
+	sanitizedInfo, err := r.sanitizeResourceInfo(resourceInfo)
+	if err != nil {
+		return err
+	}
+
+	evt := NewResourceRegistered(registeredBy, registeredFor, sanitizedInfo)
 	r.raise(evt)
 
 	return r.ChangeSharings(registeredBy, resourceSharings)
@@ -52,7 +73,6 @@ func (r *Resource) Register(registeredBy keys.UserKey, registeredFor domain.Targ
 func (r *Resource) handleResourceRegistered(e ResourceRegistered) {
 	r.isNew = false
 	r.registeredBy = e.RegisteredBy
-	r.resourceType = e.ResourceType
 	r.info = e.ResourceInfo
 }
 
@@ -66,7 +86,21 @@ func (r *Resource) ChangeInfo(changedBy keys.UserKey, resourceInfo ResourceInfo)
 	if r.info == resourceInfo {
 		return nil
 	}
-	evt := NewResourceInfoChanged(changedBy, r.info, resourceInfo)
+
+	sanitizedInfo, err := r.sanitizeResourceInfo(resourceInfo)
+	if err != nil {
+		return err
+	}
+
+	if resourceInfo.CallType != r.info.CallType {
+		return exceptions.ErrBadRequest("cannot change resource call type")
+	}
+
+	if resourceInfo.ResourceType != r.info.ResourceType {
+		return exceptions.ErrBadRequest("cannot change resource type")
+	}
+
+	evt := NewResourceInfoChanged(changedBy, r.info, sanitizedInfo)
 	r.raise(evt)
 	return nil
 }
@@ -149,6 +183,30 @@ func (r *Resource) handleResourceDeleted(e ResourceDeleted) {
 	r.isDeleted = true
 }
 
+func (r *Resource) sanitizeResourceInfo(resourceInfo ResourceInfo) (ResourceInfo, error) {
+	sanitizedInfo := ResourceInfo{
+		Value:        resourceInfo.Value,
+		Name:         strings.TrimSpace(resourceInfo.Name),
+		Description:  strings.TrimSpace(resourceInfo.Description),
+		CallType:     resourceInfo.CallType,
+		ResourceType: resourceInfo.ResourceType,
+	}
+
+	if sanitizedInfo.Name == "" {
+		return ResourceInfo{}, exceptions.ErrValidation("name is required")
+	}
+	if len(sanitizedInfo.Name) > 64 {
+		return ResourceInfo{}, exceptions.ErrValidation("name is too long")
+	}
+	if sanitizedInfo.Description == "" {
+		return ResourceInfo{}, exceptions.ErrValidation("description is required")
+	}
+	if len(sanitizedInfo.Description) > 2048 {
+		return ResourceInfo{}, exceptions.ErrValidation("description is too long")
+	}
+	return sanitizedInfo, nil
+}
+
 func (r *Resource) assertIsNew() error {
 	if !r.isNew {
 		return fmt.Errorf("resource is not new")
@@ -170,12 +228,24 @@ func (r *Resource) assertIsNotNew() error {
 	return nil
 }
 
+func (r *Resource) GetCallType() CallType {
+	return r.info.CallType
+}
+
+func (r *Resource) GetResourceType() ResourceType {
+	return r.info.ResourceType
+}
+
 func (r *Resource) GetVersion() int {
 	return r.version
 }
 
 func (r *Resource) GetChanges() []eventsource.Event {
 	return r.changes
+}
+
+func (r *Resource) GetKey() keys.ResourceKey {
+	return r.key
 }
 
 func (r *Resource) MarkAsCommitted() {

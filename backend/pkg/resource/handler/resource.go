@@ -1,9 +1,8 @@
 package handler
 
 import (
-	group2 "github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/keys"
-	"github.com/commonpool/backend/pkg/resource"
+	"github.com/commonpool/backend/pkg/resource/readmodel"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"time"
@@ -30,8 +29,8 @@ type Resource struct {
 	Id               string                  `json:"id"`
 	Summary          string                  `json:"summary"`
 	Description      string                  `json:"description"`
-	Type             resource.Type           `json:"type"`
-	SubType          resource.SubType        `json:"subType"`
+	Type             string                  `json:"type"`
+	SubType          string                  `json:"subType"`
 	CreatedAt        time.Time               `json:"createdAt"`
 	CreatedBy        string                  `json:"createdBy"`
 	CreatedById      string                  `json:"createdById"`
@@ -40,28 +39,28 @@ type Resource struct {
 	SharedWith       []OutputResourceSharing `json:"sharedWith"`
 }
 
-func NewResourceResponse(res *resource.Resource, creatorUsername string, creatorId string, sharedWithGroups *group2.Groups) Resource {
+func NewResourceResponse(res *readmodel.ResourceReadModel, shares []*readmodel.ResourceSharingReadModel) Resource {
 
 	//goland:noinspection GoPreferNilSlice
 	var sharings = []OutputResourceSharing{}
-	for _, withGroup := range sharedWithGroups.Items {
+	for _, share := range shares {
 		sharings = append(sharings, OutputResourceSharing{
-			GroupID:   withGroup.Key.String(),
-			GroupName: withGroup.Name,
+			GroupID:   share.GroupKey,
+			GroupName: share.GroupName,
 		})
 	}
 
 	return Resource{
-		Id:               res.Key.String(),
-		Type:             res.Type,
-		SubType:          res.SubType,
+		Id:               res.ResourceKey,
+		Type:             string(res.ResourceType),
+		SubType:          string(res.CallType),
 		Description:      res.Description,
-		Summary:          res.Summary,
-		CreatedBy:        creatorUsername,
-		CreatedById:      creatorId,
+		Summary:          res.ResourceName,
+		CreatedBy:        res.CreatedByName,
+		CreatedById:      res.CreatedBy,
 		CreatedAt:        res.CreatedAt,
-		ValueInHoursFrom: res.ValueInHoursFrom,
-		ValueInHoursTo:   res.ValueInHoursTo,
+		ValueInHoursFrom: int(res.ValueFromDuration.Hours()),
+		ValueInHoursTo:   int(res.ValueToDuration.Hours()),
 		SharedWith:       sharings,
 	}
 }

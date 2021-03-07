@@ -18,11 +18,10 @@ type ResourceRegistered struct {
 	ResourceRegisteredPayload `json:"payload"`
 }
 
-func NewResourceRegistered(registeredBy keys.UserKey, registeredFor domain.Target, resourceType ResourceType, resourceInfo ResourceInfo) ResourceRegistered {
+func NewResourceRegistered(registeredBy keys.UserKey, registeredFor domain.Target, resourceInfo ResourceInfo) ResourceRegistered {
 	return ResourceRegistered{
 		eventsource.NewEventEnvelope(ResourceRegisteredEvent, 1),
 		ResourceRegisteredPayload{
-			ResourceType:  resourceType,
 			RegisteredBy:  registeredBy,
 			RegisteredFor: registeredFor,
 			ResourceInfo:  resourceInfo,

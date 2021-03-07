@@ -2,15 +2,17 @@ package handler
 
 import (
 	"fmt"
+	"github.com/avast/retry-go"
 	"github.com/commonpool/backend/pkg/auth/authenticator/oidc"
 	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/keys"
-	resource "github.com/commonpool/backend/pkg/resource"
+	"github.com/commonpool/backend/pkg/resource/domain"
+	"github.com/commonpool/backend/pkg/resource/readmodel"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 	"net/http"
-	"strings"
+	"time"
 )
 
 type UpdateResourceRequest struct {
@@ -44,95 +46,82 @@ type UpdateResourceResponse struct {
 func (h *ResourceHandler) UpdateResource(c echo.Context) error {
 
 	ctx, l := handler.GetEchoContext(c, "UpdateResource")
+	l = l.Named("ResourceHandler.UpdateResource")
 
-	c.Logger().Debug("UpdateResource: updating resource")
+	l.Debug("getting logged in user")
+	loggedInUser, err := oidc.GetLoggedInUser(ctx)
+	if err != nil {
+		return err
+	}
+
+	l.Debug("binding request")
 	req := UpdateResourceRequest{}
-
-	// Binds the request payload to the web.UpdateResourceRequest instance
 	if err := c.Bind(&req); err != nil {
 		return err
 	}
 
-	// Validates the UpdateResourceRequest
+	l.Debug("validating request")
 	if err := c.Validate(req); err != nil {
 		return err
 	}
 
-	// Gets the resource id
+	l.Debug("parsing resource key")
 	resourceKey, err := keys.ParseResourceKey(c.Param("id"))
 	if err != nil {
 		return err
 	}
 
-	// Retrieves the resource
-	getResourceByKeyResponse, err := h.resourceService.GetByKey(ctx, resource.NewGetResourceByKeyQuery(resourceKey))
+	l.Debug("loading resource from repo")
+	resource, err := h.resourceRepo.Load(ctx, resourceKey)
+	if err != nil {
+		return err
+	}
+	if resource.GetVersion() == 0 {
+		return exceptions.ErrResourceNotFound
+	}
+
+	l.Debug("changing resource info")
+	err = resource.ChangeInfo(loggedInUser.GetUserKey(), domain.ResourceInfo{
+		Value: domain.ResourceValueEstimation{
+			ValueType:         domain.FromToDuration,
+			ValueFromDuration: time.Duration(req.Resource.ValueInHoursFrom) * time.Hour,
+			ValueToDuration:   time.Duration(req.Resource.ValueInHoursTo) * time.Hour,
+		},
+		Name:         req.Resource.Summary,
+		Description:  req.Resource.Description,
+		CallType:     resource.GetCallType(),
+		ResourceType: resource.GetResourceType(),
+	})
 	if err != nil {
 		return err
 	}
 
-	resToUpdate := getResourceByKeyResponse.Resource
-
-	// make sure user is owner of resource
-
-	loggedInUser, err := oidc.GetLoggedInUser(ctx)
-	if err != nil {
-		return exceptions.ErrUnauthorized
-	}
-	if resToUpdate.GetOwnerKey() != loggedInUser.GetUserKey() {
-		err := fmt.Errorf("cannot update a resource you do not own")
-		return err
-	}
-
-	// Parsing group keys that resource is shared with
-	sharedWithGroupKeys, err, done := h.parseGroupKeys(c, req.Resource.SharedWith)
-	if done {
-		return err
-	}
-
-	// make sure user is sharing resource with groups he's actively part of
-	err, done = h.ensureResourceIsSharedWithGroupsTheUserIsActiveMemberOf(c, loggedInUser.GetUserKey(), sharedWithGroupKeys)
-	if done {
-		return err
-	}
-
-	// update resource
-	req.Resource.Summary = strings.TrimSpace(req.Resource.Summary)
-	req.Resource.Description = strings.TrimSpace(req.Resource.Description)
-	resToUpdate.Summary = req.Resource.Summary
-	resToUpdate.Description = req.Resource.Description
-	resToUpdate.ValueInHoursFrom = req.Resource.ValueInHoursFrom
-	resToUpdate.ValueInHoursTo = req.Resource.ValueInHoursTo
-
-	// get shared with keys
-	var groupKeys []keys.GroupKey
-	for _, sharing := range req.Resource.SharedWith {
-		groupKey, err := keys.ParseGroupKey(sharing.GroupID)
+	l.Debug("getting resource readmodel")
+	var rm *readmodel.ResourceReadModel
+	err = retry.Do(func() error {
+		rm, err = h.getResource.Get(ctx, resourceKey)
 		if err != nil {
-			message := "UpdateResource: could not parse groupKey"
-			c.Logger().Error(err, message)
-			return c.String(http.StatusInternalServerError, message)
+			return err
 		}
-		groupKeys = append(groupKeys, groupKey)
-	}
-
-	if err := h.resourceService.Update(ctx, resource.NewUpdateResourceQuery(resToUpdate, keys.NewGroupKeys(groupKeys))); err != nil {
-		return err
-	}
-
-	getResourceResponse, err := h.resourceService.GetByKey(ctx, resource.NewGetResourceByKeyQuery(resToUpdate.GetKey()))
+		if rm.Version != resource.GetVersion() {
+			l.Debug("read model version not up to date", zap.Int("expected", resource.GetVersion()), zap.Int("actual", rm.Version))
+			return fmt.Errorf("unexpected read model version")
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}
 
-	// retrieving groups
-	groups, err := h.groupService.GetGroupsByKeys(ctx, getResourceResponse.Sharings.GetAllGroupKeys())
+	l.Debug("getting sharings read model")
+	sharings, err := h.getResourceSharings.Get(ctx, resourceKey)
 	if err != nil {
-		l.Error("could not get groups by keys", zap.Error(err))
-		return c.JSON(http.StatusBadRequest, err)
+		return err
 	}
 
+	l.Debug("returning response")
 	return c.JSON(http.StatusOK, GetResourceResponse{
-		Resource: NewResourceResponse(getResourceResponse.Resource, loggedInUser.Username, loggedInUser.Subject, groups),
+		Resource: NewResourceResponse(rm, sharings),
 	})
 
 }

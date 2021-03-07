@@ -6,6 +6,7 @@ import (
 	group "github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/group/domain"
 	"github.com/commonpool/backend/pkg/keys"
+	uuid "github.com/satori/go.uuid"
 )
 
 func (g GroupService) CreateGroup(ctx context.Context, request *group.CreateGroupRequest) (keys.GroupKey, error) {
@@ -15,7 +16,8 @@ func (g GroupService) CreateGroup(ctx context.Context, request *group.CreateGrou
 		return keys.GroupKey{}, err
 	}
 
-	grp := domain.NewGroup()
+	groupKey := keys.NewGroupKey(uuid.NewV4())
+	grp := domain.NewGroup(groupKey)
 	if err := grp.CreateGroup(userSession.GetUserKey(), domain.GroupInfo{
 		Name:        request.Name,
 		Description: request.Description,
@@ -27,7 +29,7 @@ func (g GroupService) CreateGroup(ctx context.Context, request *group.CreateGrou
 		return keys.GroupKey{}, err
 	}
 
-	return grp.GetKey(), nil
+	return groupKey, nil
 
 	//
 	//

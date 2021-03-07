@@ -3,8 +3,9 @@ package handler
 import (
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/keys"
-	resource2 "github.com/commonpool/backend/pkg/resource"
+	"github.com/commonpool/backend/pkg/resource/readmodel"
 	"github.com/labstack/echo/v4"
+	"golang.org/x/sync/errgroup"
 	"net/http"
 )
 
@@ -22,31 +23,30 @@ import (
 func (h *ResourceHandler) GetResource(c echo.Context) error {
 
 	ctx, _ := handler.GetEchoContext(c, "GetResource")
+	g, ctx := errgroup.WithContext(ctx)
 
 	resourceKey, err := keys.ParseResourceKey(c.Param("id"))
 	if err != nil {
 		return err
 	}
 
-	getResourceByKeyResponse, err := h.resourceService.GetByKey(ctx, resource2.NewGetResourceByKeyQuery(resourceKey))
-	if err != nil {
-		return err
-	}
-	res := getResourceByKeyResponse.Resource
+	var resource *readmodel.ResourceReadModel
+	var shares []*readmodel.ResourceSharingReadModel
 
-	groups, err := h.groupService.GetGroupsByKeys(ctx, getResourceByKeyResponse.Sharings.GetAllGroupKeys())
-	if err != nil {
+	g.Go(func() error {
+		resource, err = h.getResource.Get(ctx, resourceKey)
 		return err
-	}
-
-	ownerKey := res.GetOwnerKey()
-	username, err := h.userService.GetUsername(ownerKey)
-	if err != nil {
+	})
+	g.Go(func() error {
+		shares, err = h.getResourceSharings.Get(ctx, resourceKey)
+		return err
+	})
+	if err := g.Wait(); err != nil {
 		return err
 	}
 
 	// return
 	return c.JSON(http.StatusOK, GetResourceResponse{
-		Resource: NewResourceResponse(res, username, ownerKey.String(), groups),
+		Resource: NewResourceResponse(resource, shares),
 	})
 }

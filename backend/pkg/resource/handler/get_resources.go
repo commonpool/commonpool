@@ -1,10 +1,11 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/keys"
-	resource2 "github.com/commonpool/backend/pkg/resource"
+	"github.com/commonpool/backend/pkg/resource/domain"
+	"github.com/commonpool/backend/pkg/resource/queries"
+	"github.com/commonpool/backend/pkg/resource/readmodel"
 	"github.com/commonpool/backend/pkg/utils"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -36,6 +37,10 @@ type SearchResourcesResponse struct {
 // @Router /resources [get]
 func (h *ResourceHandler) SearchResources(c echo.Context) error {
 
+	var (
+		err error
+	)
+
 	ctx, _ := handler.GetEchoContext(c, "SearchResources")
 
 	skip, err := utils.ParseSkip(c)
@@ -50,17 +55,31 @@ func (h *ResourceHandler) SearchResources(c echo.Context) error {
 
 	searchQuery := strings.TrimSpace(c.QueryParam("query"))
 
-	resourceType, err := resource2.ParseResourceType(c.QueryParam("type"))
-	if err != nil {
-		return err
+	var resourceType *domain.ResourceType
+	resourceTypeStr := c.QueryParam("type")
+	if resourceTypeStr != "" {
+		resourceTypeValue, err := domain.ParseResourceType(resourceTypeStr)
+		if err != nil {
+			return err
+		}
+		resourceType = &resourceTypeValue
 	}
 
-	resourceSubType, err := resource2.ParseResourceSubType(c.QueryParam("sub_type"))
-	if err != nil {
-		return err
+	var callType *domain.CallType
+	callTypeStr := c.QueryParam("sub_type")
+	if callTypeStr != "" {
+		callTypeValue, err := domain.ParseCallType(callTypeStr)
+		if err != nil {
+			return err
+		}
+		callType = &callTypeValue
 	}
 
-	createdBy := c.QueryParam("created_by")
+	var createdBy *string
+	createdByStr := c.QueryParam("created_by")
+	if createdByStr != "" {
+		createdBy = &createdByStr
+	}
 
 	var groupKey *keys.GroupKey
 	groupStr := c.QueryParam("group_id")
@@ -72,55 +91,47 @@ func (h *ResourceHandler) SearchResources(c echo.Context) error {
 		groupKey = &groupKey2
 	}
 
-	resourcesQuery := resource2.NewSearchResourcesQuery(&searchQuery, resourceType, resourceSubType, skip, take, createdBy, groupKey)
-	resources, err := h.resourceService.Search(ctx, resourcesQuery)
+	resourcesQuery := queries.NewSearchResourcesQuery(&searchQuery, resourceType, callType, skip, take, createdBy, groupKey)
+	resources, err := h.searchResources.Get(ctx, resourcesQuery)
 	if err != nil {
 		return err
 	}
 
-	getGroupsResponse, err := h.groupService.GetGroupsByKeys(ctx, resources.Sharings.GetAllGroupKeys())
-	if err != nil {
-		return err
-	}
-
-	groupMap := map[keys.GroupKey]*group.Group{}
-	for _, g := range getGroupsResponse.Items {
-		groupMap[g.GetKey()] = g
-	}
-
-	var createdByKeys []keys.UserKey
-	for _, item := range resources.Resources.Items {
-		createdByKeys = append(createdByKeys, item.GetOwnerKey())
-	}
-
-	createdByUsers, err := h.userService.GetByKeys(ctx, keys.NewUserKeys(createdByKeys))
-	if err != nil {
-		return err
-	}
-
-	resourceItems := resources.Resources.Items
-	var resourcesResponse = make([]Resource, len(resourceItems))
-	for i, item := range resourceItems {
-
-		createdBy, err := createdByUsers.GetUser(keys.NewUserKey(item.CreatedBy))
+	resourceKeys := keys.NewEmptyResourceKeys()
+	for _, resource := range resources {
+		resourceKey, err := keys.ParseResourceKey(resource.ResourceKey)
 		if err != nil {
 			return err
 		}
+		resourceKeys = resourceKeys.Append(resourceKey)
+	}
 
-		var groups []*group.Group
-		sharings := resources.Sharings.GetSharingsForResource(item.GetKey())
-		for _, groupKey := range sharings.GetAllGroupKeys().Items {
-			groups = append(groups, groupMap[groupKey])
+	sharings, err := h.getResourcesSharings.Get(ctx, resourceKeys)
+	if err != nil {
+		return err
+	}
+
+	groupedSharings := map[string][]*readmodel.ResourceSharingReadModel{}
+	for _, sharing := range sharings {
+		if _, ok := groupedSharings[sharing.ResourceKey]; !ok {
+			groupedSharings[sharing.ResourceKey] = []*readmodel.ResourceSharingReadModel{}
 		}
+		groupedSharings[sharing.ResourceKey] = append(groupedSharings[sharing.ResourceKey], sharing)
+	}
 
-		resourcesResponse[i] = NewResourceResponse(item, createdBy.Username, createdBy.ID, group.NewGroups(groups))
+	var resourcesResponse = make([]Resource, len(resources))
+	for i, resource := range resources {
+		sharingsForResource, ok := groupedSharings[resource.ResourceKey]
+		if !ok {
+			sharingsForResource = []*readmodel.ResourceSharingReadModel{}
+		}
+		resourcesResponse[i] = NewResourceResponse(resource, sharingsForResource)
 	}
 
 	// return
 	return c.JSON(http.StatusOK, SearchResourcesResponse{
-		Resources:  resourcesResponse,
-		Take:       take,
-		Skip:       skip,
-		TotalCount: resources.TotalCount,
+		Resources: resourcesResponse,
+		Take:      take,
+		Skip:      skip,
 	})
 }

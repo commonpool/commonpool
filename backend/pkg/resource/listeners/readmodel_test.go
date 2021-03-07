@@ -497,9 +497,11 @@ func (s *ReadModelTestSuite) aResourceInfo(prefix string) domain.ResourceInfo {
 		ValueToDuration:   time.Duration(rand.Intn(10)+10) * time.Hour,
 	}
 	return domain.ResourceInfo{
-		Value:       valueEstimation,
-		Name:        prefix,
-		Description: prefix + "-description",
+		Value:        valueEstimation,
+		Name:         prefix,
+		Description:  prefix + "-description",
+		CallType:     domain.Offer,
+		ResourceType: domain.ObjectResource,
 	}
 }
 

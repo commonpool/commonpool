@@ -12,6 +12,13 @@ func (k ResourceKeys) IsEmpty() bool {
 	return k.Count() == 0
 }
 
+func (k *ResourceKeys) Append(resourceKey ResourceKey) *ResourceKeys {
+	newResourceKeys := make([]ResourceKey, len(k.Items)+1)
+	copy(newResourceKeys, k.Items)
+	newResourceKeys[len(k.Items)] = resourceKey
+	return NewResourceKeys(newResourceKeys)
+}
+
 func (k ResourceKeys) Strings() []string {
 	var strings []string
 	for _, item := range k.Items {
