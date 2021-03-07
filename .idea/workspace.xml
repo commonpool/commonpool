@@ -5,41 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7cd8279a-e3af-42a0-8513-69224f91376a" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/backend/pkg/group/queries/get_group_invitation_picker_users.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/domain/evt_resource_deleted.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/domain/evt_resource_group_sharing_changed.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/domain/evt_resource_info_changed.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/domain/evt_resource_registered.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/domain/evt_types.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/domain/resource.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/domain/resource_test.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/domain/resource_type.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/domain/vo_resource_info.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/domain/vo_resource_sharing.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/listeners/readmodel.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/listeners/readmodel_test.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/queries/get_resource.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/readmodel/resource.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/readmodel/sharing.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/queries/get_sharings.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/auth/authenticator/oidc/context.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/auth/authenticator/oidc/context.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/auth/authenticator/oidc/middleware.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/auth/authenticator/oidc/middleware.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/auth/authenticator/oidc/oidc_authenticator.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/auth/authenticator/oidc/oidc_authenticator.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/auth/authenticator/oidc/utils.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/auth/authenticator/oidc/utils.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/auth/module/module.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/auth/module/module.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/chat/store/chat.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/chat/store/chat.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/eventstore/postgres/eventstore_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/eventstore/postgres/eventstore_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/eventstore/postgres/postgres.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/eventstore/postgres/postgres.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/domain/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/domain/group.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/handler/get_group_invite_picker.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/handler/get_group_invite_picker.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/handler/handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/handler/handler.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/service/accept_invitation.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/service/accept_invitation.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/service/create_group.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/service/create_group.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/service/decline_invitation.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/service/decline_invitation.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/server/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/server/server.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/test/integration/group_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test/integration/group_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/test/integration/main_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test/integration/main_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/test/integration/resource_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test/integration/resource_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/listeners/readmodel_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/listeners/readmodel_test.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -139,10 +107,9 @@
       <directory value="$PROJECT_DIR$/backend" />
       <method v="2" />
     </configuration>
-    <configuration name="TestShouldCreateResourceWhenResourceCreated in github.com/commonpool/backend/pkg/resource/listeners" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="TestReadModelSuite in github.com/commonpool/backend/pkg/resource/listeners" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="commonpool" />
       <working_directory value="$PROJECT_DIR$/backend/pkg/resource/listeners" />
-      <parameters value=" -testify.m ^TestShouldCreateResourceWhenResourceCreated$" />
       <EXTENSION ID="net.ashald.envfile">
         <option name="IS_ENABLED" value="true" />
         <option name="IS_SUBST" value="false" />
@@ -159,7 +126,7 @@
       <package value="github.com/commonpool/backend/pkg/resource/listeners" />
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
-      <pattern value="^\QTestReadModelSuite\E$/^\QTestShouldCreateResourceWhenResourceCreated\E$" />
+      <pattern value="^\QTestReadModelSuite\E$" />
       <method v="2" />
     </configuration>
     <configuration name="TestShouldDeleteReadModelWhenResourceDeleted in github.com/commonpool/backend/pkg/resource/listeners" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
@@ -276,18 +243,18 @@
     <list>
       <item itemvalue="Go Build.go build github.com/commonpool/backend" />
       <item itemvalue="Go Test.go test github.com/commonpool/backend/pkg/resource/listeners" />
-      <item itemvalue="Go Test.TestShouldCreateResourceWhenResourceCreated in github.com/commonpool/backend/pkg/resource/listeners" />
       <item itemvalue="Go Test.TestShouldUpdateUserWhenUserInfoChange in github.com/commonpool/backend/pkg/resource/listeners" />
       <item itemvalue="Go Test.TestShouldDeleteReadModelWhenResourceDeleted in github.com/commonpool/backend/pkg/resource/listeners" />
       <item itemvalue="Go Test.TestShouldUpdateSharings in github.com/commonpool/backend/pkg/resource/listeners" />
+      <item itemvalue="Go Test.TestReadModelSuite in github.com/commonpool/backend/pkg/resource/listeners" />
     </list>
     <recent_temporary>
       <list>
         <item itemvalue="Go Test.go test github.com/commonpool/backend/pkg/resource/listeners" />
+        <item itemvalue="Go Test.TestReadModelSuite in github.com/commonpool/backend/pkg/resource/listeners" />
         <item itemvalue="Go Test.TestShouldUpdateSharings in github.com/commonpool/backend/pkg/resource/listeners" />
         <item itemvalue="Go Test.TestShouldDeleteReadModelWhenResourceDeleted in github.com/commonpool/backend/pkg/resource/listeners" />
         <item itemvalue="Go Test.TestShouldUpdateUserWhenUserInfoChange in github.com/commonpool/backend/pkg/resource/listeners" />
-        <item itemvalue="Go Test.TestShouldCreateResourceWhenResourceCreated in github.com/commonpool/backend/pkg/resource/listeners" />
       </list>
     </recent_temporary>
   </component>
@@ -363,7 +330,14 @@
       <option name="project" value="LOCAL" />
       <updated>1615052653822</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="wrk">
+      <created>1615104754185</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1615104754185</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
