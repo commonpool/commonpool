@@ -7,8 +7,8 @@ import (
 
 type OfferItem struct {
 	ID                          string               `json:"id"`
-	From                        *OfferItemTarget     `json:"from"`
-	To                          *OfferItemTarget     `json:"to"`
+	From                        *domain.Target       `json:"from"`
+	To                          *domain.Target       `json:"to"`
 	Type                        domain.OfferItemType `json:"type"`
 	ResourceId                  *string              `json:"resourceId"`
 	Duration                    *int64               `json:"duration"`

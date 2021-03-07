@@ -1,7 +1,9 @@
 package keys
 
 import (
+	"database/sql/driver"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/satori/go.uuid"
@@ -42,6 +44,10 @@ func (r ResourceKey) String() string {
 	return r.ID.String()
 }
 
+func (k ResourceKey) StreamKey() StreamKey {
+	return NewStreamKey("resource", k.String())
+}
+
 func (r ResourceKey) GetFrontendLink() string {
 	return fmt.Sprintf("<commonpool-resource id='%s'><commonpool-resource>", r.String())
 }
@@ -61,4 +67,25 @@ func (k *ResourceKey) UnmarshalJSON(data []byte) error {
 	}
 	k.ID = id
 	return nil
+}
+
+func (k *ResourceKey) Scan(value interface{}) error {
+	keyValue, ok := value.(string)
+	if !ok {
+		return errors.New(fmt.Sprint("Failed to unmarshal string value:", value))
+	}
+	uid, err := uuid.FromString(keyValue)
+	if err != nil {
+		return err
+	}
+	*k = NewResourceKey(uid)
+	return nil
+}
+
+func (k ResourceKey) Value() (driver.Value, error) {
+	return driver.String.ConvertValue(k.String())
+}
+
+func (k ResourceKey) GormDataType() string {
+	return "varchar(128)"
 }

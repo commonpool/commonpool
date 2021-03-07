@@ -40,7 +40,7 @@ func NewFromEvents(key keys.ResourceKey, events []eventsource.Event) *Resource {
 	return r
 }
 
-func (r *Resource) Register(registeredBy keys.UserKey, registeredFor domain.Target, resourceInfo ResourceInfo, resourceSharings keys.GroupKeys) error {
+func (r *Resource) Register(registeredBy keys.UserKey, registeredFor *domain.Target, resourceInfo ResourceInfo, resourceSharings *keys.GroupKeys) error {
 	if err := r.assertIsNew(); err != nil {
 		return err
 	}
@@ -64,10 +64,18 @@ func (r *Resource) Register(registeredBy keys.UserKey, registeredFor domain.Targ
 		return err
 	}
 
-	evt := NewResourceRegistered(registeredBy, registeredFor, sanitizedInfo)
+	if registeredFor == nil {
+		return exceptions.ErrBadRequest("registeredFor is required")
+	}
+
+	evt := NewResourceRegistered(registeredBy, *registeredFor, sanitizedInfo)
 	r.raise(evt)
 
-	return r.ChangeSharings(registeredBy, resourceSharings)
+	if resourceSharings == nil {
+		resourceSharings = keys.NewEmptyGroupKeys()
+	}
+
+	return r.ChangeSharings(registeredBy, *resourceSharings)
 }
 
 func (r *Resource) handleResourceRegistered(e ResourceRegistered) {
@@ -226,6 +234,10 @@ func (r *Resource) assertIsNotNew() error {
 		return fmt.Errorf("resource is not new")
 	}
 	return nil
+}
+
+func (r *Resource) StreamKey() keys.StreamKey {
+	return r.key.StreamKey()
 }
 
 func (r *Resource) GetCallType() CallType {

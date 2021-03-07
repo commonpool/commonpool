@@ -93,7 +93,7 @@ func (s *ReadModelTestSuite) TestShouldCreateUserWhenUserRegistered() {
 	streamKey := s.aUserStreamKey(userKey)
 	userInfo := s.aUserInfo("TestShouldCreateUserWhenUserRegistered")
 
-	user := userdomain.New(userKey)
+	user := userdomain.NewUser(userKey)
 	if err := user.DiscoverUser(userInfo); !assert.NoError(s.T(), err) {
 		return
 	}
@@ -119,7 +119,7 @@ func (s *ReadModelTestSuite) TestShouldUpdateUserWhenUserInfoChange() {
 	userInfo1 := s.aUserInfo("TestShouldUpdateUserWhenUserInfoChange")
 	userInfo2 := s.aUserInfo("TestShouldUpdateUserWhenUserInfoChange-2")
 
-	user := userdomain.New(userKey)
+	user := userdomain.NewUser(userKey)
 	if err := user.DiscoverUser(userInfo1); !assert.NoError(s.T(), err) {
 		return
 	}
@@ -227,7 +227,6 @@ func (s *ReadModelTestSuite) TestShouldCreateResourceWhenResourceCreated() {
 	if err := resource.Register(
 		userKey,
 		*tradingdomain.NewUserTarget(userKey),
-		domain.ServiceResource,
 		resourceInfo,
 		*keys.NewGroupKeys([]keys.GroupKey{groupKey})); !assert.NoError(s.T(), err) {
 		return
@@ -302,7 +301,6 @@ func (s *ReadModelTestSuite) TestShouldUpdateResourceWhenResourceInfoChanged() {
 
 	if err := resource.Register(
 		userKey1, *tradingdomain.NewUserTarget(userKey1),
-		domain.ServiceResource,
 		resourceInfo,
 		*keys.NewGroupKeys([]keys.GroupKey{groupKey})); !assert.NoError(s.T(), err) {
 		return
@@ -355,7 +353,6 @@ func (s *ReadModelTestSuite) TestShouldDeleteReadModelWhenResourceDeleted() {
 	if err := resource.Register(
 		user1Key,
 		*tradingdomain.NewUserTarget(user1Key),
-		domain.ServiceResource,
 		resourceInfo,
 		*keys.NewGroupKeys([]keys.GroupKey{groupKey})); !assert.NoError(s.T(), err) {
 		return
@@ -401,7 +398,6 @@ func (s *ReadModelTestSuite) TestShouldUpdateSharings() {
 	if err := resource.Register(
 		userKey,
 		*tradingdomain.NewUserTarget(userKey),
-		domain.ServiceResource,
 		resourceInfo,
 		*keys.NewGroupKeys([]keys.GroupKey{groupKey1})); !assert.NoError(s.T(), err) {
 		return
@@ -460,16 +456,16 @@ func (s *ReadModelTestSuite) aUserKey() keys.UserKey {
 	return keys.NewUserKey(uuid.NewV4().String())
 }
 
-func (s *ReadModelTestSuite) aUserStreamKey(userKey keys.UserKey) eventstore.StreamKey {
-	return eventstore.NewStreamKey("user", userKey.String())
+func (s *ReadModelTestSuite) aUserStreamKey(userKey keys.UserKey) keys.StreamKey {
+	return keys.NewStreamKey("user", userKey.String())
 }
 
-func (s *ReadModelTestSuite) aResourceStreamKey(resourceKey keys.ResourceKey) eventstore.StreamKey {
-	return eventstore.NewStreamKey("resource", resourceKey.String())
+func (s *ReadModelTestSuite) aResourceStreamKey(resourceKey keys.ResourceKey) keys.StreamKey {
+	return keys.NewStreamKey("resource", resourceKey.String())
 }
 
-func (s *ReadModelTestSuite) aGroupStreamKey(groupKey keys.GroupKey) eventstore.StreamKey {
-	return eventstore.NewStreamKey("group", groupKey.String())
+func (s *ReadModelTestSuite) aGroupStreamKey(groupKey keys.GroupKey) keys.StreamKey {
+	return keys.NewStreamKey("group", groupKey.String())
 }
 
 func (s *ReadModelTestSuite) aResourceKey() keys.ResourceKey {
@@ -505,7 +501,7 @@ func (s *ReadModelTestSuite) aResourceInfo(prefix string) domain.ResourceInfo {
 	}
 }
 
-func (s *ReadModelTestSuite) saveAndApplyEvents(streamKey eventstore.StreamKey, expectedRevision int, changes []eventsource.Event) ([]eventsource.Event, error) {
+func (s *ReadModelTestSuite) saveAndApplyEvents(streamKey keys.StreamKey, expectedRevision int, changes []eventsource.Event) ([]eventsource.Event, error) {
 	evts, err := s.eventStore.Save(s.ctx, streamKey, expectedRevision, changes)
 	if err != nil {
 		return nil, err
@@ -535,7 +531,7 @@ func (s *ReadModelTestSuite) findGroupNameReadModel(groupKey keys.GroupKey) (*re
 func (s *ReadModelTestSuite) createUser(prefix string) (keys.UserKey, userdomain.UserInfo, error) {
 	userKey := s.aUserKey()
 	userInfo := s.aUserInfo(prefix)
-	user := userdomain.New(userKey)
+	user := userdomain.NewUser(userKey)
 	streamKey := s.aUserStreamKey(userKey)
 
 	if err := user.DiscoverUser(userInfo); !assert.NoError(s.T(), err) {

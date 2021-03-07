@@ -6,6 +6,7 @@ import (
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/trading"
 	"github.com/commonpool/backend/pkg/trading/domain"
+	readmodels "github.com/commonpool/backend/pkg/trading/readmodels"
 	"github.com/labstack/echo/v4"
 	"time"
 )
@@ -36,110 +37,98 @@ func parseTargetFromQueryParams(c echo.Context, typeQueryParam string, valueQuer
 	return nil, nil
 }
 
-func mapWebOfferItem(offerItem domain.OfferItem, approvers trading.Approvers) (*OfferItem, error) {
+func mapWebOfferItem(offerItem *readmodels.OfferItemReadModel2, approvers trading.Approvers) (*OfferItem, error) {
 
-	outboundApprovers := approvers.GetOutboundApprovers(offerItem.GetKey())
-	inboundApprovers := approvers.GetInboundApprovers(offerItem.GetKey())
+	outboundApprovers := approvers.GetOutboundApprovers(offerItem.OfferItemKey)
+	inboundApprovers := approvers.GetInboundApprovers(offerItem.OfferItemKey)
 
-	if offerItem.IsCreditTransfer() {
+	if offerItem.Type == domain.ProvideService {
 
-		creditTransfer := offerItem.(*domain.CreditTransferItem)
-
-		from, err := MapOfferItemTarget(creditTransfer.From)
+		from, err := MapOfferItemTarget(offerItem.FromType, offerItem.FromID)
 		if err != nil {
 			return nil, err
 		}
-		to, err := MapOfferItemTarget(creditTransfer.To)
+		to, err := MapOfferItemTarget(offerItem.ToType, offerItem.ToID)
 		if err != nil {
 			return nil, err
 		}
 
-		amount := int64(creditTransfer.Amount.Seconds())
+		amount := int64(offerItem.Amount.Seconds())
 		return &OfferItem{
-			ID:                 creditTransfer.Key.String(),
+			ID:                 offerItem.OfferItemKey,
 			From:               from,
 			To:                 to,
 			Type:               domain.CreditTransfer,
 			ReceivingApprovers: inboundApprovers.Strings(),
 			GivingApprovers:    outboundApprovers.Strings(),
-			GiverApproved:      creditTransfer.ApprovedOutbound,
-			ReceiverApproved:   creditTransfer.ApprovedInbound,
+			GiverApproved:      offerItem.ApprovedOutbound,
+			ReceiverApproved:   offerItem.ApprovedInbound,
 			Amount:             &amount,
 		}, nil
 
-	} else if offerItem.IsBorrowingResource() {
+	} else if offerItem.Type == string(domain.BorrowResource) {
 
-		borrowResource := offerItem.(*domain.BorrowResourceItem)
-
-		to, err := MapOfferItemTarget(borrowResource.To)
+		to, err := MapOfferItemTarget(offerItem.ToType, offerItem.ToID)
 		if err != nil {
 			return nil, err
 		}
-
-		resourceId := borrowResource.ResourceKey.String()
-		duration := int64(borrowResource.Duration.Seconds())
+		duration := int64(offerItem.Duration.Seconds())
 		return &OfferItem{
-			ID:                 borrowResource.Key.String(),
+			ID:                 offerItem.OfferItemKey,
 			To:                 to,
-			ResourceId:         &resourceId,
+			ResourceId:         &offerItem.ResourceID,
 			Duration:           &duration,
 			Type:               domain.BorrowResource,
 			ReceivingApprovers: inboundApprovers.Strings(),
 			GivingApprovers:    outboundApprovers.Strings(),
-			GiverApproved:      borrowResource.ApprovedOutbound,
-			ReceiverApproved:   borrowResource.ApprovedInbound,
-			ItemGiven:          borrowResource.ItemGiven,
-			ItemTaken:          borrowResource.ItemTaken,
-			ItemReceivedBack:   borrowResource.ItemReceivedBack,
-			ItemReturnedBack:   borrowResource.ItemReturnedBack,
+			GiverApproved:      offerItem.ApprovedOutbound,
+			ReceiverApproved:   offerItem.ApprovedInbound,
+			ItemGiven:          offerItem.ResourceLent,
+			ItemTaken:          offerItem.ResourceBorrowed,
+			ItemReceivedBack:   offerItem.LentItemReceived,
+			ItemReturnedBack:   offerItem.BorrowedItemReturned,
 		}, nil
 
-	} else if offerItem.IsResourceTransfer() {
+	} else if offerItem.Type == string(domain.ResourceTransfer) {
 
-		resourceTransfer := offerItem.(*domain.ResourceTransferItem)
-
-		to, err := MapOfferItemTarget(resourceTransfer.To)
+		to, err := MapOfferItemTarget(offerItem.ToType, offerItem.ToID)
 		if err != nil {
 			return nil, err
 		}
 
-		resourceId := resourceTransfer.ResourceKey.String()
 		return &OfferItem{
-			ID:                 resourceTransfer.Key.String(),
+			ID:                 offerItem.OfferItemKey,
 			To:                 to,
-			ResourceId:         &resourceId,
+			ResourceId:         &offerItem.ResourceID,
 			Type:               domain.ResourceTransfer,
 			ReceivingApprovers: inboundApprovers.Strings(),
 			GivingApprovers:    outboundApprovers.Strings(),
-			GiverApproved:      resourceTransfer.ApprovedOutbound,
-			ReceiverApproved:   resourceTransfer.ApprovedInbound,
-			ItemGiven:          resourceTransfer.ItemGiven,
-			ItemTaken:          resourceTransfer.ItemReceived,
+			GiverApproved:      offerItem.ApprovedOutbound,
+			ReceiverApproved:   offerItem.ApprovedInbound,
+			ItemGiven:          offerItem.ResourceGiven,
+			ItemTaken:          offerItem.ResourceTaken,
 		}, nil
 
-	} else if offerItem.IsServiceProviding() {
+	} else if offerItem.Type == string(domain.ProvideService) {
 
-		serviceProvision := offerItem.(*domain.ProvideServiceItem)
-
-		to, err := MapOfferItemTarget(serviceProvision.To)
+		to, err := MapOfferItemTarget(offerItem.ToType, offerItem.ToID)
 		if err != nil {
 			return nil, err
 		}
 
-		resourceId := serviceProvision.ResourceKey.String()
-		duration := int64(serviceProvision.Duration.Seconds())
+		duration := int64(offerItem.Duration.Seconds())
 		return &OfferItem{
-			ID:                          serviceProvision.Key.String(),
+			ID:                          offerItem.OfferItemKey,
 			To:                          to,
-			ResourceId:                  &resourceId,
+			ResourceId:                  &offerItem.ResourceID,
 			Duration:                    &duration,
 			Type:                        domain.ProvideService,
 			ReceivingApprovers:          inboundApprovers.Strings(),
 			GivingApprovers:             outboundApprovers.Strings(),
-			GiverApproved:               serviceProvision.ApprovedOutbound,
-			ReceiverApproved:            serviceProvision.ApprovedInbound,
-			ServiceGivenConfirmation:    serviceProvision.ServiceGivenConfirmation,
-			ServiceReceivedConfirmation: serviceProvision.ServiceReceivedConfirmation,
+			GiverApproved:               offerItem.ApprovedOutbound,
+			ReceiverApproved:            offerItem.ApprovedInbound,
+			ServiceGivenConfirmation:    offerItem.ServiceGiven,
+			ServiceReceivedConfirmation: offerItem.ServiceReceived,
 		}, nil
 	} else {
 		return nil, fmt.Errorf("unexpected offer item type")
@@ -147,18 +136,10 @@ func mapWebOfferItem(offerItem domain.OfferItem, approvers trading.Approvers) (*
 
 }
 
-func (h *TradingHandler) mapToWebOffer(offer *trading.Offer, items *domain.OfferItems, approvers trading.Approvers) (*Offer, error) {
-
-	authorUsername, err := h.userService.GetUsername(offer.GetAuthorKey())
-	if err != nil {
-		return nil, err
-	}
+func (h *TradingHandler) mapToWebOffer(offer *readmodels.OfferReadModel, items []*readmodels.OfferItemReadModel, approvers trading.Approvers) (*Offer, error) {
 
 	var responseItems []*OfferItem
-	for _, offerItem := range items.Items {
-		if offerItem.GetOfferKey() != offer.GetKey() {
-			continue
-		}
+	for _, offerItem := range offer.OfferItems {
 		webOfferItem, err := mapWebOfferItem(offerItem, approvers)
 		if err != nil {
 			return nil, err
@@ -167,13 +148,13 @@ func (h *TradingHandler) mapToWebOffer(offer *trading.Offer, items *domain.Offer
 	}
 
 	webOffer := Offer{
-		ID:             offer.Key.String(),
-		CreatedAt:      offer.CreatedAt,
+		ID: offer.ID,
+		// TODO: CreatedAt:      offer.CreatedAt,
 		CompletedAt:    offer.CompletedAt,
 		Status:         offer.Status,
 		Items:          responseItems,
-		AuthorID:       offer.CreatedByKey.String(),
-		AuthorUsername: authorUsername,
+		AuthorID:       offer.SubmittedByID,
+		AuthorUsername: offer.SubmittedByID,
 	}
 
 	return &webOffer, nil

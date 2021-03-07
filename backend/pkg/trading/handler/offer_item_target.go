@@ -34,23 +34,17 @@ func MapWebOfferItemTarget(target OfferItemTarget) (*domain.Target, error) {
 	return nil, fmt.Errorf("invalid target")
 }
 
-func MapOfferItemTarget(target *domain.Target) (*OfferItemTarget, error) {
-
-	if target == nil {
-		return nil, nil
-	}
-	if target.IsForGroup() {
-		groupId := target.GetGroupKey().String()
+func MapOfferItemTarget(targetType, targetKey string) (*OfferItemTarget, error) {
+	if targetType == string(domain.GroupTarget) {
 		return &OfferItemTarget{
 			UserID:  nil,
-			GroupID: &groupId,
+			GroupID: &targetKey,
 			Type:    domain.GroupTarget,
 		}, nil
 
-	} else if target.IsForUser() {
-		userId := target.GetUserKey().String()
+	} else if targetType == string(domain.UserTarget) {
 		return &OfferItemTarget{
-			UserID:  &userId,
+			UserID:  &targetKey,
 			GroupID: nil,
 			Type:    domain.UserTarget,
 		}, nil

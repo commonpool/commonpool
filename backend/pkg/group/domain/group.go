@@ -353,6 +353,10 @@ func (o *Group) GetKey() keys.GroupKey {
 	return o.key
 }
 
+func (o *Group) StreamKey() keys.StreamKey {
+	return o.key.StreamKey()
+}
+
 func (o *Group) GetVersion() int {
 	return o.version
 }

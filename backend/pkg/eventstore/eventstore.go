@@ -3,6 +3,7 @@ package eventstore
 import (
 	"context"
 	"github.com/commonpool/backend/pkg/eventsource"
+	"github.com/commonpool/backend/pkg/keys"
 	"time"
 )
 
@@ -11,21 +12,9 @@ type ReplayEventsByTypeOptions struct {
 }
 
 type EventStore interface {
-	Load(ctx context.Context, streamKey StreamKey) ([]eventsource.Event, error)
-	Save(ctx context.Context, streamKey StreamKey, expectedRevision int, events []eventsource.Event) ([]eventsource.Event, error)
+	Load(ctx context.Context, streamKey keys.StreamKey) ([]eventsource.Event, error)
+	Save(ctx context.Context, streamKey keys.StreamKey, expectedRevision int, events []eventsource.Event) ([]eventsource.Event, error)
 	ReplayEventsByType(ctx context.Context, eventTypes []string, timestamp time.Time, replayFunc func(events []eventsource.Event) error, options ...ReplayEventsByTypeOptions) error
-}
-
-type StreamEventKey struct {
-	EventID   string `gorm:"not null;type:varchar(128);primaryKey"`
-	EventType string `gorm:"not null;type:varchar(128);primaryKey"`
-}
-
-func NewStreamEventKey(eventType string, eventID string) StreamEventKey {
-	return StreamEventKey{
-		EventID:   eventID,
-		EventType: eventType,
-	}
 }
 
 type StreamEvent struct {
@@ -40,15 +29,15 @@ type StreamEvent struct {
 	Body          string    `gorm:"not null;type:jsonb"`
 }
 
-func (s *StreamEvent) StreamKey() StreamKey {
-	return StreamKey{
+func (s *StreamEvent) StreamKey() keys.StreamKey {
+	return keys.StreamKey{
 		StreamID:   s.StreamID,
 		StreamType: s.StreamType,
 	}
 }
 
-func (s *StreamEvent) StreamEventKey() StreamEventKey {
-	return StreamEventKey{
+func (s *StreamEvent) StreamEventKey() keys.StreamEventKey {
+	return keys.StreamEventKey{
 		EventID:   s.EventID,
 		EventType: s.EventType,
 	}
@@ -60,7 +49,7 @@ type NewStreamEventOptions struct {
 	Version       int
 }
 
-func NewStreamEvent(streamKey StreamKey, streamEventKey StreamEventKey, payload string, options ...NewStreamEventOptions) *StreamEvent {
+func NewStreamEvent(streamKey keys.StreamKey, streamEventKey keys.StreamEventKey, payload string, options ...NewStreamEventOptions) *StreamEvent {
 	streamEvent := &StreamEvent{
 		EventID:      streamEventKey.EventID,
 		EventType:    streamEventKey.EventType,
@@ -85,21 +74,9 @@ type Stream struct {
 	LatestVersion int
 }
 
-func (s *Stream) StreamKey() StreamKey {
-	return StreamKey{
+func (s *Stream) StreamKey() keys.StreamKey {
+	return keys.StreamKey{
 		StreamID:   s.StreamID,
 		StreamType: s.StreamType,
-	}
-}
-
-type StreamKey struct {
-	StreamID   string
-	StreamType string
-}
-
-func NewStreamKey(streamType string, id string) StreamKey {
-	return StreamKey{
-		StreamID:   id,
-		StreamType: streamType,
 	}
 }

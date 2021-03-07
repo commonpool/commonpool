@@ -22,22 +22,24 @@ const (
 	LenderReceivedBackResourceEvent       = "lender_received_back_resource_notified"
 )
 
+var AllEvents = []string{
+	OfferSubmittedEvent,
+	OfferItemApprovedEvent,
+	OfferDeclinedEvent,
+	OfferApprovedEvent,
+	OfferCompletedEvent,
+	ServiceGivenNotifiedEvent,
+	ServiceReceivedNotifiedEvent,
+	ResourceTransferGivenNotifiedEvent,
+	ResourceTransferReceivedNotifiedEvent,
+	ResourceBorrowedNotifiedEvent,
+	ResourceLentNotifiedEvent,
+	BorrowerReturnedResourceEvent,
+	LenderReceivedBackResourceEvent,
+}
+
 func RegisterEvents(eventMapper *eventsource.EventMapper) error {
-	for _, eventType := range []string{
-		OfferSubmittedEvent,
-		OfferItemApprovedEvent,
-		OfferDeclinedEvent,
-		OfferApprovedEvent,
-		OfferCompletedEvent,
-		ServiceGivenNotifiedEvent,
-		ServiceReceivedNotifiedEvent,
-		ResourceTransferGivenNotifiedEvent,
-		ResourceTransferReceivedNotifiedEvent,
-		ResourceBorrowedNotifiedEvent,
-		ResourceLentNotifiedEvent,
-		BorrowerReturnedResourceEvent,
-		LenderReceivedBackResourceEvent,
-	} {
+	for _, eventType := range AllEvents {
 		if err := eventMapper.RegisterMapper(eventType, MapEvent); err != nil {
 			return err
 		}
@@ -49,31 +51,31 @@ func MapEvent(eventType string, bytes []byte) (eventsource.Event, error) {
 
 	var decoded eventsource.Event
 	switch eventType {
-	case string(OfferSubmittedEvent):
+	case OfferSubmittedEvent:
 		decoded = &OfferSubmitted{}
-	case string(OfferItemApprovedEvent):
+	case OfferItemApprovedEvent:
 		decoded = &OfferItemApproved{}
-	case string(OfferDeclinedEvent):
+	case OfferDeclinedEvent:
 		decoded = &OfferDeclined{}
-	case string(OfferApprovedEvent):
+	case OfferApprovedEvent:
 		decoded = &OfferApproved{}
-	case string(OfferCompletedEvent):
+	case OfferCompletedEvent:
 		decoded = &OfferCompleted{}
-	case string(ServiceGivenNotifiedEvent):
+	case ServiceGivenNotifiedEvent:
 		decoded = &ServiceGivenNotified{}
-	case string(ServiceReceivedNotifiedEvent):
+	case ServiceReceivedNotifiedEvent:
 		decoded = &ServiceReceivedNotified{}
-	case string(ResourceTransferGivenNotifiedEvent):
+	case ResourceTransferGivenNotifiedEvent:
 		decoded = &ResourceTransferGivenNotified{}
-	case string(ResourceTransferReceivedNotifiedEvent):
+	case ResourceTransferReceivedNotifiedEvent:
 		decoded = &ResourceTransferReceivedNotified{}
-	case string(ResourceBorrowedNotifiedEvent):
+	case ResourceBorrowedNotifiedEvent:
 		decoded = &ResourceBorrowedNotified{}
-	case string(ResourceLentNotifiedEvent):
+	case ResourceLentNotifiedEvent:
 		decoded = &ResourceLentNotified{}
-	case string(BorrowerReturnedResourceEvent):
+	case BorrowerReturnedResourceEvent:
 		decoded = &BorrowerReturnedResourceNotified{}
-	case string(LenderReceivedBackResourceEvent):
+	case LenderReceivedBackResourceEvent:
 		decoded = &LenderReceivedBackResourceNotified{}
 	default:
 		return nil, fmt.Errorf("unexpected event type: %s", eventType)

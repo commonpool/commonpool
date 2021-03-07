@@ -18,7 +18,7 @@ func NewEventSourcedResourceRepository(eventStore eventstore.EventStore) *EventS
 }
 
 func (e EventSourcedResourceRepository) Load(ctx context.Context, resourceKey keys.ResourceKey) (*domain.Resource, error) {
-	events, err := e.eventStore.Load(ctx, eventstore.NewStreamKey("resource", resourceKey.String()))
+	events, err := e.eventStore.Load(ctx, keys.NewStreamKey("resource", resourceKey.String()))
 	if err != nil {
 		return nil, err
 	}
@@ -26,7 +26,7 @@ func (e EventSourcedResourceRepository) Load(ctx context.Context, resourceKey ke
 }
 
 func (e *EventSourcedResourceRepository) Save(ctx context.Context, resource *domain.Resource) error {
-	streamKey := eventstore.NewStreamKey("resource", resource.GetKey().String())
+	streamKey := keys.NewStreamKey("resource", resource.GetKey().String())
 	if _, err := e.eventStore.Save(ctx, streamKey, resource.GetVersion(), resource.GetChanges()); err != nil {
 		return err
 	}

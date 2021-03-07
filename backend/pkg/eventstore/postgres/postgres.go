@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/commonpool/backend/pkg/eventsource"
 	"github.com/commonpool/backend/pkg/eventstore"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/satori/go.uuid"
 	"gorm.io/gorm"
 	"sync"
@@ -33,7 +34,7 @@ func (p *PostgresEventStore) MigrateDatabase() error {
 	return p.db.AutoMigrate(&eventstore.StreamEvent{}, &eventstore.Stream{})
 }
 
-func (p *PostgresEventStore) Load(ctx context.Context, streamKey eventstore.StreamKey) ([]eventsource.Event, error) {
+func (p *PostgresEventStore) Load(ctx context.Context, streamKey keys.StreamKey) ([]eventsource.Event, error) {
 	var events []*eventstore.StreamEvent
 	if err := p.db.
 		Where("stream_type = ? AND stream_id = ?", streamKey.StreamType, streamKey.StreamID).
@@ -114,7 +115,7 @@ func eventTimeValueOrDefault(defaultValue time.Time, key string, tempStruct map[
 	return value
 }
 
-func (p *PostgresEventStore) Save(ctx context.Context, streamKey eventstore.StreamKey, expectedRevision int, events []eventsource.Event) ([]eventsource.Event, error) {
+func (p *PostgresEventStore) Save(ctx context.Context, streamKey keys.StreamKey, expectedRevision int, events []eventsource.Event) ([]eventsource.Event, error) {
 
 	if len(events) == 0 {
 		return []eventsource.Event{}, nil

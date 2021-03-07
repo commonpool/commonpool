@@ -26,3 +26,7 @@ func ParseOfferItemType(str string) (OfferItemType, error) {
 		return "", exceptions.ErrInvalidOfferItemType
 	}
 }
+
+func (k OfferItemType) GormDataType() string {
+	return "varchar(64)"
+}

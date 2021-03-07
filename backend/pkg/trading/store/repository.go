@@ -18,7 +18,7 @@ func NewEventSourcedOfferRepository(eventStore eventstore.EventStore) *EventSour
 }
 
 func (e EventSourcedOfferRepository) Load(ctx context.Context, offerKey keys.OfferKey) (*domain.Offer, error) {
-	events, err := e.eventStore.Load(ctx, eventstore.NewStreamKey("offer", offerKey.String()))
+	events, err := e.eventStore.Load(ctx, keys.NewStreamKey("offer", offerKey.String()))
 	if err != nil {
 		return nil, err
 	}
@@ -26,7 +26,7 @@ func (e EventSourcedOfferRepository) Load(ctx context.Context, offerKey keys.Off
 }
 
 func (e EventSourcedOfferRepository) Save(ctx context.Context, offer *domain.Offer) error {
-	streamKey := eventstore.NewStreamKey("offer", offer.GetKey().String())
+	streamKey := keys.NewStreamKey("offer", offer.GetKey().String())
 	if _, err := e.eventStore.Save(ctx, streamKey, offer.GetSequenceNo(), offer.GetChanges()); err != nil {
 		return err
 	}

@@ -1,8 +1,9 @@
 package queries
 
 import (
+	"context"
 	"github.com/commonpool/backend/pkg/keys"
-	"github.com/commonpool/backend/pkg/trading/listeners"
+	keys2 "github.com/commonpool/backend/pkg/trading/readmodels"
 	"gorm.io/gorm"
 )
 
@@ -16,14 +17,14 @@ func NewGetOfferKeyForOfferItemKey(db *gorm.DB) *GetOfferKeyForOfferItemKey {
 	}
 }
 
-func (q *GetOfferKeyForOfferItemKey) Get(offerItemKey keys.OfferItemKey) (keys.OfferKey, error) {
-	var readModel listeners.OfferItemReadModel
+func (q *GetOfferKeyForOfferItemKey) Get(ctx context.Context, offerItemKey keys.OfferItemKey) (keys.OfferKey, error) {
+	var readModel keys2.OfferItemReadModel
 	if err := q.db.
-		Model(&listeners.OfferItemReadModel{}).
+		Model(&keys2.OfferItemReadModel{}).
 		Where("id = ?", offerItemKey.String()).
 		First(&readModel).
 		Error; err != nil {
 		return keys.OfferKey{}, err
 	}
-	return keys.ParseOfferKey(readModel.OfferID)
+	return readModel.OfferKey, nil
 }

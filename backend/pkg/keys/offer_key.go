@@ -1,7 +1,10 @@
 package keys
 
 import (
+	"database/sql/driver"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/satori/go.uuid"
 	"go.uber.org/zap/zapcore"
 )
@@ -20,6 +23,10 @@ func GenerateOfferKey() OfferKey {
 
 func (ok OfferKey) String() string {
 	return ok.ID.String()
+}
+
+func (k OfferKey) StreamKey() StreamKey {
+	return NewStreamKey("offer", k.String())
 }
 
 func ParseOfferKey(value string) (OfferKey, error) {
@@ -59,4 +66,25 @@ func (k *OfferKey) UnmarshalJSON(data []byte) error {
 	}
 	k.ID = id
 	return nil
+}
+
+func (k *OfferKey) Scan(value interface{}) error {
+	keyValue, ok := value.(string)
+	if !ok {
+		return errors.New(fmt.Sprint("Failed to unmarshal string value:", value))
+	}
+	uid, err := uuid.FromString(keyValue)
+	if err != nil {
+		return err
+	}
+	*k = NewOfferKey(uid)
+	return nil
+}
+
+func (k OfferKey) Value() (driver.Value, error) {
+	return driver.String.ConvertValue(k.String())
+}
+
+func (k OfferKey) GormDataType() string {
+	return "varchar(128)"
 }

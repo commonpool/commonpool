@@ -7,7 +7,6 @@ import (
 )
 
 type ResourceRegisteredPayload struct {
-	ResourceType  ResourceType  `json:"resource_type"`
 	RegisteredBy  keys.UserKey  `json:"registered_by"`
 	RegisteredFor domain.Target `json:"registered_for"`
 	ResourceInfo  ResourceInfo  `json:"resource_info"`

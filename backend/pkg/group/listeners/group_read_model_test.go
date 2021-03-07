@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/commonpool/backend/pkg/db"
 	"github.com/commonpool/backend/pkg/eventsource"
-	"github.com/commonpool/backend/pkg/eventstore"
 	"github.com/commonpool/backend/pkg/eventstore/postgres"
 	"github.com/commonpool/backend/pkg/group/domain"
 	"github.com/commonpool/backend/pkg/group/queries"
@@ -75,7 +74,7 @@ func (s *GroupReadModelTestSuite) TestGroupReadModelCreateGroup() {
 		return
 	}
 
-	events, err := s.es.Load(context.TODO(), eventstore.NewStreamKey("group", g.GetKey().String()))
+	events, err := s.es.Load(context.TODO(), keys.NewStreamKey("group", g.GetKey().String()))
 	if !assert.NoError(s.T(), err) {
 		return
 	}
@@ -149,7 +148,7 @@ func (s *GroupReadModelTestSuite) TestChangeGroupInfo() {
 		return
 	}
 
-	events, err := s.es.Load(context.TODO(), eventstore.NewStreamKey("group", g.GetKey().String()))
+	events, err := s.es.Load(context.TODO(), keys.NewStreamKey("group", g.GetKey().String()))
 	if !assert.NoError(s.T(), err) {
 		return
 	}
@@ -203,7 +202,7 @@ func (s *GroupReadModelTestSuite) TestInviteUser() {
 		return
 	}
 
-	events, err := s.es.Load(context.TODO(), eventstore.NewStreamKey("group", g.GetKey().String()))
+	events, err := s.es.Load(context.TODO(), keys.NewStreamKey("group", g.GetKey().String()))
 	if !assert.NoError(s.T(), err) {
 		return
 	}
@@ -257,7 +256,7 @@ func (s *GroupReadModelTestSuite) TestUserAcceptedInvitation() {
 		return
 	}
 
-	events, err := s.es.Load(context.TODO(), eventstore.NewStreamKey("group", g.GetKey().String()))
+	events, err := s.es.Load(context.TODO(), keys.NewStreamKey("group", g.GetKey().String()))
 	if !assert.NoError(s.T(), err) {
 		return
 	}
@@ -308,7 +307,7 @@ func (s *GroupReadModelTestSuite) TestJoinGroup() {
 		return
 	}
 
-	events, err := s.es.Load(context.TODO(), eventstore.NewStreamKey("group", g.GetKey().String()))
+	events, err := s.es.Load(context.TODO(), keys.NewStreamKey("group", g.GetKey().String()))
 	if !assert.NoError(s.T(), err) {
 		return
 	}
@@ -363,7 +362,7 @@ func (s *GroupReadModelTestSuite) TestGroupAcceptedInvitation() {
 		return
 	}
 
-	events, err := s.es.Load(context.TODO(), eventstore.NewStreamKey("group", g.GetKey().String()))
+	events, err := s.es.Load(context.TODO(), keys.NewStreamKey("group", g.GetKey().String()))
 	if !assert.NoError(s.T(), err) {
 		return
 	}
@@ -422,7 +421,7 @@ func (s *GroupReadModelTestSuite) TestPermissionChanged() {
 		return
 	}
 
-	events, err := s.es.Load(context.TODO(), eventstore.NewStreamKey("group", g.GetKey().String()))
+	events, err := s.es.Load(context.TODO(), keys.NewStreamKey("group", g.GetKey().String()))
 	if !assert.NoError(s.T(), err) {
 		return
 	}
@@ -472,7 +471,7 @@ func (s *GroupReadModelTestSuite) TestLeftGroup() {
 		return
 	}
 
-	events, err := s.es.Load(context.TODO(), eventstore.NewStreamKey("group", g.GetKey().String()))
+	events, err := s.es.Load(context.TODO(), keys.NewStreamKey("group", g.GetKey().String()))
 	if !assert.NoError(s.T(), err) {
 		return
 	}

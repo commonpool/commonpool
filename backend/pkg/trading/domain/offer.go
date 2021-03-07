@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/commonpool/backend/pkg/eventsource"
 	"github.com/commonpool/backend/pkg/keys"
-	uuid "github.com/satori/go.uuid"
 )
 
 type Offer struct {
@@ -57,10 +56,10 @@ func (a *OfferItemMap) MarshalJSON() ([]byte, error) {
 	return json.Marshal(val)
 }
 
-func NewOffer() *Offer {
+func NewOffer(key keys.OfferKey) *Offer {
 	return &Offer{
 		aggregateType:                       "offer",
-		key:                                 keys.NewOfferKey(uuid.NewV4()),
+		key:                                 key,
 		inboundApproved:                     ApprovalMap{},
 		outboundApproved:                    ApprovalMap{},
 		offerItemMap:                        OfferItemMap{},
@@ -83,8 +82,7 @@ func NewOffer() *Offer {
 }
 
 func NewFromEvents(key keys.OfferKey, events []eventsource.Event) *Offer {
-	offer := NewOffer()
-	offer.key = key
+	offer := NewOffer(key)
 	for _, event := range events {
 		offer.on(event, false)
 	}
@@ -114,15 +112,15 @@ func (o *Offer) Submit(submittedBy keys.UserKey, groupKey keys.GroupKey, offerIt
 	return nil
 }
 
-func (o *Offer) ApproveAll(approver keys.UserKey, permissionMatrix PermissionMatrix) error {
+func (o *Offer) ApproveAll(approver keys.UserKey, permissionGetter OfferPermissionGetter) error {
 	for offerItemKey, item := range o.offerItemMap {
-		if permissionMatrix(approver, item, Inbound) {
-			if err := o.ApproveOfferItem(approver, offerItemKey, Inbound, permissionMatrix); err != nil {
+		if permissionGetter.Can(approver, item, Inbound) {
+			if err := o.ApproveOfferItem(approver, offerItemKey, Inbound, permissionGetter); err != nil {
 				return err
 			}
 		}
-		if permissionMatrix(approver, item, Outbound) {
-			if err := o.ApproveOfferItem(approver, offerItemKey, Outbound, permissionMatrix); err != nil {
+		if permissionGetter.Can(approver, item, Outbound) {
+			if err := o.ApproveOfferItem(approver, offerItemKey, Outbound, permissionGetter); err != nil {
 				return err
 			}
 		}
@@ -130,7 +128,7 @@ func (o *Offer) ApproveAll(approver keys.UserKey, permissionMatrix PermissionMat
 	return nil
 }
 
-func (o *Offer) ApproveOfferItem(approver keys.UserKey, offerItemKey keys.OfferItemKey, direction ApprovalDirection, permissionMatrix PermissionMatrix) error {
+func (o *Offer) ApproveOfferItem(approver keys.UserKey, offerItemKey keys.OfferItemKey, direction ApprovalDirection, permissionMatrix OfferPermissionGetter) error {
 
 	if err := o.assertNotNew(); err != nil {
 		return fmt.Errorf("cannot approve offer item (%s): %v", direction, err)
@@ -149,7 +147,7 @@ func (o *Offer) ApproveOfferItem(approver keys.UserKey, offerItemKey keys.OfferI
 	}
 	offerItem := o.offerItemMap[offerItemKey]
 
-	if !permissionMatrix(approver, offerItem, direction) {
+	if !permissionMatrix.Can(approver, offerItem, direction) {
 		return fmt.Errorf("cannot approve offer item (%v): user '%s' is not allowed to do this operation", direction, approver.String())
 	}
 
@@ -539,6 +537,10 @@ func (o *Offer) CheckOfferCompleted() {
 
 }
 
+func (o *Offer) StreamKey() keys.StreamKey {
+	return o.key.StreamKey()
+}
+
 func (o *Offer) MarkAsCommitted() {
 	o.version = o.version + len(o.changes)
 	o.changes = []eventsource.Event{}
@@ -555,6 +557,10 @@ func (o *Offer) GetKey() keys.OfferKey {
 }
 
 func (o *Offer) GetSequenceNo() int {
+	return o.version
+}
+
+func (o *Offer) GetVersion() int {
 	return o.version
 }
 

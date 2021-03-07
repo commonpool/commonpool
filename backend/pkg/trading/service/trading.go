@@ -24,6 +24,7 @@ type TradingService struct {
 	chatService                 service.Service
 	offerRepo                   tradingdomain.OfferRepository
 	getOfferKeyFromOfferItemKey *queries.GetOfferKeyForOfferItemKey
+	getOfferItem                *queries.GetOfferItem
 }
 
 var _ trading2.Service = &TradingService{}
@@ -35,7 +36,9 @@ func NewTradingService(
 	groupService group2.Service,
 	transactionService transaction2.Service,
 	offerRepo tradingdomain.OfferRepository,
-	getOfferKeyFromOfferItemKey *queries.GetOfferKeyForOfferItemKey) *TradingService {
+	getOfferKeyFromOfferItemKey *queries.GetOfferKeyForOfferItemKey,
+	getOfferItem *queries.GetOfferItem,
+) *TradingService {
 	return &TradingService{
 		tradingStore:                tradingStore,
 		userStore:                   authStore,
@@ -44,6 +47,7 @@ func NewTradingService(
 		transactionService:          transactionService,
 		offerRepo:                   offerRepo,
 		getOfferKeyFromOfferItemKey: getOfferKeyFromOfferItemKey,
+		getOfferItem:                getOfferItem,
 	}
 }
 

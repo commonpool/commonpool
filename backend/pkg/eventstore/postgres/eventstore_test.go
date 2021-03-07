@@ -5,6 +5,7 @@ import (
 	"github.com/commonpool/backend/pkg/db"
 	"github.com/commonpool/backend/pkg/eventsource"
 	"github.com/commonpool/backend/pkg/eventstore"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -48,7 +49,7 @@ func (s *EventStoreSuite) SetupTest() {
 }
 
 func (s *EventStoreSuite) TestLoadEventsFromEmptyEventStore() {
-	streamKey := eventstore.NewStreamKey(test.MockAggregateType, "mock-id")
+	streamKey := keys.NewStreamKey(test.MockAggregateType, "mock-id")
 	events, err := s.eventStore.Load(s.ctx, streamKey)
 	assert.NoError(s.T(), err)
 	assert.Empty(s.T(), events)
@@ -56,7 +57,7 @@ func (s *EventStoreSuite) TestLoadEventsFromEmptyEventStore() {
 
 func (s *EventStoreSuite) TestSaveEventsShouldSetCorrelationID() {
 
-	streamKey := eventstore.NewStreamKey(test.MockAggregateType, "mock-id")
+	streamKey := keys.NewStreamKey(test.MockAggregateType, "mock-id")
 
 	events := test.NewMockEvents(
 		test.NewMockEvent("1"),
@@ -77,7 +78,7 @@ func (s *EventStoreSuite) TestSaveEventsShouldSetCorrelationID() {
 }
 func (s *EventStoreSuite) TestSaveEventsShouldSetEventID() {
 
-	streamKey := eventstore.NewStreamKey(test.MockAggregateType, "mock-id")
+	streamKey := keys.NewStreamKey(test.MockAggregateType, "mock-id")
 
 	events := test.NewMockEvents(
 		test.NewMockEvent("1"),
@@ -98,7 +99,7 @@ func (s *EventStoreSuite) TestSaveEventsShouldSetEventID() {
 }
 
 func (s *EventStoreSuite) TestSaveEventsShouldSetSequenceNoForNewStreams() {
-	streamKey := eventstore.NewStreamKey(test.MockAggregateType, "mock-id")
+	streamKey := keys.NewStreamKey(test.MockAggregateType, "mock-id")
 	_, err := s.eventStore.Save(s.ctx, streamKey, 0, test.NewMockEvents(
 		test.NewMockEvent("1"),
 		test.NewMockEvent("2"),
@@ -114,7 +115,7 @@ func (s *EventStoreSuite) TestSaveEventsShouldSetSequenceNoForNewStreams() {
 }
 
 func (s *EventStoreSuite) TestSaveEventsShouldSetSequenceNoForExistingStreams() {
-	streamKey := eventstore.NewStreamKey(test.MockAggregateType, "mock-id")
+	streamKey := keys.NewStreamKey(test.MockAggregateType, "mock-id")
 
 	_, err := s.eventStore.Save(s.ctx, streamKey, 0, test.NewMockEvents(
 		test.NewMockEvent("1"),
@@ -140,7 +141,7 @@ func (s *EventStoreSuite) TestSaveEventsShouldSetSequenceNoForExistingStreams() 
 }
 
 func (s *EventStoreSuite) TestSaveShouldThrowWhenEmptyStreamIsNotExpectedVersion() {
-	streamKey := eventstore.NewStreamKey(test.MockAggregateType, "mock-id")
+	streamKey := keys.NewStreamKey(test.MockAggregateType, "mock-id")
 	events := test.NewMockEvents(
 		test.NewMockEvent("1"),
 		test.NewMockEvent("2"),
@@ -150,7 +151,7 @@ func (s *EventStoreSuite) TestSaveShouldThrowWhenEmptyStreamIsNotExpectedVersion
 }
 
 func (s *EventStoreSuite) TestSaveShouldThrowWhenStreamIsNotExpectedVersion() {
-	streamKey := eventstore.NewStreamKey(test.MockAggregateType, "mock-id")
+	streamKey := keys.NewStreamKey(test.MockAggregateType, "mock-id")
 	evt1 := test.NewMockEvent("1")
 	evt2 := test.NewMockEvent("2")
 	_, err := s.eventStore.Save(s.ctx, streamKey, 0, test.NewMockEvents(evt1))
@@ -160,7 +161,7 @@ func (s *EventStoreSuite) TestSaveShouldThrowWhenStreamIsNotExpectedVersion() {
 }
 
 func (s *EventStoreSuite) TestSaveShouldThrowWhenEventsHaveSameID() {
-	streamKey := eventstore.NewStreamKey(test.MockAggregateType, "mock-id")
+	streamKey := keys.NewStreamKey(test.MockAggregateType, "mock-id")
 	evt1 := test.NewMockEvent("1")
 	evt2 := test.NewMockEvent("2")
 	_, err := s.eventStore.Save(s.ctx, streamKey, 0, test.NewMockEvents(evt1))
@@ -173,7 +174,7 @@ func (s *EventStoreSuite) TestGetEventsByType() {
 
 	now := time.Now()
 
-	streamKey := eventstore.NewStreamKey(test.MockAggregateType, "mock-id")
+	streamKey := keys.NewStreamKey(test.MockAggregateType, "mock-id")
 
 	evt1 := test.NewMockEvent("1")
 	evt2 := test.NewMockEvent("2")

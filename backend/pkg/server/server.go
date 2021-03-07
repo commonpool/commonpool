@@ -199,6 +199,9 @@ func NewServer() (*Server, error) {
 	searchResources := resourcequeries.NewSearchResources(db)
 	getResourceSharings := resourcequeries.NewGetResourceSharings(db)
 	getResourcesSharings := resourcequeries.NewGetResourcesSharings(db)
+	getOfferItems := queries.NewGetOfferItem(db)
+	getOfferItem := queries.NewGetOfferItem(db)
+	getOfferKeyForOfferItem := queries.NewGetOfferKeyForOfferItemKey(db)
 
 	r := NewRouter()
 	r.HTTPErrorHandler = handler2.HttpErrorHandler
@@ -230,7 +233,8 @@ func NewServer() (*Server, error) {
 		groupService,
 		transactionService,
 		offerRepository,
-		getOfferKeyForOfferItemKeyQry)
+		getOfferKeyForOfferItemKeyQry,
+		getOfferItems)
 
 	chatHandler := chathandler.NewHandler(chatService, tradingService, appConfig, userModule.Authenticator)
 	chatHandler.Register(v1)
@@ -262,7 +266,14 @@ func NewServer() (*Server, error) {
 	realtimeHandler := realtime.NewRealtimeHandler(amqpCli, chatService, userModule.Authenticator)
 	realtimeHandler.Register(v1)
 
-	tradingHandler := tradinghandler.NewTradingHandler(tradingService, groupService, userModule.Service, userModule.Authenticator)
+	tradingHandler := tradinghandler.NewTradingHandler(
+		tradingService,
+		groupService,
+		userModule.Service,
+		userModule.Authenticator,
+		getOfferKeyForOfferItem,
+		getOfferItem)
+
 	tradingHandler.Register(v1)
 
 	nukeHandler := nukehandler.NewHandler(db, amqpCli, driver)

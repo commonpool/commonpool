@@ -5,6 +5,7 @@ import (
 	"github.com/commonpool/backend/pkg/eventbus"
 	"github.com/commonpool/backend/pkg/eventsource"
 	"github.com/commonpool/backend/pkg/eventstore"
+	"github.com/commonpool/backend/pkg/keys"
 	"time"
 )
 
@@ -20,11 +21,11 @@ func NewPublishEventStore(eventStore eventstore.EventStore, eventPublisher event
 	}
 }
 
-func (p PublishEventStore) Load(ctx context.Context, streamKey eventstore.StreamKey) ([]eventsource.Event, error) {
+func (p PublishEventStore) Load(ctx context.Context, streamKey keys.StreamKey) ([]eventsource.Event, error) {
 	return p.eventStore.Load(ctx, streamKey)
 }
 
-func (p PublishEventStore) Save(ctx context.Context, streamKey eventstore.StreamKey, expectedRevision int, events []eventsource.Event) ([]eventsource.Event, error) {
+func (p PublishEventStore) Save(ctx context.Context, streamKey keys.StreamKey, expectedRevision int, events []eventsource.Event) ([]eventsource.Event, error) {
 	publishedEvents, err := p.eventStore.Save(ctx, streamKey, expectedRevision, events)
 	if err != nil {
 		return nil, err

@@ -15,7 +15,7 @@ func (t TradingService) ConfirmResourceTransferred(ctx context.Context, confirme
 	}
 	loggedInUserKey := loggedInUser.GetUserKey()
 
-	offerKey, err := t.getOfferKeyFromOfferItemKey.Get(confirmedItemKey)
+	offerKey, err := t.getOfferKeyFromOfferItemKey.Get(nil, confirmedItemKey)
 	if err != nil {
 		return err
 	}

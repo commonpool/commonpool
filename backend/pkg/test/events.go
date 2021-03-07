@@ -3,7 +3,7 @@ package test
 import (
 	"encoding/json"
 	"github.com/commonpool/backend/pkg/eventsource"
-	"github.com/commonpool/backend/pkg/eventstore"
+	"github.com/commonpool/backend/pkg/keys"
 	"time"
 )
 
@@ -14,7 +14,7 @@ const (
 )
 
 var (
-	MockStreamKey = eventstore.NewStreamKey(MockAggregateType, MockAggregateID)
+	MockStreamKey = keys.NewStreamKey(MockAggregateType, MockAggregateID)
 )
 
 type MockEvent struct {

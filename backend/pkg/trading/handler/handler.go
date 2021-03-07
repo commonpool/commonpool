@@ -5,26 +5,44 @@ import (
 	"github.com/commonpool/backend/pkg/auth/service"
 	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/trading"
+	"github.com/commonpool/backend/pkg/trading/domain"
+	"github.com/commonpool/backend/pkg/trading/queries"
 	"github.com/labstack/echo/v4"
 )
 
 type TradingHandler struct {
-	tradingService trading.Service
-	groupService   group.Service
-	userService    service.Service
-	authorization  authenticator.Authenticator
+	tradingService          trading.Service
+	groupService            group.Service
+	userService             service.Service
+	authorization           authenticator.Authenticator
+	offerRepo               domain.OfferRepository
+	getOfferKeyForOfferItem *queries.GetOfferKeyForOfferItemKey
+	getOfferItem            *queries.GetOfferItem
+	getOffer                *queries.GetOffer
+	getPermissions          *queries.GetOfferPermissions
 }
 
 func NewTradingHandler(
 	tradingService trading.Service,
 	groupService group.Service,
 	userService service.Service,
-	auth authenticator.Authenticator) *TradingHandler {
+	auth authenticator.Authenticator,
+	offerRepo domain.OfferRepository,
+	getOfferKeyForOfferItem *queries.GetOfferKeyForOfferItemKey,
+	getOfferItem *queries.GetOfferItem,
+	getOffer *queries.GetOffer,
+	getPermissions *queries.GetOfferPermissions,
+) *TradingHandler {
 	return &TradingHandler{
-		tradingService: tradingService,
-		groupService:   groupService,
-		userService:    userService,
-		authorization:  auth,
+		tradingService:          tradingService,
+		groupService:            groupService,
+		userService:             userService,
+		authorization:           auth,
+		offerRepo:               offerRepo,
+		getOfferKeyForOfferItem: getOfferKeyForOfferItem,
+		getOfferItem:            getOfferItem,
+		getOffer:                getOffer,
+		getPermissions:          getPermissions,
 	}
 }
 

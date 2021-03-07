@@ -1,8 +1,11 @@
 package keys
 
 import (
+	"database/sql/driver"
 	"encoding/json"
+	"errors"
 	"fmt"
+	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap/zapcore"
 )
 
@@ -21,8 +24,16 @@ func NewUserKey(subject string) UserKey {
 	return UserKey{subject: subject}
 }
 
+func GenerateUserKey() UserKey {
+	return NewUserKey(uuid.NewV4().String())
+}
+
 func (k UserKey) String() string {
 	return k.subject
+}
+
+func (k UserKey) StreamKey() StreamKey {
+	return NewStreamKey("user", k.String())
 }
 
 func (k UserKey) GetExchangeName() string {
@@ -44,4 +55,21 @@ func (k *UserKey) UnmarshalJSON(data []byte) error {
 	}
 	k.subject = uid
 	return nil
+}
+
+func (k *UserKey) Scan(value interface{}) error {
+	keyValue, ok := value.(string)
+	if !ok {
+		return errors.New(fmt.Sprint("Failed to unmarshal string value:", value))
+	}
+	*k = NewUserKey(keyValue)
+	return nil
+}
+
+func (k UserKey) Value() (driver.Value, error) {
+	return driver.String.ConvertValue(k.subject)
+}
+
+func (k UserKey) GormDataType() string {
+	return "varchar(128)"
 }

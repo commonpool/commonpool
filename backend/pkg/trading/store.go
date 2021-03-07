@@ -7,12 +7,10 @@ import (
 )
 
 type Store interface {
-	SaveOffer(offer *Offer, offerItems *tradingdomain.OfferItems) error
 	GetOffer(key keys.OfferKey) (*Offer, error)
 	GetOfferItemsForOffer(key keys.OfferKey) (*tradingdomain.OfferItems, error)
 	GetOfferItem(ctx context.Context, key keys.OfferItemKey) (tradingdomain.OfferItem, error)
 	GetOffersForUser(userKey keys.UserKey) (*GetOffersResult, error)
-	UpdateOfferItem(ctx context.Context, offerItem tradingdomain.OfferItem) error
 	UpdateOfferStatus(key keys.OfferKey, offer tradingdomain.OfferStatus) error
 	GetTradingHistory(ctx context.Context, ids *keys.UserKeys) ([]HistoryEntry, error)
 	FindApproversForOffer(offerKey keys.OfferKey) (Approvers, error)
@@ -20,7 +18,6 @@ type Store interface {
 	FindApproversForCandidateOffer(offer *Offer, offerItems *tradingdomain.OfferItems) (*keys.UserKeys, error)
 	FindReceivingApproversForOfferItem(offerItemKey keys.OfferItemKey) (*keys.UserKeys, error)
 	FindGivingApproversForOfferItem(offerItemKey keys.OfferItemKey) (*keys.UserKeys, error)
-	MarkOfferItemsAsAccepted(ctx context.Context, approvedBy keys.UserKey, approvedByGiver *keys.OfferItemKeys, approvedByReceiver *keys.OfferItemKeys) error
 }
 
 type GetOffersQuery struct {

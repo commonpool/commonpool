@@ -20,7 +20,7 @@ func NewEventSourcedUserRepository(eventStore eventstore.EventStore) *EventSourc
 var _ userdomain.UserRepository = &EventSourcedUserRepository{}
 
 func (e EventSourcedUserRepository) Load(ctx context.Context, userKey keys.UserKey) (*userdomain.User, error) {
-	events, err := e.eventStore.Load(ctx, eventstore.NewStreamKey("user", userKey.String()))
+	events, err := e.eventStore.Load(ctx, keys.NewStreamKey("user", userKey.String()))
 	if err != nil {
 		return nil, err
 	}
@@ -28,7 +28,7 @@ func (e EventSourcedUserRepository) Load(ctx context.Context, userKey keys.UserK
 }
 
 func (e EventSourcedUserRepository) Save(ctx context.Context, user *userdomain.User) error {
-	streamKey := eventstore.NewStreamKey("user", user.GetKey().String())
+	streamKey := keys.NewStreamKey("user", user.GetKey().String())
 	if _, err := e.eventStore.Save(ctx, streamKey, user.GetVersion(), user.GetChanges()); err != nil {
 		return err
 	}

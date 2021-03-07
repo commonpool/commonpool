@@ -33,7 +33,7 @@ func (s *UserReadModelTestSuite) saveAndLoadEvents(user *domain.User, alsoHandle
 		return nil, err
 	}
 
-	evts, err := s.es.Load(context.TODO(), eventstore.NewStreamKey("user", user.GetKey().String()))
+	evts, err := s.es.Load(context.TODO(), keys.NewStreamKey("user", user.GetKey().String()))
 	if !assert.NoError(s.T(), err) {
 		return nil, err
 	}
@@ -82,7 +82,7 @@ func (s *UserReadModelTestSuite) SetupSuite() {
 }
 
 func (s *UserReadModelTestSuite) TestNewUser() {
-	user := domain.New(keys.NewUserKey("TestNewUser"))
+	user := domain.NewUser(keys.NewUserKey("TestNewUser"))
 	err := user.DiscoverUser(domain.UserInfo{
 		Email:    "TestNewUser@example.com",
 		Username: "TestNewUser-username",
@@ -109,7 +109,7 @@ func (s *UserReadModelTestSuite) TestNewUser() {
 }
 
 func (s *UserReadModelTestSuite) TestChangeUserInfo() {
-	user := domain.New(keys.NewUserKey("TestChangeUserInfo"))
+	user := domain.NewUser(keys.NewUserKey("TestChangeUserInfo"))
 
 	if err := user.DiscoverUser(domain.UserInfo{
 		Email:    "TestChangeUserInfo@example.com",

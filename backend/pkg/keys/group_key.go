@@ -1,7 +1,9 @@
 package keys
 
 import (
+	"database/sql/driver"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/satori/go.uuid"
@@ -25,8 +27,13 @@ func (k GroupKey) Equals(g GroupKey) bool {
 func NewGroupKey(id uuid.UUID) GroupKey {
 	return GroupKey{ID: id}
 }
+
 func GenerateGroupKey() GroupKey {
 	return GroupKey{ID: uuid.NewV4()}
+}
+
+func (k GroupKey) StreamKey() StreamKey {
+	return NewStreamKey("group", k.String())
 }
 
 func (k GroupKey) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
@@ -61,4 +68,25 @@ func (k *GroupKey) UnmarshalJSON(data []byte) error {
 	}
 	k.ID = id
 	return nil
+}
+
+func (k *GroupKey) Scan(value interface{}) error {
+	keyValue, ok := value.(string)
+	if !ok {
+		return errors.New(fmt.Sprint("Failed to unmarshal string value:", value))
+	}
+	uid, err := uuid.FromString(keyValue)
+	if err != nil {
+		return err
+	}
+	*k = NewGroupKey(uid)
+	return nil
+}
+
+func (k GroupKey) Value() (driver.Value, error) {
+	return driver.String.ConvertValue(k.ID.String())
+}
+
+func (k GroupKey) GormDataType() string {
+	return "varchar(128)"
 }

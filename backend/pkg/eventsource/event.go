@@ -108,3 +108,11 @@ func (c EventEnvelope) GetSequenceNo() int {
 func (c *EventEnvelope) SetSequenceNo(sequenceNo int) {
 	c.SequenceNo = sequenceNo
 }
+
+type ChangeGetter interface {
+	GetChanges() []Event
+}
+
+type RevisionGetter interface {
+	GetVersion() int
+}

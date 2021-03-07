@@ -14,7 +14,7 @@ type User struct {
 	info    UserInfo
 }
 
-func New(key keys.UserKey) *User {
+func NewUser(key keys.UserKey) *User {
 	return &User{
 		key:     key,
 		version: 0,
@@ -25,7 +25,7 @@ func New(key keys.UserKey) *User {
 }
 
 func NewFromEvents(key keys.UserKey, events []eventsource.Event) *User {
-	user := New(key)
+	user := NewUser(key)
 	for _, event := range events {
 		user.on(event, false)
 	}
@@ -89,6 +89,10 @@ func (u *User) assertIsNotNew() error {
 func (u *User) MarkAsCommitted() {
 	u.version = u.version + len(u.changes)
 	u.changes = []eventsource.Event{}
+}
+
+func (u *User) StreamKey() keys.StreamKey {
+	return u.key.StreamKey()
 }
 
 func (u *User) raise(event eventsource.Event) {
