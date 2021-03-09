@@ -131,10 +131,10 @@ func (s *OfferReadModelTestSuite) createGroup(group *groupdomain.Group, createdB
 func (s *OfferReadModelTestSuite) registerResource(
 	resource *resourcedomain.Resource,
 	createdBy keys.UserKey,
-	target *keys.Target,
+	target keys.Targetter,
 	resourceInfo resourcedomain.ResourceInfo,
 	groupKeys ...keys.GroupKey) ([]eventsource.Event, error) {
-	err := resource.Register(createdBy, target, resourceInfo, keys.NewGroupKeys(groupKeys))
+	err := resource.Register(createdBy, target.Target(), resourceInfo, keys.NewGroupKeys(groupKeys))
 	if !assert.NoError(s.T(), err) {
 		return nil, nil
 	}
@@ -184,7 +184,7 @@ func (s *OfferReadModelTestSuite) Test() {
 		WithValue(resourcedomain.NewResourceValueEstimation().
 			WithFromToValueType().WithHoursFromTo(1, 2))
 	resource1 := resourcedomain.NewResource(resource1Key)
-	if _, err := s.registerResource(resource1, user1Key, keys.NewUserTarget(user1Key), resource1Info); !assert.NoError(s.T(), err) {
+	if _, err := s.registerResource(resource1, user1Key, user1Key, resource1Info); !assert.NoError(s.T(), err) {
 		return
 	}
 
@@ -197,7 +197,7 @@ func (s *OfferReadModelTestSuite) Test() {
 		WithValue(resourcedomain.NewResourceValueEstimation().
 			WithFromToValueType().WithHoursFromTo(1, 2))
 	resource2 := resourcedomain.NewResource(resource2Key)
-	if _, err := s.registerResource(resource2, user1Key, keys.NewUserTarget(user2Key), resource2Info); !assert.NoError(s.T(), err) {
+	if _, err := s.registerResource(resource2, user1Key, user2Key, resource2Info); !assert.NoError(s.T(), err) {
 		return
 	}
 
@@ -210,7 +210,7 @@ func (s *OfferReadModelTestSuite) Test() {
 		WithValue(resourcedomain.NewResourceValueEstimation().
 			WithFromToValueType().WithHoursFromTo(2, 3))
 	resource3 := resourcedomain.NewResource(resource3Key)
-	if _, err := s.registerResource(resource3, user2Key, keys.NewUserTarget(user2Key), resource3Info); !assert.NoError(s.T(), err) {
+	if _, err := s.registerResource(resource3, user2Key, user2Key, resource3Info); !assert.NoError(s.T(), err) {
 		return
 	}
 
@@ -223,26 +223,26 @@ func (s *OfferReadModelTestSuite) Test() {
 	err = offer.Submit(user1Key, group1Key, tradingdomain.NewSubmitOfferItems(
 		tradingdomain.NewResourceTransferItemInput(
 			offerItemKey,
-			keys.NewGroupTarget(group1Key),
+			group1Key,
 			resource1Key,
 		),
 		tradingdomain.NewProvideServiceItemInput(
 			offerItem2Key,
-			keys.NewUserTarget(user1Key),
-			keys.NewUserTarget(user2Key),
+			user1Key,
+			user2Key,
 			resource2Key,
 			2*time.Hour,
 		),
 		tradingdomain.NewBorrowResourceInput(
 			offerItem3Key,
-			keys.NewUserTarget(user2Key),
+			user2Key,
 			resource3Key,
 			2*time.Hour,
 		),
 		tradingdomain.NewCreditTransferItemInput(
 			offerItem4Key,
-			keys.NewGroupTarget(group1Key),
-			keys.NewUserTarget(user1Key),
+			group1Key,
+			user1Key,
 			time.Hour*5,
 		),
 	),

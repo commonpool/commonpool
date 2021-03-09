@@ -355,7 +355,7 @@ func (h *ResourceHandler) CreateResource(c echo.Context) error {
 			return err
 		}
 		return nil
-	}, retry.Attempts(10), retry.MaxDelay(200*time.Millisecond))
+	}, retry.Attempts(20), retry.MaxDelay(200*time.Millisecond))
 	if err != nil {
 		l.Error("failed to retrieve resource read model", zap.Error(err))
 		return err

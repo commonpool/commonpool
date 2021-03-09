@@ -18,10 +18,14 @@ func (e WebServiceException) Error() string {
 
 func (e WebServiceException) Is(err error) bool {
 	a, ok := err.(*WebServiceException)
-	if !ok {
-		return false
+	if ok {
+		return a.Code == e.Code
 	}
-	return e.Code == a.Code
+	a2, ok := err.(WebServiceException)
+	if ok {
+		return a2.Code == e.Code
+	}
+	return false
 }
 
 func Is(err error, trg error) bool {

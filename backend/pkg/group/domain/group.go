@@ -174,12 +174,12 @@ func (o *Group) CancelMembership(requestedBy, memberKey keys.UserKey) error {
 
 	membership, ok := o.GetMembership(memberKey)
 	if !ok {
-		return fmt.Errorf("membership not found")
+		return exceptions.ErrForbidden
 	}
 
 	requesterMembership, ok := o.GetMembership(requestedBy)
 	if !ok {
-		return fmt.Errorf("membership not found")
+		return exceptions.ErrForbidden
 	}
 
 	if requestedBy != memberKey {

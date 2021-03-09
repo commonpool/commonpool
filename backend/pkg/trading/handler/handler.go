@@ -121,6 +121,10 @@ type GetOfferResponse struct {
 	Offer *groupreadmodels.OfferReadModel
 }
 
+type GetOffersResponse struct {
+	Offers []*groupreadmodels.OfferReadModel
+}
+
 func (g GetOfferResponse) GetOfferKey() keys.OfferKey {
 	return g.Offer.OfferKey
 }
@@ -135,7 +139,9 @@ func (h *TradingHandler) HandleGetOffer(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return c.JSON(http.StatusOK, offer)
+	return c.JSON(http.StatusOK, GetOfferResponse{
+		Offer: offer,
+	})
 }
 
 func (h *TradingHandler) HandleGetOffers(c echo.Context) error {
@@ -145,7 +151,9 @@ func (h *TradingHandler) HandleGetOffers(c echo.Context) error {
 		return err
 	}
 	offers, err := h.getOffers.Get(ctx, loggedInUser.GetUserKey())
-	return c.JSON(http.StatusOK, offers)
+	return c.JSON(http.StatusOK, GetOffersResponse{
+		Offers: offers,
+	})
 }
 
 func (h *TradingHandler) HandleAcceptOffer(c echo.Context) error {

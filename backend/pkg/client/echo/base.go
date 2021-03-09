@@ -39,7 +39,7 @@ func (e *Client) assertResponseCode(statusCode int, resp *http.Response, body []
 		var errResponse exceptions.WebServiceException
 		err := json.Unmarshal(body, &errResponse)
 		if err != nil {
-			return fmt.Errorf("could not unmarshal error response")
+			return fmt.Errorf("could not unmarshal error response: %s", string(body))
 		}
 		if errResponse.Code == "" {
 			return fmt.Errorf("error occured on server side, but could not decode error: %s", string(body))

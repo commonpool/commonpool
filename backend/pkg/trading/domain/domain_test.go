@@ -36,7 +36,7 @@ func TestSubmitOffer(t *testing.T) {
 	offerItemKey := keys.GenerateOfferItemKey()
 
 	err := offer.Submit(user1Key, groupKey, NewSubmitOfferItems(
-		NewCreditTransferItemInput(offerItemKey, keys.NewUserTarget(user1Key), keys.NewUserTarget(user2Key), time.Hour*2),
+		NewCreditTransferItemInput(offerItemKey, user1Key, user2Key, time.Hour*2),
 	))
 
 	assert.NoError(t, err)
@@ -69,18 +69,18 @@ func TestCannotApprove(t *testing.T) {
 	offer := NewOffer(keys.GenerateOfferKey())
 	groupKey := keys.GenerateGroupKey()
 	offerItemKey := keys.GenerateOfferItemKey()
-	user1Key := keys.NewUserKey("user1")
-	user2Key := keys.NewUserKey("user2")
+	user1 := keys.NewUserKey("user1")
+	user2 := keys.NewUserKey("user2")
 
-	err := offer.Submit(user1Key, groupKey, NewSubmitOfferItems(
-		NewCreditTransferItemInput(offerItemKey, keys.NewUserTarget(user1Key), keys.NewUserTarget(user2Key), time.Hour*2),
+	err := offer.Submit(user1, groupKey, NewSubmitOfferItems(
+		NewCreditTransferItemInput(offerItemKey, user1, user2, time.Hour*2),
 	))
 
 	assert.NoError(t, err)
 	assert.Len(t, offer.changes, 1)
 	assert.Equal(t, 1, offer.OfferItemCount())
 
-	err = offer.ApproveOfferItem(user1Key, offerItemKey, Outbound, DenyAllMatrix)
+	err = offer.ApproveOfferItem(user1, offerItemKey, Outbound, DenyAllMatrix)
 	assertError(t, "cannot approve offer item (outbound): user 'user1' is not allowed to do this operation", err)
 	assert.Len(t, offer.changes, 1)
 
@@ -95,7 +95,7 @@ func TestApproveTwiceIdempotent(t *testing.T) {
 	user2Key := keys.NewUserKey("user2")
 
 	err := offer.Submit(user1Key, groupKey, NewSubmitOfferItems(
-		NewCreditTransferItemInput(offerItemKey, keys.NewUserTarget(user1Key), keys.NewUserTarget(user2Key), time.Hour*2),
+		NewCreditTransferItemInput(offerItemKey, user1Key, user2Key, time.Hour*2),
 	))
 
 	assert.NoError(t, err)
@@ -121,7 +121,7 @@ func TestApproveDeclinedOfferShouldThrow(t *testing.T) {
 	user2Key := keys.NewUserKey("user2")
 
 	err := offer.Submit(user1Key, groupKey, NewSubmitOfferItems(
-		NewCreditTransferItemInput(offerItemKey, keys.NewUserTarget(user1Key), keys.NewUserTarget(user2Key), time.Hour*2),
+		NewCreditTransferItemInput(offerItemKey, user1Key, user2Key, time.Hour*2),
 	))
 
 	err = offer.DeclineOffer(user1Key)
@@ -161,14 +161,14 @@ func TestSubmitTwiceShouldThrow(t *testing.T) {
 	offerItemKey := keys.GenerateOfferItemKey()
 
 	err := offer.Submit(user1Key, groupKey, NewSubmitOfferItems(
-		NewCreditTransferItemInput(offerItemKey, keys.NewUserTarget(user1Key), keys.NewUserTarget(user2Key), time.Hour*2),
+		NewCreditTransferItemInput(offerItemKey, user1Key, user2Key, time.Hour*2),
 	))
 
 	assert.NoError(t, err)
 	assert.Len(t, offer.changes, 1)
 
 	err = offer.Submit(user1Key, groupKey, NewSubmitOfferItems(
-		NewCreditTransferItemInput(offerItemKey, keys.NewUserTarget(user1Key), keys.NewUserTarget(user2Key), time.Hour*2),
+		NewCreditTransferItemInput(offerItemKey, user1Key, user2Key, time.Hour*2),
 	))
 
 	assertError(t, "cannot submit offer: offer has already been submitted", err)
@@ -186,7 +186,7 @@ func TestReceiveServiceCompletesOffer(t *testing.T) {
 	user1Key := keys.NewUserKey("user1")
 
 	err := offer.Submit(user1Key, groupKey, NewSubmitOfferItems(
-		NewProvideServiceItemInput(offerItemKey, user1Key.Target(), groupKey.Target(), resourceKey, time.Hour*2),
+		NewProvideServiceItemInput(offerItemKey, user1Key, groupKey, resourceKey, time.Hour*2),
 	))
 	if !assert.NoError(t, err) {
 		return
@@ -220,7 +220,7 @@ func TestGiveServiceCompletesOffer(t *testing.T) {
 	user1Key := keys.NewUserKey("user1")
 
 	err := offer.Submit(user1Key, groupKey, NewSubmitOfferItems(
-		NewProvideServiceItemInput(offerItemKey, user1Key.Target(), groupKey.Target(), resourceKey, time.Hour*2),
+		NewProvideServiceItemInput(offerItemKey, user1Key, groupKey, resourceKey, time.Hour*2),
 	))
 
 	if !assert.NoError(t, err) {
@@ -256,7 +256,7 @@ func TestReceiveResourceCompletesOffer(t *testing.T) {
 	user1Key := keys.NewUserKey("user1")
 
 	err := offer.Submit(user1Key, groupKey, NewSubmitOfferItems(
-		NewResourceTransferItemInput(offerItemKey, user1Key.Target(), resourceKey),
+		NewResourceTransferItemInput(offerItemKey, user1Key, resourceKey),
 	))
 
 	if !assert.NoError(t, err) {
@@ -293,7 +293,7 @@ func TestGiveResourceCompletesOffer(t *testing.T) {
 	user1Key := keys.NewUserKey("user1")
 
 	err := offer.Submit(user1Key, groupKey, NewSubmitOfferItems(
-		NewResourceTransferItemInput(offerItemKey, user1Key.Target(), resourceKey),
+		NewResourceTransferItemInput(offerItemKey, user1Key, resourceKey),
 	))
 
 	if !assert.NoError(t, err) {
@@ -330,7 +330,7 @@ func TestBorrowItem(t *testing.T) {
 	user1Key := keys.NewUserKey("user1")
 
 	err := offer.Submit(user1Key, groupKey, NewSubmitOfferItems(
-		NewBorrowResourceInput(offerItemKey, user1Key.Target(), resourceKey, time.Hour*2),
+		NewBorrowResourceInput(offerItemKey, user1Key, resourceKey, time.Hour*2),
 	))
 
 	if !assert.NoError(t, err) {
@@ -374,7 +374,7 @@ func TestCannotReturnItemBeforeBorrowingIt(t *testing.T) {
 	offerItemKey := keys.GenerateOfferItemKey()
 
 	err := offer.Submit(user1Key, groupKey, NewSubmitOfferItems(
-		NewBorrowResourceInput(offerItemKey, user1Key.Target(), resourceKey, time.Hour*2),
+		NewBorrowResourceInput(offerItemKey, user1Key, resourceKey, time.Hour*2),
 	))
 
 	if !assert.NoError(t, err) {
@@ -408,7 +408,7 @@ func TestCannotReceiveItemBeforeBorrowingIt(t *testing.T) {
 	user1Key := keys.NewUserKey("user1")
 
 	err := offer.Submit(user1Key, groupKey, NewSubmitOfferItems(
-		NewBorrowResourceInput(offerItemKey, user1Key.Target(), resourceKey, time.Hour*2),
+		NewBorrowResourceInput(offerItemKey, user1Key, resourceKey, time.Hour*2),
 	))
 
 	if !assert.NoError(t, err) {
@@ -440,7 +440,7 @@ func TestFromEvents(t *testing.T) {
 	user1Key := keys.NewUserKey("user1")
 
 	err := offer.Submit(user1Key, groupKey, NewSubmitOfferItems(
-		NewBorrowResourceInput(offerItemKey, user1Key.Target(), resourceKey, time.Hour*2),
+		NewBorrowResourceInput(offerItemKey, user1Key, resourceKey, time.Hour*2),
 	))
 
 	if !assert.NoError(t, err) {

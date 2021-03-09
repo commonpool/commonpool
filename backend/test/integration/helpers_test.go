@@ -11,7 +11,6 @@ import (
 	res "github.com/commonpool/backend/pkg/resource/handler"
 	"github.com/commonpool/backend/test"
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/sync/errgroup"
 	"strconv"
 	"testing"
 )
@@ -20,6 +19,7 @@ func (s *IntegrationTestBase) testUser(t *testing.T) (*models.UserSession, func(
 	t.Helper()
 
 	createUserLock.Lock()
+	defer createUserLock.Unlock()
 
 	u := s.NewUser()
 	upsertError := s.server.User.Store.Upsert(u.GetUserKey(), u.Email, u.Username)
@@ -29,14 +29,16 @@ func (s *IntegrationTestBase) testUser(t *testing.T) (*models.UserSession, func(
 		_, userXchangeErr = s.server.ChatService.CreateUserExchange(context.TODO(), u.GetUserKey())
 	}
 
-	createUserLock.Unlock()
-
 	if upsertError != nil {
 		t.Fatalf("upsert error: %s", upsertError)
 	}
 
 	if userXchangeErr != nil {
 		t.Fatalf("exchange error: %s", userXchangeErr)
+	}
+
+	if err := s.getUserClient(u).GetLoggedInUserMemberships(context.TODO(), &handler.GetMembershipsResponse{}); err != nil {
+		t.Fatal(err)
 	}
 
 	return u, func(user *models.UserSession) func() {
@@ -72,17 +74,13 @@ func (s *IntegrationTestBase) testGroup2(t *testing.T, owner *models.UserSession
 	if err := ownerCli.CreateGroup(ctx, handler.NewCreateGroupRequest("group-"+strconv.Itoa(groupCounter), "group-"+strconv.Itoa(groupCounter)), output); !assert.NoError(t, err) {
 		return err
 	}
-	g, ctx := errgroup.WithContext(ctx)
 	for _, member := range members {
-		g.Go(func() error {
-			return s.getUserClient(member).JoinGroup(ctx, keys.NewMembershipKey(output.Group.GroupKey, member.GetUserKey()))
-		})
-		g.Go(func() error {
-			return ownerCli.JoinGroup(ctx, keys.NewMembershipKey(output.Group.GroupKey, member.GetUserKey()))
-		})
-	}
-	if err := g.Wait(); err != nil {
-		return err
+		if err := s.getUserClient(member).JoinGroup(ctx, keys.NewMembershipKey(output.Group.GroupKey, member.GetUserKey())); err != nil {
+			return err
+		}
+		if err := ownerCli.JoinGroup(ctx, keys.NewMembershipKey(output.Group.GroupKey, member.GetUserKey())); err != nil {
+			return err
+		}
 	}
 	return nil
 }

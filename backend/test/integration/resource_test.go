@@ -8,8 +8,6 @@ import (
 	"github.com/commonpool/backend/pkg/resource/handler"
 	"github.com/commonpool/backend/test"
 	uuid "github.com/satori/go.uuid"
-	"github.com/stretchr/testify/assert"
-	"golang.org/x/sync/errgroup"
 	"net/http"
 	"strconv"
 	"time"
@@ -76,13 +74,12 @@ func (s *IntegrationTestSuite) CreateResource(ctx context.Context, userSession *
 }
 
 func (s *IntegrationTestSuite) TestUserCanCreateResource() {
-	s.T().Parallel()
 
 	ctx := context.Background()
 
 	_, user1Cli := s.testUserCli(s.T())
 	var resource handler.GetResourceResponse
-	if !assert.NoError(s.T(), user1Cli.CreateResource(ctx, &handler.CreateResourceRequest{
+	if !s.NoError(user1Cli.CreateResource(ctx, &handler.CreateResourceRequest{
 		Resource: handler.CreateResourcePayload{
 			ResourceInfo: domain.ResourceInfo{
 				ResourceInfoBase: domain.ResourceInfoBase{
@@ -103,86 +100,88 @@ func (s *IntegrationTestSuite) TestUserCanCreateResource() {
 		return
 	}
 
-	assert.Equal(s.T(), "Summary", resource.Resource.Name)
-	assert.Equal(s.T(), "Description", resource.Resource.Description)
-	assert.Equal(s.T(), domain.ObjectResource, resource.Resource.ResourceType)
-	assert.Equal(s.T(), 3*time.Hour, resource.Resource.Value.ValueFromDuration)
-	assert.Equal(s.T(), 4*time.Hour, resource.Resource.Value.ValueToDuration)
+	s.Equal("Summary", resource.Resource.Name)
+	s.Equal("Description", resource.Resource.Description)
+	s.Equal(domain.ObjectResource, resource.Resource.ResourceType)
+	s.Equal(3*time.Hour, resource.Resource.Value.ValueFromDuration)
+	s.Equal(4*time.Hour, resource.Resource.Value.ValueToDuration)
 
 }
 
 func (s *IntegrationTestSuite) TestUserCanSearchResources() {
-	s.T().Parallel()
+
 	ctx := context.Background()
 	uid := uuid.NewV4().String()
 
 	_, user1Cli := s.testUserCli(s.T())
 
-	if !assert.NoError(s.T(), user1Cli.CreateResource(ctx, handler.NewCreateResourcePayload(test.AResourceInfo().WithName(uid)).AsRequest(), &handler.GetResourceResponse{})) {
+	if !s.NoError(user1Cli.CreateResource(ctx, handler.NewCreateResourcePayload(test.AResourceInfo().WithName(uid)).AsRequest(), &handler.GetResourceResponse{})) {
 		return
 	}
 
 	response := &handler.SearchResourcesResponse{}
-	if !assert.NoError(s.T(), user1Cli.SearchResources(ctx, uid, nil, nil, 0, 10, nil, response)) {
+	if !s.NoError(user1Cli.SearchResources(ctx, uid, nil, nil, 0, 10, nil, response)) {
 		return
 	}
 
-	assert.Equal(s.T(), 10, response.Take)
-	assert.Equal(s.T(), 0, response.Skip)
-	if !assert.Len(s.T(), response.Resources, 1) {
+	s.Equal(10, response.Take)
+	s.Equal(0, response.Skip)
+	if !s.Len(response.Resources, 1) {
 		return
 	}
-	assert.Equal(s.T(), uid, response.Resources[0].Name)
+	s.Equal(uid, response.Resources[0].Name)
 }
 
 func (s *IntegrationTestSuite) TestUserCanSearchResourcesWhenNoMatch() {
-	s.T().Parallel()
+
 	ctx := context.Background()
 	uid1 := uuid.NewV4().String()
 	uid2 := uuid.NewV4().String()
 
 	_, user1Cli := s.testUserCli(s.T())
 
-	if !assert.NoError(s.T(), user1Cli.CreateResource(ctx, handler.NewCreateResourcePayload(test.AResourceInfo().WithName(uid1)).AsRequest(), &handler.GetResourceResponse{})) {
+	if !s.NoError(user1Cli.CreateResource(ctx, handler.NewCreateResourcePayload(test.AResourceInfo().WithName(uid1)).AsRequest(), &handler.GetResourceResponse{})) {
 		return
 	}
 
 	response := &handler.SearchResourcesResponse{}
-	if !assert.NoError(s.T(), user1Cli.SearchResources(ctx, uid2, nil, nil, 0, 10, nil, response)) {
+	if !s.NoError(user1Cli.SearchResources(ctx, uid2, nil, nil, 0, 10, nil, response)) {
 		return
 	}
 
-	assert.Equal(s.T(), 10, response.Take)
-	assert.Equal(s.T(), 0, response.Skip)
-	assert.Len(s.T(), response.Resources, 0)
+	s.Equal(10, response.Take)
+	s.Equal(0, response.Skip)
+	s.Len(response.Resources, 0)
 }
 
 func (s *IntegrationTestSuite) TestUserCanSearchResourcesWithSkip() {
-	s.T().Parallel()
+
 	ctx := context.Background()
 	uid := uuid.NewV4().String()
 
 	_, user1Cli := s.testUserCli(s.T())
 
-	if !assert.NoError(s.T(), user1Cli.CreateResource(ctx, handler.NewCreateResourcePayload(test.AResourceInfo().WithName(uid)).AsRequest(), &handler.GetResourceResponse{})) {
+	if !s.NoError(user1Cli.CreateResource(ctx, handler.NewCreateResourcePayload(test.AResourceInfo().WithName(uid)).AsRequest(), &handler.GetResourceResponse{})) {
 		return
 	}
 
-	if !assert.NoError(s.T(), user1Cli.CreateResource(ctx, handler.NewCreateResourcePayload(test.AResourceInfo().WithName(uid)).AsRequest(), &handler.GetResourceResponse{})) {
+	if !s.NoError(user1Cli.CreateResource(ctx, handler.NewCreateResourcePayload(test.AResourceInfo().WithName(uid)).AsRequest(), &handler.GetResourceResponse{})) {
 		return
 	}
+
+	time.Sleep(1 * time.Second)
 
 	response := &handler.SearchResourcesResponse{}
-	if !assert.NoError(s.T(), user1Cli.SearchResources(ctx, uid, nil, nil, 1, 10, nil, response)) {
+	if !s.NoError(user1Cli.SearchResources(ctx, uid, nil, nil, 1, 10, nil, response)) {
 		return
 	}
 
-	assert.Len(s.T(), response.Resources, 2)
+	s.Len(response.Resources, 1)
 
 }
 
 func (s *IntegrationTestSuite) TestUserCanSearchResourcesSharedWithGroup() {
-	s.T().Parallel()
+
 	ctx := context.Background()
 	uid := uuid.NewV4().String()
 
@@ -191,90 +190,96 @@ func (s *IntegrationTestSuite) TestUserCanSearchResourcesSharedWithGroup() {
 	group1 := &handler2.GetGroupResponse{}
 	group2 := &handler2.GetGroupResponse{}
 
-	if !assert.NoError(s.T(), s.testGroup2(s.T(), user1, group1)) {
+	if !s.NoError(s.testGroup2(s.T(), user1, group1)) {
 		return
 	}
-	if !assert.NoError(s.T(), s.testGroup2(s.T(), user1, group2)) {
+
+	if !s.NoError(s.testGroup2(s.T(), user1, group2)) {
 		return
 	}
+
+	time.Sleep(500 * time.Millisecond)
 
 	resourceInGroup1 := &handler.GetResourceResponse{}
 	resourceInGroup2 := &handler.GetResourceResponse{}
 	resourceInBothGroups := &handler.GetResourceResponse{}
 	resourceInNoGroups := &handler.GetResourceResponse{}
 
-	g, ctx := errgroup.WithContext(ctx)
+	if !s.NoError(user1Cli.CreateResource(ctx, handler.NewCreateResourcePayload(test.AResourceInfo().WithName(uid), group1).AsRequest(), resourceInGroup1)) {
+		return
+	}
 
-	g.Go(func() error {
-		return user1Cli.CreateResource(ctx, handler.NewCreateResourcePayload(test.AResourceInfo().WithName(uid), group1).AsRequest(), resourceInGroup1)
-	})
-	g.Go(func() error {
-		return user1Cli.CreateResource(ctx, handler.NewCreateResourcePayload(test.AResourceInfo().WithName(uid), group2).AsRequest(), resourceInGroup2)
-	})
-	g.Go(func() error {
-		return user1Cli.CreateResource(ctx, handler.NewCreateResourcePayload(test.AResourceInfo().WithName(uid), group1, group2).AsRequest(), resourceInBothGroups)
-	})
-	g.Go(func() error {
-		return user1Cli.CreateResource(ctx, handler.NewCreateResourcePayload(test.AResourceInfo().WithName(uid)).AsRequest(), resourceInNoGroups)
-	})
+	time.Sleep(500 * time.Millisecond)
 
-	if !assert.NoError(s.T(), g.Wait()) {
+	if !s.NoError(user1Cli.CreateResource(ctx, handler.NewCreateResourcePayload(test.AResourceInfo().WithName(uid), group2).AsRequest(), resourceInGroup2)) {
+		return
+	}
+
+	time.Sleep(500 * time.Millisecond)
+
+	if !s.NoError(user1Cli.CreateResource(ctx, handler.NewCreateResourcePayload(test.AResourceInfo().WithName(uid), group1, group2).AsRequest(), resourceInBothGroups)) {
+		return
+	}
+
+	time.Sleep(500 * time.Millisecond)
+
+	if !s.NoError(user1Cli.CreateResource(ctx, handler.NewCreateResourcePayload(test.AResourceInfo().WithName(uid)).AsRequest(), resourceInNoGroups)) {
 		return
 	}
 
 	time.Sleep(1 * time.Second)
 
 	searchedInGroup1 := &handler.SearchResourcesResponse{}
-	if !assert.NoError(s.T(), user1Cli.SearchResources(ctx, uid, nil, nil, 0, 10, group1, searchedInGroup1)) {
+	if !s.NoError(user1Cli.SearchResources(ctx, uid, nil, nil, 0, 10, group1, searchedInGroup1)) {
 		return
 	}
 
 	searchedInGroup2 := &handler.SearchResourcesResponse{}
-	if !assert.NoError(s.T(), user1Cli.SearchResources(ctx, uid, nil, nil, 0, 10, group2, searchedInGroup2)) {
+	if !s.NoError(user1Cli.SearchResources(ctx, uid, nil, nil, 0, 10, group2, searchedInGroup2)) {
 		return
 	}
 
-	assert.Contains(s.T(), searchedInGroup1.GetResourceKeys(), resourceInGroup1.Resource.ResourceKey)
-	assert.Contains(s.T(), searchedInGroup1.GetResourceKeys(), resourceInBothGroups.Resource.ResourceKey)
-	assert.NotContains(s.T(), searchedInGroup1.GetResourceKeys(), resourceInNoGroups.Resource.ResourceKey)
-	assert.NotContains(s.T(), searchedInGroup1.GetResourceKeys(), resourceInGroup2.Resource.ResourceKey)
+	s.Contains(searchedInGroup1.GetResourceKeys(), resourceInGroup1.Resource.ResourceKey)
+	s.Contains(searchedInGroup1.GetResourceKeys(), resourceInBothGroups.Resource.ResourceKey)
+	s.NotContains(searchedInGroup1.GetResourceKeys(), resourceInNoGroups.Resource.ResourceKey)
+	s.NotContains(searchedInGroup1.GetResourceKeys(), resourceInGroup2.Resource.ResourceKey)
 
-	assert.NotContains(s.T(), searchedInGroup2.GetResourceKeys(), resourceInGroup1.Resource.ResourceKey)
-	assert.Contains(s.T(), searchedInGroup2.GetResourceKeys(), resourceInBothGroups.Resource.ResourceKey)
-	assert.NotContains(s.T(), searchedInGroup2.GetResourceKeys(), resourceInNoGroups.Resource.ResourceKey)
-	assert.Contains(s.T(), searchedInGroup2.GetResourceKeys(), resourceInGroup2.Resource.ResourceKey)
+	s.NotContains(searchedInGroup2.GetResourceKeys(), resourceInGroup1.Resource.ResourceKey)
+	s.Contains(searchedInGroup2.GetResourceKeys(), resourceInBothGroups.Resource.ResourceKey)
+	s.NotContains(searchedInGroup2.GetResourceKeys(), resourceInNoGroups.Resource.ResourceKey)
+	s.Contains(searchedInGroup2.GetResourceKeys(), resourceInGroup2.Resource.ResourceKey)
 
-	if !assert.Len(s.T(), searchedInGroup1.Resources, 2) {
+	if !s.Len(searchedInGroup1.Resources, 2) {
 		return
 	}
-	if !assert.Len(s.T(), searchedInGroup2.Resources, 2) {
+	if !s.Len(searchedInGroup2.Resources, 2) {
 		return
 	}
 
 }
 
 func (s *IntegrationTestSuite) TestUserCanGetResource() {
-	s.T().Parallel()
+
 	ctx := context.Background()
 
 	_, user1Cli := s.testUserCli(s.T())
 
 	var createdResource handler.GetResourceResponse
-	if !assert.NoError(s.T(), user1Cli.CreateResource(ctx, handler.NewCreateResourcePayload(test.AResourceInfo().WithName("TestUserCanGetResource")).AsRequest(), &createdResource)) {
+	if !s.NoError(user1Cli.CreateResource(ctx, handler.NewCreateResourcePayload(test.AResourceInfo().WithName("TestUserCanGetResource")).AsRequest(), &createdResource)) {
 		return
 	}
 
 	var gottenResource handler.GetResourceResponse
-	if !assert.NoError(s.T(), user1Cli.GetResource(ctx, createdResource, &gottenResource)) {
+	if !s.NoError(user1Cli.GetResource(ctx, createdResource, &gottenResource)) {
 		return
 	}
 
-	assert.Equal(s.T(), createdResource, gottenResource)
+	s.Equal(createdResource, gottenResource)
 
 }
 
 func (s *IntegrationTestSuite) TestUserCanUpdateResource() {
-	s.T().Parallel()
+
 	ctx := context.Background()
 	_, cli := s.testUserCli(s.T())
 
@@ -285,64 +290,64 @@ func (s *IntegrationTestSuite) TestUserCanUpdateResource() {
 		WithValue(domain.NewResourceValueEstimation().WithHoursFromTo(9, 18))
 
 	var createdResource handler.GetResourceResponse
-	if !assert.NoError(s.T(), cli.CreateResource(ctx, handler.NewCreateResourcePayload(first).AsRequest(), &createdResource)) {
+	if !s.NoError(cli.CreateResource(ctx, handler.NewCreateResourcePayload(first).AsRequest(), &createdResource)) {
 		return
 	}
 
 	var updatedResource handler.GetResourceResponse
-	if !assert.NoError(s.T(), cli.UpdateResource(ctx, createdResource, handler.NewUpdateResourcePayload(second.AsUpdate()).AsRequest(), &updatedResource)) {
+	if !s.NoError(cli.UpdateResource(ctx, createdResource, handler.NewUpdateResourcePayload(second.AsUpdate()).AsRequest(), &updatedResource)) {
 		return
 	}
 
 	var gottenResource handler.GetResourceResponse
-	if !assert.NoError(s.T(), cli.GetResource(ctx, createdResource, &gottenResource)) {
+	if !s.NoError(cli.GetResource(ctx, createdResource, &gottenResource)) {
 		return
 	}
 
-	assert.Equal(s.T(), "second-name", gottenResource.Resource.ResourceInfo.Name)
-	assert.Equal(s.T(), "second-description", gottenResource.Resource.ResourceInfo.Description)
-	assert.Equal(s.T(), 9*time.Hour, gottenResource.Resource.ResourceInfo.Value.ValueFromDuration)
-	assert.Equal(s.T(), 18*time.Hour, gottenResource.Resource.ResourceInfo.Value.ValueToDuration)
+	s.Equal("second-name", gottenResource.Resource.ResourceInfo.Name)
+	s.Equal("second-description", gottenResource.Resource.ResourceInfo.Description)
+	s.Equal(9*time.Hour, gottenResource.Resource.ResourceInfo.Value.ValueFromDuration)
+	s.Equal(18*time.Hour, gottenResource.Resource.ResourceInfo.Value.ValueToDuration)
 
 }
 
 func (s *IntegrationTestSuite) TestUserCanUpdateResourceSharings() {
-	s.T().Parallel()
+
 	ctx := context.Background()
 	user, cli := s.testUserCli(s.T())
 
 	group1 := &handler2.GetGroupResponse{}
 	group2 := &handler2.GetGroupResponse{}
 
-	if !assert.NoError(s.T(), s.testGroup2(s.T(), user, group1)) {
+	if !s.NoError(s.testGroup2(s.T(), user, group1)) {
 		return
 	}
-	if !assert.NoError(s.T(), s.testGroup2(s.T(), user, group2)) {
+	if !s.NoError(s.testGroup2(s.T(), user, group2)) {
 		return
 	}
 
 	var resource handler.GetResourceResponse
-	if !assert.NoError(s.T(), cli.CreateResource(ctx, handler.NewCreateResourcePayload(test.AResourceInfo()).AsRequest(), &resource)) {
+	if !s.NoError(cli.CreateResource(ctx, handler.NewCreateResourcePayload(test.AResourceInfo()).AsRequest(), &resource)) {
 		return
 	}
 
-	assert.Len(s.T(), resource.Resource.Sharings, 0)
+	s.Len(resource.Resource.Sharings, 0)
 
-	if !assert.NoError(s.T(), cli.UpdateResource(ctx, resource, resource.AsUpdate().WithShared(group1), &resource)) {
+	if !s.NoError(cli.UpdateResource(ctx, resource, resource.AsUpdate().WithShared(group1), &resource)) {
 		return
 	}
 
-	assert.Len(s.T(), resource.Resource.Sharings, 1)
+	s.Len(resource.Resource.Sharings, 1)
 
-	if !assert.NoError(s.T(), cli.UpdateResource(ctx, resource, resource.AsUpdate().WithShared(group1, group2), &resource)) {
+	if !s.NoError(cli.UpdateResource(ctx, resource, resource.AsUpdate().WithShared(group1, group2), &resource)) {
 		return
 	}
 
-	assert.Len(s.T(), resource.Resource.Sharings, 2)
+	s.Len(resource.Resource.Sharings, 2)
 
-	if !assert.NoError(s.T(), cli.UpdateResource(ctx, resource, resource.AsUpdate().WithShared(), &resource)) {
+	if !s.NoError(cli.UpdateResource(ctx, resource, resource.AsUpdate().WithShared(), &resource)) {
 		return
 	}
 
-	assert.Len(s.T(), resource.Resource.Sharings, 0)
+	s.Len(resource.Resource.Sharings, 0)
 }

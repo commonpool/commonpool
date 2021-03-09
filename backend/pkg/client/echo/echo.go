@@ -44,13 +44,13 @@ func (e *Client) SubmitOffer(ctx context.Context, offer *tradinghandler.SendOffe
 	return e.do(ctx, http.MethodPost, "/api/v1/offers", http.StatusCreated, offer, out)
 }
 func (e *Client) GetOffer(ctx context.Context, offerKey keys.OfferKeyGetter, out *tradinghandler.GetOfferResponse) error {
-	return e.do(ctx, http.MethodGet, fmt.Sprintf("/api/v1/offers/%s", offerKey.GetOfferKey().String()), http.StatusCreated, nil, out)
+	return e.do(ctx, http.MethodGet, fmt.Sprintf("/api/v1/offers/%s", offerKey.GetOfferKey().String()), http.StatusOK, nil, out)
 }
 func (e *Client) AcceptOffer(ctx context.Context, offerKey keys.OfferKeyGetter) error {
 	return e.do(ctx, http.MethodPost, fmt.Sprintf("/api/v1/offers/%s/accept", offerKey.GetOfferKey().String()), http.StatusAccepted, nil, nil)
 }
 func (e *Client) DeclineOffer(ctx context.Context, offerKey keys.OfferKeyGetter) error {
-	return e.do(ctx, http.MethodDelete, fmt.Sprintf("/api/v1/offers/%s/decline", offerKey.GetOfferKey().String()), http.StatusAccepted, nil, nil)
+	return e.do(ctx, http.MethodPost, fmt.Sprintf("/api/v1/offers/%s/decline", offerKey.GetOfferKey().String()), http.StatusAccepted, nil, nil)
 }
 func (e *Client) ConfirmResourceGiven(ctx context.Context, offerKey keys.OfferKeyGetter, offerItemKey keys.OfferItemKey) error {
 	return e.do(ctx, http.MethodPost, fmt.Sprintf("/api/v1/offers/%s/items/%s/confirm/resource-given", offerKey.GetOfferKey().String(), offerItemKey.String()), http.StatusAccepted, nil, nil)

@@ -275,49 +275,23 @@ func (h *OfferReadModelHandler) handleOfferItemApproved(e *domain.OfferItemAppro
 }
 
 func (h *OfferReadModelHandler) handleOfferCompleted(e *domain.OfferCompleted) error {
-	return h.db.Transaction(func(tx *gorm.DB) error {
-		offerKey, err := keys.ParseOfferKey(e.AggregateID)
-		if err != nil {
-			return err
-		}
-		err = tx.
-			Model(&groupreadmodels.DBOfferReadModel{}).
-			Where("offer_key = ? and version < ?", e.GetAggregateID(), e.GetSequenceNo()).
-			Updates(map[string]interface{}{
-				"status":       "completed",
-				"version":      e.GetSequenceNo(),
-				"completed_at": e.GetEventTime(),
-			}).Error
-		if err != nil {
-			return err
-		}
-		return h.updateOfferVersion(tx, offerKey, e.SequenceNo)
-	}, &sql.TxOptions{
-		Isolation: sql.LevelSerializable,
-	})
+	return h.db.Model(&groupreadmodels.DBOfferReadModel{}).
+		Where("offer_key = ? and version < ?", e.GetAggregateID(), e.GetSequenceNo()).
+		Updates(map[string]interface{}{
+			"status":       "completed",
+			"version":      e.GetSequenceNo(),
+			"completed_at": e.GetEventTime(),
+		}).Error
 }
 
-func (h *OfferReadModelHandler) handleOfferApproved(evt *domain.OfferApproved) error {
-	return h.db.Transaction(func(tx *gorm.DB) error {
-		offerKey, err := keys.ParseOfferKey(evt.AggregateID)
-		if err != nil {
-			return err
-		}
-		err = tx.
-			Model(&groupreadmodels.DBOfferReadModel{}).
-			Where("offer_key = ? and version < ?", evt.GetAggregateID(), evt.GetSequenceNo()).
-			Updates(map[string]interface{}{
-				"status":      "approved",
-				"version":     evt.GetSequenceNo(),
-				"approved_at": evt.GetEventTime(),
-			}).Error
-		if err != nil {
-			return err
-		}
-		return h.updateOfferVersion(tx, offerKey, evt.SequenceNo)
-	}, &sql.TxOptions{
-		Isolation: sql.LevelSerializable,
-	})
+func (h *OfferReadModelHandler) handleOfferApproved(e *domain.OfferApproved) error {
+	return h.db.Model(&groupreadmodels.DBOfferReadModel{}).
+		Where("offer_key = ? and version < ?", e.GetAggregateID(), e.GetSequenceNo()).
+		Updates(map[string]interface{}{
+			"status":      "approved",
+			"version":     e.GetSequenceNo(),
+			"approved_at": e.GetEventTime(),
+		}).Error
 }
 
 func (h *OfferReadModelHandler) updateOfferVersion(db *gorm.DB, offerKey keys.OfferKey, version int) error {
@@ -325,27 +299,14 @@ func (h *OfferReadModelHandler) updateOfferVersion(db *gorm.DB, offerKey keys.Of
 }
 
 func (h *OfferReadModelHandler) handleOfferDeclined(e *domain.OfferDeclined) error {
-	return h.db.Transaction(func(tx *gorm.DB) error {
-		offerKey, err := keys.ParseOfferKey(e.AggregateID)
-		if err != nil {
-			return err
-		}
-		err = tx.
-			Model(&groupreadmodels.DBOfferReadModel{}).
-			Where("offer_key = ? and version < ?", e.GetAggregateID(), e.GetSequenceNo()).
-			Updates(map[string]interface{}{
-				"status":      "declined",
-				"version":     e.GetSequenceNo(),
-				"declined_by": e.OfferDeclinedPayload.DeclinedBy,
-				"declined_at": e.GetEventTime(),
-			}).Error
-		if err != nil {
-			return err
-		}
-		return h.updateOfferVersion(tx, offerKey, e.SequenceNo)
-	}, &sql.TxOptions{
-		Isolation: sql.LevelSerializable,
-	})
+	return h.db.Model(&groupreadmodels.DBOfferReadModel{}).
+		Where("offer_key = ? and version < ?", e.GetAggregateID(), e.GetSequenceNo()).
+		Updates(map[string]interface{}{
+			"status":      "declined",
+			"version":     e.GetSequenceNo(),
+			"declined_by": e.OfferDeclinedPayload.DeclinedBy,
+			"declined_at": e.GetEventTime(),
+		}).Error
 }
 
 func (h *OfferReadModelHandler) updateOfferItem(offerItemId string, expectedVersion int, updates map[string]interface{}) error {

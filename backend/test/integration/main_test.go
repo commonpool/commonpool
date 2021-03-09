@@ -25,7 +25,8 @@ var (
 )
 
 type IntegrationTestBase struct {
-	server *server.Server
+	server  *server.Server
+	servers []*server.Server
 }
 
 func (i *IntegrationTestBase) Setup() {
@@ -34,6 +35,15 @@ func (i *IntegrationTestBase) Setup() {
 		print(err.Error())
 	}
 	i.server = srv
+
+	for j := 0; j < 10; j++ {
+		srv, err = server.NewServer()
+		if err != nil {
+			panic(err)
+		}
+		i.servers = append(i.servers, srv)
+	}
+
 	i.cleanDb()
 }
 
@@ -68,7 +78,6 @@ func (s *IntegrationTestBase) cleanDb() {
 type IntegrationTestSuite struct {
 	suite.Suite
 	*IntegrationTestBase
-	server *server.Server
 }
 
 func TestIntegration(t *testing.T) {
