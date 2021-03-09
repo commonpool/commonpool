@@ -19,9 +19,9 @@ func (m MembershipKey) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
 
 var _ zapcore.ObjectMarshaler = MembershipKey{}
 
-func NewMembershipKey(groupKey GroupKey, userKey UserKey) MembershipKey {
+func NewMembershipKey(groupKey GroupKeyGetter, userKey UserKeyGetter) MembershipKey {
 	return MembershipKey{
-		UserKey:  userKey,
-		GroupKey: groupKey,
+		UserKey:  userKey.GetUserKey(),
+		GroupKey: groupKey.GetGroupKey(),
 	}
 }

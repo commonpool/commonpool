@@ -195,9 +195,45 @@ type CreateResourceRequest struct {
 	Resource CreateResourcePayload `json:"resource"`
 }
 
+func NewCreateResourceRequest(resource CreateResourcePayload) *CreateResourceRequest {
+	return &CreateResourceRequest{
+		resource,
+	}
+}
+
 type CreateResourcePayload struct {
 	ResourceInfo domain.ResourceInfo   `json:"info"`
 	SharedWith   InputResourceSharings `json:"sharings"`
+}
+
+func NewCreateResourcePayload(resourceInfo domain.ResourceInfo, groupKeys ...keys.GroupKey) CreateResourcePayload {
+	return CreateResourcePayload{}.WithResourceInfo(resourceInfo).SharedWithGroups(groupKeys...)
+}
+
+func (p CreateResourcePayload) WithResourceInfo(resourceInfo domain.ResourceInfo) CreateResourcePayload {
+	return CreateResourcePayload{
+		ResourceInfo: resourceInfo,
+		SharedWith:   p.SharedWith,
+	}
+}
+
+func (p CreateResourcePayload) SharedWithGroups(groupKeys ...keys.GroupKey) CreateResourcePayload {
+	var sharings InputResourceSharings
+	for _, groupKey := range groupKeys {
+		sharings = append(sharings, InputResourceSharing{
+			GroupKey: groupKey,
+		})
+	}
+	return CreateResourcePayload{
+		ResourceInfo: p.ResourceInfo,
+		SharedWith:   sharings,
+	}
+}
+
+func (p CreateResourcePayload) AsRequest() *CreateResourceRequest {
+	return &CreateResourceRequest{
+		Resource: p,
+	}
 }
 
 type InputResourceSharing struct {

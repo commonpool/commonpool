@@ -27,6 +27,7 @@ require (
 	github.com/neo4j/neo4j-go-driver/v4 v4.2.3
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/posener/wstest v1.2.0
 	github.com/pquerna/cachecontrol v0.0.0-20201205024021-ac21108117ac // indirect
 	github.com/satori/go.uuid v1.2.0
 	github.com/streadway/amqp v1.0.0

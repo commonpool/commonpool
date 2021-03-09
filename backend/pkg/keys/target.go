@@ -10,16 +10,17 @@ type Target struct {
 	Type     TargetType `json:"type"`
 }
 
-func (t Target) Equals(target Target) bool {
+type Targetter interface {
+	Target() *Target
+}
 
+func (t Target) Equals(target Target) bool {
 	if t.Type != target.Type {
 		return false
 	}
-
 	if t.Type == GroupTarget {
 		return *t.GroupKey == *target.GroupKey
 	}
-
 	return *t.UserKey == *target.UserKey
 }
 
@@ -44,6 +45,7 @@ func (t Target) GetKeyAsString() string {
 		return t.UserKey.String()
 	}
 }
+
 func NewUserTarget(userKey UserKey) *Target {
 	return &Target{
 		UserKey: &userKey,

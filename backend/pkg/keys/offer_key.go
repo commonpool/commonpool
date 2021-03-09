@@ -9,6 +9,10 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+type OfferKeyGetter interface {
+	GetOfferKey() OfferKey
+}
+
 type OfferKey struct {
 	ID uuid.UUID
 }

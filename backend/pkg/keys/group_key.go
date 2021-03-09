@@ -14,6 +14,14 @@ type GroupKey struct {
 	ID uuid.UUID
 }
 
+func (g GroupKey) GetGroupKey() GroupKey {
+	return g
+}
+
+type GroupKeyGetter interface {
+	GetGroupKey() GroupKey
+}
+
 var _ zapcore.ObjectMarshaler = &GroupKey{}
 
 func (k GroupKey) String() string {

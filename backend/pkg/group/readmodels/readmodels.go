@@ -15,6 +15,10 @@ type GroupReadModel struct {
 	CreatedAt   time.Time     `gorm:"not null" json:"created_at"`
 }
 
+func (g GroupReadModel) Target() *keys.Target {
+	return g.GroupKey.Target()
+}
+
 type MembershipReadModel struct {
 	Version          int                     `gorm:"not null" json:"version"`
 	GroupKey         keys.GroupKey           `gorm:"not null;type:varchar(128);primaryKey" json:"group_key"`

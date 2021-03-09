@@ -437,7 +437,6 @@ func (s *IntegrationTestSuite) TestUserCanUpdateResource() {
 }
 
 func (s *IntegrationTestSuite) TestUserCanUpdateResourceSharings() {
-	s.T().Parallel()
 
 	user1, delUser1 := s.testUser(s.T())
 	defer delUser1()

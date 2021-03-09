@@ -19,6 +19,10 @@ type Group struct {
 	memberships   *Memberships
 }
 
+func (g Group) GetGroupKey() keys.GroupKey {
+	return g.key
+}
+
 func NewGroup(key keys.GroupKey) *Group {
 	return &Group{
 		aggregateType: "group",
@@ -96,7 +100,7 @@ func (o *Group) handleGroupInfoChanged(e GroupInfoChanged) {
 }
 
 func (o *Group) JoinGroup(requestedBy keys.UserKey, memberKey keys.UserKey) error {
-	membershipKey := keys.NewMembershipKey(o.key, memberKey)
+	membershipKey := keys.NewMembershipKey(o, memberKey)
 	m, ok := o.memberships.GetMembership(membershipKey)
 
 	if !ok {
@@ -206,7 +210,7 @@ func (o *Group) CancelMembership(requestedBy, memberKey keys.UserKey) error {
 }
 
 func (o *Group) handleMembershipStatusChange(e MembershipStatusChanged) {
-	membershipKey := keys.NewMembershipKey(o.key, e.MemberKey)
+	membershipKey := keys.NewMembershipKey(o, e.MemberKey)
 	if e.IsNewMembership {
 		m := &Membership{
 			PermissionLevel: e.NewPermissions,
@@ -217,7 +221,7 @@ func (o *Group) handleMembershipStatusChange(e MembershipStatusChanged) {
 	} else if e.NewStatus == nil {
 		o.memberships.RemoveMembership(membershipKey)
 	} else {
-		m, _ := o.memberships.GetMembership(keys.NewMembershipKey(o.key, e.MemberKey))
+		m, _ := o.memberships.GetMembership(keys.NewMembershipKey(o, e.MemberKey))
 		m.Status = *e.NewStatus
 		m.PermissionLevel = e.NewPermissions
 	}
@@ -268,7 +272,7 @@ func (o *Group) AssignPermission(grantedBy keys.UserKey, grantedTo keys.UserKey,
 }
 
 func (o *Group) GetMembership(memberKey keys.UserKey) (*Membership, bool) {
-	return o.memberships.GetMembership(keys.NewMembershipKey(o.key, memberKey))
+	return o.memberships.GetMembership(keys.NewMembershipKey(o, memberKey))
 }
 
 func (o *Group) assertIsNew() error {

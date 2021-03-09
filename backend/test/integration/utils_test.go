@@ -42,9 +42,14 @@ func ReadResponse(t *testing.T, recorder *httptest.ResponseRecorder, output inte
 	resp := recorder.Result()
 	body, _ := ioutil.ReadAll(resp.Body)
 	_ = json.Unmarshal(body, output)
-	indent, err := json.MarshalIndent(output, "", "  ")
+
+	var tmp map[string]interface{}
+	err := json.Unmarshal(body, &tmp)
 	if err == nil {
-		t.Log("\n" + string(indent))
+		indent, err := json.MarshalIndent(tmp, "", "  ")
+		if err == nil {
+			t.Log("\n" + string(indent))
+		}
 	}
 	return resp
 }

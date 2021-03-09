@@ -13,6 +13,14 @@ type UserKey struct {
 	subject string
 }
 
+func (u UserKey) GetUserKey() UserKey {
+	return u
+}
+
+type UserKeyGetter interface {
+	GetUserKey() UserKey
+}
+
 func (k UserKey) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
 	encoder.AddString("user_id", k.subject)
 	return nil

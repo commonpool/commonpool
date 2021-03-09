@@ -94,6 +94,20 @@ type SendOfferPayload struct {
 	Message  string                       `json:"message"`
 }
 
+func NewSendOfferPayload(groupKey keys.GroupKey, items ...domain.SubmitOfferItemBase) SendOfferPayload {
+	return SendOfferPayload{
+		Items:    items,
+		GroupKey: groupKey,
+		Message:  "",
+	}
+}
+
+func (p SendOfferPayload) AsRequest() *SendOfferRequest {
+	return &SendOfferRequest{
+		Offer: p,
+	}
+}
+
 type SendOfferPayloadItem struct {
 	Type       domain.OfferItemType `json:"type"`
 	To         keys.Target          `json:"to" validate:"required,uuid"`
@@ -103,8 +117,12 @@ type SendOfferPayloadItem struct {
 	Amount     *string              `json:"amount"`
 }
 
-type OfferResponse struct {
+type GetOfferResponse struct {
 	Offer *groupreadmodels.OfferReadModel
+}
+
+func (g GetOfferResponse) GetOfferKey() keys.OfferKey {
+	return g.Offer.OfferKey
 }
 
 func (h *TradingHandler) HandleGetOffer(c echo.Context) error {
@@ -263,7 +281,7 @@ func (h *TradingHandler) HandleSendOffer(c echo.Context) error {
 		return err
 	}
 
-	return c.JSON(http.StatusCreated, OfferResponse{
+	return c.JSON(http.StatusCreated, GetOfferResponse{
 		Offer: offer,
 	})
 

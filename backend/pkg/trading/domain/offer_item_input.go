@@ -25,64 +25,64 @@ type SubmitOfferItem struct {
 	OfferItemKey keys.OfferItemKey
 }
 
-func NewResourceTransferItemInputBase(to *keys.Target, resourceKey keys.ResourceKey) SubmitOfferItemBase {
+func NewResourceTransferItemInputBase(to keys.Targetter, resourceKey keys.ResourceKey) SubmitOfferItemBase {
 	return SubmitOfferItemBase{
 		OfferItemType: ResourceTransfer,
 		ResourceKey:   &resourceKey,
-		To:            to,
+		To:            to.Target(),
 	}
 }
 
-func NewCreditTransferItemInputBase(from *keys.Target, to *keys.Target, amount time.Duration) SubmitOfferItemBase {
+func NewCreditTransferItemInputBase(from keys.Targetter, to keys.Targetter, amount time.Duration) SubmitOfferItemBase {
 	return SubmitOfferItemBase{
 		OfferItemType: CreditTransfer,
-		From:          from,
-		To:            to,
+		From:          from.Target(),
+		To:            to.Target(),
 		Amount:        &amount,
 	}
 }
 
-func NewProvideServiceItemInputBase(from *keys.Target, to *keys.Target, resourceKey keys.ResourceKey, duration time.Duration) SubmitOfferItemBase {
+func NewProvideServiceItemInputBase(from keys.Targetter, to keys.Targetter, resourceKey keys.ResourceKey, duration time.Duration) SubmitOfferItemBase {
 	return SubmitOfferItemBase{
 		OfferItemType: ProvideService,
-		From:          from,
-		To:            to,
+		From:          from.Target(),
+		To:            to.Target(),
 		ResourceKey:   &resourceKey,
 		Duration:      &duration,
 	}
 }
 
-func NewBorrowResourceInputBase(to *keys.Target, resourceKey keys.ResourceKey, duration time.Duration) SubmitOfferItemBase {
+func NewBorrowResourceInputBase(to keys.Targetter, resourceKey keys.ResourceKey, duration time.Duration) SubmitOfferItemBase {
 	return SubmitOfferItemBase{
 		OfferItemType: BorrowResource,
-		To:            to,
+		To:            to.Target(),
 		ResourceKey:   &resourceKey,
 		Duration:      &duration,
 	}
 }
 
-func NewResourceTransferItemInput(offerItemKey keys.OfferItemKey, to *keys.Target, resourceKey keys.ResourceKey) SubmitOfferItem {
+func NewResourceTransferItemInput(offerItemKey keys.OfferItemKey, to keys.Targetter, resourceKey keys.ResourceKey) SubmitOfferItem {
 	return SubmitOfferItem{
 		OfferItemKey:        offerItemKey,
 		SubmitOfferItemBase: NewResourceTransferItemInputBase(to, resourceKey),
 	}
 }
 
-func NewCreditTransferItemInput(offerItemKey keys.OfferItemKey, from *keys.Target, to *keys.Target, amount time.Duration) SubmitOfferItem {
+func NewCreditTransferItemInput(offerItemKey keys.OfferItemKey, from keys.Targetter, to keys.Targetter, amount time.Duration) SubmitOfferItem {
 	return SubmitOfferItem{
 		OfferItemKey:        offerItemKey,
 		SubmitOfferItemBase: NewCreditTransferItemInputBase(from, to, amount),
 	}
 }
 
-func NewProvideServiceItemInput(offerItemKey keys.OfferItemKey, from *keys.Target, to *keys.Target, resourceKey keys.ResourceKey, duration time.Duration) SubmitOfferItem {
+func NewProvideServiceItemInput(offerItemKey keys.OfferItemKey, from keys.Targetter, to keys.Targetter, resourceKey keys.ResourceKey, duration time.Duration) SubmitOfferItem {
 	return SubmitOfferItem{
 		OfferItemKey:        offerItemKey,
 		SubmitOfferItemBase: NewProvideServiceItemInputBase(from, to, resourceKey, duration),
 	}
 }
 
-func NewBorrowResourceInput(offerItemKey keys.OfferItemKey, to *keys.Target, resourceKey keys.ResourceKey, duration time.Duration) SubmitOfferItem {
+func NewBorrowResourceInput(offerItemKey keys.OfferItemKey, to keys.Targetter, resourceKey keys.ResourceKey, duration time.Duration) SubmitOfferItem {
 	return SubmitOfferItem{
 		OfferItemKey:        offerItemKey,
 		SubmitOfferItemBase: NewBorrowResourceInputBase(to, resourceKey, duration),

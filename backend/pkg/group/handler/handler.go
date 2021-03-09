@@ -67,20 +67,40 @@ func (h *Handler) Register(g *echo.Group) {
 type GetMembershipResponse struct {
 	Membership *readmodels.MembershipReadModel `json:"membership"`
 }
+
 type GetMembershipsResponse struct {
 	Memberships []*readmodels.MembershipReadModel `json:"memberships"`
 }
+
 type GetGroupResponse struct {
 	Group *readmodels.GroupReadModel `json:"group"`
 }
+
+func (g GetGroupResponse) Target() *keys.Target {
+	return g.Group.Target()
+}
+
 type CreateGroupRequest struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 }
+
+func NewCreateGroupRequest(name, description string) *CreateGroupRequest {
+	return &CreateGroupRequest{
+		name,
+		description,
+	}
+}
+
 type CreateOrAcceptInvitationRequest struct {
 	UserKey  keys.UserKey  `json:"userId"`
 	GroupKey keys.GroupKey `json:"groupId"`
 }
+
+func (c CreateOrAcceptInvitationRequest) GetMembershipKey() keys.MembershipKey {
+	return keys.NewMembershipKey(c.GroupKey, c.UserKey)
+}
+
 type CancelOrDeclineInvitationRequest struct {
 	UserKey  keys.UserKey  `json:"userId"`
 	GroupKey keys.GroupKey `json:"groupId"`

@@ -19,6 +19,10 @@ func (s *UserSession) GetUserKey() keys.UserKey {
 	return keys.NewUserKey(s.Subject)
 }
 
+func (s *UserSession) Target() *keys.Target {
+	return keys.NewUserKey(s.Subject).Target()
+}
+
 // GetUsername Gets the userName from the UserSession
 func (s *UserSession) GetUsername() string {
 	return s.Username

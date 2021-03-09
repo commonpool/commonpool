@@ -2,11 +2,14 @@ package integration
 
 import (
 	"context"
-	"fmt"
 	"github.com/commonpool/backend/pkg/auth/models"
+	"github.com/commonpool/backend/pkg/client"
+	"github.com/commonpool/backend/pkg/client/echo"
 	"github.com/commonpool/backend/pkg/group/handler"
 	"github.com/commonpool/backend/pkg/group/readmodels"
-	"io/ioutil"
+	"github.com/commonpool/backend/pkg/keys"
+	"github.com/stretchr/testify/assert"
+	"golang.org/x/sync/errgroup"
 	"strconv"
 	"testing"
 )
@@ -51,47 +54,41 @@ func (s *IntegrationTestSuite) testUser(t *testing.T) (*models.UserSession, func
 	}(u)
 }
 
-func (s *IntegrationTestSuite) testGroup(t *testing.T, owner *models.UserSession, members ...*models.UserSession) (*readmodels.GroupReadModel, error) {
+func (s *IntegrationTestSuite) testUserCli(t *testing.T) (*models.UserSession, client.Client) {
+	user, _ := s.testUser(t)
+	return user, s.getUserClient(user)
+}
 
+func (s *IntegrationTestSuite) getUserClient(user *models.UserSession) client.Client {
+	return echo.NewEchoClient(s.server.Router, client.NewMockAuthentication(user))
+}
+
+func (s *IntegrationTestSuite) testGroup2(t *testing.T, owner *models.UserSession, output *handler.GetGroupResponse, members ...*models.UserSession) error {
 	ctx := context.Background()
 	s.groupCounter++
-
-	response, httpResponse := s.CreateGroup(t, ctx, owner, &handler.CreateGroupRequest{
-		Name:        "group-" + strconv.Itoa(s.groupCounter),
-		Description: "group-" + strconv.Itoa(s.groupCounter),
-	})
-	if !AssertStatusCreated(t, httpResponse) {
-		bytes, bytesErr := ioutil.ReadAll(httpResponse.Body)
-		if bytesErr != nil {
-			return nil, bytesErr
-		}
-		return nil, fmt.Errorf(string(bytes))
+	ownerCli := s.getUserClient(owner)
+	if err := ownerCli.CreateGroup(ctx, handler.NewCreateGroupRequest("group-"+strconv.Itoa(s.groupCounter), "group-"+strconv.Itoa(s.groupCounter)), output); !assert.NoError(t, err) {
+		return err
 	}
-
+	g, ctx := errgroup.WithContext(ctx)
 	for _, member := range members {
-		httpResponse = s.CreateOrAcceptInvitation(ctx, owner, &handler.CreateOrAcceptInvitationRequest{
-			UserKey:  member.GetUserKey(),
-			GroupKey: response.Group.GroupKey,
+		g.Go(func() error {
+			return s.getUserClient(member).JoinGroup(ctx, keys.NewMembershipKey(output.Group.GroupKey, member.GetUserKey()))
 		})
-		if !AssertStatusAccepted(t, httpResponse) {
-			bytes, bytesErr := ioutil.ReadAll(httpResponse.Body)
-			if bytesErr != nil {
-				return nil, bytesErr
-			}
-			return nil, fmt.Errorf(string(bytes))
-		}
-		httpResponse = s.CreateOrAcceptInvitation(ctx, member, &handler.CreateOrAcceptInvitationRequest{
-			UserKey:  member.GetUserKey(),
-			GroupKey: response.Group.GroupKey,
+		g.Go(func() error {
+			return ownerCli.JoinGroup(ctx, keys.NewMembershipKey(output.Group.GroupKey, member.GetUserKey()))
 		})
-		if !AssertStatusAccepted(t, httpResponse) {
-			bytes, bytesErr := ioutil.ReadAll(httpResponse.Body)
-			if bytesErr != nil {
-				return nil, bytesErr
-			}
-			return nil, fmt.Errorf(string(bytes))
-		}
 	}
+	if err := g.Wait(); err != nil {
+		return err
+	}
+	return nil
+}
 
+func (s *IntegrationTestSuite) testGroup(t *testing.T, owner *models.UserSession, members ...*models.UserSession) (*readmodels.GroupReadModel, error) {
+	var response handler.GetGroupResponse
+	if err := s.testGroup2(t, owner, &response, members...); err != nil {
+		return nil, err
+	}
 	return response.Group, nil
 }

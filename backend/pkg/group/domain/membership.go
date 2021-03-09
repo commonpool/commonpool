@@ -54,7 +54,7 @@ func (m *Membership) GetUserKey() keys.UserKey {
 }
 
 func (m *Membership) GetKey() keys.MembershipKey {
-	return keys.NewMembershipKey(m.GetGroupKey(), m.GetUserKey())
+	return keys.NewMembershipKey(m, m.GetUserKey())
 }
 
 func (m *Membership) GetStatus() MembershipStatus {
