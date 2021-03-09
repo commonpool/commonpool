@@ -367,6 +367,12 @@ const (
 	MembershipStatusChangedEvent = "group_membership_status_changed"
 )
 
+var AllEvents = []string{
+	GroupCreatedEvent,
+	GroupInfoChangedEvent,
+	MembershipStatusChangedEvent,
+}
+
 // Group Created Event
 
 type GroupCreatedPayload struct {
@@ -472,11 +478,7 @@ var _ eventsource.Event = MembershipStatusChanged{}
 //
 
 func RegisterEvents(mapper *eventsource.EventMapper) error {
-	for _, eventType := range []string{
-		GroupCreatedEvent,
-		GroupInfoChangedEvent,
-		MembershipStatusChangedEvent,
-	} {
+	for _, eventType := range AllEvents {
 		if err := mapper.RegisterMapper(eventType, MapEvent); err != nil {
 			return err
 		}

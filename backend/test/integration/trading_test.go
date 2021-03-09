@@ -71,7 +71,6 @@ func (s *IntegrationTestSuite) AssertOfferDeclined(ctx context.Context, offerKey
 // }
 
 func (s *IntegrationTestSuite) TestUserCanSubmitOfferBetweenUsers() {
-	s.T().Parallel()
 
 	user1, delUser1 := s.testUser(s.T())
 	defer delUser1()
@@ -91,6 +90,8 @@ func (s *IntegrationTestSuite) TestUserCanSubmitOfferBetweenUsers() {
 			SharedWith: handler2.NewInputResourceSharings().WithGroups(group.GroupKey),
 		},
 	})
+
+	time.Sleep(1 * time.Second)
 
 	offerResp, httpResponse := s.SubmitOffer(ctx, user1, &handler.SendOfferRequest{
 		Offer: handler.SendOfferPayload{
@@ -112,7 +113,6 @@ func (s *IntegrationTestSuite) TestUserCanSubmitOfferBetweenUsers() {
 }
 
 func (s *IntegrationTestSuite) TestUserCanSubmitOfferBetweenUsersAndGroup() {
-	s.T().Parallel()
 
 	user1, delUser1 := s.testUser(s.T())
 	defer delUser1()
@@ -154,7 +154,6 @@ func (s *IntegrationTestSuite) TestUserCanSubmitOfferBetweenUsersAndGroup() {
 }
 
 func (s *IntegrationTestSuite) TestUserCanSubmitOfferBetweenGroupAndMultipleUsers() {
-	s.T().Parallel()
 
 	user1, delUser1 := s.testUser(s.T())
 	defer delUser1()
@@ -200,6 +199,8 @@ func (s *IntegrationTestSuite) TestUserCanSubmitOfferBetweenGroupAndMultipleUser
 		return
 	}
 
+	time.Sleep(1 * time.Second)
+
 	if err := s.UsersAcceptOffer(s.T(), ctx, offerResp.Offer, []*models.UserSession{user1, user2}); !assert.NoError(s.T(), err) {
 		return
 	}
@@ -207,7 +208,6 @@ func (s *IntegrationTestSuite) TestUserCanSubmitOfferBetweenGroupAndMultipleUser
 }
 
 func (s *IntegrationTestSuite) TestUsersCanAcceptOfferBetweenUsers() {
-	s.T().Parallel()
 
 	user1, delUser1 := s.testUser(s.T())
 	defer delUser1()
@@ -270,7 +270,6 @@ func (s *IntegrationTestSuite) TestUsersCanAcceptOfferBetweenUsers() {
 }
 
 func (s *IntegrationTestSuite) TestUserCannotCreateOfferForResourceNotSharedWithGroup() {
-	s.T().Parallel()
 
 	user1, delUser1 := s.testUser(s.T())
 	defer delUser1()
@@ -315,7 +314,6 @@ func (s *IntegrationTestSuite) TestUserCannotCreateOfferForResourceNotSharedWith
 }
 
 func (s *IntegrationTestSuite) TestCannotCreateResourceTransferItemForResourceAlreadyOwned() {
-	s.T().Parallel()
 
 	user1, delUser1 := s.testUser(s.T())
 	defer delUser1()
@@ -355,7 +353,6 @@ func (s *IntegrationTestSuite) TestCannotCreateResourceTransferItemForResourceAl
 }
 
 func (s *IntegrationTestSuite) TestUsersCanDeclineOffer() {
-	s.T().Parallel()
 
 	user1, delUser1 := s.testUser(s.T())
 	defer delUser1()
@@ -414,7 +411,6 @@ func (s *IntegrationTestSuite) TestUsersCanDeclineOffer() {
 }
 
 func (s *IntegrationTestSuite) TestSendingOfferShouldCreateChatChannelBetweenUsers() {
-	s.T().Parallel()
 
 	user1, delUser1 := s.testUser(s.T())
 	defer delUser1()
@@ -465,8 +461,6 @@ func (s *IntegrationTestSuite) TestSendingOfferShouldCreateChatChannelBetweenUse
 }
 
 func (s *IntegrationTestSuite) TestSendingOfferBetweenMultiplePeopleShouldCreateChatChannelBetweenUsers() {
-
-	s.T().Parallel()
 
 	user1, delUser1 := s.testUser(s.T())
 	defer delUser1()

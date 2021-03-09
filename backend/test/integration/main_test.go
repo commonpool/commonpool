@@ -3,14 +3,14 @@ package integration
 import (
 	"fmt"
 	"github.com/commonpool/backend/pkg/auth/models"
-	"github.com/commonpool/backend/pkg/auth/readmodel"
+	userreadmodels "github.com/commonpool/backend/pkg/auth/readmodel"
 	chatstore "github.com/commonpool/backend/pkg/chat/store"
 	"github.com/commonpool/backend/pkg/config"
 	"github.com/commonpool/backend/pkg/eventstore"
-	"github.com/commonpool/backend/pkg/group/readmodels"
-	readmodel2 "github.com/commonpool/backend/pkg/resource/readmodel"
+	groupreadmodels "github.com/commonpool/backend/pkg/group/readmodels"
+	resourcereadmodels "github.com/commonpool/backend/pkg/resource/readmodel"
 	"github.com/commonpool/backend/pkg/server"
-	keys "github.com/commonpool/backend/pkg/trading/readmodels"
+	tradingreadmodels "github.com/commonpool/backend/pkg/trading/readmodels"
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/suite"
 	"gorm.io/driver/postgres"
@@ -76,17 +76,18 @@ func (s *IntegrationTestSuite) cleanDb() {
 	s.server.Db.Delete(chatstore.Message{}, "1 = 1")
 	s.server.Db.Delete(eventstore.StreamEvent{}, "1 = 1")
 	s.server.Db.Delete(eventstore.Stream{}, "1 = 1")
-	s.server.Db.Delete(readmodel.UserReadModel{}, "1 = 1")
-	s.server.Db.Delete(readmodels.MembershipReadModel{}, "1 = 1")
-	s.server.Db.Delete(readmodels.GroupReadModel{}, "1 = 1")
-	s.server.Db.Delete(readmodel2.DbResourceReadModel{}, "1 = 1")
-	s.server.Db.Delete(readmodel2.ResourceGroupNameReadModel{}, "1 = 1")
-	s.server.Db.Delete(readmodel2.ResourceSharingReadModel{}, "1 = 1")
-	s.server.Db.Delete(keys.DBOfferReadModel{}, "1 = 1")
-	s.server.Db.Delete(keys.OfferItemReadModel{}, "1 = 1")
-	s.server.Db.Delete(keys.OfferResourceReadModel{}, "1 = 1")
-	s.server.Db.Delete(keys.OfferUserMembershipReadModel{}, "1 = 1")
-	s.server.Db.Delete(keys.OfferUserReadModel{}, "1 = 1")
+	s.server.Db.Delete(userreadmodels.UserReadModel{}, "1 = 1")
+	s.server.Db.Delete(groupreadmodels.MembershipReadModel{}, "1 = 1")
+	s.server.Db.Delete(groupreadmodels.GroupReadModel{}, "1 = 1")
+	s.server.Db.Delete(groupreadmodels.DBGroupUserReadModel{}, "1 = 1")
+	s.server.Db.Delete(resourcereadmodels.DbResourceReadModel{}, "1 = 1")
+	s.server.Db.Delete(resourcereadmodels.ResourceGroupNameReadModel{}, "1 = 1")
+	s.server.Db.Delete(resourcereadmodels.ResourceSharingReadModel{}, "1 = 1")
+	s.server.Db.Delete(tradingreadmodels.DBOfferReadModel{}, "1 = 1")
+	s.server.Db.Delete(tradingreadmodels.OfferItemReadModel{}, "1 = 1")
+	s.server.Db.Delete(tradingreadmodels.OfferResourceReadModel{}, "1 = 1")
+	s.server.Db.Delete(tradingreadmodels.OfferUserMembershipReadModel{}, "1 = 1")
+	s.server.Db.Delete(tradingreadmodels.OfferUserReadModel{}, "1 = 1")
 }
 
 func getDb(appConfig *config.AppConfig) *gorm.DB {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/commonpool/backend/pkg/auth/models"
 	"github.com/commonpool/backend/pkg/group/handler"
+	"github.com/commonpool/backend/pkg/group/readmodels"
 	"io/ioutil"
 	"strconv"
 	"testing"
@@ -50,7 +51,7 @@ func (s *IntegrationTestSuite) testUser(t *testing.T) (*models.UserSession, func
 	}(u)
 }
 
-func (s *IntegrationTestSuite) testGroup(t *testing.T, owner *models.UserSession, members ...*models.UserSession) (*handler.Group, error) {
+func (s *IntegrationTestSuite) testGroup(t *testing.T, owner *models.UserSession, members ...*models.UserSession) (*readmodels.GroupReadModel, error) {
 
 	ctx := context.Background()
 	s.groupCounter++
@@ -68,7 +69,7 @@ func (s *IntegrationTestSuite) testGroup(t *testing.T, owner *models.UserSession
 	}
 
 	for _, member := range members {
-		_, httpResponse = s.CreateOrAcceptInvitation(t, ctx, owner, &handler.CreateOrAcceptInvitationRequest{
+		httpResponse = s.CreateOrAcceptInvitation(ctx, owner, &handler.CreateOrAcceptInvitationRequest{
 			UserKey:  member.GetUserKey(),
 			GroupKey: response.Group.GroupKey,
 		})
@@ -79,7 +80,7 @@ func (s *IntegrationTestSuite) testGroup(t *testing.T, owner *models.UserSession
 			}
 			return nil, fmt.Errorf(string(bytes))
 		}
-		_, httpResponse = s.CreateOrAcceptInvitation(t, ctx, member, &handler.CreateOrAcceptInvitationRequest{
+		httpResponse = s.CreateOrAcceptInvitation(ctx, member, &handler.CreateOrAcceptInvitationRequest{
 			UserKey:  member.GetUserKey(),
 			GroupKey: response.Group.GroupKey,
 		})

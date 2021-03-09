@@ -98,6 +98,7 @@ type Server struct {
 	GetGroup                    *groupqueries.GetGroup
 	GetGroupByKeys              *groupqueries.GetGroupByKeys
 	GetMembership               *groupqueries.GetMembershipReadModel
+	GetUserMembership           *groupqueries.GetUserMemberships
 	GetOfferKeyForOfferItem     *queries.GetOfferKeyForOfferItemKey
 	GetResource                 *resourcequeries.GetResource
 	GetResourceWithSharings     *resourcequeries.GetResourceWithSharings
@@ -400,6 +401,7 @@ func NewServer() (*Server, error) {
 		GetGroup:                    getGroup,
 		GetGroupByKeys:              getGroupByKeys,
 		GetMembership:               getMembership,
+		GetUserMembership:           getUserMemberships,
 		GetOfferKeyForOfferItem:     getOfferKeyForOfferItemKeyQry,
 		GetResource:                 getResource,
 		GetResourceWithSharings:     getResourceWithSharings,

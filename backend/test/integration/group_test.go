@@ -16,20 +16,18 @@ import (
 	"time"
 )
 
-func (s *IntegrationTestSuite) CreateGroup(t *testing.T, ctx context.Context, userSession *models.UserSession, request *handler.CreateGroupRequest) (*handler.CreateGroupResponse, *http.Response) {
+func (s *IntegrationTestSuite) CreateGroup(t *testing.T, ctx context.Context, userSession *models.UserSession, request *handler.CreateGroupRequest) (*handler.GetGroupResponse, *http.Response) {
 	req, recorder := NewRequest(ctx, userSession, http.MethodPost, "/api/v1/groups", request)
 	s.server.Router.ServeHTTP(recorder, req)
-	response := &handler.CreateGroupResponse{}
+	response := &handler.GetGroupResponse{}
 	t.Log(recorder.Body.String())
 	return response, ReadResponse(s.T(), recorder, response)
 }
 
-func (s *IntegrationTestSuite) CreateOrAcceptInvitation(t *testing.T, ctx context.Context, userSession *models.UserSession, request *handler.CreateOrAcceptInvitationRequest) (*handler.CreateOrAcceptInvitationResponse, *http.Response) {
+func (s *IntegrationTestSuite) CreateOrAcceptInvitation(ctx context.Context, userSession *models.UserSession, request *handler.CreateOrAcceptInvitationRequest) *http.Response {
 	req, recorder := NewRequest(ctx, userSession, http.MethodPost, "/api/v1/memberships", request)
 	s.server.Router.ServeHTTP(recorder, req)
-	response := &handler.CreateOrAcceptInvitationResponse{}
-	t.Log(recorder.Body.String())
-	return response, ReadResponse(s.T(), recorder, response)
+	return ReadResponse(s.T(), recorder, nil)
 }
 
 func (s *IntegrationTestSuite) DeclineOrCancelInvitation(t *testing.T, ctx context.Context, userSession *models.UserSession, request *handler.CancelOrDeclineInvitationRequest) *http.Response {
@@ -76,8 +74,22 @@ func (s *IntegrationTestSuite) TestGroups() {
 	user3, delUser2 := s.testUser(s.T())
 	defer delUser2()
 
+	groupOwner, delGroupOwner := s.testUser(s.T())
+	defer delGroupOwner()
+
+	ctx := context.Background()
+	group, httpResponse := s.CreateGroup(s.T(), ctx, groupOwner, &handler.CreateGroupRequest{
+		Name:        "sample",
+		Description: "description",
+	})
+	if !AssertStatusCreated(s.T(), httpResponse) {
+		return
+	}
+	groupKey := group.Group.GroupKey
+
+	time.Sleep(1 * time.Second)
+
 	s.T().Run("CreateGroup", func(t *testing.T) {
-		t.Parallel()
 
 		ctx := context.Background()
 		response, httpResponse := s.CreateGroup(t, ctx, user1, &handler.CreateGroupRequest{
@@ -96,7 +108,6 @@ func (s *IntegrationTestSuite) TestGroups() {
 	})
 
 	s.T().Run("CreateGroupUnauthenticatedShouldFailWithUnauthorized", func(t *testing.T) {
-		t.Parallel()
 
 		ctx := context.Background()
 		_, httpResponse := s.CreateGroup(t, ctx, nil, &handler.CreateGroupRequest{
@@ -109,7 +120,6 @@ func (s *IntegrationTestSuite) TestGroups() {
 	})
 
 	s.T().Run("CreateGroupEmptyNameShouldFail", func(t *testing.T) {
-		t.Parallel()
 
 		ctx := context.Background()
 		_, httpResponse := s.CreateGroup(t, ctx, user1, &handler.CreateGroupRequest{
@@ -124,7 +134,6 @@ func (s *IntegrationTestSuite) TestGroups() {
 	})
 
 	s.T().Run("CreateGroupEmptyDescriptionShouldNotFail", func(t *testing.T) {
-		t.Parallel()
 
 		ctx := context.Background()
 		_, httpResponse := s.CreateGroup(t, ctx, user1, &handler.CreateGroupRequest{
@@ -138,34 +147,20 @@ func (s *IntegrationTestSuite) TestGroups() {
 	})
 
 	s.T().Run("CreateGroupShouldCreateOwnerMembership", func(t *testing.T) {
-		t.Parallel()
 
-		ctx := context.Background()
-		createGroup, httpResponse := s.CreateGroup(t, ctx, user1, &handler.CreateGroupRequest{
-			Name:        "sample",
-			Description: "description",
-		})
-
-		if !AssertStatusCreated(t, httpResponse) {
+		membership, err := s.server.GetMembership.Get(ctx, keys.NewMembershipKey(groupKey, groupOwner.GetUserKey()))
+		if !assert.NoError(t, err) {
 			return
 		}
-
-		groupKey := createGroup.Group.GroupKey
-		grps, _ := s.server.Group.Service.GetGroupMemberships(ctx, group2.NewGetMembershipsForGroupRequest(groupKey, nil))
-		if !assert.Len(t, grps.Memberships, 1) {
-			return
-		}
-		assert.Equal(t, true, grps.Memberships[0].IsOwner)
-		assert.Equal(t, true, grps.Memberships[0].UserConfirmed)
-		assert.Equal(t, true, grps.Memberships[0].GroupConfirmed)
-		assert.Equal(t, true, grps.Memberships[0].IsAdmin)
-		assert.Equal(t, true, grps.Memberships[0].IsMember)
-		assert.Equal(t, user1.Subject, grps.Memberships[0].UserKey)
-
+		assert.Equal(t, groupOwner.Subject, membership.UserKey)
+		assert.Equal(t, true, membership.IsOwner)
+		assert.Equal(t, true, membership.UserConfirmed)
+		assert.Equal(t, true, membership.GroupConfirmed)
+		assert.Equal(t, true, membership.IsAdmin)
+		assert.Equal(t, true, membership.IsMember)
 	})
 
 	s.T().Run("CreatingGroupShouldSubscribeOwnerToChanel", func(t *testing.T) {
-		t.Parallel()
 
 		ctx := context.Background()
 
@@ -202,34 +197,26 @@ func (s *IntegrationTestSuite) TestGroups() {
 	})
 
 	s.T().Run("OwnerShouldBeAbleToInviteUser", func(t *testing.T) {
-		t.Parallel()
 
-		ctx := context.Background()
-		grp, httpResponse := s.CreateGroup(t, ctx, user1, &handler.CreateGroupRequest{
-			Name:        "sample",
-			Description: "description",
-		})
-		if !AssertStatusCreated(t, httpResponse) {
-			return
-		}
+		user, delUser := s.testUser(s.T())
+		defer delUser()
 
-		_, httpResponse = s.CreateOrAcceptInvitation(t, ctx, user1, &handler.CreateOrAcceptInvitationRequest{
-			UserKey:  user2.GetUserKey(),
-			GroupKey: grp.Group.GroupKey,
+		httpResponse = s.CreateOrAcceptInvitation(ctx, groupOwner, &handler.CreateOrAcceptInvitationRequest{
+			UserKey:  user.GetUserKey(),
+			GroupKey: groupKey,
 		})
 		if !AssertStatusAccepted(t, httpResponse) {
 			return
 		}
 
-		membership, httpResponse := s.GetMembership(t, ctx, user1, user2.GetUserKey(), grp.Group.GroupKey)
+		membership, httpResponse := s.GetMembership(t, ctx, groupOwner, user.GetUserKey(), groupKey)
 		if !AssertOK(t, httpResponse) {
 			return
 		}
 
-		assert.Equal(t, user2.Subject, membership.Membership.UserID)
+		assert.Equal(t, user.Subject, membership.Membership.UserKey)
 		assert.Equal(t, false, membership.Membership.IsAdmin)
 		assert.Equal(t, false, membership.Membership.IsOwner)
-		assert.Equal(t, false, membership.Membership.IsDeactivated)
 		assert.Equal(t, false, membership.Membership.IsMember)
 		assert.Equal(t, true, membership.Membership.GroupConfirmed)
 		assert.Equal(t, false, membership.Membership.UserConfirmed)
@@ -237,28 +224,23 @@ func (s *IntegrationTestSuite) TestGroups() {
 	})
 
 	s.T().Run("InviteeShouldBeAbleToAcceptInvitationFromOwner", func(t *testing.T) {
-		t.Parallel()
 
 		ctx := context.Background()
-		createGroup, httpResponse := s.CreateGroup(t, ctx, user1, &handler.CreateGroupRequest{
-			Name:        "sample",
-			Description: "description",
-		})
-		if !AssertStatusCreated(t, httpResponse) {
-			return
-		}
 
-		_, httpResponse = s.CreateOrAcceptInvitation(t, ctx, user1, &handler.CreateOrAcceptInvitationRequest{
-			UserKey:  user2.GetUserKey(),
-			GroupKey: createGroup.Group.GroupKey,
+		user, delUser := s.testUser(s.T())
+		defer delUser()
+
+		httpResponse = s.CreateOrAcceptInvitation(ctx, groupOwner, &handler.CreateOrAcceptInvitationRequest{
+			UserKey:  user.GetUserKey(),
+			GroupKey: groupKey,
 		})
 		if !AssertStatusAccepted(t, httpResponse) {
 			return
 		}
 
-		_, httpResponse = s.CreateOrAcceptInvitation(t, ctx, user2, &handler.CreateOrAcceptInvitationRequest{
-			UserKey:  user2.GetUserKey(),
-			GroupKey: createGroup.Group.GroupKey,
+		httpResponse = s.CreateOrAcceptInvitation(ctx, user, &handler.CreateOrAcceptInvitationRequest{
+			UserKey:  user.GetUserKey(),
+			GroupKey: groupKey,
 		})
 		if !AssertStatusAccepted(t, httpResponse) {
 			return
@@ -266,7 +248,7 @@ func (s *IntegrationTestSuite) TestGroups() {
 
 		var membership *handler.GetMembershipResponse
 		err := retry.Do(func() error {
-			membership, httpResponse = s.GetMembership(t, ctx, user2, user2.GetUserKey(), createGroup.Group.GroupKey)
+			membership, httpResponse = s.GetMembership(t, ctx, user, user.GetUserKey(), groupKey)
 			if httpResponse.StatusCode != http.StatusOK {
 				return fmt.Errorf("invalid status code")
 			}
@@ -280,103 +262,95 @@ func (s *IntegrationTestSuite) TestGroups() {
 			return
 		}
 
-		assert.Equal(t, user2.Subject, membership.Membership.UserID)
+		assert.Equal(t, user.Subject, membership.Membership.UserKey)
 		assert.Equal(t, false, membership.Membership.IsAdmin)
 		assert.Equal(t, false, membership.Membership.IsOwner)
-		assert.Equal(t, false, membership.Membership.IsDeactivated)
 		assert.Equal(t, true, membership.Membership.IsMember)
 		assert.Equal(t, true, membership.Membership.GroupConfirmed)
 		assert.Equal(t, true, membership.Membership.UserConfirmed)
 	})
 
 	s.T().Run("InviteeShouldBeAbleToDeclineInvitationFromOwner", func(t *testing.T) {
-		t.Parallel()
 
 		ctx := context.Background()
-		createGroup, httpResponse := s.CreateGroup(t, ctx, user1, &handler.CreateGroupRequest{
-			Name:        "sample",
-			Description: "description",
-		})
-		if !AssertStatusCreated(t, httpResponse) {
-			return
-		}
-		_, httpResponse = s.CreateOrAcceptInvitation(t, ctx, user1, &handler.CreateOrAcceptInvitationRequest{
-			UserKey:  user2.GetUserKey(),
-			GroupKey: createGroup.Group.GroupKey,
+
+		user, delUser := s.testUser(s.T())
+		defer delUser()
+
+		httpResponse = s.CreateOrAcceptInvitation(ctx, groupOwner, &handler.CreateOrAcceptInvitationRequest{
+			UserKey:  user.GetUserKey(),
+			GroupKey: groupKey,
 		})
 		if !AssertStatusAccepted(t, httpResponse) {
 			return
 		}
 
-		httpResponse = s.DeclineOrCancelInvitation(t, ctx, user2, &handler.CancelOrDeclineInvitationRequest{
-			UserKey:  user2.GetUserKey(),
-			GroupKey: createGroup.Group.GroupKey,
+		httpResponse = s.DeclineOrCancelInvitation(t, ctx, user, &handler.CancelOrDeclineInvitationRequest{
+			UserKey:  user.GetUserKey(),
+			GroupKey: groupKey,
 		})
 		if !AssertStatusAccepted(t, httpResponse) {
 			return
 		}
 
-		_, err := s.server.Group.Store.GetMembership(ctx, keys.NewMembershipKey(createGroup.Group.GroupKey, user2.GetUserKey()))
+		time.Sleep(1 * time.Second)
+
+		_, err := s.server.GetMembership.Get(ctx, keys.NewMembershipKey(groupKey, user.GetUserKey()))
 		assert.True(t, errors.Is(err, exceptions.ErrMembershipNotFound))
 
 	})
 
 	s.T().Run("OwnerShouldBeAbleToDeclineInvitationFromOwner", func(t *testing.T) {
-		t.Parallel()
 
 		ctx := context.Background()
-		createGroup, httpResponse := s.CreateGroup(t, ctx, user1, &handler.CreateGroupRequest{
-			Name:        "sample",
-			Description: "description",
-		})
-		if !AssertStatusCreated(t, httpResponse) {
-			return
-		}
 
-		_, httpResponse = s.CreateOrAcceptInvitation(t, ctx, user2, &handler.CreateOrAcceptInvitationRequest{
-			UserKey:  user2.GetUserKey(),
-			GroupKey: createGroup.Group.GroupKey,
+		user, delUser := s.testUser(s.T())
+		defer delUser()
+
+		httpResponse = s.CreateOrAcceptInvitation(ctx, user, &handler.CreateOrAcceptInvitationRequest{
+			UserKey:  user.GetUserKey(),
+			GroupKey: groupKey,
 		})
 		if !AssertStatusAccepted(t, httpResponse) {
 			return
 		}
 
-		httpResponse = s.DeclineOrCancelInvitation(t, ctx, user1, &handler.CancelOrDeclineInvitationRequest{
-			UserKey:  user2.GetUserKey(),
-			GroupKey: createGroup.Group.GroupKey,
+		httpResponse = s.DeclineOrCancelInvitation(t, ctx, groupOwner, &handler.CancelOrDeclineInvitationRequest{
+			UserKey:  user.GetUserKey(),
+			GroupKey: groupKey,
 		})
 		if !AssertStatusAccepted(t, httpResponse) {
 			return
 		}
 
-		_, err := s.server.Group.Store.GetMembership(ctx, keys.NewMembershipKey(createGroup.Group.GroupKey, user2.GetUserKey()))
+		time.Sleep(1 * time.Second)
+
+		_, err := s.server.GetMembership.Get(ctx, keys.NewMembershipKey(groupKey, user.GetUserKey()))
 		assert.True(t, errors.Is(err, exceptions.ErrMembershipNotFound))
 
 	})
 
 	s.T().Run("RandomUserShouldNotBeAbleToAcceptInvitation", func(t *testing.T) {
-		t.Parallel()
 
 		ctx := context.Background()
-		grp, httpResponse := s.CreateGroup(t, ctx, user1, &handler.CreateGroupRequest{
-			Name:        "sample",
-			Description: "description",
-		})
-		if !AssertStatusCreated(t, httpResponse) {
-			return
-		}
 
-		_, httpResponse = s.CreateOrAcceptInvitation(t, ctx, user1, &handler.CreateOrAcceptInvitationRequest{
-			UserKey:  user2.GetUserKey(),
-			GroupKey: grp.Group.GroupKey,
+		user, delUser := s.testUser(s.T())
+		defer delUser()
+
+		randomUser, delrandomUser := s.testUser(s.T())
+		defer delrandomUser()
+
+		httpResponse = s.CreateOrAcceptInvitation(ctx, groupOwner, &handler.CreateOrAcceptInvitationRequest{
+			UserKey:  user.GetUserKey(),
+			GroupKey: groupKey,
 		})
 		if !AssertStatusAccepted(t, httpResponse) {
 			return
 		}
 
-		_, httpResponse = s.CreateOrAcceptInvitation(t, ctx, user3, &handler.CreateOrAcceptInvitationRequest{
-			UserKey:  user2.GetUserKey(),
-			GroupKey: grp.Group.GroupKey,
+		httpResponse = s.CreateOrAcceptInvitation(ctx, randomUser, &handler.CreateOrAcceptInvitationRequest{
+			UserKey:  user.GetUserKey(),
+			GroupKey: groupKey,
 		})
 		if !AssertStatusForbidden(t, httpResponse) {
 			return
@@ -385,34 +359,28 @@ func (s *IntegrationTestSuite) TestGroups() {
 	})
 
 	s.T().Run("PersonShouldBeAbleToRequestBeingInvitedInGroup", func(t *testing.T) {
-		t.Parallel()
 
 		ctx := context.Background()
-		grp, httpResponse := s.CreateGroup(t, ctx, user1, &handler.CreateGroupRequest{
-			Name:        "sample",
-			Description: "description",
-		})
-		if !AssertStatusCreated(t, httpResponse) {
-			return
-		}
 
-		_, httpResponse = s.CreateOrAcceptInvitation(t, ctx, user2, &handler.CreateOrAcceptInvitationRequest{
-			UserKey:  user2.GetUserKey(),
-			GroupKey: grp.Group.GroupKey,
+		user, delUser := s.testUser(s.T())
+		defer delUser()
+
+		httpResponse = s.CreateOrAcceptInvitation(ctx, user, &handler.CreateOrAcceptInvitationRequest{
+			UserKey:  user.GetUserKey(),
+			GroupKey: groupKey,
 		})
 		if !AssertStatusAccepted(t, httpResponse) {
 			return
 		}
 
-		membership, httpResponse := s.GetMembership(t, ctx, user2, user2.GetUserKey(), grp.Group.GroupKey)
+		membership, httpResponse := s.GetMembership(t, ctx, user, user.GetUserKey(), groupKey)
 		if !AssertOK(t, httpResponse) {
 			return
 		}
 
-		assert.Equal(t, user2.Subject, membership.Membership.UserID)
+		assert.Equal(t, user.Subject, membership.Membership.UserKey)
 		assert.Equal(t, false, membership.Membership.IsAdmin)
 		assert.Equal(t, false, membership.Membership.IsOwner)
-		assert.Equal(t, false, membership.Membership.IsDeactivated)
 		assert.Equal(t, false, membership.Membership.IsMember)
 		assert.Equal(t, false, membership.Membership.GroupConfirmed)
 		assert.Equal(t, true, membership.Membership.UserConfirmed)
@@ -420,49 +388,45 @@ func (s *IntegrationTestSuite) TestGroups() {
 	})
 
 	s.T().Run("OwnerShouldBeAbleToAcceptInvitationRequest", func(t *testing.T) {
-		t.Parallel()
 
 		ctx := context.Background()
-		grp, httpResponse := s.CreateGroup(t, ctx, user1, &handler.CreateGroupRequest{
-			Name:        "sample",
-			Description: "description",
-		})
-		if !AssertStatusCreated(t, httpResponse) {
-			return
-		}
 
-		_, httpResponse = s.CreateOrAcceptInvitation(t, ctx, user2, &handler.CreateOrAcceptInvitationRequest{
-			UserKey:  user2.GetUserKey(),
-			GroupKey: grp.Group.GroupKey,
+		user, delUser := s.testUser(s.T())
+		defer delUser()
+
+		httpResponse = s.CreateOrAcceptInvitation(ctx, groupOwner, &handler.CreateOrAcceptInvitationRequest{
+			UserKey:  user.GetUserKey(),
+			GroupKey: groupKey,
 		})
 		if !AssertStatusAccepted(t, httpResponse) {
 			return
 		}
 
-		_, httpResponse = s.CreateOrAcceptInvitation(t, ctx, user1, &handler.CreateOrAcceptInvitationRequest{
-			UserKey:  user2.GetUserKey(),
-			GroupKey: grp.Group.GroupKey,
+		httpResponse = s.CreateOrAcceptInvitation(ctx, user, &handler.CreateOrAcceptInvitationRequest{
+			UserKey:  user.GetUserKey(),
+			GroupKey: groupKey,
 		})
 		if !AssertStatusAccepted(t, httpResponse) {
 			return
 		}
 
-		membership, httpResponse := s.GetMembership(t, ctx, user2, user2.GetUserKey(), grp.Group.GroupKey)
+		time.Sleep(1 * time.Second)
+
+		membershipResponse, httpResponse := s.GetMembership(t, ctx, groupOwner, user.GetUserKey(), groupKey)
 		if !AssertOK(t, httpResponse) {
 			return
 		}
 
-		assert.Equal(t, user2.Subject, membership.Membership.UserID)
-		assert.Equal(t, false, membership.Membership.IsAdmin)
-		assert.Equal(t, false, membership.Membership.IsOwner)
-		assert.Equal(t, false, membership.Membership.IsDeactivated)
-		assert.Equal(t, true, membership.Membership.IsMember)
-		assert.Equal(t, true, membership.Membership.GroupConfirmed)
-		assert.Equal(t, true, membership.Membership.UserConfirmed)
+		membership := membershipResponse.Membership
+		assert.Equal(t, user.Subject, membership.UserKey)
+		assert.Equal(t, false, membership.IsAdmin)
+		assert.Equal(t, false, membership.IsOwner)
+		assert.Equal(t, true, membership.IsMember)
+		assert.Equal(t, true, membership.GroupConfirmed)
+		assert.Equal(t, true, membership.UserConfirmed)
 	})
 
 	s.T().Run("GroupShouldReceiveMessageWhenUserJoined", func(t *testing.T) {
-		t.Parallel()
 
 		ctx := context.Background()
 
@@ -479,7 +443,7 @@ func (s *IntegrationTestSuite) TestGroups() {
 			return
 		}
 
-		_, httpResponse = s.CreateOrAcceptInvitation(t, ctx, user2, &handler.CreateOrAcceptInvitationRequest{
+		httpResponse = s.CreateOrAcceptInvitation(ctx, user2, &handler.CreateOrAcceptInvitationRequest{
 			UserKey:  user2.GetUserKey(),
 			GroupKey: grp.Group.GroupKey,
 		})
@@ -487,7 +451,7 @@ func (s *IntegrationTestSuite) TestGroups() {
 			return
 		}
 
-		_, httpResponse = s.CreateOrAcceptInvitation(t, ctx, user1, &handler.CreateOrAcceptInvitationRequest{
+		httpResponse = s.CreateOrAcceptInvitation(ctx, user1, &handler.CreateOrAcceptInvitationRequest{
 			UserKey:  user2.GetUserKey(),
 			GroupKey: grp.Group.GroupKey,
 		})
@@ -555,7 +519,6 @@ func (s *IntegrationTestSuite) TestGroups() {
 	})
 
 	s.T().Run("GetUsersForInvitePickerShouldNotReturnDuplicates", func(t *testing.T) {
-		s.cleanDb()
 		ctx := context.Background()
 
 		_, httpResponse := s.CreateGroup(t, ctx, user1, &handler.CreateGroupRequest{
@@ -572,13 +535,6 @@ func (s *IntegrationTestSuite) TestGroups() {
 		if !AssertStatusCreated(t, httpResponse) {
 			return
 		}
-		_, httpResponse = s.CreateGroup(t, ctx, user1, &handler.CreateGroupRequest{
-			Name:        "sample",
-			Description: "description",
-		})
-		if !AssertStatusCreated(t, httpResponse) {
-			return
-		}
 		_, httpResponse = s.CreateGroup(t, ctx, user2, &handler.CreateGroupRequest{
 			Name:        "sample",
 			Description: "description",
@@ -587,20 +543,6 @@ func (s *IntegrationTestSuite) TestGroups() {
 			return
 		}
 		_, httpResponse = s.CreateGroup(t, ctx, user2, &handler.CreateGroupRequest{
-			Name:        "sample",
-			Description: "description",
-		})
-		if !AssertStatusCreated(t, httpResponse) {
-			return
-		}
-		_, httpResponse = s.CreateGroup(t, ctx, user2, &handler.CreateGroupRequest{
-			Name:        "sample",
-			Description: "description",
-		})
-		if !AssertStatusCreated(t, httpResponse) {
-			return
-		}
-		_, httpResponse = s.CreateGroup(t, ctx, user3, &handler.CreateGroupRequest{
 			Name:        "sample",
 			Description: "description",
 		})
@@ -622,51 +564,55 @@ func (s *IntegrationTestSuite) TestGroups() {
 			return
 		}
 
-		resp, httpResp := s.GetUsersForInvitePicker(t, ctx, grp.Group.GroupKey, 100, 0, user3)
+		resp, httpResponse := s.GetUsersForInvitePicker(t, ctx, grp.Group.GroupKey, 100, 0, user3)
 
-		assert.Equal(t, http.StatusOK, httpResp.StatusCode)
-		assert.Equal(t, 2, len(resp.Users))
+		if !AssertOK(t, httpResponse) {
+			return
+		}
 
+		seen := map[string]bool{}
+		for _, user := range resp.Users {
+			_, ok := seen[user.Username]
+			if !assert.False(t, ok) {
+				return
+			}
+			seen[user.Username] = true
+		}
 	})
 
 	s.T().Run("GetLoggedInUserMembershipsWithoutGroup", func(t *testing.T) {
-		t.Parallel()
+
 		ctx := context.Background()
-		getMemberships, getMembershipsHttp := s.GetLoggedInUserMemberships(t, ctx, user1)
+
+		user, delUser := s.testUser(t)
+		defer delUser()
+
+		getMemberships, getMembershipsHttp := s.GetLoggedInUserMemberships(t, ctx, user)
 		assert.Equal(t, http.StatusOK, getMembershipsHttp.StatusCode)
 		assert.Equal(t, 0, len(getMemberships.Memberships))
 	})
 
 	s.T().Run("TestGetLoggedInUserMembershipsWithGroup", func(t *testing.T) {
-		t.Parallel()
-		user, delUser := s.testUser(t)
-		defer delUser()
 
-		ctx := context.Background()
-		createGroup, httpResponse := s.CreateGroup(t, ctx, user, &handler.CreateGroupRequest{
-			Name:        "sample",
-			Description: "description",
-		})
-		if !AssertStatusCreated(t, httpResponse) {
-			return
-		}
-
-		getMemberships, httpResponse := s.GetLoggedInUserMemberships(t, ctx, user)
+		memberships, httpResponse := s.GetLoggedInUserMemberships(t, ctx, groupOwner)
 		if !AssertOK(t, httpResponse) {
 			return
 		}
 
-		if !assert.Len(t, getMemberships.Memberships, 1) {
+		if !assert.Len(t, memberships.Memberships, 1) {
 			return
 		}
-		assert.Equal(t, createGroup.Group.GroupKey, getMemberships.Memberships[0].GroupID)
-		assert.Equal(t, "sample", getMemberships.Memberships[0].GroupName)
-		assert.Equal(t, user.Subject, getMemberships.Memberships[0].UserID)
-		assert.Equal(t, user.Username, getMemberships.Memberships[0].UserName)
-		assert.Equal(t, true, getMemberships.Memberships[0].UserConfirmed)
-		assert.Equal(t, true, getMemberships.Memberships[0].GroupConfirmed)
-		assert.Equal(t, true, getMemberships.Memberships[0].IsMember)
-		assert.Equal(t, true, getMemberships.Memberships[0].IsOwner)
+
+		membership := memberships.Memberships[0]
+		assert.Equal(t, groupKey, membership.GroupKey)
+		assert.Equal(t, group.Group.Name, membership.GroupName)
+		assert.Equal(t, group.Group.GroupKey, membership.GroupKey)
+		assert.Equal(t, groupOwner.Subject, membership.UserKey)
+		assert.Equal(t, groupOwner.Username, membership.UserName)
+		assert.Equal(t, true, membership.UserConfirmed)
+		assert.Equal(t, true, membership.GroupConfirmed)
+		assert.Equal(t, true, membership.IsMember)
+		assert.Equal(t, true, membership.IsOwner)
 
 	})
 

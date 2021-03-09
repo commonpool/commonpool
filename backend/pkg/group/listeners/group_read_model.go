@@ -3,6 +3,7 @@ package listeners
 import (
 	"context"
 	"database/sql"
+	userdomain "github.com/commonpool/backend/pkg/auth/domain"
 	"github.com/commonpool/backend/pkg/eventbus"
 	"github.com/commonpool/backend/pkg/eventsource"
 	"github.com/commonpool/backend/pkg/group/domain"
@@ -26,17 +27,14 @@ func NewGroupReadModelListener(catchUpListenerFactory eventbus.CatchUpListenerFa
 }
 
 func (l *GroupReadModelListener) Start(ctx context.Context) error {
-
 	if err := l.migrateDatabase(); err != nil {
 		return err
 	}
-
 	factory := l.catchUpListenerFactory("locks.readmodels.group", time.Second*5)
-	if err := factory.Initialize(ctx, "listeners.group-readmodel", []string{
-		domain.GroupCreatedEvent,
-		domain.GroupInfoChangedEvent,
-		domain.MembershipStatusChangedEvent,
-	}); err != nil {
+	watchedEvents := domain.AllEvents
+	watchedEvents = append(watchedEvents, userdomain.UserDiscoveredEvent)
+	watchedEvents = append(watchedEvents, userdomain.UserInfoChangedEvent)
+	if err := factory.Initialize(ctx, "listeners.group-readmodel", watchedEvents); err != nil {
 		return err
 	}
 	return factory.Listen(ctx, l.applyEvents)
@@ -52,7 +50,7 @@ func (l *GroupReadModelListener) applyEvents(events []eventsource.Event) error {
 }
 
 func (l *GroupReadModelListener) migrateDatabase() error {
-	return l.db.AutoMigrate(&readmodels.GroupReadModel{}, &readmodels.MembershipReadModel{})
+	return l.db.AutoMigrate(&readmodels.GroupReadModel{}, &readmodels.MembershipReadModel{}, &readmodels.DBGroupUserReadModel{})
 }
 
 func (l *GroupReadModelListener) applyEvent(event eventsource.Event) error {
@@ -63,11 +61,32 @@ func (l *GroupReadModelListener) applyEvent(event eventsource.Event) error {
 		return l.applyGroupInfoChangedEvent(e)
 	case domain.MembershipStatusChanged:
 		return l.applyMembershipStatusChangedEvent(e)
+	case userdomain.UserDiscovered:
+		return l.handleUserDiscovered(e)
+	case userdomain.UserInfoChanged:
+		return l.handleUserInfoChanged(e)
 	}
 	return nil
 }
 
 func (l *GroupReadModelListener) applyMembershipStatusChangedEvent(e domain.MembershipStatusChanged) error {
+
+	var userName string
+	var userVersion = -1
+
+	if e.IsNewMembership || !e.IsCanceledMembership {
+		var user readmodels.DBGroupUserReadModel
+		qry := l.db.Model(&readmodels.DBGroupUserReadModel{}).Where("user_key = ?", e.MemberKey).Find(&user)
+		err := qry.Error
+		if err != nil {
+			return err
+		}
+		if qry.RowsAffected != 0 {
+			userName = user.Name
+			userVersion = user.Version
+		}
+	}
+
 	if e.IsNewMembership {
 
 		updates := map[string]interface{}{
@@ -80,6 +99,8 @@ func (l *GroupReadModelListener) applyMembershipStatusChangedEvent(e domain.Memb
 			"group_confirmed_by": nil,
 			"group_confirmed_at": nil,
 			"group_name":         e.GroupName,
+			"user_name":          userName,
+			"user_version":       userVersion,
 		}
 
 		applyMembershipChanged(updates, e)
@@ -176,7 +197,6 @@ func (l *GroupReadModelListener) applyGroupCreatedEvent(e domain.GroupCreated) e
 	if err != nil {
 		return err
 	}
-
 	return l.db.Clauses(
 		clause.OnConflict{
 			Where: clause.Where{
@@ -195,6 +215,38 @@ func (l *GroupReadModelListener) applyGroupCreatedEvent(e domain.GroupCreated) e
 		Description: e.GroupInfo.Description,
 		CreatedBy:   e.CreatedBy.String(),
 		CreatedAt:   e.EventTime,
+	}).Error
+}
+
+func (l *GroupReadModelListener) handleUserDiscovered(e userdomain.UserDiscovered) error {
+	userKey := keys.NewUserKey(e.AggregateID)
+	err := getOptimisticLocking(l.db, e.SequenceNo).Model(&readmodels.DBGroupUserReadModel{}).Create(&readmodels.DBGroupUserReadModel{
+		UserKey: userKey,
+		Name:    e.UserInfo.Username,
+		Version: e.SequenceNo,
+	}).Error
+	if err != nil {
+		return err
+	}
+	return l.db.Model(&readmodels.MembershipReadModel{}).Where("user_version < ?", e.SequenceNo).Updates(map[string]interface{}{
+		"user_name":    e.UserInfo.Username,
+		"user_version": e.SequenceNo,
+	}).Error
+}
+
+func (l *GroupReadModelListener) handleUserInfoChanged(e userdomain.UserInfoChanged) error {
+	userKey := keys.NewUserKey(e.AggregateID)
+	err := getOptimisticLocking(l.db, e.SequenceNo).Model(&readmodels.DBGroupUserReadModel{}).Create(&readmodels.DBGroupUserReadModel{
+		UserKey: userKey,
+		Name:    e.NewUserInfo.Username,
+		Version: e.SequenceNo,
+	}).Error
+	if err != nil {
+		return err
+	}
+	return l.db.Where("user_version < ?", e.SequenceNo).Model(&readmodels.MembershipReadModel{}).Updates(map[string]interface{}{
+		"user_name":    e.NewUserInfo.Username,
+		"user_version": e.SequenceNo,
 	}).Error
 }
 
@@ -225,4 +277,19 @@ func applyMembershipChanged(values map[string]interface{}, e domain.MembershipSt
 
 	values["status"] = e.NewStatus
 
+}
+
+func getOptimisticLocking(db *gorm.DB, version int) *gorm.DB {
+	return db.Clauses(
+		clause.OnConflict{
+			Where: clause.Where{
+				Exprs: []clause.Expression{
+					clause.Lt{
+						Column: "version",
+						Value:  version,
+					},
+				},
+			},
+			UpdateAll: true,
+		})
 }
