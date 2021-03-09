@@ -15,7 +15,7 @@ type ResourceTestSuite struct {
 	suite.Suite
 	user         keys.UserKey
 	user2        keys.UserKey
-	userTarget   keys.Target
+	userTarget   *keys.Target
 	resource     *Resource
 	resourceInfo ResourceInfo
 	group1       keys.GroupKey
@@ -29,7 +29,7 @@ func (s *ResourceTestSuite) SetupTest() {
 	r := NewResource(s.resourceKey)
 	s.user = keys.NewUserKey("user")
 	s.user2 = keys.NewUserKey("user2")
-	s.userTarget = *keys.NewUserTarget(s.user)
+	s.userTarget = keys.NewUserTarget(s.user)
 	s.group1 = keys.NewGroupKey(uuid.NewV4())
 	s.group2 = keys.NewGroupKey(uuid.NewV4())
 	s.group3 = keys.NewGroupKey(uuid.NewV4())
@@ -39,12 +39,14 @@ func (s *ResourceTestSuite) SetupTest() {
 			ValueFromDuration: 3 * time.Hour,
 			ValueToDuration:   5 * time.Hour,
 		},
-		Name:         "resource",
-		Description:  "description",
-		CallType:     Offer,
-		ResourceType: ServiceResource,
+		ResourceInfoBase: ResourceInfoBase{
+			Name:         "resource",
+			Description:  "description",
+			CallType:     Offer,
+			ResourceType: ServiceResource,
+		},
 	}
-	err := r.Register(s.user, s.userTarget, ServiceResource, s.resourceInfo, *keys.NewEmptyGroupKeys())
+	err := r.Register(s.user, s.userTarget, s.resourceInfo, keys.NewEmptyGroupKeys())
 	if !assert.NoError(s.T(), err) {
 		s.FailNow(err.Error())
 	}
@@ -54,7 +56,7 @@ func (s *ResourceTestSuite) SetupTest() {
 func (s *ResourceTestSuite) TestNewResource() {
 	r := NewResource(s.resourceKey)
 	user := keys.NewUserKey("user")
-	err := r.Register(user, *keys.NewUserTarget(user), ServiceResource, s.resourceInfo, *keys.NewGroupKeys([]keys.GroupKey{}))
+	err := r.Register(user, keys.NewUserTarget(user), s.resourceInfo, keys.NewGroupKeys([]keys.GroupKey{}))
 	if !assert.NoError(s.T(), err) {
 		return
 	}
@@ -64,7 +66,7 @@ func (s *ResourceTestSuite) TestNewResource() {
 func (s *ResourceTestSuite) TestNewResourceWithSharings() {
 	r := NewResource(s.resourceKey)
 	user := keys.NewUserKey("user")
-	err := r.Register(user, *keys.NewUserTarget(user), ServiceResource, s.resourceInfo, *keys.NewGroupKeys([]keys.GroupKey{
+	err := r.Register(user, keys.NewUserTarget(user), s.resourceInfo, keys.NewGroupKeys([]keys.GroupKey{
 		s.group1,
 	}))
 
@@ -81,25 +83,15 @@ func (s *ResourceTestSuite) TestNewResourceWithSharings() {
 }
 
 func (s *ResourceTestSuite) TestNewResourceShouldFailIfAlreadyCreated() {
-	err := s.resource.Register(s.user, s.userTarget, ServiceResource, s.resourceInfo, *keys.NewEmptyGroupKeys())
+	err := s.resource.Register(s.user, s.userTarget, s.resourceInfo, keys.NewEmptyGroupKeys())
 	if !assert.Error(s.T(), err) {
 		return
 	}
 }
 
 func (s *ResourceTestSuite) TestChangeInfo() {
-	newInfo := ResourceInfo{
-		Value: ResourceValueEstimation{
-			ValueType:         FromToDuration,
-			ValueFromDuration: 100 * time.Hour,
-			ValueToDuration:   200 * time.Hour,
-		},
-		Name:         "TestChangeInfo",
-		Description:  "TestChangeInfo-description",
-		ResourceType: ObjectResource,
-		CallType:     Offer,
-	}
-	err := s.resource.ChangeInfo(s.user2, newInfo)
+	newInfo := s.resourceInfo.WithName("bla").WithDescription("bli")
+	err := s.resource.ChangeInfo(s.user2, newInfo.AsUpdate())
 	if !assert.NoError(s.T(), err) {
 		return
 	}
@@ -108,7 +100,7 @@ func (s *ResourceTestSuite) TestChangeInfo() {
 
 func (s *ResourceTestSuite) TestChangeInfoIdempotent() {
 	currentChangeCount := len(s.resource.changes)
-	err := s.resource.ChangeInfo(s.user2, s.resourceInfo)
+	err := s.resource.ChangeInfo(s.user2, s.resourceInfo.AsUpdate())
 	if !assert.NoError(s.T(), err) {
 		return
 	}
@@ -117,7 +109,7 @@ func (s *ResourceTestSuite) TestChangeInfoIdempotent() {
 
 func (s *ResourceTestSuite) TestChangeInfoShouldFailIfNotRegistered() {
 	r := NewResource(keys.NewResourceKey(uuid.NewV4()))
-	err := r.ChangeInfo(s.user2, s.resourceInfo)
+	err := r.ChangeInfo(s.user2, s.resourceInfo.AsUpdate())
 	assert.Error(s.T(), err)
 }
 
@@ -125,19 +117,19 @@ func (s *ResourceTestSuite) TestChangeInfoShouldFailIfDeleted() {
 	if err := s.resource.Delete(s.user2); !assert.NoError(s.T(), err) {
 		return
 	}
-	err := s.resource.ChangeInfo(s.user2, s.resourceInfo)
+	err := s.resource.ChangeInfo(s.user2, s.resourceInfo.AsUpdate())
 	assert.Error(s.T(), err)
 }
 
 func (s *ResourceTestSuite) TestChangeInfoShouldFailIfNew() {
 	r := NewResource(s.resourceKey)
-	err := r.ChangeInfo(s.user2, s.resourceInfo)
+	err := r.ChangeInfo(s.user2, s.resourceInfo.AsUpdate())
 	assert.Error(s.T(), err)
 }
 
 func (s *ResourceTestSuite) TestChangeSharings() {
 
-	err := s.resource.ChangeSharings(s.user2, *keys.NewGroupKeys([]keys.GroupKey{
+	err := s.resource.ChangeSharings(s.user2, keys.NewGroupKeys([]keys.GroupKey{
 		s.group1,
 	}))
 	if !assert.NoError(s.T(), err) {
@@ -154,7 +146,7 @@ func (s *ResourceTestSuite) TestChangeSharings() {
 
 func (s *ResourceTestSuite) TestChangeSharingsShouldFailIfNew() {
 	r := NewResource(s.resourceKey)
-	err := r.ChangeSharings(s.user2, *keys.NewEmptyGroupKeys())
+	err := r.ChangeSharings(s.user2, keys.NewEmptyGroupKeys())
 	assert.Error(s.T(), err)
 }
 
@@ -163,12 +155,12 @@ func (s *ResourceTestSuite) TestChangeSharingsShouldFailIfDeleted() {
 	if !assert.NoError(s.T(), err) {
 		return
 	}
-	err = s.resource.ChangeSharings(s.user2, *keys.NewEmptyGroupKeys())
+	err = s.resource.ChangeSharings(s.user2, keys.NewEmptyGroupKeys())
 	assert.Error(s.T(), err)
 }
 
 func (s *ResourceTestSuite) TestChangeSharingsDuplicateKeys() {
-	err := s.resource.ChangeSharings(s.user2, *keys.NewGroupKeys([]keys.GroupKey{
+	err := s.resource.ChangeSharings(s.user2, keys.NewGroupKeys([]keys.GroupKey{
 		s.group1,
 		s.group1,
 		s.group1,
@@ -182,7 +174,7 @@ func (s *ResourceTestSuite) TestChangeSharingsDuplicateKeys() {
 func (s *ResourceTestSuite) TestChangeSharingsIdempotent() {
 
 	for i := 0; i < 2; i++ {
-		err := s.resource.ChangeSharings(s.user2, *keys.NewGroupKeys([]keys.GroupKey{
+		err := s.resource.ChangeSharings(s.user2, keys.NewGroupKeys([]keys.GroupKey{
 			s.group1,
 		}))
 		if !assert.NoError(s.T(), err) {
@@ -200,7 +192,7 @@ func (s *ResourceTestSuite) TestChangeSharingsIdempotent() {
 }
 func (s *ResourceTestSuite) TestChangeSharingsEvtDifference() {
 
-	err := s.resource.ChangeSharings(s.user2, *keys.NewGroupKeys([]keys.GroupKey{
+	err := s.resource.ChangeSharings(s.user2, keys.NewGroupKeys([]keys.GroupKey{
 		s.group1,
 		s.group2,
 	}))
@@ -208,7 +200,7 @@ func (s *ResourceTestSuite) TestChangeSharingsEvtDifference() {
 		return
 	}
 
-	err = s.resource.ChangeSharings(s.user2, *keys.NewGroupKeys([]keys.GroupKey{
+	err = s.resource.ChangeSharings(s.user2, keys.NewGroupKeys([]keys.GroupKey{
 		s.group2,
 		s.group3,
 	}))
@@ -295,7 +287,7 @@ func (s *ResourceTestSuite) TestFromEvents() {
 
 func (s *ResourceTestSuite) TestMapEvents() {
 
-	err := s.resource.ChangeInfo(s.user2, ResourceInfo{
+	newInfo := ResourceInfoUpdate{
 		Value: ResourceValueEstimation{
 			ValueType:         FromToDuration,
 			ValueFromDuration: 5 * time.Hour,
@@ -303,12 +295,12 @@ func (s *ResourceTestSuite) TestMapEvents() {
 		},
 		Name:        "TestMapEvents",
 		Description: "TestMapEvents-desc",
-	})
+	}
+	err := s.resource.ChangeInfo(s.user2, newInfo)
 	if !assert.NoError(s.T(), err) {
 		return
 	}
-
-	err = s.resource.ChangeSharings(s.user, *keys.NewGroupKeys([]keys.GroupKey{s.group2}))
+	err = s.resource.ChangeSharings(s.user, keys.NewGroupKeys([]keys.GroupKey{s.group2}))
 	if !assert.NoError(s.T(), err) {
 		return
 	}

@@ -13,7 +13,8 @@ var groupInfo GroupInfo = GroupInfo{
 
 func TestGroup(t *testing.T) {
 
-	group := NewGroup()
+	gk := keys.GenerateGroupKey()
+	group := NewGroup(gk)
 	owner := keys.NewUserKey("owner")
 
 	if err := group.CreateGroup(owner, groupInfo); !assert.NoError(t, err) {
@@ -52,7 +53,8 @@ func TestGroup(t *testing.T) {
 
 func TestUserInvitedByMember(t *testing.T) {
 
-	group := NewGroup()
+	gk := keys.GenerateGroupKey()
+	group := NewGroup(gk)
 	owner := keys.NewUserKey("owner")
 	if err := group.CreateGroup(owner, groupInfo); !assert.NoError(t, err) {
 		return
@@ -84,7 +86,8 @@ func TestUserInvitedByMember(t *testing.T) {
 
 func TestMemberAskedToJoin(t *testing.T) {
 
-	group := NewGroup()
+	gk := keys.GenerateGroupKey()
+	group := NewGroup(gk)
 	owner := keys.NewUserKey("owner")
 	if err := group.CreateGroup(owner, groupInfo); !assert.NoError(t, err) {
 		return
@@ -119,7 +122,8 @@ func TestMemberAskedToJoin(t *testing.T) {
 }
 
 func TestJoinGroupIdempotent(t *testing.T) {
-	group := NewGroup()
+	gk := keys.GenerateGroupKey()
+	group := NewGroup(gk)
 	owner := keys.NewUserKey("owner")
 	if err := group.CreateGroup(owner, groupInfo); !assert.NoError(t, err) {
 		return
@@ -150,8 +154,8 @@ func TestJoinGroupIdempotent(t *testing.T) {
 }
 
 func TestJoinGroupShouldFailIfUserIsNotAdmin(t *testing.T) {
-
-	group := NewGroup()
+	gk := keys.GenerateGroupKey()
+	group := NewGroup(gk)
 	owner := keys.NewUserKey("owner")
 	if err := group.CreateGroup(owner, groupInfo); !assert.NoError(t, err) {
 		return
@@ -167,7 +171,8 @@ func TestJoinGroupShouldFailIfUserIsNotAdmin(t *testing.T) {
 }
 
 func TestOwnerAssignsPermission(t *testing.T) {
-	group := NewGroup()
+	gk := keys.GenerateGroupKey()
+	group := NewGroup(gk)
 	owner := keys.NewUserKey("owner")
 	user1 := keys.NewUserKey("user1")
 
@@ -193,7 +198,8 @@ func TestOwnerAssignsPermission(t *testing.T) {
 }
 
 func TestAdminAssignsPermission(t *testing.T) {
-	group := NewGroup()
+	gk := keys.GenerateGroupKey()
+	group := NewGroup(gk)
 	owner := keys.NewUserKey("owner")
 	admin := keys.NewUserKey("admin")
 	user1 := keys.NewUserKey("user1")
@@ -239,8 +245,8 @@ func TestAdminAssignsPermission(t *testing.T) {
 }
 
 func TestAdminGrantsOwnerPermissionsShouldFail(t *testing.T) {
-
-	group := NewGroup()
+	gk := keys.GenerateGroupKey()
+	group := NewGroup(gk)
 	owner := keys.NewUserKey("owner")
 	admin := keys.NewUserKey("admin")
 	user1 := keys.NewUserKey("user1")
@@ -276,8 +282,8 @@ func TestAdminGrantsOwnerPermissionsShouldFail(t *testing.T) {
 }
 
 func TestMemberGrantsPermissionsShouldFail(t *testing.T) {
-
-	group := NewGroup()
+	gk := keys.GenerateGroupKey()
+	group := NewGroup(gk)
 	owner := keys.NewUserKey("owner")
 	user1 := keys.NewUserKey("user1")
 	user2 := keys.NewUserKey("user2")
@@ -313,8 +319,8 @@ func TestMemberGrantsPermissionsShouldFail(t *testing.T) {
 }
 
 func TestLeaveGroup(t *testing.T) {
-
-	group := NewGroup()
+	gk := keys.GenerateGroupKey()
+	group := NewGroup(gk)
 	owner := keys.NewUserKey("owner")
 	user1 := keys.NewUserKey("user1")
 	user2 := keys.NewUserKey("user2")

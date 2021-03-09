@@ -48,7 +48,7 @@ func (s *UserReadModelTestSuite) saveAndLoadEvents(user *domain.User, alsoHandle
 }
 
 func (s *UserReadModelTestSuite) SetupSuite() {
-	s.db = db.NewTestDb()
+	s.db = db.NewTestDb("UserReadModelTestSuite")
 	evtMapper := eventsource.NewEventMapper()
 
 	if err := domain.RegisterEvents(evtMapper); err != nil {

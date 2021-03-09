@@ -26,7 +26,7 @@ type RepositoryTestSuite struct {
 }
 
 func (s *RepositoryTestSuite) SetupSuite() {
-	s.db = db.NewTestDb()
+	s.db = db.NewTestDb("RepositoryTestSuite")
 	if err := s.db.AutoMigrate(&eventstore.StreamEvent{}, eventstore.Stream{}); err != nil {
 		s.T().Fatal(err)
 	}

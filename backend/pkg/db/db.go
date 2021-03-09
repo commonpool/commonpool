@@ -11,8 +11,8 @@ import (
 	"time"
 )
 
-func NewTestDb() *gorm.DB {
-	db, err := gorm.Open(sqlite.Open("./realworld_test.db"), &gorm.Config{
+func NewTestDb(name string) *gorm.DB {
+	db, err := gorm.Open(sqlite.Open(fmt.Sprintf("./test-%s.db", name)), &gorm.Config{
 		SkipDefaultTransaction: true,
 	})
 	if err != nil {

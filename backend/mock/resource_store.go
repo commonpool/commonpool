@@ -6,7 +6,6 @@ package mock
 import (
 	"context"
 	"github.com/commonpool/backend/pkg/keys"
-	"github.com/commonpool/backend/pkg/resource"
 	"sync"
 )
 

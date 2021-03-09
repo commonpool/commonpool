@@ -83,7 +83,7 @@ func (r *RabbitCommandBus) Start(ctx context.Context) error {
 					if err != nil {
 						return err
 					}
-					if err := handler.HandleCommand(ctx, cmd); err != nil {
+					if err := handler.HandleCommand(ctx, cmd).GetError(); err != nil {
 						return err
 					}
 					if err := msg.Acknowledger.Ack(msg.DeliveryTag, false); err != nil {

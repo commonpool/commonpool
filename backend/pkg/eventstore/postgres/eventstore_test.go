@@ -22,7 +22,7 @@ type EventStoreSuite struct {
 }
 
 func (s *EventStoreSuite) SetupSuite() {
-	s.testDB = db.NewTestDb()
+	s.testDB = db.NewTestDb("EventStoreSuite")
 	if err := s.testDB.AutoMigrate(&eventstore.StreamEvent{}, &eventstore.Stream{}); err != nil {
 		s.T().FailNow()
 	}

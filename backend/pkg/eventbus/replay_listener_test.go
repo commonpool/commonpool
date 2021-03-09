@@ -23,7 +23,7 @@ type ReplayListenerTestSuite struct {
 
 func (s *ReplayListenerTestSuite) SetupSuite() {
 	s.ctx = context.Background()
-	s.db = db.NewTestDb()
+	s.db = db.NewTestDb("ReplayListenerTestSuite")
 	if err := s.db.AutoMigrate(&eventstore.StreamEvent{}, eventstore.Stream{}); err != nil {
 		s.T().Fatal(err)
 	}

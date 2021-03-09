@@ -34,7 +34,7 @@ type ReadModelTestSuite struct {
 func (s *ReadModelTestSuite) SetupSuite() {
 
 	// database
-	db := db2.NewTestDb()
+	db := db2.NewTestDb("ReadModelTestSuite")
 	s.db = db
 
 	// Create event mapper
@@ -254,6 +254,11 @@ func (s *ReadModelTestSuite) TestShouldCreateResourceWhenResourceCreated() {
 			UpdatedAt:         evts[1].GetEventTime(),
 			GroupSharingCount: 1,
 			Version:           1,
+			Owner: keys.Target{
+				UserKey:  &userKey,
+				GroupKey: nil,
+				Type:     keys.UserTarget,
+			},
 		},
 		ResourceInfo: domain.ResourceInfo{
 			ResourceInfoBase: domain.ResourceInfoBase{
@@ -340,7 +345,12 @@ func (s *ReadModelTestSuite) TestShouldUpdateResourceWhenResourceInfoChanged() {
 			UpdatedByName:     userInfo2.Username,
 			UpdatedAt:         evts[2].GetEventTime(),
 			GroupSharingCount: 1,
-			Version:           1,
+			Version:           2,
+			Owner: keys.Target{
+				UserKey:  &userKey1,
+				GroupKey: nil,
+				Type:     keys.UserTarget,
+			},
 		},
 		ResourceInfo: domain.ResourceInfo{
 			ResourceInfoBase: domain.ResourceInfoBase{
@@ -418,7 +428,7 @@ func (s *ReadModelTestSuite) TestShouldUpdateSharings() {
 		return
 	}
 
-	if err := resource.ChangeSharings(userKey, *keys.NewGroupKeys([]keys.GroupKey{groupKey2})); !assert.NoError(s.T(), err) {
+	if err := resource.ChangeSharings(userKey, keys.NewGroupKeys([]keys.GroupKey{groupKey2})); !assert.NoError(s.T(), err) {
 		return
 	}
 
@@ -442,6 +452,11 @@ func (s *ReadModelTestSuite) TestShouldUpdateSharings() {
 			UpdatedAt:         evts[2].GetEventTime(),
 			GroupSharingCount: 1,
 			Version:           2,
+			Owner: keys.Target{
+				UserKey:  &userKey,
+				GroupKey: nil,
+				Type:     keys.UserTarget,
+			},
 		},
 		ResourceInfo: domain.ResourceInfo{
 			ResourceInfoBase: domain.ResourceInfoBase{

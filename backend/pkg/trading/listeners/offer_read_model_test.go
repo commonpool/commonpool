@@ -40,7 +40,7 @@ type OfferReadModelTestSuite struct {
 }
 
 func (s *OfferReadModelTestSuite) SetupSuite() {
-	db := db2.NewTestDb()
+	db := db2.NewTestDb("OfferReadModelTestSuite")
 	s.db = db
 	listener := &OfferReadModelHandler{
 		db: db,
@@ -333,6 +333,7 @@ func (s *OfferReadModelTestSuite) Test() {
 	expected := readmodels.OfferReadModel{
 		OfferReadModelBase: readmodels.OfferReadModelBase{
 			OfferKey:    offerKey,
+			GroupKey:    group1Key,
 			Status:      tradingdomain.Pending,
 			Version:     2,
 			DeclinedAt:  nil,

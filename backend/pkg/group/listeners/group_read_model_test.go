@@ -28,7 +28,7 @@ type GroupReadModelTestSuite struct {
 }
 
 func (s *GroupReadModelTestSuite) SetupSuite() {
-	s.db = db.NewTestDb()
+	s.db = db.NewTestDb("GroupReadModelTestSuite")
 	s.l = &GroupReadModelListener{
 		db: s.db,
 	}
@@ -57,7 +57,8 @@ func (s *GroupReadModelTestSuite) SetupSuite() {
 
 func (s *GroupReadModelTestSuite) TestGroupReadModelCreateGroup() {
 
-	g := domain.NewGroup()
+	gk := keys.GenerateGroupKey()
+	g := domain.NewGroup(gk)
 	owner := keys.NewUserKey("TestGroupReadModelCreateGroup-Owner")
 	ownerMembershipKey := keys.NewMembershipKey(g.GetKey(), owner)
 
@@ -107,8 +108,8 @@ func (s *GroupReadModelTestSuite) TestGroupReadModelCreateGroup() {
 	}
 
 	assert.Equal(s.T(), 1, membership.Version)
-	assert.Equal(s.T(), owner.String(), membership.UserKey)
-	assert.Equal(s.T(), g.GetKey().String(), membership.GroupKey)
+	assert.Equal(s.T(), owner, membership.UserKey)
+	assert.Equal(s.T(), g.GetKey(), membership.GroupKey)
 	assert.Equal(s.T(), true, membership.IsMember)
 	assert.Equal(s.T(), true, membership.IsAdmin)
 	assert.Equal(s.T(), true, membership.IsOwner)
@@ -123,7 +124,8 @@ func (s *GroupReadModelTestSuite) TestGroupReadModelCreateGroup() {
 
 func (s *GroupReadModelTestSuite) TestChangeGroupInfo() {
 
-	g := domain.NewGroup()
+	gk := keys.GenerateGroupKey()
+	g := domain.NewGroup(gk)
 	owner := keys.NewUserKey("TestGroupReadModelCreateGroup-Owner")
 	ownerMembershipKey := keys.NewMembershipKey(g.GetKey(), owner)
 
@@ -181,7 +183,8 @@ func (s *GroupReadModelTestSuite) TestChangeGroupInfo() {
 
 func (s *GroupReadModelTestSuite) TestInviteUser() {
 
-	g := domain.NewGroup()
+	gk := keys.GenerateGroupKey()
+	g := domain.NewGroup(gk)
 	owner := keys.NewUserKey("TestInviteUser-Owner")
 	user := keys.NewUserKey("TestInviteUser-User")
 
@@ -224,14 +227,15 @@ func (s *GroupReadModelTestSuite) TestInviteUser() {
 	assert.False(s.T(), userMembership.IsOwner)
 	assert.False(s.T(), userMembership.IsAdmin)
 	assert.False(s.T(), userMembership.IsMember)
-	assert.Equal(s.T(), g.GetKey().String(), userMembership.GroupKey)
-	assert.Equal(s.T(), user.String(), userMembership.UserKey)
+	assert.Equal(s.T(), g.GetKey(), userMembership.GroupKey)
+	assert.Equal(s.T(), user, userMembership.UserKey)
 	assert.Equal(s.T(), 2, userMembership.Version)
 }
 
 func (s *GroupReadModelTestSuite) TestUserAcceptedInvitation() {
 
-	g := domain.NewGroup()
+	gk := keys.GenerateGroupKey()
+	g := domain.NewGroup(gk)
 	owner := keys.NewUserKey("TestUserAcceptedInvitation-Owner")
 	user := keys.NewUserKey("TestUserAcceptedInvitation-User")
 
@@ -278,15 +282,16 @@ func (s *GroupReadModelTestSuite) TestUserAcceptedInvitation() {
 	assert.False(s.T(), userMembership.IsOwner)
 	assert.False(s.T(), userMembership.IsAdmin)
 	assert.True(s.T(), userMembership.IsMember)
-	assert.Equal(s.T(), g.GetKey().String(), userMembership.GroupKey)
-	assert.Equal(s.T(), user.String(), userMembership.UserKey)
+	assert.Equal(s.T(), g.GetKey(), userMembership.GroupKey)
+	assert.Equal(s.T(), user, userMembership.UserKey)
 	assert.Equal(s.T(), 3, userMembership.Version)
 
 }
 
 func (s *GroupReadModelTestSuite) TestJoinGroup() {
 
-	g := domain.NewGroup()
+	gk := keys.GenerateGroupKey()
+	g := domain.NewGroup(gk)
 	owner := keys.NewUserKey("TestJoinGroup-Owner")
 	user := keys.NewUserKey("TestJoinGroup-User")
 
@@ -329,15 +334,16 @@ func (s *GroupReadModelTestSuite) TestJoinGroup() {
 	assert.False(s.T(), userMembership.IsOwner)
 	assert.False(s.T(), userMembership.IsAdmin)
 	assert.False(s.T(), userMembership.IsMember)
-	assert.Equal(s.T(), g.GetKey().String(), userMembership.GroupKey)
-	assert.Equal(s.T(), user.String(), userMembership.UserKey)
+	assert.Equal(s.T(), g.GetKey(), userMembership.GroupKey)
+	assert.Equal(s.T(), user, userMembership.UserKey)
 	assert.Equal(s.T(), 2, userMembership.Version)
 
 }
 
 func (s *GroupReadModelTestSuite) TestGroupAcceptedInvitation() {
 
-	g := domain.NewGroup()
+	gk := keys.GenerateGroupKey()
+	g := domain.NewGroup(gk)
 	owner := keys.NewUserKey("TestGroupAcceptedInvitation-Owner")
 	user := keys.NewUserKey("TestGroupAcceptedInvitation-User")
 
@@ -384,15 +390,16 @@ func (s *GroupReadModelTestSuite) TestGroupAcceptedInvitation() {
 	assert.False(s.T(), userMembership.IsOwner)
 	assert.False(s.T(), userMembership.IsAdmin)
 	assert.True(s.T(), userMembership.IsMember)
-	assert.Equal(s.T(), g.GetKey().String(), userMembership.GroupKey)
-	assert.Equal(s.T(), user.String(), userMembership.UserKey)
+	assert.Equal(s.T(), g.GetKey(), userMembership.GroupKey)
+	assert.Equal(s.T(), user, userMembership.UserKey)
 	assert.Equal(s.T(), 3, userMembership.Version)
 
 }
 
 func (s *GroupReadModelTestSuite) TestPermissionChanged() {
 
-	g := domain.NewGroup()
+	gk := keys.GenerateGroupKey()
+	g := domain.NewGroup(gk)
 	owner := keys.NewUserKey("TestPermissionChanged-Owner")
 	user := keys.NewUserKey("TestPermissionChanged-User")
 
@@ -442,7 +449,8 @@ func (s *GroupReadModelTestSuite) TestPermissionChanged() {
 
 func (s *GroupReadModelTestSuite) TestLeftGroup() {
 
-	g := domain.NewGroup()
+	gk := keys.GenerateGroupKey()
+	g := domain.NewGroup(gk)
 	owner := keys.NewUserKey("TestLeftGroup-Owner")
 	user := keys.NewUserKey("TestLeftGroup-User")
 

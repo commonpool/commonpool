@@ -19,7 +19,7 @@ type MembershipReadModel struct {
 	Version          int           `gorm:"not null"`
 	GroupKey         keys.GroupKey `gorm:"not null;type:varchar(128);primaryKey"`
 	GroupName        string        `gorm:"type:varchar(128)"`
-	UserKey          string        `gorm:"not null;type:varchar(128);primaryKey"`
+	UserKey          keys.UserKey  `gorm:"not null;type:varchar(128);primaryKey"`
 	IsOwner          bool          `gorm:"not null"`
 	IsAdmin          bool          `gorm:"not null"`
 	IsMember         bool          `gorm:"not null"`

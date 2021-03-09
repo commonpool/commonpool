@@ -21,3 +21,5 @@ tmp/
 **/realworld_test.db
 
 tmp
+
+**/test*.db
