@@ -25,10 +25,11 @@ type SubmitOfferItem struct {
 	OfferItemKey keys.OfferItemKey
 }
 
-func NewResourceTransferItemInputBase(to keys.Targetter, resourceKey keys.ResourceKey) SubmitOfferItemBase {
+func NewResourceTransferItemInputBase(to keys.Targetter, resourceKey keys.ResourceKeyGetter) SubmitOfferItemBase {
+	rkey := resourceKey.GetResourceKey()
 	return SubmitOfferItemBase{
 		OfferItemType: ResourceTransfer,
-		ResourceKey:   &resourceKey,
+		ResourceKey:   &rkey,
 		To:            to.Target(),
 	}
 }

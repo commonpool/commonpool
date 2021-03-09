@@ -17,6 +17,7 @@ import (
 	"go.uber.org/zap"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type Handler struct {
@@ -74,6 +75,10 @@ type GetMembershipsResponse struct {
 
 type GetGroupResponse struct {
 	Group *readmodels.GroupReadModel `json:"group"`
+}
+
+func (g GetGroupResponse) GetGroupKey() keys.GroupKey {
+	return g.Group.GroupKey
 }
 
 func (g GetGroupResponse) Target() *keys.Target {
@@ -230,7 +235,7 @@ func (h *Handler) GetMembership(c echo.Context) error {
 			return err
 		}
 		return nil
-	})
+	}, retry.MaxDelay(200*time.Millisecond), retry.Attempts(10), retry.LastErrorOnly(true))
 	if err != nil {
 		return err
 	}

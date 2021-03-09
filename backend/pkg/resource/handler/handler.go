@@ -75,6 +75,25 @@ type GetResourceResponse struct {
 	Resource *readmodel.ResourceWithSharingsReadModel `json:"resource"`
 }
 
+func (g GetResourceResponse) GetResourceKey() keys.ResourceKey {
+	return g.Resource.ResourceKey
+}
+
+func (g GetResourceResponse) AsUpdate() *UpdateResourceRequest {
+	var sharedWith InputResourceSharings
+	for _, sharing := range g.Resource.Sharings {
+		sharedWith = append(sharedWith, InputResourceSharing{
+			GroupKey: sharing.GroupKey,
+		})
+	}
+	return &UpdateResourceRequest{
+		Resource: UpdateResourcePayload{
+			ResourceInfo: g.Resource.ResourceInfo.AsUpdate(),
+			SharedWith:   sharedWith,
+		},
+	}
+}
+
 // GetResource
 // @Summary Gets a single resource
 // @Description Gets a resource by id
@@ -105,6 +124,14 @@ type SearchResourcesResponse struct {
 	Take      int                                        `json:"take"`
 	Skip      int                                        `json:"skip"`
 	Resources []*readmodel.ResourceWithSharingsReadModel `json:"resources"`
+}
+
+func (r SearchResourcesResponse) GetResourceKeys() []keys.ResourceKey {
+	var result []keys.ResourceKey
+	for _, resource := range r.Resources {
+		result = append(result, resource.ResourceKey)
+	}
+	return result
 }
 
 // SearchResources godoc
@@ -206,7 +233,7 @@ type CreateResourcePayload struct {
 	SharedWith   InputResourceSharings `json:"sharings"`
 }
 
-func NewCreateResourcePayload(resourceInfo domain.ResourceInfo, groupKeys ...keys.GroupKey) CreateResourcePayload {
+func NewCreateResourcePayload(resourceInfo domain.ResourceInfo, groupKeys ...keys.GroupKeyGetter) CreateResourcePayload {
 	return CreateResourcePayload{}.WithResourceInfo(resourceInfo).SharedWithGroups(groupKeys...)
 }
 
@@ -217,11 +244,11 @@ func (p CreateResourcePayload) WithResourceInfo(resourceInfo domain.ResourceInfo
 	}
 }
 
-func (p CreateResourcePayload) SharedWithGroups(groupKeys ...keys.GroupKey) CreateResourcePayload {
+func (p CreateResourcePayload) SharedWithGroups(groupKeys ...keys.GroupKeyGetter) CreateResourcePayload {
 	var sharings InputResourceSharings
 	for _, groupKey := range groupKeys {
 		sharings = append(sharings, InputResourceSharing{
-			GroupKey: groupKey,
+			GroupKey: groupKey.GetGroupKey(),
 		})
 	}
 	return CreateResourcePayload{
@@ -343,9 +370,43 @@ type UpdateResourceRequest struct {
 	Resource UpdateResourcePayload `json:"resource"`
 }
 
+func (u UpdateResourceRequest) WithShared(groups ...keys.GroupKeyGetter) *UpdateResourceRequest {
+	var groupKeys []InputResourceSharing
+	for _, getter := range groups {
+		groupKeys = append(groupKeys, InputResourceSharing{
+			GroupKey: getter.GetGroupKey(),
+		})
+	}
+	return &UpdateResourceRequest{
+		Resource: UpdateResourcePayload{
+			ResourceInfo: u.Resource.ResourceInfo,
+			SharedWith:   groupKeys,
+		},
+	}
+}
+
 type UpdateResourcePayload struct {
 	ResourceInfo domain.ResourceInfoUpdate `json:"info"`
 	SharedWith   InputResourceSharings     `json:"sharedWith"`
+}
+
+func NewUpdateResourcePayload(resourceInfo domain.ResourceInfoUpdate, sharedWith ...keys.GroupKeyGetter) UpdateResourcePayload {
+	var groupKeys []InputResourceSharing
+	for _, getter := range sharedWith {
+		groupKeys = append(groupKeys, InputResourceSharing{
+			GroupKey: getter.GetGroupKey(),
+		})
+	}
+	return UpdateResourcePayload{
+		ResourceInfo: resourceInfo,
+		SharedWith:   groupKeys,
+	}
+}
+
+func (u UpdateResourcePayload) AsRequest() *UpdateResourceRequest {
+	return &UpdateResourceRequest{
+		Resource: u,
+	}
 }
 
 // UpdateResource

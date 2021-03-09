@@ -94,10 +94,10 @@ type SendOfferPayload struct {
 	Message  string                       `json:"message"`
 }
 
-func NewSendOfferPayload(groupKey keys.GroupKey, items ...domain.SubmitOfferItemBase) SendOfferPayload {
+func NewSendOfferPayload(groupKey keys.GroupKeyGetter, items ...domain.SubmitOfferItemBase) SendOfferPayload {
 	return SendOfferPayload{
 		Items:    items,
-		GroupKey: groupKey,
+		GroupKey: groupKey.GetGroupKey(),
 		Message:  "",
 	}
 }

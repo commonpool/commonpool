@@ -17,7 +17,7 @@ func (e WebServiceException) Error() string {
 }
 
 func (e WebServiceException) Is(err error) bool {
-	a, ok := err.(WebServiceException)
+	a, ok := err.(*WebServiceException)
 	if !ok {
 		return false
 	}

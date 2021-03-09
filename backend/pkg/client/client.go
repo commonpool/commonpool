@@ -5,6 +5,7 @@ import (
 	"github.com/commonpool/backend/pkg/auth/models"
 	grouphandler "github.com/commonpool/backend/pkg/group/handler"
 	"github.com/commonpool/backend/pkg/keys"
+	"github.com/commonpool/backend/pkg/resource/domain"
 	resourcehandler "github.com/commonpool/backend/pkg/resource/handler"
 	tradinghandler "github.com/commonpool/backend/pkg/trading/handler"
 	"github.com/gorilla/websocket"
@@ -21,9 +22,13 @@ type Client interface {
 	GetMembership(ctx context.Context, membershipKey keys.MembershipKey, output *grouphandler.GetMembershipResponse) error
 	GetMemberInvitationPicker(ctx context.Context, groupKey keys.GroupKey, query string, skip, take int, response *grouphandler.GetUsersForGroupInvitePickerResponse) error
 	// Resources
+	GetResource(ctx context.Context, resourceKey keys.ResourceKeyGetter, out *resourcehandler.GetResourceResponse) error
 	CreateResource(ctx context.Context, resource *resourcehandler.CreateResourceRequest, out *resourcehandler.GetResourceResponse) error
+	UpdateResource(ctx context.Context, resourceKey keys.ResourceKeyGetter, resource *resourcehandler.UpdateResourceRequest, out *resourcehandler.GetResourceResponse) error
+	SearchResources(ctx context.Context, query string, callType *domain.CallType, resourceType *domain.ResourceType, skip, take int, sharedWithGroup keys.GroupKeyGetter, output *resourcehandler.SearchResourcesResponse) error
 	// Trading
 	SubmitOffer(ctx context.Context, offer *tradinghandler.SendOfferRequest, out *tradinghandler.GetOfferResponse) error
+	GetOffer(ctx context.Context, offerKey keys.OfferKeyGetter, out *tradinghandler.GetOfferResponse) error
 	AcceptOffer(ctx context.Context, offerKey keys.OfferKeyGetter) error
 	DeclineOffer(ctx context.Context, offerKey keys.OfferKeyGetter) error
 	ConfirmResourceGiven(ctx context.Context, offerKey keys.OfferKeyGetter, offerItemKey keys.OfferItemKey) error

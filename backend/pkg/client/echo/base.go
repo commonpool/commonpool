@@ -42,7 +42,7 @@ func (e *Client) assertResponseCode(statusCode int, resp *http.Response, body []
 			return fmt.Errorf("could not unmarshal error response")
 		}
 		if errResponse.Code == "" {
-			return fmt.Errorf("error occured on server side, but could not decode error")
+			return fmt.Errorf("error occured on server side, but could not decode error: %s", string(body))
 		}
 		return errResponse
 	}

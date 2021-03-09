@@ -16,7 +16,7 @@ import (
 
 type GroupTestSuite struct {
 	suite.Suite
-	*IntegrationTestSuite
+	*IntegrationTestBase
 	groupOwner    *models.UserSession
 	groupKey      keys.GroupKey
 	group         *handler.GetGroupResponse
@@ -24,23 +24,24 @@ type GroupTestSuite struct {
 }
 
 func TestGroupTestSuite(t *testing.T) {
-	suite.Run(t, new(GroupTestSuite))
+	suite.Run(t, &GroupTestSuite{})
 }
 
 func (s *GroupTestSuite) SetupSuite() {
-	s.IntegrationTestSuite = &IntegrationTestSuite{}
-	s.IntegrationTestSuite.SetupSuite()
-	ctx := context.Background()
-	cli := s.NewClient(s.groupOwner)
-	var group handler.GetGroupResponse
-	if !assert.NoError(s.T(), cli.CreateGroup(ctx, &handler.CreateGroupRequest{
-		Name:        "sample",
-		Description: "description",
-	}, &group)) {
+	s.IntegrationTestBase = &IntegrationTestBase{}
+	s.IntegrationTestBase.Setup()
+
+	groupOwner, _ := s.testUserCli(s.T())
+
+	var response handler.GetGroupResponse
+	if err := s.testGroup2(s.T(), groupOwner, &response); !assert.NoError(s.T(), err) {
 		return
 	}
-	s.group = &group
-	s.groupKey = s.group.Group.GroupKey
+
+	s.groupOwner = groupOwner
+	s.group = &response
+	s.groupKey = response.GetGroupKey()
+
 	time.Sleep(1 * time.Second)
 }
 
@@ -49,6 +50,7 @@ func (s *GroupTestSuite) NewClient(user *models.UserSession) client.Client {
 }
 
 func (s *GroupTestSuite) TestCreateGroup() {
+	s.T().Parallel()
 	ctx := context.Background()
 
 	var _, cli = s.testUserCli(s.T())
@@ -66,6 +68,7 @@ func (s *GroupTestSuite) TestCreateGroup() {
 }
 
 func (s *GroupTestSuite) TestCreateGroupUnauthenticatedShouldFailWithUnauthorized() {
+	s.T().Parallel()
 	err := s.NewClient(nil).CreateGroup(context.Background(), handler.NewCreateGroupRequest("sample", "description"), &handler.GetGroupResponse{})
 	if !assert.Error(s.T(), err) {
 		return
@@ -73,6 +76,7 @@ func (s *GroupTestSuite) TestCreateGroupUnauthenticatedShouldFailWithUnauthorize
 }
 
 func (s *GroupTestSuite) TestCreateGroupEmptyNameShouldFail() {
+	s.T().Parallel()
 	ctx := context.Background()
 	var _, cli = s.testUserCli(s.T())
 	assert.Error(s.T(), cli.CreateGroup(ctx, handler.NewCreateGroupRequest("", "description"), &handler.GetGroupResponse{}))
@@ -80,32 +84,33 @@ func (s *GroupTestSuite) TestCreateGroupEmptyNameShouldFail() {
 }
 
 func (s *GroupTestSuite) TestCreateGroupEmptyDescriptionShouldNotFail() {
+	s.T().Parallel()
 	ctx := context.Background()
 	var _, cli = s.testUserCli(s.T())
 	assert.NoError(s.T(), cli.CreateGroup(ctx, handler.NewCreateGroupRequest("name", ""), &handler.GetGroupResponse{}))
 }
 
 func (s *GroupTestSuite) TestCreateGroupShouldCreateOwnerMembership() {
-	t := s.T()
+	s.T().Parallel()
 	ctx := context.TODO()
-	membership, err := s.server.GetMembership.Get(ctx, keys.NewMembershipKey(s.groupKey, s.groupOwner.GetUserKey()))
-	if !assert.NoError(t, err) {
+	membership, err := s.server.GetMembership.Get(ctx, keys.NewMembershipKey(s.groupKey, s.groupOwner))
+	if !assert.NoError(s.T(), err) {
 		return
 	}
-	assert.Equal(t, s.groupOwner.GetUserKey(), membership.UserKey)
-	assert.Equal(t, true, membership.IsOwner)
-	assert.Equal(t, true, membership.UserConfirmed)
-	assert.Equal(t, true, membership.GroupConfirmed)
-	assert.Equal(t, true, membership.IsAdmin)
-	assert.Equal(t, true, membership.IsMember)
+	assert.Equal(s.T(), s.groupOwner.GetUserKey(), membership.UserKey)
+	assert.Equal(s.T(), true, membership.IsOwner)
+	assert.Equal(s.T(), true, membership.UserConfirmed)
+	assert.Equal(s.T(), true, membership.GroupConfirmed)
+	assert.Equal(s.T(), true, membership.IsAdmin)
+	assert.Equal(s.T(), true, membership.IsMember)
 }
 
 func (s *GroupTestSuite) TestOwnerShouldBeAbleToInviteUser() {
-
+	s.T().Parallel()
 	ctx := context.TODO()
 	user, _ := s.testUser(s.T())
 	ownerCli := s.NewClient(s.groupOwner)
-	membershipKey := keys.NewMembershipKey(s.groupKey, user.GetUserKey())
+	membershipKey := keys.NewMembershipKey(s.groupKey, user)
 
 	if !assert.NoError(s.T(), ownerCli.JoinGroup(ctx, membershipKey)) {
 		return
@@ -125,13 +130,15 @@ func (s *GroupTestSuite) TestOwnerShouldBeAbleToInviteUser() {
 }
 
 func (s *GroupTestSuite) TestInviteeShouldBeAbleToAcceptInvitationFromOwner() {
+	s.T().Parallel()
+
 	ctx := context.Background()
 
-	user, _ := s.testUser(s.T())
-	membershipKey := keys.NewMembershipKey(s.groupKey, user.GetUserKey())
-
 	ownerCli := s.NewClient(s.groupOwner)
+
+	user, _ := s.testUser(s.T())
 	userCli := s.NewClient(user)
+	membershipKey := keys.NewMembershipKey(s.groupKey, user)
 
 	if !assert.NoError(s.T(), ownerCli.JoinGroup(ctx, membershipKey)) {
 		return
@@ -140,6 +147,8 @@ func (s *GroupTestSuite) TestInviteeShouldBeAbleToAcceptInvitationFromOwner() {
 	if !assert.NoError(s.T(), userCli.JoinGroup(ctx, membershipKey)) {
 		return
 	}
+
+	time.Sleep(time.Second)
 
 	var membership handler.GetMembershipResponse
 	if !assert.NoError(s.T(), userCli.GetMembership(ctx, membershipKey, &membership)) {
@@ -156,10 +165,11 @@ func (s *GroupTestSuite) TestInviteeShouldBeAbleToAcceptInvitationFromOwner() {
 }
 
 func (s *GroupTestSuite) TestInviteeShouldBeAbleToDeclineInvitationFromOwner() {
+	s.T().Parallel()
 	ctx := context.Background()
 
 	user, _ := s.testUser(s.T())
-	membershipKey := keys.NewMembershipKey(s.groupKey, user.GetUserKey())
+	membershipKey := keys.NewMembershipKey(s.groupKey, user)
 
 	ownerCli := s.NewClient(s.groupOwner)
 	userCli := s.NewClient(user)
@@ -168,6 +178,8 @@ func (s *GroupTestSuite) TestInviteeShouldBeAbleToDeclineInvitationFromOwner() {
 	if !assert.NoError(s.T(), ownerCli.JoinGroup(ctx, membershipKey)) {
 		return
 	}
+
+	time.Sleep(time.Second)
 
 	if !assert.NoError(s.T(), userCli.GetMembership(ctx, membershipKey, &handler.GetMembershipResponse{})) {
 		return
@@ -178,6 +190,8 @@ func (s *GroupTestSuite) TestInviteeShouldBeAbleToDeclineInvitationFromOwner() {
 		return
 	}
 
+	time.Sleep(time.Second)
+
 	err := userCli.GetMembership(ctx, membershipKey, &handler.GetMembershipResponse{})
 	assert.Error(s.T(), err)
 	assert.ErrorIs(s.T(), err, exceptions.ErrMembershipNotFound)
@@ -185,10 +199,11 @@ func (s *GroupTestSuite) TestInviteeShouldBeAbleToDeclineInvitationFromOwner() {
 }
 
 func (s *GroupTestSuite) TestOwnerShouldBeAbleToDeclineInvitationFromOwner() {
+	s.T().Parallel()
 	ctx := context.Background()
 
 	user, _ := s.testUser(s.T())
-	membershipKey := keys.NewMembershipKey(s.groupKey, user.GetUserKey())
+	membershipKey := keys.NewMembershipKey(s.groupKey, user)
 
 	ownerCli := s.NewClient(s.groupOwner)
 	userCli := s.NewClient(user)
@@ -207,6 +222,8 @@ func (s *GroupTestSuite) TestOwnerShouldBeAbleToDeclineInvitationFromOwner() {
 		return
 	}
 
+	time.Sleep(time.Second)
+
 	err := userCli.GetMembership(ctx, membershipKey, &handler.GetMembershipResponse{})
 	assert.Error(s.T(), err)
 	assert.ErrorIs(s.T(), err, exceptions.ErrMembershipNotFound)
@@ -214,10 +231,11 @@ func (s *GroupTestSuite) TestOwnerShouldBeAbleToDeclineInvitationFromOwner() {
 }
 
 func (s *GroupTestSuite) TestRandomUserShouldNotBeAbleToAcceptOrDeclineInvitation() {
+	s.T().Parallel()
 	ctx := context.Background()
 
 	user, _ := s.testUser(s.T())
-	membershipKey := keys.NewMembershipKey(s.groupKey, user.GetUserKey())
+	membershipKey := keys.NewMembershipKey(s.groupKey, user)
 	userCli := s.NewClient(user)
 
 	randomUser, _ := s.testUser(s.T())
@@ -246,9 +264,10 @@ func (s *GroupTestSuite) TestRandomUserShouldNotBeAbleToAcceptOrDeclineInvitatio
 }
 
 func (s *GroupTestSuite) TestPersonShouldBeAbleToRequestBeingInvitedInGroup() {
+	s.T().Parallel()
 	ctx := context.Background()
 	user, userCli := s.testUserCli(s.T())
-	membershipKey := keys.NewMembershipKey(s.groupKey, user.GetUserKey())
+	membershipKey := keys.NewMembershipKey(s.groupKey, user)
 
 	// user requests invitation
 	if !assert.NoError(s.T(), userCli.JoinGroup(ctx, membershipKey)) {
@@ -271,11 +290,13 @@ func (s *GroupTestSuite) TestPersonShouldBeAbleToRequestBeingInvitedInGroup() {
 }
 
 func (s *GroupTestSuite) TestOwnerShouldBeAbleToAcceptInvitationRequest() {
+	s.T().Parallel()
 	ctx := context.Background()
 
 	ownerCli := s.NewClient(s.groupOwner)
+
 	user, userCli := s.testUserCli(s.T())
-	membershipKey := keys.NewMembershipKey(s.groupKey, user.GetUserKey())
+	membershipKey := keys.NewMembershipKey(s.groupKey, user)
 
 	// user requests invitation
 	if !assert.NoError(s.T(), userCli.JoinGroup(ctx, membershipKey)) {
@@ -286,6 +307,8 @@ func (s *GroupTestSuite) TestOwnerShouldBeAbleToAcceptInvitationRequest() {
 	if !assert.NoError(s.T(), ownerCli.JoinGroup(ctx, membershipKey)) {
 		return
 	}
+
+	time.Sleep(time.Second)
 
 	// get membership
 	membership := &handler.GetMembershipResponse{}
@@ -302,6 +325,7 @@ func (s *GroupTestSuite) TestOwnerShouldBeAbleToAcceptInvitationRequest() {
 }
 
 func (s *GroupTestSuite) TestGetLoggedInUserMembershipsWithoutGroup() {
+	s.T().Parallel()
 	ctx := context.Background()
 	_, userCli := s.testUserCli(s.T())
 	var memberships handler.GetMembershipsResponse
@@ -312,6 +336,7 @@ func (s *GroupTestSuite) TestGetLoggedInUserMembershipsWithoutGroup() {
 }
 
 func (s *GroupTestSuite) TestTestGetLoggedInUserMembershipsWithGroup() {
+	s.T().Parallel()
 
 	ctx := context.Background()
 	ownerCli := s.NewClient(s.groupOwner)
@@ -338,12 +363,15 @@ func (s *GroupTestSuite) TestTestGetLoggedInUserMembershipsWithGroup() {
 }
 
 func (s *GroupTestSuite) TestGroupShouldReceiveMessageWhenUserJoined() {
+	s.T().Parallel()
+
 	ctx := context.Background()
 
 	_, user1Cli := s.testUserCli(s.T())
 	user2, user2Cli := s.testUserCli(s.T())
 
 	ws, err := user1Cli.GetWebsocketClient()
+
 	if !assert.NoError(s.T(), err) {
 		return
 	}
@@ -421,7 +449,7 @@ func (s *GroupTestSuite) TestGroupShouldReceiveMessageWhenUserJoined() {
 }
 
 func (s *GroupTestSuite) TestGetUsersForInvitePickerShouldNotReturnDuplicates() {
-	t := s.T()
+	s.T().Parallel()
 	ctx := context.Background()
 
 	var userClis []client.Client
@@ -449,7 +477,7 @@ func (s *GroupTestSuite) TestGetUsersForInvitePickerShouldNotReturnDuplicates() 
 		seen := map[string]bool{}
 		for _, user := range response.Users {
 			_, ok := seen[user.Username]
-			if !assert.False(t, ok, "found duplicate user %s in results", user.Username) {
+			if !assert.False(s.T(), ok, "found duplicate user %s in results", user.Username) {
 				return
 			}
 			seen[user.Username] = true

@@ -280,13 +280,6 @@ func (l *ResourceReadModelHandler) handleResourceGroupSharingChanged(ctx context
 		return err
 	}
 	g, ctx := errgroup.WithContext(ctx)
-	g.Go(func() error {
-		return l.db.Model(&readmodel.DbResourceReadModel{}).Where("resource_key = ?", resourceKey).Updates(map[string]interface{}{
-			"group_sharing_count": len(e.NewResourceSharings),
-			"version":             e.SequenceNo,
-			"updated_at":          e.EventTime,
-		}).Error
-	})
 	if len(e.RemovedSharings) > 0 {
 		g.Go(func() error {
 			deleteSql := "resource_key = ? and group_key in ("
@@ -331,7 +324,14 @@ func (l *ResourceReadModelHandler) handleResourceGroupSharingChanged(ctx context
 		}
 		return nil
 	})
-	return g.Wait()
+	if err := g.Wait(); err != nil {
+		return err
+	}
+	return l.db.Model(&readmodel.DbResourceReadModel{}).Where("resource_key = ?", resourceKey).Updates(map[string]interface{}{
+		"group_sharing_count": len(e.NewResourceSharings),
+		"version":             e.SequenceNo,
+		"updated_at":          e.EventTime,
+	}).Error
 }
 
 func (l *ResourceReadModelHandler) handleResourceDeleted(ctx context.Context, e domain.ResourceDeleted) error {

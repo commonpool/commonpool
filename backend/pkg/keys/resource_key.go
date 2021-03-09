@@ -13,6 +13,14 @@ type ResourceKey struct {
 	ID uuid.UUID
 }
 
+type ResourceKeyGetter interface {
+	GetResourceKey() ResourceKey
+}
+
+func (r ResourceKey) GetResourceKey() ResourceKey {
+	return r
+}
+
 func NewResourceKey(id uuid.UUID) ResourceKey {
 	return ResourceKey{
 		ID: id,

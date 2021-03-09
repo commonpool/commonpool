@@ -5,7 +5,6 @@ import (
 	"github.com/commonpool/backend/pkg/auth/models"
 	userreadmodels "github.com/commonpool/backend/pkg/auth/readmodel"
 	chatstore "github.com/commonpool/backend/pkg/chat/store"
-	"github.com/commonpool/backend/pkg/config"
 	"github.com/commonpool/backend/pkg/eventstore"
 	groupreadmodels "github.com/commonpool/backend/pkg/group/readmodels"
 	resourcereadmodels "github.com/commonpool/backend/pkg/resource/readmodel"
@@ -13,56 +12,32 @@ import (
 	tradingreadmodels "github.com/commonpool/backend/pkg/trading/readmodels"
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/suite"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 	_ "net/http/pprof"
 	"sync"
 	"testing"
 )
 
-type IntegrationTestSuite struct {
-	suite.Suite
-	server            *server.Server
-	userIncrementer   int
+var (
+	userIncrementer   = 0
+	groupCounter      = 0
 	userIncrementerMu sync.Mutex
 	createUserLock    sync.Mutex
-	groupCounter      int
+)
+
+type IntegrationTestBase struct {
+	server *server.Server
 }
 
-func TestIntegration(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
-}
-
-func (s *IntegrationTestSuite) SetupSuite() {
-	s.userIncrementer = 0
-	s.userIncrementerMu = sync.Mutex{}
-	s.groupCounter = 0
+func (i *IntegrationTestBase) Setup() {
 	srv, err := server.NewServer()
 	if err != nil {
 		print(err.Error())
 	}
-	s.server = srv
-	s.cleanDb()
+	i.server = srv
+	i.cleanDb()
 }
 
-func (s *IntegrationTestSuite) NewUser() *models.UserSession {
-	s.userIncrementerMu.Lock()
-	defer func() {
-		s.userIncrementerMu.Unlock()
-	}()
-	s.userIncrementer++
-	var userId = uuid.NewV4().String()
-	userEmail := fmt.Sprintf("user%d@email.com", s.userIncrementer)
-	userName := fmt.Sprintf("user%d", s.userIncrementer)
-	return &models.UserSession{
-		Username:        userName,
-		Subject:         userId,
-		Email:           userEmail,
-		IsAuthenticated: true,
-	}
-}
-
-func (s *IntegrationTestSuite) cleanDb() {
+func (s *IntegrationTestBase) cleanDb() {
 
 	session := s.server.GraphDriver.GetSession()
 
@@ -90,11 +65,34 @@ func (s *IntegrationTestSuite) cleanDb() {
 	s.server.Db.Delete(tradingreadmodels.OfferUserReadModel{}, "1 = 1")
 }
 
-func getDb(appConfig *config.AppConfig) *gorm.DB {
-	cs := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable", appConfig.DbHost, appConfig.DbUsername, appConfig.DbPassword, appConfig.DbName, appConfig.DbPort)
-	database, err := gorm.Open(postgres.Open(cs), &gorm.Config{})
-	if err != nil {
-		panic(err)
+type IntegrationTestSuite struct {
+	suite.Suite
+	*IntegrationTestBase
+	server *server.Server
+}
+
+func TestIntegration(t *testing.T) {
+	suite.Run(t, new(IntegrationTestSuite))
+}
+
+func (s *IntegrationTestSuite) SetupSuite() {
+	s.IntegrationTestBase = &IntegrationTestBase{}
+	s.IntegrationTestBase.Setup()
+}
+
+func (s *IntegrationTestBase) NewUser() *models.UserSession {
+	userIncrementerMu.Lock()
+	defer func() {
+		userIncrementerMu.Unlock()
+	}()
+	userIncrementer++
+	var userId = uuid.NewV4().String()
+	userEmail := fmt.Sprintf("user%d@email.com", userIncrementer)
+	userName := fmt.Sprintf("user%d", userIncrementer)
+	return &models.UserSession{
+		Username:        userName,
+		Subject:         userId,
+		Email:           userEmail,
+		IsAuthenticated: true,
 	}
-	return database
 }
