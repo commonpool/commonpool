@@ -206,15 +206,15 @@ func (o *Offer) Submit(submittedBy keys.UserKey, groupKey keys.GroupKey, offerIt
 }
 
 func (o *Offer) ApproveAll(approver keys.UserKey, permissionGetter OfferPermissionGetter) error {
-	for offerItemKey, item := range o.offerItemMap {
-		if permissionGetter.Can(approver, item, Inbound) {
-			if err := o.ApproveOfferItem(approver, offerItemKey, Inbound, permissionGetter); err != nil {
-				return err
+	for _, direction := range []ApprovalDirection{Inbound, Outbound} {
+		for offerItemKey, item := range o.offerItemMap {
+			if o.status == Approved {
+				return nil
 			}
-		}
-		if permissionGetter.Can(approver, item, Outbound) {
-			if err := o.ApproveOfferItem(approver, offerItemKey, Outbound, permissionGetter); err != nil {
-				return err
+			if permissionGetter.Can(approver, item, direction) {
+				if err := o.ApproveOfferItem(approver, offerItemKey, direction, permissionGetter); err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -668,6 +668,10 @@ func (o *Offer) GetResourceKeys() *keys.ResourceKeys {
 
 func (o *Offer) GetKey() keys.OfferKey {
 	return o.key
+}
+
+func (o *Offer) GetGroupKey() keys.GroupKey {
+	return o.groupKey
 }
 
 func (o *Offer) GetSequenceNo() int {

@@ -8,326 +8,328 @@ import (
 	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/pkg/group/handler"
 	"github.com/commonpool/backend/pkg/keys"
-	"github.com/stretchr/testify/suite"
+	"github.com/commonpool/backend/pkg/server"
+	"github.com/labstack/gommon/log"
+	"github.com/stretchr/testify/assert"
 	"golang.org/x/sync/errgroup"
+	"os"
 	"testing"
 	"time"
 )
 
-type GroupTestSuite struct {
-	suite.Suite
-	*IntegrationTestBase
+var srv *server.Server
+
+func TestMain(m *testing.M) {
+	var err error
+	srv, err = server.NewServer()
+	cleanDb()
+	if err != nil {
+		log.Error(err.Error())
+		os.Exit(1)
+	}
+	code := m.Run()
+	os.Exit(code)
 }
 
-func TestGroupTestSuite(t *testing.T) {
-	suite.Run(t, &GroupTestSuite{})
+func NewClient(user *models.UserSession) client.Client {
+	return echo.NewEchoClient(srv.Router, client.NewMockAuthentication(user))
 }
 
-func (s *GroupTestSuite) SetupSuite() {
-	s.IntegrationTestBase = &IntegrationTestBase{}
-	s.IntegrationTestBase.Setup()
-	time.Sleep(1 * time.Second)
-}
-
-func (s *GroupTestSuite) NewClient(user *models.UserSession) client.Client {
-	return echo.NewEchoClient(s.server.Router, client.NewMockAuthentication(user))
-}
-
-func (s *GroupTestSuite) TestCreateGroup() {
+func TestCreateGroup(t *testing.T) {
 
 	ctx := context.Background()
 
-	var _, cli = s.testUserCli(s.T())
+	var _, cli = testUserCli(t)
 
 	var response = &handler.GetGroupResponse{}
-	if !s.NoError(cli.CreateGroup(ctx, handler.NewCreateGroupRequest("sample", "description"), response)) {
+	if !assert.NoError(t, cli.CreateGroup(ctx, handler.NewCreateGroupRequest("sample", "description"), response)) {
 		return
 	}
 
-	s.NotNil(response.Group)
-	s.Equal(response.Group.Name, "sample")
-	s.Equal(response.Group.Description, "description")
-	s.NotEmpty(response.Group.GroupKey)
-	s.NotEmpty(response.Group.CreatedAt)
+	assert.NotNil(t, response.Group)
+	assert.Equal(t, response.Group.Name, "sample")
+	assert.Equal(t, response.Group.Description, "description")
+	assert.NotEmpty(t, response.Group.GroupKey)
+	assert.NotEmpty(t, response.Group.CreatedAt)
 }
 
-func (s *GroupTestSuite) TestCreateGroupUnauthenticatedShouldFailWithUnauthorized() {
+func TestCreateGroupUnauthenticatedShouldFailWithUnauthorized(t *testing.T) {
 
-	err := s.NewClient(nil).CreateGroup(context.Background(), handler.NewCreateGroupRequest("sample", "description"), &handler.GetGroupResponse{})
-	if !s.Error(err) {
+	err := NewClient(nil).CreateGroup(context.Background(), handler.NewCreateGroupRequest("sample", "description"), &handler.GetGroupResponse{})
+	if !assert.Error(t, err) {
 		return
 	}
 }
 
-func (s *GroupTestSuite) TestCreateGroupEmptyNameShouldFail() {
+func TestCreateGroupEmptyNameShouldFail(t *testing.T) {
 
 	ctx := context.Background()
-	var _, cli = s.testUserCli(s.T())
-	s.Error(cli.CreateGroup(ctx, handler.NewCreateGroupRequest("", "description"), &handler.GetGroupResponse{}))
-	s.Error(cli.CreateGroup(ctx, handler.NewCreateGroupRequest("   ", "description"), &handler.GetGroupResponse{}))
+	var _, cli = testUserCli(t)
+	assert.Error(t, cli.CreateGroup(ctx, handler.NewCreateGroupRequest("", "description"), &handler.GetGroupResponse{}))
+	assert.Error(t, cli.CreateGroup(ctx, handler.NewCreateGroupRequest("   ", "description"), &handler.GetGroupResponse{}))
 }
 
-func (s *GroupTestSuite) TestCreateGroupEmptyDescriptionShouldNotFail() {
+func TestCreateGroupEmptyDescriptionShouldNotFail(t *testing.T) {
 
 	ctx := context.Background()
-	var _, cli = s.testUserCli(s.T())
-	s.NoError(cli.CreateGroup(ctx, handler.NewCreateGroupRequest("name", ""), &handler.GetGroupResponse{}))
+	var _, cli = testUserCli(t)
+	assert.NoError(t, cli.CreateGroup(ctx, handler.NewCreateGroupRequest("name", ""), &handler.GetGroupResponse{}))
 }
 
-func (s *GroupTestSuite) TestCreateGroupShouldCreateOwnerMembership() {
+func TestCreateGroupShouldCreateOwnerMembership(t *testing.T) {
 
 	ctx := context.TODO()
 
-	owner, _ := s.testUserCli(s.T())
+	owner, _ := testUserCli(t)
 	group := &handler.GetGroupResponse{}
-	if !s.NoError(s.testGroup2(s.T(), owner, group)) {
+	if !assert.NoError(t, testGroup2(t, owner, group)) {
 		return
 	}
 
 	time.Sleep(time.Second)
 
-	membership, err := s.server.GetMembership.Get(ctx, keys.NewMembershipKey(group, owner))
-	if !s.NoError(err) {
+	membership, err := srv.GetMembership.Get(ctx, keys.NewMembershipKey(group, owner))
+	if !assert.NoError(t, err) {
 		return
 	}
-	s.Equal(owner.GetUserKey(), membership.UserKey)
-	s.Equal(true, membership.IsOwner)
-	s.Equal(true, membership.UserConfirmed)
-	s.Equal(true, membership.GroupConfirmed)
-	s.Equal(true, membership.IsAdmin)
-	s.Equal(true, membership.IsMember)
+	assert.Equal(t, owner.GetUserKey(), membership.UserKey)
+	assert.Equal(t, true, membership.IsOwner)
+	assert.Equal(t, true, membership.UserConfirmed)
+	assert.Equal(t, true, membership.GroupConfirmed)
+	assert.Equal(t, true, membership.IsAdmin)
+	assert.Equal(t, true, membership.IsMember)
 }
 
-func (s *GroupTestSuite) TestOwnerShouldBeAbleToInviteUser() {
+func TestOwnerShouldBeAbleToInviteUser(t *testing.T) {
 
 	ctx := context.TODO()
 
-	owner, ownerCli := s.testUserCli(s.T())
+	owner, ownerCli := testUserCli(t)
 	group := &handler.GetGroupResponse{}
-	if !s.NoError(s.testGroup2(s.T(), owner, group)) {
+	if !assert.NoError(t, testGroup2(t, owner, group)) {
 		return
 	}
 
-	user, _ := s.testUser(s.T())
+	user, _ := testUser(t)
 	membershipKey := keys.NewMembershipKey(group, user)
 
-	if !s.NoError(ownerCli.JoinGroup(ctx, membershipKey)) {
+	if !assert.NoError(t, ownerCli.JoinGroup(ctx, membershipKey)) {
 		return
 	}
 
 	var membership handler.GetMembershipResponse
-	if !s.NoError(ownerCli.GetMembership(ctx, membershipKey, &membership)) {
+	if !assert.NoError(t, ownerCli.GetMembership(ctx, membershipKey, &membership)) {
 		return
 	}
 
-	s.Equal(user.GetUserKey(), membership.Membership.UserKey)
-	s.Equal(false, membership.Membership.IsAdmin)
-	s.Equal(false, membership.Membership.IsOwner)
-	s.Equal(false, membership.Membership.IsMember)
-	s.Equal(true, membership.Membership.GroupConfirmed)
-	s.Equal(false, membership.Membership.UserConfirmed)
+	assert.Equal(t, user.GetUserKey(), membership.Membership.UserKey)
+	assert.Equal(t, false, membership.Membership.IsAdmin)
+	assert.Equal(t, false, membership.Membership.IsOwner)
+	assert.Equal(t, false, membership.Membership.IsMember)
+	assert.Equal(t, true, membership.Membership.GroupConfirmed)
+	assert.Equal(t, false, membership.Membership.UserConfirmed)
 }
 
-func (s *GroupTestSuite) TestInviteeShouldBeAbleToAcceptInvitationFromOwner() {
+func TestInviteeShouldBeAbleToAcceptInvitationFromOwner(t *testing.T) {
 
 	ctx := context.Background()
 
-	owner, ownerCli := s.testUserCli(s.T())
+	owner, ownerCli := testUserCli(t)
 	group := &handler.GetGroupResponse{}
-	if !s.NoError(s.testGroup2(s.T(), owner, group)) {
+	if !assert.NoError(t, testGroup2(t, owner, group)) {
 		return
 	}
 
-	user, _ := s.testUser(s.T())
-	userCli := s.NewClient(user)
+	user, _ := testUser(t)
+	userCli := NewClient(user)
 	membershipKey := keys.NewMembershipKey(group, user)
 
-	if !s.NoError(ownerCli.JoinGroup(ctx, membershipKey)) {
+	if !assert.NoError(t, ownerCli.JoinGroup(ctx, membershipKey)) {
 		return
 	}
 
-	if !s.NoError(userCli.JoinGroup(ctx, membershipKey)) {
+	if !assert.NoError(t, userCli.JoinGroup(ctx, membershipKey)) {
 		return
 	}
 
 	time.Sleep(time.Second)
 
 	var membership handler.GetMembershipResponse
-	if !s.NoError(userCli.GetMembership(ctx, membershipKey, &membership)) {
+	if !assert.NoError(t, userCli.GetMembership(ctx, membershipKey, &membership)) {
 		return
 	}
 
-	s.Equal(user.GetUserKey(), membership.Membership.UserKey)
-	s.Equal(false, membership.Membership.IsAdmin)
-	s.Equal(false, membership.Membership.IsOwner)
-	s.Equal(true, membership.Membership.IsMember)
-	s.Equal(true, membership.Membership.GroupConfirmed)
-	s.Equal(true, membership.Membership.UserConfirmed)
+	assert.Equal(t, user.GetUserKey(), membership.Membership.UserKey)
+	assert.Equal(t, false, membership.Membership.IsAdmin)
+	assert.Equal(t, false, membership.Membership.IsOwner)
+	assert.Equal(t, true, membership.Membership.IsMember)
+	assert.Equal(t, true, membership.Membership.GroupConfirmed)
+	assert.Equal(t, true, membership.Membership.UserConfirmed)
 
 }
 
-func (s *GroupTestSuite) TestInviteeShouldBeAbleToDeclineInvitationFromOwner() {
+func TestInviteeShouldBeAbleToDeclineInvitationFromOwner(t *testing.T) {
 
 	ctx := context.Background()
 
-	owner, ownerCli := s.testUserCli(s.T())
+	owner, ownerCli := testUserCli(t)
 	group := &handler.GetGroupResponse{}
-	if !s.NoError(s.testGroup2(s.T(), owner, group)) {
+	if !assert.NoError(t, testGroup2(t, owner, group)) {
 		return
 	}
 
-	user, userCli := s.testUserCli(s.T())
+	user, userCli := testUserCli(t)
 	membershipKey := keys.NewMembershipKey(group, user)
 
 	// owner invites user
-	if !s.NoError(ownerCli.JoinGroup(ctx, membershipKey)) {
+	if !assert.NoError(t, ownerCli.JoinGroup(ctx, membershipKey)) {
 		return
 	}
 
 	time.Sleep(time.Second)
 
-	if !s.NoError(userCli.GetMembership(ctx, membershipKey, &handler.GetMembershipResponse{})) {
+	if !assert.NoError(t, userCli.GetMembership(ctx, membershipKey, &handler.GetMembershipResponse{})) {
 		return
 	}
 
 	// user declines
-	if !s.NoError(userCli.LeaveGroup(ctx, membershipKey)) {
+	if !assert.NoError(t, userCli.LeaveGroup(ctx, membershipKey)) {
 		return
 	}
 
 	time.Sleep(time.Second)
 
 	err := userCli.GetMembership(ctx, membershipKey, &handler.GetMembershipResponse{})
-	s.Error(err)
-	s.ErrorIs(err, exceptions.ErrMembershipNotFound)
+	assert.Error(t, err)
+	assert.ErrorIs(t, err, exceptions.ErrMembershipNotFound)
 
 }
 
-func (s *GroupTestSuite) TestUserShouldBeAbleToDeclineInvitationFromOwner() {
+func TestUserShouldBeAbleToDeclineInvitationFromOwner(t *testing.T) {
 
 	ctx := context.Background()
 
-	owner, ownerCli := s.testUserCli(s.T())
+	owner, ownerCli := testUserCli(t)
 	group := &handler.GetGroupResponse{}
-	if !s.NoError(s.testGroup2(s.T(), owner, group)) {
+	if !assert.NoError(t, testGroup2(t, owner, group)) {
 		return
 	}
 
-	user, userCli := s.testUserCli(s.T())
+	user, userCli := testUserCli(t)
 	membershipKey := keys.NewMembershipKey(group, user)
 
 	// user requests invitation
-	if !s.NoError(userCli.JoinGroup(ctx, membershipKey)) {
+	if !assert.NoError(t, userCli.JoinGroup(ctx, membershipKey)) {
 		return
 	}
 
-	if !s.NoError(userCli.GetMembership(ctx, membershipKey, &handler.GetMembershipResponse{})) {
+	if !assert.NoError(t, userCli.GetMembership(ctx, membershipKey, &handler.GetMembershipResponse{})) {
 		return
 	}
 
 	// owner declines
-	if !s.NoError(ownerCli.LeaveGroup(ctx, membershipKey)) {
+	if !assert.NoError(t, ownerCli.LeaveGroup(ctx, membershipKey)) {
 		return
 	}
 
 	time.Sleep(time.Second)
 
 	err := userCli.GetMembership(ctx, membershipKey, &handler.GetMembershipResponse{})
-	s.Error(err)
-	s.ErrorIs(err, exceptions.ErrMembershipNotFound)
+	assert.Error(t, err)
+	assert.ErrorIs(t, err, exceptions.ErrMembershipNotFound)
 
 }
 
-func (s *GroupTestSuite) TestRandomUserShouldNotBeAbleToAcceptOrDeclineInvitation() {
+func TestRandomUserShouldNotBeAbleToAcceptOrDeclineInvitation(t *testing.T) {
 
 	ctx := context.Background()
 
-	owner, _ := s.testUserCli(s.T())
+	owner, _ := testUserCli(t)
 	group := &handler.GetGroupResponse{}
-	if !s.NoError(s.testGroup2(s.T(), owner, group)) {
+	if !assert.NoError(t, testGroup2(t, owner, group)) {
 		return
 	}
 
-	user, userCli := s.testUserCli(s.T())
+	user, userCli := testUserCli(t)
 	membershipKey := keys.NewMembershipKey(group, user)
 
-	_, randomUserCli := s.testUserCli(s.T())
+	_, randomUserCli := testUserCli(t)
 
 	// user requests invitation
-	if !s.NoError(userCli.JoinGroup(ctx, membershipKey)) {
+	if !assert.NoError(t, userCli.JoinGroup(ctx, membershipKey)) {
 		return
 	}
 
 	// check membership exists
-	if !s.NoError(userCli.GetMembership(ctx, membershipKey, &handler.GetMembershipResponse{})) {
+	if !assert.NoError(t, userCli.GetMembership(ctx, membershipKey, &handler.GetMembershipResponse{})) {
 		return
 	}
 
 	// random user tries to decline
 	err := randomUserCli.LeaveGroup(ctx, membershipKey)
-	s.Error(err)
-	s.ErrorIs(err, exceptions.ErrForbidden)
+	assert.Error(t, err)
+	assert.ErrorIs(t, err, exceptions.ErrForbidden)
 
 	// random user tries to approve
 	err = randomUserCli.JoinGroup(ctx, membershipKey)
-	s.Error(err)
-	s.ErrorIs(err, exceptions.ErrForbidden)
+	assert.Error(t, err)
+	assert.ErrorIs(t, err, exceptions.ErrForbidden)
 
 }
 
-func (s *GroupTestSuite) TestPersonShouldBeAbleToRequestBeingInvitedInGroup() {
+func TestPersonShouldBeAbleToRequestBeingInvitedInGroup(t *testing.T) {
 
 	ctx := context.Background()
 
-	owner, _ := s.testUserCli(s.T())
+	owner, _ := testUserCli(t)
 	group := &handler.GetGroupResponse{}
-	if !s.NoError(s.testGroup2(s.T(), owner, group)) {
+	if !assert.NoError(t, testGroup2(t, owner, group)) {
 		return
 	}
 
-	user, userCli := s.testUserCli(s.T())
+	user, userCli := testUserCli(t)
 	membershipKey := keys.NewMembershipKey(group, user)
 
 	// user requests invitation
-	if !s.NoError(userCli.JoinGroup(ctx, membershipKey)) {
+	if !assert.NoError(t, userCli.JoinGroup(ctx, membershipKey)) {
 		return
 	}
 
 	// get membership
 	membership := &handler.GetMembershipResponse{}
-	if !s.NoError(userCli.GetMembership(ctx, membershipKey, membership)) {
+	if !assert.NoError(t, userCli.GetMembership(ctx, membershipKey, membership)) {
 		return
 	}
 
-	s.Equal(user.GetUserKey(), membership.Membership.UserKey)
-	s.Equal(false, membership.Membership.IsAdmin)
-	s.Equal(false, membership.Membership.IsOwner)
-	s.Equal(false, membership.Membership.IsMember)
-	s.Equal(false, membership.Membership.GroupConfirmed)
-	s.Equal(true, membership.Membership.UserConfirmed)
+	assert.Equal(t, user.GetUserKey(), membership.Membership.UserKey)
+	assert.Equal(t, false, membership.Membership.IsAdmin)
+	assert.Equal(t, false, membership.Membership.IsOwner)
+	assert.Equal(t, false, membership.Membership.IsMember)
+	assert.Equal(t, false, membership.Membership.GroupConfirmed)
+	assert.Equal(t, true, membership.Membership.UserConfirmed)
 
 }
 
-func (s *GroupTestSuite) TestOwnerShouldBeAbleToAcceptInvitationRequest() {
+func TestOwnerShouldBeAbleToAcceptInvitationRequest(t *testing.T) {
 
 	ctx := context.Background()
 
-	owner, ownerCli := s.testUserCli(s.T())
+	owner, ownerCli := testUserCli(t)
 	group := &handler.GetGroupResponse{}
-	if !s.NoError(s.testGroup2(s.T(), owner, group)) {
+	if !assert.NoError(t, testGroup2(t, owner, group)) {
 		return
 	}
 
-	user, userCli := s.testUserCli(s.T())
+	user, userCli := testUserCli(t)
 	membershipKey := keys.NewMembershipKey(group, user)
 
 	// user requests invitation
-	if !s.NoError(userCli.JoinGroup(ctx, membershipKey)) {
+	if !assert.NoError(t, userCli.JoinGroup(ctx, membershipKey)) {
 		return
 	}
 
 	// owner accepts invitation
-	if !s.NoError(ownerCli.JoinGroup(ctx, membershipKey)) {
+	if !assert.NoError(t, ownerCli.JoinGroup(ctx, membershipKey)) {
 		return
 	}
 
@@ -335,82 +337,82 @@ func (s *GroupTestSuite) TestOwnerShouldBeAbleToAcceptInvitationRequest() {
 
 	// get membership
 	membership := &handler.GetMembershipResponse{}
-	if !s.NoError(userCli.GetMembership(ctx, membershipKey, membership)) {
+	if !assert.NoError(t, userCli.GetMembership(ctx, membershipKey, membership)) {
 		return
 	}
 
-	s.Equal(user.GetUserKey(), membership.Membership.UserKey)
-	s.Equal(false, membership.Membership.IsAdmin)
-	s.Equal(false, membership.Membership.IsOwner)
-	s.Equal(true, membership.Membership.IsMember)
-	s.Equal(true, membership.Membership.GroupConfirmed)
-	s.Equal(true, membership.Membership.UserConfirmed)
+	assert.Equal(t, user.GetUserKey(), membership.Membership.UserKey)
+	assert.Equal(t, false, membership.Membership.IsAdmin)
+	assert.Equal(t, false, membership.Membership.IsOwner)
+	assert.Equal(t, true, membership.Membership.IsMember)
+	assert.Equal(t, true, membership.Membership.GroupConfirmed)
+	assert.Equal(t, true, membership.Membership.UserConfirmed)
 }
 
-func (s *GroupTestSuite) TestGetLoggedInUserMembershipsWithoutGroup() {
+func TestGetLoggedInUserMembershipsWithoutGroup(t *testing.T) {
 
 	ctx := context.Background()
-	_, userCli := s.testUserCli(s.T())
+	_, userCli := testUserCli(t)
 	var memberships handler.GetMembershipsResponse
-	if !s.NoError(userCli.GetLoggedInUserMemberships(ctx, &memberships)) {
+	if !assert.NoError(t, userCli.GetLoggedInUserMemberships(ctx, &memberships)) {
 		return
 	}
-	s.Len(memberships.Memberships, 0)
+	assert.Len(t, memberships.Memberships, 0)
 }
 
-func (s *GroupTestSuite) TestTestGetLoggedInUserMembershipsWithGroup() {
+func TestTestGetLoggedInUserMembershipsWithGroup(t *testing.T) {
 
 	ctx := context.Background()
 
-	owner, ownerCli := s.testUserCli(s.T())
+	owner, ownerCli := testUserCli(t)
 	group := &handler.GetGroupResponse{}
-	if !s.NoError(s.testGroup2(s.T(), owner, group)) {
+	if !assert.NoError(t, testGroup2(t, owner, group)) {
 		return
 	}
 
 	time.Sleep(time.Second)
 
 	var memberships handler.GetMembershipsResponse
-	if !s.NoError(ownerCli.GetLoggedInUserMemberships(ctx, &memberships)) {
+	if !assert.NoError(t, ownerCli.GetLoggedInUserMemberships(ctx, &memberships)) {
 		return
 	}
-	if !s.Len(memberships.Memberships, 1) {
+	if !assert.Len(t, memberships.Memberships, 1) {
 		return
 	}
 	membership := memberships.Memberships[0]
-	s.Equal(group.GetGroupKey(), membership.GroupKey)
-	s.Equal(group.Group.Name, membership.GroupName)
-	s.Equal(group.Group.GroupKey, membership.GroupKey)
-	s.Equal(owner.GetUserKey(), membership.UserKey)
-	s.Equal(owner.Username, membership.UserName)
-	s.Equal(true, membership.UserConfirmed)
-	s.Equal(true, membership.GroupConfirmed)
-	s.Equal(true, membership.IsMember)
-	s.Equal(true, membership.IsOwner)
+	assert.Equal(t, group.GetGroupKey(), membership.GroupKey)
+	assert.Equal(t, group.Group.Name, membership.GroupName)
+	assert.Equal(t, group.Group.GroupKey, membership.GroupKey)
+	assert.Equal(t, owner.GetUserKey(), membership.UserKey)
+	assert.Equal(t, owner.Username, membership.UserName)
+	assert.Equal(t, true, membership.UserConfirmed)
+	assert.Equal(t, true, membership.GroupConfirmed)
+	assert.Equal(t, true, membership.IsMember)
+	assert.Equal(t, true, membership.IsOwner)
 }
 
-func (s *GroupTestSuite) TestGroupShouldReceiveMessageWhenUserJoined() {
+func TestGroupShouldReceiveMessageWhenUserJoined(t *testing.T) {
 
 	ctx := context.Background()
 
-	_, user1Cli := s.testUserCli(s.T())
-	user2, user2Cli := s.testUserCli(s.T())
+	_, user1Cli := testUserCli(t)
+	user2, user2Cli := testUserCli(t)
 
 	ws, err := user1Cli.GetWebsocketClient()
 
-	if !s.NoError(err) {
+	if !assert.NoError(t, err) {
 		return
 	}
 	defer ws.Close()
 
 	groupResponse := &handler.GetGroupResponse{}
-	if !s.NoError(user1Cli.CreateGroup(ctx, handler.NewCreateGroupRequest("sample", "description"), groupResponse)) {
+	if !assert.NoError(t, user1Cli.CreateGroup(ctx, handler.NewCreateGroupRequest("sample", "description"), groupResponse)) {
 		return
 	}
-	if !s.NoError(user2Cli.JoinGroup(ctx, keys.NewMembershipKey(groupResponse.Group.GroupKey, user2.GetUserKey()))) {
+	if !assert.NoError(t, user2Cli.JoinGroup(ctx, keys.NewMembershipKey(groupResponse.Group.GroupKey, user2.GetUserKey()))) {
 		return
 	}
-	if !s.NoError(user1Cli.JoinGroup(ctx, keys.NewMembershipKey(groupResponse.Group.GroupKey, user2.GetUserKey()))) {
+	if !assert.NoError(t, user1Cli.JoinGroup(ctx, keys.NewMembershipKey(groupResponse.Group.GroupKey, user2.GetUserKey()))) {
 		return
 	}
 
@@ -474,7 +476,7 @@ func (s *GroupTestSuite) TestGroupShouldReceiveMessageWhenUserJoined() {
 
 }
 
-func (s *GroupTestSuite) TestGetUsersForInvitePickerShouldNotReturnDuplicates() {
+func TestGetUsersForInvitePickerShouldNotReturnDuplicates(t *testing.T) {
 
 	ctx := context.Background()
 
@@ -486,13 +488,13 @@ func (s *GroupTestSuite) TestGetUsersForInvitePickerShouldNotReturnDuplicates() 
 	g1, ctx := errgroup.WithContext(ctx)
 	for i := 0; i < userCount; i++ {
 		g1.Go(func() error {
-			user, userCli := s.testUserCli(s.T())
+			user, userCli := testUserCli(t)
 			userClis = append(userClis, userCli)
 			g2, ctx := errgroup.WithContext(ctx)
 			for j := 0; j < groupCount; j++ {
 				func(userCli client.Client, user *models.UserSession) {
 					g2.Go(func() error {
-						s.T().Log(user.Username)
+						t.Log(user.Username)
 						var response handler.GetGroupResponse
 						if err := userCli.CreateGroup(ctx, handler.NewCreateGroupRequest("sample", "description"), &response); err != nil {
 							return err
@@ -506,20 +508,20 @@ func (s *GroupTestSuite) TestGetUsersForInvitePickerShouldNotReturnDuplicates() 
 		})
 	}
 
-	if !s.NoError(g1.Wait()) {
+	if !assert.NoError(t, g1.Wait()) {
 		return
 	}
 
 	for i := 0; i < userCount*groupCount; i++ {
 		group := groups[i]
 		var response handler.GetUsersForGroupInvitePickerResponse
-		if !s.NoError(userClis[0].GetMemberInvitationPicker(ctx, group.Group.GroupKey, "", 0, 10, &response)) {
+		if !assert.NoError(t, userClis[0].GetMemberInvitationPicker(ctx, group.Group.GroupKey, "", 0, 10, &response)) {
 			return
 		}
 		seen := map[string]bool{}
 		for _, user := range response.Users {
 			_, ok := seen[user.Username]
-			if !s.False(ok, "found duplicate user %s in results", user.Username) {
+			if !assert.False(t, ok, "found duplicate user %s in results", user.Username) {
 				return
 			}
 			seen[user.Username] = true

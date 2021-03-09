@@ -68,49 +68,50 @@ type Group struct {
 }
 
 type Server struct {
-	AppConfig                   *config.AppConfig
-	AmqpClient                  mq.Client
-	GraphDriver                 graph.Driver
-	Db                          *gorm.DB
-	TransactionStore            transaction.Store
-	TransactionService          transaction.Service
-	ChatStore                   chatstore.Store
-	ChatService                 chatservice.Service
-	TradingService              trading.Service
-	ChatHandler                 *chathandler.Handler
-	ResourceHandler             *resourcehandler.ResourceHandler
-	RealTimeHandler             *realtime.Handler
-	Router                      *echo.Echo
-	NukeHandler                 *nukehandler.Handler
-	TradingHandler              *tradinghandler.TradingHandler
-	RedisClient                 *redis.Client
-	ClusterLocker               clusterlock.Locker
-	CommandMapper               *commands.CommandMapper
-	CommandBus                  commands.CommandBus
-	EventMapper                 *eventsource.EventMapper
-	Group                       Group
-	User                        *module.Module
-	ErrGroup                    *errgroup.Group
-	Ctx                         context.Context
-	GetOffer                    *queries.GetOffer
-	GetOffers                   *queries.GetOffers
-	GetOfferItem                *queries.GetOfferItem
-	GetGroup                    *groupqueries.GetGroup
-	GetGroupByKeys              *groupqueries.GetGroupByKeys
-	GetMembership               *groupqueries.GetMembershipReadModel
-	GetUserMembership           *groupqueries.GetUserMemberships
-	GetOfferKeyForOfferItem     *queries.GetOfferKeyForOfferItemKey
-	GetResource                 *resourcequeries.GetResource
-	GetResourceWithSharings     *resourcequeries.GetResourceWithSharings
-	GetResourcesByKeys          *resourcequeries.GetResourcesByKeys
-	SearchResources             *resourcequeries.SearchResources
-	SearchResourcesWithSharings *resourcequeries.SearchResourcesWithSharings
-	AcceptOffer                 *tradingcmdhandlers.AcceptOfferHandler
-	DeclineOffer                *tradingcmdhandlers.DeclineOfferHandler
-	ConfirmResourceGiven        *tradingcmdhandlers.ConfirmResourceGivenHandler
-	ConfirmResourceBorrowed     *tradingcmdhandlers.ConfirmResourceBorrowedHandler
-	ConfirmServiceGiven         *tradingcmdhandlers.ConfirmServiceGivenHandler
-	ConfirmResourceReturned     *tradingcmdhandlers.ConfirmResourceReturnedHandler
+	AppConfig                      *config.AppConfig
+	AmqpClient                     mq.Client
+	GraphDriver                    graph.Driver
+	Db                             *gorm.DB
+	TransactionStore               transaction.Store
+	TransactionService             transaction.Service
+	ChatStore                      chatstore.Store
+	ChatService                    chatservice.Service
+	TradingService                 trading.Service
+	ChatHandler                    *chathandler.Handler
+	ResourceHandler                *resourcehandler.ResourceHandler
+	RealTimeHandler                *realtime.Handler
+	Router                         *echo.Echo
+	NukeHandler                    *nukehandler.Handler
+	TradingHandler                 *tradinghandler.TradingHandler
+	RedisClient                    *redis.Client
+	ClusterLocker                  clusterlock.Locker
+	CommandMapper                  *commands.CommandMapper
+	CommandBus                     commands.CommandBus
+	EventMapper                    *eventsource.EventMapper
+	Group                          Group
+	User                           *module.Module
+	ErrGroup                       *errgroup.Group
+	Ctx                            context.Context
+	GetOffer                       *queries.GetOffer
+	GetOffers                      *queries.GetOffers
+	GetOfferItem                   *queries.GetOfferItem
+	GetGroup                       *groupqueries.GetGroup
+	GetGroupByKeys                 *groupqueries.GetGroupByKeys
+	GetMembership                  *groupqueries.GetMembershipReadModel
+	GetUserMembership              *groupqueries.GetUserMemberships
+	GetOfferKeyForOfferItem        *queries.GetOfferKeyForOfferItemKey
+	GetResource                    *resourcequeries.GetResource
+	GetResourceWithSharings        *resourcequeries.GetResourceWithSharings
+	GetResourcesByKeys             *resourcequeries.GetResourcesByKeys
+	SearchResources                *resourcequeries.SearchResources
+	SearchResourcesWithSharings    *resourcequeries.SearchResourcesWithSharings
+	AcceptOffer                    *tradingcmdhandlers.AcceptOfferHandler
+	DeclineOffer                   *tradingcmdhandlers.DeclineOfferHandler
+	ConfirmResourceGiven           *tradingcmdhandlers.ConfirmResourceGivenHandler
+	ConfirmResourceBorrowed        *tradingcmdhandlers.ConfirmResourceBorrowedHandler
+	ConfirmServiceGiven            *tradingcmdhandlers.ConfirmServiceGivenHandler
+	ConfirmResourceReturned        *tradingcmdhandlers.ConfirmResourceReturnedHandler
+	GetResourcesByKeysWithSharings *resourcequeries.GetResourcesByKeysWithSharings
 }
 
 func getEnv(key, defaultValue string) string {
@@ -200,6 +201,7 @@ func NewServer() (*Server, error) {
 	getUsersForGroupInvite := groupqueries.NewGetUsersForGroupInvite(db)
 	getResource := resourcequeries.NewGetResource(db)
 	getResourcesByKeys := resourcequeries.NewGetResourcesByKeys(db)
+	getResourcesByKeysWithSharings := resourcequeries.NewGetResourcesByKeysWithSharings(db)
 	searchResources := resourcequeries.NewSearchResources(db)
 	getResourceSharings := resourcequeries.NewGetResourceSharings(db)
 	getResourcesSharings := resourcequeries.NewGetResourcesSharings(db)
@@ -218,7 +220,7 @@ func NewServer() (*Server, error) {
 
 	acceptOffer := tradingcmdhandlers.NewAcceptOfferHandler(offerRepository, getOfferPermissions)
 	declineOffer := tradingcmdhandlers.NewDeclineOfferHandler(offerRepository)
-	submitOffer := tradingcmdhandlers.NewSubmitOfferHandler(offerRepository, getOfferPermissions, getResourcesByKeys)
+	submitOffer := tradingcmdhandlers.NewSubmitOfferHandler(offerRepository, getOfferPermissions, getResourcesByKeysWithSharings)
 	confirmResourceBorrowed := tradingcmdhandlers.NewConfirmResourceBorrowedHandler(offerRepository)
 	confirmResourceGiven := tradingcmdhandlers.NewConfirmResourceGivenHandler(offerRepository)
 	confirmResourceReturned := tradingcmdhandlers.NewConfirmResourceReturnedHandler(offerRepository)
@@ -392,27 +394,29 @@ func NewServer() (*Server, error) {
 			Repository: groupRepo,
 			Store:      groupStore,
 		},
-		User:                        userModule,
-		ErrGroup:                    g,
-		Ctx:                         ctx,
-		GetOffer:                    getOffer,
-		GetOffers:                   getOffers,
-		GetOfferItem:                getOfferItem,
-		GetGroup:                    getGroup,
-		GetGroupByKeys:              getGroupByKeys,
-		GetMembership:               getMembership,
-		GetUserMembership:           getUserMemberships,
-		GetOfferKeyForOfferItem:     getOfferKeyForOfferItemKeyQry,
-		GetResource:                 getResource,
-		GetResourceWithSharings:     getResourceWithSharings,
-		SearchResources:             searchResources,
-		SearchResourcesWithSharings: searchResourcesWithSharings,
-		AcceptOffer:                 acceptOffer,
-		DeclineOffer:                declineOffer,
-		ConfirmResourceGiven:        confirmResourceGiven,
-		ConfirmResourceBorrowed:     confirmResourceBorrowed,
-		ConfirmServiceGiven:         confirmServiceGiven,
-		ConfirmResourceReturned:     confirmResourceReturned,
+		User:                           userModule,
+		ErrGroup:                       g,
+		Ctx:                            ctx,
+		GetOffer:                       getOffer,
+		GetOffers:                      getOffers,
+		GetOfferItem:                   getOfferItem,
+		GetGroup:                       getGroup,
+		GetGroupByKeys:                 getGroupByKeys,
+		GetMembership:                  getMembership,
+		GetUserMembership:              getUserMemberships,
+		GetOfferKeyForOfferItem:        getOfferKeyForOfferItemKeyQry,
+		GetResource:                    getResource,
+		GetResourcesByKeys:             getResourcesByKeys,
+		GetResourcesByKeysWithSharings: getResourcesByKeysWithSharings,
+		GetResourceWithSharings:        getResourceWithSharings,
+		SearchResources:                searchResources,
+		SearchResourcesWithSharings:    searchResourcesWithSharings,
+		AcceptOffer:                    acceptOffer,
+		DeclineOffer:                   declineOffer,
+		ConfirmResourceGiven:           confirmResourceGiven,
+		ConfirmResourceBorrowed:        confirmResourceBorrowed,
+		ConfirmServiceGiven:            confirmServiceGiven,
+		ConfirmResourceReturned:        confirmResourceReturned,
 	}, nil
 
 }

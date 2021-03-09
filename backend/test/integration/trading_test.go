@@ -6,94 +6,96 @@ import (
 	grouphandler "github.com/commonpool/backend/pkg/group/handler"
 	"github.com/commonpool/backend/pkg/trading/domain"
 	"github.com/commonpool/backend/test"
+	"github.com/stretchr/testify/assert"
+	"testing"
 
 	res "github.com/commonpool/backend/pkg/resource/handler"
 	trd "github.com/commonpool/backend/pkg/trading/handler"
 	"time"
 )
 
-func (s *IntegrationTestSuite) TestUserCanSubmitOfferBetweenUsers() {
+func TestUserCanSubmitOfferBetweenUsers(t *testing.T) {
 
 	ctx := context.Background()
 
-	user1, user1Cli := s.testUserCli(s.T())
-	user2, _ := s.testUserCli(s.T())
+	user1, user1Cli := testUserCli(t)
+	user2, _ := testUserCli(t)
 
 	var group grouphandler.GetGroupResponse
-	if !s.NoError(s.testGroup2(s.T(), user1, &group, user2)) {
+	if !assert.NoError(t, testGroup2(t, user1, &group, user2)) {
 		return
 	}
 
 	var resourceResponse res.GetResourceResponse
-	if !s.NoError(user1Cli.CreateResource(ctx, res.NewCreateResourcePayload(test.AResourceInfo()).AsRequest(), &resourceResponse)) {
+	if !assert.NoError(t, user1Cli.CreateResource(ctx, res.NewCreateResourcePayload(test.AResourceInfo()).AsRequest(), &resourceResponse)) {
 		return
 	}
 
 	time.Sleep(1 * time.Second)
 
 	offerResponse := &trd.GetOfferResponse{}
-	if !s.NoError(user1Cli.SubmitOffer(ctx, trd.NewSendOfferPayload(
+	if !assert.NoError(t, user1Cli.SubmitOffer(ctx, trd.NewSendOfferPayload(
 		group.Group.GroupKey,
 		domain.NewCreditTransferItemInputBase(user1, user2, time.Hour*2),
 	).AsRequest(), offerResponse)) {
 		return
 	}
 
-	s.Equal(1, len(offerResponse.Offer.OfferItems))
+	assert.Equal(t, 1, len(offerResponse.Offer.OfferItems))
 
 }
 
-func (s *IntegrationTestSuite) TestUserCanSubmitOfferBetweenUsersAndGroup() {
+func TestUserCanSubmitOfferBetweenUsersAndGroup(t *testing.T) {
 
 	ctx := context.Background()
 
-	user1, user1Cli := s.testUserCli(s.T())
+	user1, user1Cli := testUserCli(t)
 
 	var group grouphandler.GetGroupResponse
-	if !s.NoError(s.testGroup2(s.T(), user1, &group)) {
+	if !assert.NoError(t, testGroup2(t, user1, &group)) {
 		return
 	}
 
 	var resourceResponse res.GetResourceResponse
-	if !s.NoError(user1Cli.CreateResource(ctx, res.NewCreateResourcePayload(test.AResourceInfo()).AsRequest(), &resourceResponse)) {
+	if !assert.NoError(t, user1Cli.CreateResource(ctx, res.NewCreateResourcePayload(test.AResourceInfo()).AsRequest(), &resourceResponse)) {
 		return
 	}
 
 	time.Sleep(1 * time.Second)
 
 	offerResponse := &trd.GetOfferResponse{}
-	if !s.NoError(user1Cli.SubmitOffer(ctx, trd.NewSendOfferPayload(
+	if !assert.NoError(t, user1Cli.SubmitOffer(ctx, trd.NewSendOfferPayload(
 		group.Group.GroupKey,
 		domain.NewCreditTransferItemInputBase(user1, group.Group, time.Hour*2),
 	).AsRequest(), offerResponse)) {
 		return
 	}
 
-	s.Equal(1, len(offerResponse.Offer.OfferItems))
+	assert.Equal(t, 1, len(offerResponse.Offer.OfferItems))
 
 }
 
-func (s *IntegrationTestSuite) TestUserCanSubmitOfferBetweenGroupAndMultipleUsers() {
+func TestUserCanSubmitOfferBetweenGroupAndMultipleUsers(t *testing.T) {
 
 	ctx := context.Background()
 
-	user1, user1Cli := s.testUserCli(s.T())
-	user2, _ := s.testUserCli(s.T())
+	user1, user1Cli := testUserCli(t)
+	user2, _ := testUserCli(t)
 
 	var group grouphandler.GetGroupResponse
-	if !s.NoError(s.testGroup2(s.T(), user1, &group, user2)) {
+	if !assert.NoError(t, testGroup2(t, user1, &group, user2)) {
 		return
 	}
 
 	var resourceResponse res.GetResourceResponse
-	if !s.NoError(user1Cli.CreateResource(ctx, res.NewCreateResourcePayload(test.AResourceInfo()).AsRequest(), &resourceResponse)) {
+	if !assert.NoError(t, user1Cli.CreateResource(ctx, res.NewCreateResourcePayload(test.AResourceInfo()).AsRequest(), &resourceResponse)) {
 		return
 	}
 
 	time.Sleep(1 * time.Second)
 
 	offerResponse := &trd.GetOfferResponse{}
-	if !s.NoError(user1Cli.SubmitOffer(ctx, trd.NewSendOfferPayload(
+	if !assert.NoError(t, user1Cli.SubmitOffer(ctx, trd.NewSendOfferPayload(
 		group.Group.GroupKey,
 		domain.NewCreditTransferItemInputBase(user1, user2, time.Hour*2),
 		domain.NewCreditTransferItemInputBase(user2, group.Group, time.Hour*2),
@@ -102,151 +104,153 @@ func (s *IntegrationTestSuite) TestUserCanSubmitOfferBetweenGroupAndMultipleUser
 		return
 	}
 
-	s.Equal(3, len(offerResponse.Offer.OfferItems))
+	assert.Equal(t, 3, len(offerResponse.Offer.OfferItems))
 
 }
 
-func (s *IntegrationTestSuite) TestUsersCanAcceptOfferBetweenUsers() {
+func TestUsersCanAcceptOfferBetweenUsers(t *testing.T) {
 
 	ctx := context.Background()
 
-	user1, user1Cli := s.testUserCli(s.T())
-	user2, user2Cli := s.testUserCli(s.T())
+	user1, user1Cli := testUserCli(t)
+	user2, user2Cli := testUserCli(t)
 
 	var group grouphandler.GetGroupResponse
-	if !s.NoError(s.testGroup2(s.T(), user1, &group, user2)) {
+	if !assert.NoError(t, testGroup2(t, user1, &group, user2)) {
 		return
 	}
 
 	var resourceResponse res.GetResourceResponse
-	if !s.NoError(user1Cli.CreateResource(ctx, res.NewCreateResourcePayload(test.AResourceInfo()).AsRequest(), &resourceResponse)) {
+	if !assert.NoError(t, user1Cli.CreateResource(ctx, res.NewCreateResourcePayload(test.AResourceInfo()).AsRequest(), &resourceResponse)) {
 		return
 	}
 
 	time.Sleep(1 * time.Second)
 
 	offer := &trd.GetOfferResponse{}
-	if !s.NoError(user1Cli.SubmitOffer(ctx, trd.NewSendOfferPayload(
+	if !assert.NoError(t, user1Cli.SubmitOffer(ctx, trd.NewSendOfferPayload(
 		group.Group.GroupKey,
 		domain.NewCreditTransferItemInputBase(user1, user2, time.Hour*2),
 		domain.NewCreditTransferItemInputBase(group, user1, time.Hour*2),
 	).AsRequest(), offer)) {
 		return
 	}
-	if !s.Equal(2, len(offer.Offer.OfferItems)) {
+	if !assert.Equal(t, 2, len(offer.Offer.OfferItems)) {
 		return
 	}
 
 	time.Sleep(1 * time.Second)
 
-	if !s.NoError(user1Cli.AcceptOffer(ctx, offer)) {
+	if !assert.NoError(t, user1Cli.AcceptOffer(ctx, offer)) {
 		return
 	}
 
 	time.Sleep(1 * time.Second)
 
-	if !s.NoError(user2Cli.AcceptOffer(ctx, offer)) {
+	if !assert.NoError(t, user2Cli.AcceptOffer(ctx, offer)) {
 		return
 	}
 
 }
 
-func (s *IntegrationTestSuite) TestUserCannotCreateOfferForResourceNotSharedWithGroup() {
+func TestUserCannotCreateOfferForResourceNotSharedWithGroup(t *testing.T) {
 
 	ctx := context.Background()
-	user1, user1Cli := s.testUserCli(s.T())
+	user1, user1Cli := testUserCli(t)
 
 	var group grouphandler.GetGroupResponse
-	if !s.NoError(s.testGroup2(s.T(), user1, &group)) {
+	if !assert.NoError(t, testGroup2(t, user1, &group)) {
 		return
 	}
 
 	var resource res.GetResourceResponse
-	if !s.NoError(user1Cli.CreateResource(ctx, res.NewCreateResourcePayload(test.AResourceInfo()).AsRequest(), &resource)) {
+	if !assert.NoError(t, user1Cli.CreateResource(ctx, res.NewCreateResourcePayload(test.AResourceInfo()).AsRequest(), &resource)) {
 		return
 	}
+
+	time.Sleep(1 * time.Second)
 
 	var offer trd.GetOfferResponse
 	err := user1Cli.SubmitOffer(ctx, trd.NewSendOfferPayload(group, domain.NewResourceTransferItemInputBase(group, resource)).AsRequest(), &offer)
-	if !s.Error(err) {
+	if !assert.Error(t, err) {
 		return
 	}
-	if !s.ErrorIs(exceptions.ErrForbidden, err) {
+	if !assert.ErrorIs(t, exceptions.ErrBadRequest(""), err) {
 		return
 	}
 
 }
 
-func (s *IntegrationTestSuite) TestCannotCreateResourceTransferItemForResourceAlreadyOwned() {
+func TestCannotCreateResourceTransferItemForResourceAlreadyOwned(t *testing.T) {
 
 	ctx := context.Background()
-	user, cli := s.testUserCli(s.T())
+	user, cli := testUserCli(t)
 
 	var group grouphandler.GetGroupResponse
-	if !s.NoError(s.testGroup2(s.T(), user, &group)) {
+	if !assert.NoError(t, testGroup2(t, user, &group)) {
 		return
 	}
 
 	var resource res.GetResourceResponse
-	if !s.NoError(s.testResource(ctx, cli, &resource, group)) {
+	if !assert.NoError(t, testResource(ctx, cli, &resource, group)) {
 		return
 	}
 
 	var offer trd.GetOfferResponse
 	err := cli.SubmitOffer(ctx, trd.NewSendOfferPayload(group, domain.NewResourceTransferItemInputBase(user, resource)).AsRequest(), &offer)
 
-	if !s.Error(err) {
+	if !assert.Error(t, err) {
 		return
 	}
 
-	if !s.ErrorIs(exceptions.ErrBadRequest("OfferItem Resource destination is the same as the resource owner"), err) {
+	if !assert.ErrorIs(t, exceptions.ErrBadRequest("OfferItem Resource destination is the same as the resource owner"), err) {
 		return
 	}
 }
 
-func (s *IntegrationTestSuite) TestUsersCanDeclineOffer() {
+func TestUsersCanDeclineOffer(t *testing.T) {
 
 	ctx := context.Background()
 
-	user1, cli1 := s.testUserCli(s.T())
-	user2, cli2 := s.testUserCli(s.T())
+	user1, cli1 := testUserCli(t)
+	user2, cli2 := testUserCli(t)
 
 	var group grouphandler.GetGroupResponse
-	if !s.NoError(s.testGroup2(s.T(), user1, &group)) {
+	if !assert.NoError(t, testGroup2(t, user1, &group)) {
 		return
 	}
 
 	var offer trd.GetOfferResponse
-	if !s.NoError(cli1.SubmitOffer(ctx, trd.NewSendOfferPayload(group, domain.NewCreditTransferItemInputBase(user1, user2, time.Hour*2)).AsRequest(), &offer)) {
+	if !assert.NoError(t, cli1.SubmitOffer(ctx, trd.NewSendOfferPayload(group, domain.NewCreditTransferItemInputBase(user1, user2, time.Hour*2)).AsRequest(), &offer)) {
 		return
 	}
 
 	time.Sleep(100 * time.Millisecond)
 
-	if !s.NoError(cli1.AcceptOffer(ctx, offer)) {
+	if !assert.NoError(t, cli1.AcceptOffer(ctx, offer)) {
 		return
 	}
 
 	time.Sleep(100 * time.Millisecond)
 
-	if !s.NoError(cli1.GetOffer(ctx, offer, &offer)) {
+	if !assert.NoError(t, cli1.GetOffer(ctx, offer, &offer)) {
 		return
 	}
 
-	s.Equal(domain.Pending, offer.Offer.Status)
+	assert.Equal(t, domain.Pending, offer.Offer.Status)
 
 	time.Sleep(100 * time.Millisecond)
 
-	if !s.NoError(cli2.DeclineOffer(ctx, offer)) {
+	if !assert.NoError(t, cli2.DeclineOffer(ctx, offer)) {
 		return
 	}
 
 	time.Sleep(100 * time.Millisecond)
 
-	if !s.NoError(cli1.GetOffer(ctx, offer, &offer)) {
+	if !assert.NoError(t, cli1.GetOffer(ctx, offer, &offer)) {
 		return
 	}
 
-	s.Equal(domain.Declined, offer.Offer.Status)
+	assert.Equal(t, domain.Declined, offer.Offer.Status)
 
 }

@@ -42,6 +42,12 @@ func (q *SearchResourcesWithSharings) Get(ctx context.Context, query *SearchReso
 		return nil, err
 	}
 
+	return mapResourcesWithSharings(resources, sharings), nil
+
+}
+
+func mapResourcesWithSharings(resources []*readmodel.ResourceReadModel, sharings []*readmodel.ResourceSharingReadModel) []*readmodel.ResourceWithSharingsReadModel {
+
 	groupedSharings := map[keys.ResourceKey][]*readmodel.ResourceSharingReadModel{}
 	for _, sharing := range sharings {
 		groupedSharings[sharing.ResourceKey] = append(groupedSharings[sharing.ResourceKey], sharing)
@@ -59,6 +65,5 @@ func (q *SearchResourcesWithSharings) Get(ctx context.Context, query *SearchReso
 		})
 	}
 
-	return result, nil
-
+	return result
 }

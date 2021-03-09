@@ -14,13 +14,13 @@ import (
 type SubmitOfferHandler struct {
 	offerRepo          domain.OfferRepository
 	getPermission      *queries.GetOfferPermissions
-	getResourcesByKeys *queries2.GetResourcesByKeys
+	getResourcesByKeys *queries2.GetResourcesByKeysWithSharings
 }
 
 func NewSubmitOfferHandler(
 	offerRepo domain.OfferRepository,
 	getPermission *queries.GetOfferPermissions,
-	getResourcesByKeys *queries2.GetResourcesByKeys) *SubmitOfferHandler {
+	getResourcesByKeys *queries2.GetResourcesByKeysWithSharings) *SubmitOfferHandler {
 	return &SubmitOfferHandler{
 		offerRepo:          offerRepo,
 		getPermission:      getPermission,
@@ -56,7 +56,7 @@ func (c *SubmitOfferHandler) submitOffer(ctx context.Context, command domain.Sub
 			return err
 		}
 
-		var resourceMap = map[keys.ResourceKey]*readmodel.ResourceReadModel{}
+		var resourceMap = map[keys.ResourceKey]*readmodel.ResourceWithSharingsReadModel{}
 		for _, resource := range resourcesByKeys {
 			resourceMap[resource.ResourceKey] = resource
 		}
@@ -68,8 +68,20 @@ func (c *SubmitOfferHandler) submitOffer(ctx context.Context, command domain.Sub
 			}
 			resource, ok := resourceMap[roi.GetResourceKey()]
 			if !ok {
-				continue
+				return exceptions.ErrResourceNotFound
 			}
+
+			var found = false
+			for _, sharing := range resource.Sharings {
+				if sharing.GroupKey == offer.GetGroupKey() {
+					found = true
+					break
+				}
+			}
+			if !found {
+				return exceptions.ErrBadRequest("Resource is not shared with the group")
+			}
+
 			if resource.Owner.Equals(roi.GetTo()) {
 				return exceptions.ErrBadRequestf("OfferItem Resource destination is the same as the resource owner")
 			}

@@ -15,18 +15,18 @@ import (
 	"testing"
 )
 
-func (s *IntegrationTestBase) testUser(t *testing.T) (*models.UserSession, func()) {
+func testUser(t *testing.T) (*models.UserSession, func()) {
 	t.Helper()
 
 	createUserLock.Lock()
 	defer createUserLock.Unlock()
 
-	u := s.NewUser()
-	upsertError := s.server.User.Store.Upsert(u.GetUserKey(), u.Email, u.Username)
+	u := NewUser()
+	upsertError := srv.User.Store.Upsert(u.GetUserKey(), u.Email, u.Username)
 
 	var userXchangeErr error
 	if upsertError != nil {
-		_, userXchangeErr = s.server.ChatService.CreateUserExchange(context.TODO(), u.GetUserKey())
+		_, userXchangeErr = srv.ChatService.CreateUserExchange(context.TODO(), u.GetUserKey())
 	}
 
 	if upsertError != nil {
@@ -37,13 +37,13 @@ func (s *IntegrationTestBase) testUser(t *testing.T) (*models.UserSession, func(
 		t.Fatalf("exchange error: %s", userXchangeErr)
 	}
 
-	if err := s.getUserClient(u).GetLoggedInUserMemberships(context.TODO(), &handler.GetMembershipsResponse{}); err != nil {
+	if err := getUserClient(u).GetLoggedInUserMemberships(context.TODO(), &handler.GetMembershipsResponse{}); err != nil {
 		t.Fatal(err)
 	}
 
 	return u, func(user *models.UserSession) func() {
 		return func() {
-			session := s.server.GraphDriver.GetSession()
+			session := srv.GraphDriver.GetSession()
 			defer session.Close()
 			result, err := session.Run(`MATCH (u:User{id:$id}) detach delete u`, map[string]interface{}{
 				"id": user.Subject,
@@ -58,24 +58,24 @@ func (s *IntegrationTestBase) testUser(t *testing.T) (*models.UserSession, func(
 	}(u)
 }
 
-func (s *IntegrationTestBase) testUserCli(t *testing.T) (*models.UserSession, client.Client) {
-	user, _ := s.testUser(t)
-	return user, s.getUserClient(user)
+func testUserCli(t *testing.T) (*models.UserSession, client.Client) {
+	user, _ := testUser(t)
+	return user, getUserClient(user)
 }
 
-func (s *IntegrationTestBase) getUserClient(user *models.UserSession) client.Client {
-	return echo.NewEchoClient(s.server.Router, client.NewMockAuthentication(user))
+func getUserClient(user *models.UserSession) client.Client {
+	return echo.NewEchoClient(srv.Router, client.NewMockAuthentication(user))
 }
 
-func (s *IntegrationTestBase) testGroup2(t *testing.T, owner *models.UserSession, output *handler.GetGroupResponse, members ...*models.UserSession) error {
+func testGroup2(t *testing.T, owner *models.UserSession, output *handler.GetGroupResponse, members ...*models.UserSession) error {
 	ctx := context.Background()
 	groupCounter++
-	ownerCli := s.getUserClient(owner)
+	ownerCli := getUserClient(owner)
 	if err := ownerCli.CreateGroup(ctx, handler.NewCreateGroupRequest("group-"+strconv.Itoa(groupCounter), "group-"+strconv.Itoa(groupCounter)), output); !assert.NoError(t, err) {
 		return err
 	}
 	for _, member := range members {
-		if err := s.getUserClient(member).JoinGroup(ctx, keys.NewMembershipKey(output.Group.GroupKey, member.GetUserKey())); err != nil {
+		if err := getUserClient(member).JoinGroup(ctx, keys.NewMembershipKey(output.Group.GroupKey, member.GetUserKey())); err != nil {
 			return err
 		}
 		if err := ownerCli.JoinGroup(ctx, keys.NewMembershipKey(output.Group.GroupKey, member.GetUserKey())); err != nil {
@@ -85,13 +85,13 @@ func (s *IntegrationTestBase) testGroup2(t *testing.T, owner *models.UserSession
 	return nil
 }
 
-func (s *IntegrationTestBase) testResource(ctx context.Context, cli client.Client, out *res.GetResourceResponse, groups ...keys.GroupKeyGetter) error {
+func testResource(ctx context.Context, cli client.Client, out *res.GetResourceResponse, groups ...keys.GroupKeyGetter) error {
 	return cli.CreateResource(ctx, res.NewCreateResourcePayload(test.AResourceInfo(), groups...).AsRequest(), out)
 }
 
-func (s *IntegrationTestBase) testGroup(t *testing.T, owner *models.UserSession, members ...*models.UserSession) (*readmodels.GroupReadModel, error) {
+func testGroup(t *testing.T, owner *models.UserSession, members ...*models.UserSession) (*readmodels.GroupReadModel, error) {
 	var response handler.GetGroupResponse
-	if err := s.testGroup2(t, owner, &response, members...); err != nil {
+	if err := testGroup2(t, owner, &response, members...); err != nil {
 		return nil, err
 	}
 	return response.Group, nil
