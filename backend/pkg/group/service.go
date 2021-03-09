@@ -20,7 +20,7 @@ type Service interface {
 }
 
 type CreateOrAcceptInvitationRequest struct {
-	MembershipKey keys.MembershipKey
+	MembershipKey keys.MembershipKey `json:"membership_key"`
 }
 
 func NewAcceptInvitationRequest(membershipKey keys.MembershipKey) *CreateOrAcceptInvitationRequest {
@@ -34,7 +34,7 @@ type CreateOrAcceptInvitationResponse struct {
 }
 
 type CancelOrDeclineInvitationRequest struct {
-	MembershipKey keys.MembershipKey
+	MembershipKey keys.MembershipKey `json:"membership_key"`
 }
 
 func NewDeclineInvitationRequest(membershipKey keys.MembershipKey) *CancelOrDeclineInvitationRequest {

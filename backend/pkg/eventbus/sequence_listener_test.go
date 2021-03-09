@@ -21,7 +21,7 @@ func TestSequenceListener(t *testing.T) {
 	}
 
 	var calls [][]eventsource.Event
-	if !assert.NoError(t, l.Listen(context.TODO(), func(events []eventsource.Event) error {
+	if !assert.NoError(t, l.Listen(context.TODO(), func(ctx context.Context, events []eventsource.Event) error {
 		calls = append(calls, events)
 		return nil
 	})) {

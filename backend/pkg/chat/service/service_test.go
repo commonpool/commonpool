@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
-	"github.com/commonpool/backend/mock"
+	mock2 "github.com/commonpool/backend/mock/amqp_channel"
+	mock3 "github.com/commonpool/backend/mock/amqp_client"
+	mock4 "github.com/commonpool/backend/mock/chat_store"
 	"github.com/commonpool/backend/pkg/chat"
 	"github.com/commonpool/backend/pkg/mq"
 	"github.com/stretchr/testify/suite"
@@ -12,25 +14,25 @@ import (
 type serviceTestSuite struct {
 	suite.Suite
 	Service     *ChatService
-	AmqpChannel *mock.AmqpChannel
-	AmqpClient  *mock.AmqpClient
-	ChatStore   *mock.ChatStore
+	AmqpChannel *mock2.AmqpChannel
+	AmqpClient  *mock3.AmqpClient
+	ChatStore   *mock4.ChatStore
 }
 
 func (s *serviceTestSuite) SetupTest() {
 	s.Service = &ChatService{}
-	s.AmqpChannel = &mock.AmqpChannel{
+	s.AmqpChannel = &mock2.AmqpChannel{
 		CloseFunc: func() error { return nil },
 		PublishFunc: func(ctx context.Context, exchange string, key string, mandatory bool, immediate bool, publishing mq.Message) error {
 			return nil
 		},
 	}
-	s.AmqpClient = &mock.AmqpClient{
+	s.AmqpClient = &mock3.AmqpClient{
 		GetChannelFunc: func() (mq.Channel, error) { return s.AmqpChannel, nil },
 	}
 	s.Service.amqpClient = s.AmqpClient
 
-	s.ChatStore = &mock.ChatStore{
+	s.ChatStore = &mock4.ChatStore{
 		SaveMessageFunc: func(ctx context.Context, message *chat.Message) error {
 			return nil
 		},

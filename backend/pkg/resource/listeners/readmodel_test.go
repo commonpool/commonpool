@@ -546,7 +546,7 @@ func (s *ReadModelTestSuite) saveAndApplyEvents(streamKey keys.StreamKey, expect
 	if err != nil {
 		return nil, err
 	}
-	if err := s.l.handleEvents(evts); err != nil {
+	if err := s.l.handleEvents(context.TODO(), evts); err != nil {
 		return nil, err
 	}
 	return evts, err
@@ -581,7 +581,7 @@ func (s *ReadModelTestSuite) createUser(prefix string) (keys.UserKey, userdomain
 	if !assert.NoError(s.T(), err) {
 		return keys.UserKey{}, userdomain.UserInfo{}, err
 	}
-	if err := s.l.handleEvents(evts); !assert.NoError(s.T(), err) {
+	if err := s.l.handleEvents(context.TODO(), evts); !assert.NoError(s.T(), err) {
 		return keys.UserKey{}, userdomain.UserInfo{}, err
 	}
 	return userKey, userInfo, nil
@@ -603,7 +603,7 @@ func (s *ReadModelTestSuite) createGroup(prefix string) (keys.GroupKey, groupdom
 	if !assert.NoError(s.T(), err) {
 		return keys.GroupKey{}, groupdomain.GroupInfo{}, err
 	}
-	if err := s.l.handleEvents(evts); !assert.NoError(s.T(), err) {
+	if err := s.l.handleEvents(context.TODO(), evts); !assert.NoError(s.T(), err) {
 		return keys.GroupKey{}, groupdomain.GroupInfo{}, err
 	}
 	return groupKey, groupInfo, nil

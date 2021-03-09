@@ -41,16 +41,16 @@ func (l *UserReadModelListener) Start(ctx context.Context) error {
 	return catchUpListener.Listen(ctx, l.handleEvents)
 }
 
-func (l *UserReadModelListener) handleEvents(events []eventsource.Event) error {
+func (l *UserReadModelListener) handleEvents(ctx context.Context, events []eventsource.Event) error {
 	for _, event := range events {
-		if err := l.handleEvent(event); err != nil {
+		if err := l.handleEvent(ctx, event); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (l *UserReadModelListener) handleEvent(event eventsource.Event) error {
+func (l *UserReadModelListener) handleEvent(ctx context.Context, event eventsource.Event) error {
 	switch e := event.(type) {
 	case domain.UserDiscovered:
 		return l.handleUserDiscovered(e)

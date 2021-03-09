@@ -3,7 +3,7 @@ package test
 import (
 	"context"
 	"encoding/json"
-	"github.com/commonpool/backend/mock"
+	mock2 "github.com/commonpool/backend/mock/authenticator"
 	"github.com/commonpool/backend/pkg/auth/models"
 	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/pkg/handler"
@@ -27,7 +27,7 @@ type HandlerSuite struct {
 	Request       *http.Request
 	Recorder      *httptest.ResponseRecorder
 	Context       echo.Context
-	Authenticator *mock.AuthenticatorMock
+	Authenticator *mock2.AuthenticatorMock
 	LoggedInUser  models.UserReference
 }
 
@@ -35,7 +35,7 @@ func (s *HandlerSuite) SetupTest() {
 	s.Echo = echo.New()
 	s.Echo.Validator = validation.DefaultValidator
 	s.Echo.HTTPErrorHandler = handler.HttpErrorHandler
-	s.Authenticator = &mock.AuthenticatorMock{
+	s.Authenticator = &mock2.AuthenticatorMock{
 		AuthenticateFunc: func(redirectOnError bool) echo.MiddlewareFunc {
 			return func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 				return func(context echo.Context) error {

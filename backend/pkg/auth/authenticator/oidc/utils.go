@@ -39,11 +39,17 @@ func SaveUserInfo(ctx context.Context, userRepo domain.UserRepository, as store.
 // SaveAuthenticatedUser when user logs in, update the context with the user info,
 // and also saves the newly gotten user info in the db
 func SaveAuthenticatedUser(c echo.Context, ctx context.Context, userRepo domain.UserRepository, store store.Store, sub string, username string, email string) error {
+	SetAuthenticatedUser(c, sub, username, email)
+	return SaveUserInfo(ctx, userRepo, store, sub, email, username)
+}
+
+// SaveAuthenticatedUser when user logs in, update the context with the user info,
+// and also saves the newly gotten user info in the db
+func SetAuthenticatedUser(c echo.Context, sub string, username string, email string) {
 	SetIsAuthenticated(c, true)
 	c.Set(authenticator.SubjectUsernameKey, username)
 	c.Set(authenticator.SubjectEmailKey, email)
 	c.Set(authenticator.SubjectKey, sub)
-	return SaveUserInfo(ctx, userRepo, store, sub, email, username)
 }
 
 // SetIsAuthenticated marks the current user as authenticated

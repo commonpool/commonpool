@@ -84,7 +84,7 @@ func (s *GroupReadModelTestSuite) TestGroupReadModelCreateGroup() {
 		return
 	}
 
-	if !assert.NoError(s.T(), s.l.applyEvent(events[0])) {
+	if !assert.NoError(s.T(), s.l.applyEvent(context.TODO(), events[0])) {
 		return
 	}
 
@@ -98,7 +98,7 @@ func (s *GroupReadModelTestSuite) TestGroupReadModelCreateGroup() {
 	assert.Equal(s.T(), 0, group.Version)
 	assert.Equal(s.T(), "TestGroupReadModelCreateGroup-Owner", group.CreatedBy)
 
-	if !assert.NoError(s.T(), s.l.applyEvent(events[1])) {
+	if !assert.NoError(s.T(), s.l.applyEvent(context.TODO(), events[1])) {
 		return
 	}
 
@@ -159,7 +159,7 @@ func (s *GroupReadModelTestSuite) TestChangeGroupInfo() {
 		return
 	}
 
-	if !assert.NoError(s.T(), s.l.applyEvents(events)) {
+	if !assert.NoError(s.T(), s.l.applyEvents(context.TODO(), events)) {
 		return
 	}
 
@@ -210,7 +210,7 @@ func (s *GroupReadModelTestSuite) TestInviteUser() {
 		return
 	}
 
-	if !assert.NoError(s.T(), s.l.applyEvents(events)) {
+	if !assert.NoError(s.T(), s.l.applyEvents(context.TODO(), events)) {
 		return
 	}
 
@@ -265,7 +265,7 @@ func (s *GroupReadModelTestSuite) TestUserAcceptedInvitation() {
 		return
 	}
 
-	if !assert.NoError(s.T(), s.l.applyEvents(events)) {
+	if !assert.NoError(s.T(), s.l.applyEvents(context.TODO(), events)) {
 		return
 	}
 
@@ -317,7 +317,7 @@ func (s *GroupReadModelTestSuite) TestJoinGroup() {
 		return
 	}
 
-	if !assert.NoError(s.T(), s.l.applyEvents(events)) {
+	if !assert.NoError(s.T(), s.l.applyEvents(context.TODO(), events)) {
 		return
 	}
 
@@ -373,7 +373,7 @@ func (s *GroupReadModelTestSuite) TestGroupAcceptedInvitation() {
 		return
 	}
 
-	if !assert.NoError(s.T(), s.l.applyEvents(events)) {
+	if !assert.NoError(s.T(), s.l.applyEvents(context.TODO(), events)) {
 		return
 	}
 
@@ -433,7 +433,7 @@ func (s *GroupReadModelTestSuite) TestPermissionChanged() {
 		return
 	}
 
-	if !assert.NoError(s.T(), s.l.applyEvents(events)) {
+	if !assert.NoError(s.T(), s.l.applyEvents(context.TODO(), events)) {
 		return
 	}
 
@@ -484,7 +484,7 @@ func (s *GroupReadModelTestSuite) TestLeftGroup() {
 		return
 	}
 
-	if !assert.NoError(s.T(), s.l.applyEvents(events)) {
+	if !assert.NoError(s.T(), s.l.applyEvents(context.TODO(), events)) {
 		return
 	}
 

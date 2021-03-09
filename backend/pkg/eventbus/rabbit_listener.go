@@ -19,7 +19,7 @@ type RabbitMQListener struct {
 	eventMapper *eventsource.EventMapper
 }
 
-type ListenerFunc func(events []eventsource.Event) error
+type ListenerFunc func(ctx context.Context, events []eventsource.Event) error
 
 func NewRabbitMqListener(amqpClient mq.Client, eventMapper *eventsource.EventMapper) *RabbitMQListener {
 	return &RabbitMQListener{
@@ -105,7 +105,7 @@ func (s *RabbitMQListener) Listen(ctx context.Context, listenerFunc ListenerFunc
 					continue
 				}
 
-				err = listenerFunc([]eventsource.Event{evt})
+				err = listenerFunc(ctx, []eventsource.Event{evt})
 				if err != nil {
 					l.Error("listener error", zap.Error(err), zap.String("event_type", msg.Type))
 					continue

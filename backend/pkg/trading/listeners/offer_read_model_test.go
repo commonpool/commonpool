@@ -107,7 +107,7 @@ func (s *OfferReadModelTestSuite) saveAndApply(aggregate Aggregate) ([]eventsour
 	if err != nil {
 		return nil, err
 	}
-	err = s.listener.HandleEvents(evts)
+	err = s.listener.HandleEvents(context.TODO(), evts)
 	aggregate.MarkAsCommitted()
 	return evts, err
 }

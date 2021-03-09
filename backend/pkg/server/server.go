@@ -418,6 +418,7 @@ func NewServer() (*Server, error) {
 }
 
 func (s *Server) Start() error {
+	fmt.Print("hello!")
 	if err := s.Router.Start("0.0.0.0:8585"); err != nil {
 		return err
 	}

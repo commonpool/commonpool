@@ -19,9 +19,9 @@ func NewDeduplicateListener(deduplicator EventDeduplicator, listener Listener) *
 }
 
 func (s *DeduplicateListener) Listen(ctx context.Context, listenerFunc ListenerFunc) error {
-	return s.listener.Listen(ctx, func(events []eventsource.Event) error {
+	return s.listener.Listen(ctx, func(ctx context.Context, events []eventsource.Event) error {
 		return s.deduplicator.Deduplicate(ctx, events, func(evt eventsource.Event) error {
-			return listenerFunc([]eventsource.Event{evt})
+			return listenerFunc(ctx, []eventsource.Event{evt})
 		})
 	})
 }

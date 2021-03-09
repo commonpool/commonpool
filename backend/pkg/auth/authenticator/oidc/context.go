@@ -27,3 +27,12 @@ func GetLoggedInUser(ctx context.Context) (*models.UserSession, error) {
 	}, nil
 
 }
+
+// GetLoggedInUser gets the user session from the context
+func WithContextUser(ctx context.Context, userKey, userName, email string) context.Context {
+	ctx = context.WithValue(ctx, authenticator.SubjectKey, userKey)
+	ctx = context.WithValue(ctx, authenticator.SubjectUsernameKey, userName)
+	ctx = context.WithValue(ctx, authenticator.SubjectEmailKey, email)
+	ctx = context.WithValue(ctx, authenticator.IsAuthenticatedKey, true)
+	return ctx
+}

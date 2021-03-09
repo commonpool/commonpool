@@ -50,7 +50,7 @@ func TestLockedListener(t *testing.T) {
 			if err := listener.Initialize(ctx, "listener", []string{"bla"}); !assert.NoError(t, err) {
 				return err
 			}
-			if err := listener.Listen(ctx, func(events []eventsource.Event) error {
+			if err := listener.Listen(ctx, func(ctx context.Context, events []eventsource.Event) error {
 				t.Logf("entering listener %d", i)
 				defer t.Logf(" exiting listener %d", i)
 				for _, event := range events {

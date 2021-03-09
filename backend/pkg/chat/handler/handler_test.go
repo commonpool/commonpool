@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/commonpool/backend/mock"
+	mock2 "github.com/commonpool/backend/mock/chat_service"
 	"github.com/commonpool/backend/pkg/test"
 	"github.com/stretchr/testify/suite"
 	"testing"
@@ -9,7 +9,7 @@ import (
 
 type chatHandlerSuite struct {
 	test.HandlerSuite
-	ChatService *mock.ChatService
+	ChatService *mock2.ChatService
 	Handler     *Handler
 }
 
@@ -19,7 +19,7 @@ func TestChatHandler(t *testing.T) {
 
 func (s *chatHandlerSuite) SetupTest() {
 	s.HandlerSuite.SetupTest()
-	s.ChatService = &mock.ChatService{}
+	s.ChatService = &mock2.ChatService{}
 
 	s.Handler = &Handler{
 		chatService: s.ChatService,

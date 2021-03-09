@@ -69,7 +69,7 @@ func (s *RabbitListenerTestSuite) TestSubscriberIsCalled() {
 
 	subscriberCalled := false
 	go func() {
-		err := sub.Listen(ctx, func(events []eventsource.Event) error {
+		err := sub.Listen(ctx, func(ctx context.Context, events []eventsource.Event) error {
 			s.T().Log("subscriber called")
 			subscriberCalled = true
 			cancel()
@@ -103,7 +103,7 @@ func (s *RabbitListenerTestSuite) TestMessagesPersisted() {
 	}
 
 	go func() {
-		err := sub.Listen(ctx1, func(events []eventsource.Event) error {
+		err := sub.Listen(ctx1, func(ctx context.Context, events []eventsource.Event) error {
 			var evtIds []string
 			for _, event := range events {
 				evtIds = append(evtIds, event.GetEventID())
@@ -134,7 +134,7 @@ func (s *RabbitListenerTestSuite) TestMessagesPersisted() {
 	called := false
 
 	go func() {
-		err := sub.Listen(ctx2, func(events []eventsource.Event) error {
+		err := sub.Listen(ctx2, func(ctx context.Context, events []eventsource.Event) error {
 			s.T().Log("Event received")
 			called = true
 			cancel2()

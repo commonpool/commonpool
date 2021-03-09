@@ -7,7 +7,6 @@ import (
 	"github.com/avast/retry-go"
 	"github.com/commonpool/backend/pkg/auth/models"
 	"github.com/commonpool/backend/pkg/exceptions"
-	group2 "github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/group/handler"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/stretchr/testify/assert"
@@ -33,9 +32,7 @@ func (s *IntegrationTestSuite) CreateOrAcceptInvitation(ctx context.Context, use
 func (s *IntegrationTestSuite) DeclineOrCancelInvitation(t *testing.T, ctx context.Context, userSession *models.UserSession, request *handler.CancelOrDeclineInvitationRequest) *http.Response {
 	req, recorder := NewRequest(ctx, userSession, http.MethodDelete, "/api/v1/memberships", request)
 	s.server.Router.ServeHTTP(recorder, req)
-	response := group2.CancelOrDeclineInvitationRequest{}
-	t.Log(recorder.Body.String())
-	return ReadResponse(s.T(), recorder, response)
+	return ReadResponse(s.T(), recorder, nil)
 }
 
 func (s *IntegrationTestSuite) GetUsersForInvitePicker(t *testing.T, ctx context.Context, groupId keys.GroupKey, take int, skip int, userSession *models.UserSession) (*handler.GetUsersForGroupInvitePickerResponse, *http.Response) {
@@ -152,7 +149,7 @@ func (s *IntegrationTestSuite) TestGroups() {
 		if !assert.NoError(t, err) {
 			return
 		}
-		assert.Equal(t, groupOwner.Subject, membership.UserKey)
+		assert.Equal(t, groupOwner.GetUserKey(), membership.UserKey)
 		assert.Equal(t, true, membership.IsOwner)
 		assert.Equal(t, true, membership.UserConfirmed)
 		assert.Equal(t, true, membership.GroupConfirmed)
@@ -214,7 +211,7 @@ func (s *IntegrationTestSuite) TestGroups() {
 			return
 		}
 
-		assert.Equal(t, user.Subject, membership.Membership.UserKey)
+		assert.Equal(t, user.GetUserKey(), membership.Membership.UserKey)
 		assert.Equal(t, false, membership.Membership.IsAdmin)
 		assert.Equal(t, false, membership.Membership.IsOwner)
 		assert.Equal(t, false, membership.Membership.IsMember)
@@ -262,7 +259,7 @@ func (s *IntegrationTestSuite) TestGroups() {
 			return
 		}
 
-		assert.Equal(t, user.Subject, membership.Membership.UserKey)
+		assert.Equal(t, user.GetUserKey(), membership.Membership.UserKey)
 		assert.Equal(t, false, membership.Membership.IsAdmin)
 		assert.Equal(t, false, membership.Membership.IsOwner)
 		assert.Equal(t, true, membership.Membership.IsMember)
@@ -378,7 +375,7 @@ func (s *IntegrationTestSuite) TestGroups() {
 			return
 		}
 
-		assert.Equal(t, user.Subject, membership.Membership.UserKey)
+		assert.Equal(t, user.GetUserKey(), membership.Membership.UserKey)
 		assert.Equal(t, false, membership.Membership.IsAdmin)
 		assert.Equal(t, false, membership.Membership.IsOwner)
 		assert.Equal(t, false, membership.Membership.IsMember)
@@ -418,7 +415,7 @@ func (s *IntegrationTestSuite) TestGroups() {
 		}
 
 		membership := membershipResponse.Membership
-		assert.Equal(t, user.Subject, membership.UserKey)
+		assert.Equal(t, user.GetUserKey(), membership.UserKey)
 		assert.Equal(t, false, membership.IsAdmin)
 		assert.Equal(t, false, membership.IsOwner)
 		assert.Equal(t, true, membership.IsMember)
@@ -607,7 +604,7 @@ func (s *IntegrationTestSuite) TestGroups() {
 		assert.Equal(t, groupKey, membership.GroupKey)
 		assert.Equal(t, group.Group.Name, membership.GroupName)
 		assert.Equal(t, group.Group.GroupKey, membership.GroupKey)
-		assert.Equal(t, groupOwner.Subject, membership.UserKey)
+		assert.Equal(t, groupOwner.GetUserKey(), membership.UserKey)
 		assert.Equal(t, groupOwner.Username, membership.UserName)
 		assert.Equal(t, true, membership.UserConfirmed)
 		assert.Equal(t, true, membership.GroupConfirmed)

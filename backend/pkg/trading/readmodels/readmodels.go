@@ -116,7 +116,7 @@ type OfferItemReadModel2 struct {
 	LentItemReceivedBy     *OfferUserReadModel       `json:"lent_item_received_by,omitempty"`
 	From                   *OfferItemTargetReadModel `json:"from,omitempty"`
 	To                     *OfferItemTargetReadModel `json:"to,omitempty"`
-	Resource               *OfferResourceReadModel   `json:"resource"`
+	Resource               *OfferResourceReadModel   `json:"resource,omitempty"`
 }
 
 type OfferItemReadModel struct {

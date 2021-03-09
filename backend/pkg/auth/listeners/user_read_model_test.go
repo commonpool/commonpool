@@ -39,7 +39,7 @@ func (s *UserReadModelTestSuite) saveAndLoadEvents(user *domain.User, alsoHandle
 	}
 
 	if alsoHandleEvents {
-		err = s.l.handleEvents(evts)
+		err = s.l.handleEvents(context.TODO(), evts)
 		if !assert.NoError(s.T(), err) {
 			return nil, err
 		}

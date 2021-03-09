@@ -65,7 +65,7 @@ func (h *OfferReadModelHandler) migrateDatabase() error {
 	return nil
 }
 
-func (h *OfferReadModelHandler) HandleEvents(events []eventsource.Event) error {
+func (h *OfferReadModelHandler) HandleEvents(ctx context.Context, events []eventsource.Event) error {
 	for _, event := range events {
 		if err := h.HandleEvent(event); err != nil {
 			return err

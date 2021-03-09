@@ -12,7 +12,7 @@ func (s *chatHandlerSuite) TestGetSubscriptions() {
 	s.NewContext(http.MethodGet, "/api/v1/chat/subscriptions", nil)
 	s.ChatService.GetSubscriptionsForUserFunc = func(ctx context.Context, take int, skip int) (*chat.ChannelSubscriptions, error) {
 		return &chat.ChannelSubscriptions{
-			Items: []chat.ChannelSubscription{},
+			Items: []*chat.ChannelSubscription{},
 		}, nil
 	}
 	s.ServeHTTP()

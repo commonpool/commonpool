@@ -5,8 +5,8 @@ import (
 )
 
 type MembershipKey struct {
-	UserKey  UserKey
-	GroupKey GroupKey
+	UserKey  UserKey  `json:"user_key"`
+	GroupKey GroupKey `json:"group_key"`
 }
 
 func (m MembershipKey) MarshalLogObject(encoder zapcore.ObjectEncoder) error {

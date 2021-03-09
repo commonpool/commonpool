@@ -38,7 +38,7 @@ func (h *TransactionHistoryHandler) Start(ctx context.Context) error {
 	}); err != nil {
 		return err
 	}
-	return listener.Listen(ctx, func(events []eventsource.Event) error {
+	return listener.Listen(ctx, func(ctx context.Context, events []eventsource.Event) error {
 		for _, event := range events {
 			if event.GetEventType() != domain.OfferCompletedEvent {
 				continue

@@ -67,7 +67,7 @@ func (s *ReplayListenerTestSuite) TestReplayListener() {
 	}
 
 	var loaded []eventsource.Event
-	err = listener.Listen(ctx, func(events []eventsource.Event) error {
+	err = listener.Listen(ctx, func(ctx context.Context, events []eventsource.Event) error {
 		for _, loadedEvent := range events {
 			loaded = append(loaded, loadedEvent)
 			s.T().Logf("event received: %s", loadedEvent.GetEventID())

@@ -9,6 +9,7 @@ import (
 	"github.com/commonpool/backend/pkg/group/domain"
 	"github.com/commonpool/backend/pkg/group/readmodels"
 	"github.com/commonpool/backend/pkg/keys"
+	"golang.org/x/sync/errgroup"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"time"
@@ -40,9 +41,9 @@ func (l *GroupReadModelListener) Start(ctx context.Context) error {
 	return factory.Listen(ctx, l.applyEvents)
 }
 
-func (l *GroupReadModelListener) applyEvents(events []eventsource.Event) error {
+func (l *GroupReadModelListener) applyEvents(ctx context.Context, events []eventsource.Event) error {
 	for _, event := range events {
-		if err := l.applyEvent(event); err != nil {
+		if err := l.applyEvent(ctx, event); err != nil {
 			return err
 		}
 	}
@@ -53,18 +54,18 @@ func (l *GroupReadModelListener) migrateDatabase() error {
 	return l.db.AutoMigrate(&readmodels.GroupReadModel{}, &readmodels.MembershipReadModel{}, &readmodels.DBGroupUserReadModel{})
 }
 
-func (l *GroupReadModelListener) applyEvent(event eventsource.Event) error {
+func (l *GroupReadModelListener) applyEvent(ctx context.Context, event eventsource.Event) error {
 	switch e := event.(type) {
 	case domain.GroupCreated:
 		return l.applyGroupCreatedEvent(e)
 	case domain.GroupInfoChanged:
-		return l.applyGroupInfoChangedEvent(e)
+		return l.applyGroupInfoChangedEvent(ctx, e)
 	case domain.MembershipStatusChanged:
 		return l.applyMembershipStatusChangedEvent(e)
 	case userdomain.UserDiscovered:
-		return l.handleUserDiscovered(e)
+		return l.handleUserDiscovered(ctx, e)
 	case userdomain.UserInfoChanged:
-		return l.handleUserInfoChanged(e)
+		return l.handleUserInfoChanged(ctx, e)
 	}
 	return nil
 }
@@ -88,7 +89,6 @@ func (l *GroupReadModelListener) applyMembershipStatusChangedEvent(e domain.Memb
 	}
 
 	if e.IsNewMembership {
-
 		updates := map[string]interface{}{
 			"version":            e.SequenceNo,
 			"group_key":          e.AggregateID,
@@ -102,10 +102,8 @@ func (l *GroupReadModelListener) applyMembershipStatusChangedEvent(e domain.Memb
 			"user_name":          userName,
 			"user_version":       userVersion,
 		}
-
-		applyMembershipChanged(updates, e)
-
-		err := l.db.Clauses(
+		populateMembershipUpdates(updates, e)
+		return l.db.Clauses(
 			clause.OnConflict{
 				Where: clause.Where{
 					Exprs: []clause.Expression{
@@ -117,13 +115,8 @@ func (l *GroupReadModelListener) applyMembershipStatusChangedEvent(e domain.Memb
 				},
 				UpdateAll: true,
 			}).Model(&readmodels.MembershipReadModel{}).Create(updates).Error
-
-		if err != nil {
-			return err
-		}
-
 	} else if e.IsCanceledMembership {
-		err := l.db.Transaction(func(tx *gorm.DB) error {
+		return l.db.Transaction(func(tx *gorm.DB) error {
 			if err := tx.
 				Where("group_key = ? and user_key = ?", e.AggregateID, e.MemberKey.String()).
 				Delete(&readmodels.MembershipReadModel{}).
@@ -134,58 +127,43 @@ func (l *GroupReadModelListener) applyMembershipStatusChangedEvent(e domain.Memb
 		}, &sql.TxOptions{
 			Isolation: sql.LevelSerializable,
 		})
-		if err != nil {
-			return err
-		}
 	} else {
-
 		updates := map[string]interface{}{
 			"version": e.SequenceNo,
 		}
-
-		applyMembershipChanged(updates, e)
-
-		if err := l.db.Model(&readmodels.MembershipReadModel{}).
+		populateMembershipUpdates(updates, e)
+		return l.db.Model(&readmodels.MembershipReadModel{}).
 			Where("group_key = ? and user_key = ? and version < ?", e.AggregateID, e.MemberKey.String(), e.SequenceNo).
-			Updates(updates).Error; err != nil {
-			return err
-		}
+			Updates(updates).Error
 	}
-	return nil
 }
 
-func (l *GroupReadModelListener) applyGroupInfoChangedEvent(e domain.GroupInfoChanged) error {
-
+func (l *GroupReadModelListener) applyGroupInfoChangedEvent(ctx context.Context, e domain.GroupInfoChanged) error {
 	return l.db.Transaction(func(tx *gorm.DB) error {
-
-		err := tx.
-			Model(&readmodels.GroupReadModel{}).
-			Where("group_key = ? and version < ?", e.AggregateID, e.SequenceNo).
-			Updates(map[string]interface{}{
-				"name":        e.NewGroupInfo.Name,
-				"description": e.NewGroupInfo.Description,
-				"version":     e.SequenceNo,
-			}).Error
-		if err != nil {
-			return err
-		}
-
-		if e.OldGroupInfo.Name != e.NewGroupInfo.Name {
-			qry := tx.
-				Model(&readmodels.MembershipReadModel{}).
+		g, _ := errgroup.WithContext(ctx)
+		g.Go(func() error {
+			return tx.
+				Model(&readmodels.GroupReadModel{}).
 				Where("group_key = ? and version < ?", e.AggregateID, e.SequenceNo).
 				Updates(map[string]interface{}{
-					"group_name": e.NewGroupInfo.Name,
-					"version":    e.SequenceNo,
-				})
-			err := qry.Error
-			if err != nil {
-				return err
+					"name":        e.NewGroupInfo.Name,
+					"description": e.NewGroupInfo.Description,
+					"version":     e.SequenceNo,
+				}).Error
+		})
+		g.Go(func() error {
+			if e.OldGroupInfo.Name != e.NewGroupInfo.Name {
+				return tx.
+					Model(&readmodels.MembershipReadModel{}).
+					Where("group_key = ? and version < ?", e.AggregateID, e.SequenceNo).
+					Updates(map[string]interface{}{
+						"group_name": e.NewGroupInfo.Name,
+						"version":    e.SequenceNo,
+					}).Error
 			}
-		}
-
-		return nil
-
+			return nil
+		})
+		return g.Wait()
 	}, &sql.TxOptions{
 		Isolation: sql.LevelSerializable,
 	})
@@ -218,39 +196,45 @@ func (l *GroupReadModelListener) applyGroupCreatedEvent(e domain.GroupCreated) e
 	}).Error
 }
 
-func (l *GroupReadModelListener) handleUserDiscovered(e userdomain.UserDiscovered) error {
+func (l *GroupReadModelListener) handleUserDiscovered(ctx context.Context, e userdomain.UserDiscovered) error {
 	userKey := keys.NewUserKey(e.AggregateID)
-	err := getOptimisticLocking(l.db, e.SequenceNo).Model(&readmodels.DBGroupUserReadModel{}).Create(&readmodels.DBGroupUserReadModel{
-		UserKey: userKey,
-		Name:    e.UserInfo.Username,
-		Version: e.SequenceNo,
-	}).Error
-	if err != nil {
-		return err
-	}
-	return l.db.Model(&readmodels.MembershipReadModel{}).Where("user_version < ?", e.SequenceNo).Updates(map[string]interface{}{
-		"user_name":    e.UserInfo.Username,
-		"user_version": e.SequenceNo,
-	}).Error
+	g, ctx := errgroup.WithContext(ctx)
+	g.Go(func() error {
+		return getOptimisticLocking(l.db, e.SequenceNo).Model(&readmodels.DBGroupUserReadModel{}).Create(&readmodels.DBGroupUserReadModel{
+			UserKey: userKey,
+			Name:    e.UserInfo.Username,
+			Version: e.SequenceNo,
+		}).Error
+	})
+	g.Go(func() error {
+		return l.db.Model(&readmodels.MembershipReadModel{}).Where("user_version < ?", e.SequenceNo).Updates(map[string]interface{}{
+			"user_name":    e.UserInfo.Username,
+			"user_version": e.SequenceNo,
+		}).Error
+	})
+	return g.Wait()
 }
 
-func (l *GroupReadModelListener) handleUserInfoChanged(e userdomain.UserInfoChanged) error {
+func (l *GroupReadModelListener) handleUserInfoChanged(ctx context.Context, e userdomain.UserInfoChanged) error {
 	userKey := keys.NewUserKey(e.AggregateID)
-	err := getOptimisticLocking(l.db, e.SequenceNo).Model(&readmodels.DBGroupUserReadModel{}).Create(&readmodels.DBGroupUserReadModel{
-		UserKey: userKey,
-		Name:    e.NewUserInfo.Username,
-		Version: e.SequenceNo,
-	}).Error
-	if err != nil {
-		return err
-	}
-	return l.db.Where("user_version < ?", e.SequenceNo).Model(&readmodels.MembershipReadModel{}).Updates(map[string]interface{}{
-		"user_name":    e.NewUserInfo.Username,
-		"user_version": e.SequenceNo,
-	}).Error
+	g, ctx := errgroup.WithContext(ctx)
+	g.Go(func() error {
+		return getOptimisticLocking(l.db, e.SequenceNo).Model(&readmodels.DBGroupUserReadModel{}).Create(&readmodels.DBGroupUserReadModel{
+			UserKey: userKey,
+			Name:    e.NewUserInfo.Username,
+			Version: e.SequenceNo,
+		}).Error
+	})
+	g.Go(func() error {
+		return l.db.Where("user_version < ?", e.SequenceNo).Model(&readmodels.MembershipReadModel{}).Updates(map[string]interface{}{
+			"user_name":    e.NewUserInfo.Username,
+			"user_version": e.SequenceNo,
+		}).Error
+	})
+	return g.Wait()
 }
 
-func applyMembershipChanged(values map[string]interface{}, e domain.MembershipStatusChanged) {
+func populateMembershipUpdates(values map[string]interface{}, e domain.MembershipStatusChanged) {
 
 	if e.OldStatus == nil && *e.NewStatus == domain.ApprovedMembershipStatus {
 		values["group_confirmed"] = true

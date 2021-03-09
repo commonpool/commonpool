@@ -35,6 +35,6 @@ func (s *ReplayListener) Listen(ctx context.Context, listenerFunc ListenerFunc) 
 	l := logging.WithContext(ctx).Named("ReplayListener " + s.name)
 	return s.eventStore.ReplayEventsByType(ctx, s.eventTypes, s.getCurrentTimestamp(), func(events []eventsource.Event) error {
 		l.Debug("received events from event store")
-		return listenerFunc(events)
+		return listenerFunc(ctx, events)
 	})
 }

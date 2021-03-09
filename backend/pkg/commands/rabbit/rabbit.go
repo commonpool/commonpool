@@ -18,6 +18,10 @@ type RabbitCommandBus struct {
 	cmdMapper  *commands.CommandMapper
 }
 
+func (r *RabbitCommandBus) Send(ctx context.Context, command commands.Command) commands.CommandResponse {
+	panic("implement me")
+}
+
 func NewRabbitCommandBus(amqpClient mq.Client, commandMapper *commands.CommandMapper) *RabbitCommandBus {
 	return &RabbitCommandBus{
 		amqpClient: amqpClient,

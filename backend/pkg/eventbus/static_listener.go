@@ -21,7 +21,7 @@ func (s *StaticListener) Listen(ctx context.Context, listenerFunc ListenerFunc) 
 	if !s.initialized {
 		return fmt.Errorf("not initialized")
 	}
-	return listenerFunc(s.events)
+	return listenerFunc(ctx, s.events)
 }
 
 func (s *StaticListener) Initialize(ctx context.Context, name string, eventTypes []string) error {

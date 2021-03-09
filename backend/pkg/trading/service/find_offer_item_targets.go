@@ -37,8 +37,7 @@ func (t TradingService) FindTargetsForOfferItem(
 	}
 
 	for _, membership := range membershipsForGroup.Memberships {
-		userKey := keys.NewUserKey(membership.UserKey)
-		userTarget := keys.NewUserTarget(userKey)
+		userTarget := membership.UserKey.Target()
 		if to == nil || !to.Equals(*userTarget) {
 			targets = append(targets, userTarget)
 		}
