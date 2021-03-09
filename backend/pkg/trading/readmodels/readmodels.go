@@ -9,6 +9,7 @@ import (
 
 type OfferReadModelBase struct {
 	OfferKey    keys.OfferKey      `gorm:"primaryKey" json:"offer_key,omitempty"`
+	GroupKey    keys.GroupKey      `json:"group_key"`
 	Status      domain.OfferStatus `json:"status,omitempty"`
 	Version     int                `json:"version,omitempty"`
 	DeclinedAt  *time.Time         `json:"declined_at,omitempty"`
@@ -46,7 +47,7 @@ type OfferResourceReadModel struct {
 	Version      int                  `json:"version"`
 	ResourceType domain2.ResourceType `json:"resource_type"`
 	CallType     domain2.CallType     `json:"call_type"`
-	Owner        domain.Target        `json:"owner" gorm:"embedded;embeddedPrefix:owner_"`
+	Owner        keys.Target          `json:"owner" gorm:"embedded;embeddedPrefix:owner_"`
 }
 
 type OfferGroupReadModel struct {
@@ -56,7 +57,7 @@ type OfferGroupReadModel struct {
 }
 
 type OfferItemTargetReadModel struct {
-	domain.Target
+	keys.Target
 	GroupName    *string `json:"group_name,omitempty"`
 	UserName     *string `json:"user_name,omitempty"`
 	UserVersion  *int    `json:"user_version,omitempty"`
@@ -130,7 +131,7 @@ type OfferItemReadModel struct {
 	ResourceLentBy         *keys.UserKey
 	BorrowedItemReturnedBy *keys.UserKey
 	LentItemReceivedBy     *keys.UserKey
-	From                   *domain.Target `gorm:"embedded;embeddedPrefix:from_"`
-	To                     *domain.Target `gorm:"embedded;embeddedPrefix:to_"`
+	From                   *keys.Target `gorm:"embedded;embeddedPrefix:from_"`
+	To                     *keys.Target `gorm:"embedded;embeddedPrefix:to_"`
 	ResourceKey            *keys.ResourceKey
 }

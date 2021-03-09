@@ -3,13 +3,12 @@ package domain
 import (
 	"github.com/commonpool/backend/pkg/eventsource"
 	"github.com/commonpool/backend/pkg/keys"
-	"github.com/commonpool/backend/pkg/trading/domain"
 )
 
 type ResourceRegisteredPayload struct {
-	RegisteredBy  keys.UserKey  `json:"registered_by"`
-	RegisteredFor domain.Target `json:"registered_for"`
-	ResourceInfo  ResourceInfo  `json:"resource_info"`
+	RegisteredBy  keys.UserKey `json:"registered_by"`
+	RegisteredFor keys.Target  `json:"registered_for"`
+	ResourceInfo  ResourceInfo `json:"resource_info"`
 }
 
 type ResourceRegistered struct {
@@ -17,7 +16,7 @@ type ResourceRegistered struct {
 	ResourceRegisteredPayload `json:"payload"`
 }
 
-func NewResourceRegistered(registeredBy keys.UserKey, registeredFor domain.Target, resourceInfo ResourceInfo) ResourceRegistered {
+func NewResourceRegistered(registeredBy keys.UserKey, registeredFor keys.Target, resourceInfo ResourceInfo) ResourceRegistered {
 	return ResourceRegistered{
 		eventsource.NewEventEnvelope(ResourceRegisteredEvent, 1),
 		ResourceRegisteredPayload{

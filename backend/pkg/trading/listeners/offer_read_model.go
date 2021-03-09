@@ -374,6 +374,7 @@ func (h *OfferReadModelHandler) handleOfferSubmitted(e *domain.OfferSubmitted) e
 		}).Create(&groupreadmodels.DBOfferReadModel{
 			OfferReadModelBase: groupreadmodels.OfferReadModelBase{
 				OfferKey:    offerKey,
+				GroupKey:    e.GroupKey,
 				Status:      domain.Pending,
 				Version:     e.GetSequenceNo(),
 				SubmittedAt: e.GetEventTime(),
@@ -569,6 +570,7 @@ func (h *OfferReadModelHandler) handleMembershipStatusChanged(e groupdomain.Memb
 			).Error
 	} else {
 		return h.db.Model(&groupreadmodels.OfferUserMembershipReadModel{}).
+			Where("user_key = ? and version < ?", e.MemberKey, e.SequenceNo).
 			Updates(map[string]interface{}{
 				"is_member": e.NewPermissions.IsMember(),
 				"is_owner":  e.NewPermissions.IsOwner(),

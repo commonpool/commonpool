@@ -65,12 +65,12 @@ func getGroup(t *testing.T, id string) GetGroupResponse {
 	return response
 }
 
-func getLoggedInUserMemberships(t *testing.T) GetUserMembershipsResponse {
+func getLoggedInUserMemberships(t *testing.T) GetMembershipsResponse {
 	_, _, rec, c := handler.newRequest(echo.POST, "/api/v1/my/memberships", nil)
 	err := handler.h.GetLoggedInUserMemberships(c)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, rec.Code)
-	response := GetUserMembershipsResponse{}
+	response := GetMembershipsResponse{}
 	assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &response))
 	return response
 }

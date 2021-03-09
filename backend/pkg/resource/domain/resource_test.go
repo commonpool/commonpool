@@ -4,7 +4,6 @@ import (
 	json2 "encoding/json"
 	"github.com/commonpool/backend/pkg/eventsource"
 	"github.com/commonpool/backend/pkg/keys"
-	"github.com/commonpool/backend/pkg/trading/domain"
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -16,7 +15,7 @@ type ResourceTestSuite struct {
 	suite.Suite
 	user         keys.UserKey
 	user2        keys.UserKey
-	userTarget   domain.Target
+	userTarget   keys.Target
 	resource     *Resource
 	resourceInfo ResourceInfo
 	group1       keys.GroupKey
@@ -30,7 +29,7 @@ func (s *ResourceTestSuite) SetupTest() {
 	r := NewResource(s.resourceKey)
 	s.user = keys.NewUserKey("user")
 	s.user2 = keys.NewUserKey("user2")
-	s.userTarget = *domain.NewUserTarget(s.user)
+	s.userTarget = *keys.NewUserTarget(s.user)
 	s.group1 = keys.NewGroupKey(uuid.NewV4())
 	s.group2 = keys.NewGroupKey(uuid.NewV4())
 	s.group3 = keys.NewGroupKey(uuid.NewV4())
@@ -55,7 +54,7 @@ func (s *ResourceTestSuite) SetupTest() {
 func (s *ResourceTestSuite) TestNewResource() {
 	r := NewResource(s.resourceKey)
 	user := keys.NewUserKey("user")
-	err := r.Register(user, *domain.NewUserTarget(user), ServiceResource, s.resourceInfo, *keys.NewGroupKeys([]keys.GroupKey{}))
+	err := r.Register(user, *keys.NewUserTarget(user), ServiceResource, s.resourceInfo, *keys.NewGroupKeys([]keys.GroupKey{}))
 	if !assert.NoError(s.T(), err) {
 		return
 	}
@@ -65,7 +64,7 @@ func (s *ResourceTestSuite) TestNewResource() {
 func (s *ResourceTestSuite) TestNewResourceWithSharings() {
 	r := NewResource(s.resourceKey)
 	user := keys.NewUserKey("user")
-	err := r.Register(user, *domain.NewUserTarget(user), ServiceResource, s.resourceInfo, *keys.NewGroupKeys([]keys.GroupKey{
+	err := r.Register(user, *keys.NewUserTarget(user), ServiceResource, s.resourceInfo, *keys.NewGroupKeys([]keys.GroupKey{
 		s.group1,
 	}))
 

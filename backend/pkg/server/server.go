@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"github.com/bsm/redislock"
 	_ "github.com/commonpool/backend/docs"
+	commands2 "github.com/commonpool/backend/pkg/auth/commands"
 	authdomain "github.com/commonpool/backend/pkg/auth/domain"
-	listeners3 "github.com/commonpool/backend/pkg/auth/listeners"
+	userlisteners "github.com/commonpool/backend/pkg/auth/listeners"
 	"github.com/commonpool/backend/pkg/auth/module"
-	"github.com/commonpool/backend/pkg/auth/store"
 	chathandler "github.com/commonpool/backend/pkg/chat/handler"
 	chatservice "github.com/commonpool/backend/pkg/chat/service"
 	chatstore "github.com/commonpool/backend/pkg/chat/store"
@@ -24,7 +24,7 @@ import (
 	"github.com/commonpool/backend/pkg/graph"
 	groupdomain "github.com/commonpool/backend/pkg/group/domain"
 	grouphandler "github.com/commonpool/backend/pkg/group/handler"
-	listeners2 "github.com/commonpool/backend/pkg/group/listeners"
+	grouplisteners "github.com/commonpool/backend/pkg/group/listeners"
 	groupqueries "github.com/commonpool/backend/pkg/group/queries"
 	groupservice "github.com/commonpool/backend/pkg/group/service"
 	groupstore "github.com/commonpool/backend/pkg/group/store"
@@ -34,12 +34,14 @@ import (
 	"github.com/commonpool/backend/pkg/realtime"
 	resourcedomain "github.com/commonpool/backend/pkg/resource/domain"
 	resourcehandler "github.com/commonpool/backend/pkg/resource/handler"
-	listeners4 "github.com/commonpool/backend/pkg/resource/listeners"
+	resourcelisteners "github.com/commonpool/backend/pkg/resource/listeners"
 	resourcequeries "github.com/commonpool/backend/pkg/resource/queries"
 	resourcestore "github.com/commonpool/backend/pkg/resource/store"
 	"github.com/commonpool/backend/pkg/trading"
+	tradingcmdhandlers "github.com/commonpool/backend/pkg/trading/commandhandlers"
+	tradingdomain "github.com/commonpool/backend/pkg/trading/domain"
 	tradinghandler "github.com/commonpool/backend/pkg/trading/handler"
-	"github.com/commonpool/backend/pkg/trading/listeners"
+	tradinglisteners "github.com/commonpool/backend/pkg/trading/listeners"
 	"github.com/commonpool/backend/pkg/trading/queries"
 	tradingservice "github.com/commonpool/backend/pkg/trading/service"
 	tradingstore "github.com/commonpool/backend/pkg/trading/store"
@@ -61,44 +63,53 @@ import (
 type Group struct {
 	Handler    *grouphandler.Handler
 	Repository groupdomain.GroupRepository
-	Queries    GroupQueries
 	Service    *groupservice.GroupService
 	Store      *groupstore.GroupStore
 }
 
-type GroupQueries struct {
-	GetGroup                *groupqueries.GetGroup
-	GetGroupByKeys          *groupqueries.GetGroupByKeys
-	GetMembership           *groupqueries.GetMembershipReadModel
-	GetOfferKeyForOfferItem *queries.GetOfferKeyForOfferItemKey
-}
-
 type Server struct {
-	AppConfig          *config.AppConfig
-	AmqpClient         mq.Client
-	GraphDriver        graph.Driver
-	Db                 *gorm.DB
-	TransactionStore   transaction.Store
-	TransactionService transaction.Service
-	ChatStore          chatstore.Store
-	ChatService        chatservice.Service
-	TradingStore       trading.Store
-	TradingService     trading.Service
-	ChatHandler        *chathandler.Handler
-	ResourceHandler    *resourcehandler.ResourceHandler
-	RealTimeHandler    *realtime.Handler
-	Router             *echo.Echo
-	NukeHandler        *nukehandler.Handler
-	TradingHandler     *tradinghandler.TradingHandler
-	RedisClient        *redis.Client
-	ClusterLocker      clusterlock.Locker
-	CommandMapper      *commands.CommandMapper
-	CommandBus         commands.CommandBus
-	EventMapper        *eventsource.EventMapper
-	Group              Group
-	User               *module.Module
-	ErrGroup           *errgroup.Group
-	Ctx                context.Context
+	AppConfig                   *config.AppConfig
+	AmqpClient                  mq.Client
+	GraphDriver                 graph.Driver
+	Db                          *gorm.DB
+	TransactionStore            transaction.Store
+	TransactionService          transaction.Service
+	ChatStore                   chatstore.Store
+	ChatService                 chatservice.Service
+	TradingService              trading.Service
+	ChatHandler                 *chathandler.Handler
+	ResourceHandler             *resourcehandler.ResourceHandler
+	RealTimeHandler             *realtime.Handler
+	Router                      *echo.Echo
+	NukeHandler                 *nukehandler.Handler
+	TradingHandler              *tradinghandler.TradingHandler
+	RedisClient                 *redis.Client
+	ClusterLocker               clusterlock.Locker
+	CommandMapper               *commands.CommandMapper
+	CommandBus                  commands.CommandBus
+	EventMapper                 *eventsource.EventMapper
+	Group                       Group
+	User                        *module.Module
+	ErrGroup                    *errgroup.Group
+	Ctx                         context.Context
+	GetOffer                    *queries.GetOffer
+	GetOffers                   *queries.GetOffers
+	GetOfferItem                *queries.GetOfferItem
+	GetGroup                    *groupqueries.GetGroup
+	GetGroupByKeys              *groupqueries.GetGroupByKeys
+	GetMembership               *groupqueries.GetMembershipReadModel
+	GetOfferKeyForOfferItem     *queries.GetOfferKeyForOfferItemKey
+	GetResource                 *resourcequeries.GetResource
+	GetResourceWithSharings     *resourcequeries.GetResourceWithSharings
+	GetResourcesByKeys          *resourcequeries.GetResourcesByKeys
+	SearchResources             *resourcequeries.SearchResources
+	SearchResourcesWithSharings *resourcequeries.SearchResourcesWithSharings
+	AcceptOffer                 *tradingcmdhandlers.AcceptOfferHandler
+	DeclineOffer                *tradingcmdhandlers.DeclineOfferHandler
+	ConfirmResourceGiven        *tradingcmdhandlers.ConfirmResourceGivenHandler
+	ConfirmResourceBorrowed     *tradingcmdhandlers.ConfirmResourceBorrowedHandler
+	ConfirmServiceGiven         *tradingcmdhandlers.ConfirmServiceGivenHandler
+	ConfirmResourceReturned     *tradingcmdhandlers.ConfirmResourceReturnedHandler
 }
 
 func getEnv(key, defaultValue string) string {
@@ -169,23 +180,14 @@ func NewServer() (*Server, error) {
 	if err := resourcedomain.RegisterEvents(eventMapper); err != nil {
 		panic(err)
 	}
-
-	eventPublisher := eventbus.NewAmqpPublisher(amqpCli)
-	eventStore := publish.NewPublishEventStore(postgres2.NewPostgresEventStore(db, eventMapper), eventPublisher)
-
-	// commands
-	commandMapper := commands.NewCommandMapper()
-	commandBus := commands.NewRabbitCommandBus(amqpCli, commandMapper)
-	authdomain.RegisterCommands(commandMapper)
-
-	userRepo := store.NewEventSourcedUserRepository(eventStore)
-	authCmdHandler := authdomain.NewUserCommandHandler(userRepo)
-
-	if err := commandBus.RegisterHandler(authCmdHandler); err != nil {
+	if err := tradingdomain.RegisterEvents(eventMapper); err != nil {
 		panic(err)
 	}
 
-	g.Go(func() error { return commandBus.Start(ctx) })
+	eventPublisher := eventbus.NewAmqpPublisher(amqpCli)
+	eventStore := publish.NewPublishEventStore(postgres2.NewPostgresEventStore(db, eventMapper), eventPublisher)
+	// userRepo := store.NewEventSourcedUserRepository(eventStore)
+	offerRepository := tradingstore.NewEventSourcedOfferRepository(eventStore)
 
 	// queries
 	getOfferKeyForOfferItemKeyQry := queries.NewGetOfferKeyForOfferItemKey(db)
@@ -196,12 +198,30 @@ func NewServer() (*Server, error) {
 	getGroupMemberships := groupqueries.NewGetGroupMemberships(db)
 	getUsersForGroupInvite := groupqueries.NewGetUsersForGroupInvite(db)
 	getResource := resourcequeries.NewGetResource(db)
+	getResourcesByKeys := resourcequeries.NewGetResourcesByKeys(db)
 	searchResources := resourcequeries.NewSearchResources(db)
 	getResourceSharings := resourcequeries.NewGetResourceSharings(db)
 	getResourcesSharings := resourcequeries.NewGetResourcesSharings(db)
-	getOfferItems := queries.NewGetOfferItem(db)
+	getResourceWithSharings := resourcequeries.NewGetResourceWithSharings(getResource, getResourceSharings)
+	searchResourcesWithSharings := resourcequeries.NewSearchResourcesWithSharings(db, searchResources, getResourcesSharings)
+	getOffer := queries.NewGetOffer(db)
+	getOffers := queries.NewGetOffers(db)
 	getOfferItem := queries.NewGetOfferItem(db)
 	getOfferKeyForOfferItem := queries.NewGetOfferKeyForOfferItemKey(db)
+	getOfferPermissions := queries.NewGetOfferPermissions(db)
+
+	// commands
+	commandMapper := commands.NewCommandMapper()
+	// commandBus := rabbit.NewRabbitCommandBus(amqpCli, commandMapper)
+	commands2.RegisterCommands(commandMapper)
+
+	acceptOffer := tradingcmdhandlers.NewAcceptOfferHandler(offerRepository, getOfferPermissions)
+	declineOffer := tradingcmdhandlers.NewDeclineOfferHandler(offerRepository)
+	submitOffer := tradingcmdhandlers.NewSubmitOfferHandler(offerRepository, getOfferPermissions, getResourcesByKeys)
+	confirmResourceBorrowed := tradingcmdhandlers.NewConfirmResourceBorrowedHandler(offerRepository)
+	confirmResourceGiven := tradingcmdhandlers.NewConfirmResourceGivenHandler(offerRepository)
+	confirmResourceReturned := tradingcmdhandlers.NewConfirmResourceReturnedHandler(offerRepository)
+	confirmServiceGiven := tradingcmdhandlers.NewConfirmServiceGivenHandler(offerRepository)
 
 	r := NewRouter()
 	r.HTTPErrorHandler = handler2.HttpErrorHandler
@@ -223,25 +243,24 @@ func NewServer() (*Server, error) {
 	groupRepo := groupstore.NewEventSourcedGroupRepository(eventStore)
 	groupService := groupservice.NewGroupService(groupStore, amqpCli, chatService, userModule.Store, groupRepo, getGroup, getGroupByKeys, getGroupMemberships)
 
-	offerRepository := tradingstore.NewEventSourcedOfferRepository(eventStore)
+	tradingService := tradingservice.NewTradingService(groupService)
 
-	tradingStore := tradingstore.NewTradingStore(driver)
-	tradingService := tradingservice.NewTradingService(
-		tradingStore,
-		userModule.Store,
+	chatHandler := chathandler.NewHandler(
 		chatService,
-		groupService,
-		transactionService,
-		offerRepository,
-		getOfferKeyForOfferItemKeyQry,
-		getOfferItems)
-
-	chatHandler := chathandler.NewHandler(chatService, tradingService, appConfig, userModule.Authenticator)
+		tradingService,
+		appConfig,
+		userModule.Authenticator,
+		getOfferKeyForOfferItem,
+		confirmResourceBorrowed,
+		confirmResourceReturned,
+		confirmServiceGiven,
+		confirmResourceGiven,
+		declineOffer,
+		acceptOffer)
 	chatHandler.Register(v1)
 
 	groupHandler := grouphandler.NewHandler(
 		groupService,
-		userModule.Service,
 		userModule.Authenticator,
 		getGroup,
 		getMembership,
@@ -260,7 +279,9 @@ func NewServer() (*Server, error) {
 		getResource,
 		getResourceSharings,
 		getResourcesSharings,
-		searchResources)
+		searchResources,
+		getResourceWithSharings,
+		searchResourcesWithSharings)
 	resourceHandler.Register(v1)
 
 	realtimeHandler := realtime.NewRealtimeHandler(amqpCli, chatService, userModule.Authenticator)
@@ -271,8 +292,17 @@ func NewServer() (*Server, error) {
 		groupService,
 		userModule.Service,
 		userModule.Authenticator,
+		getOffer,
+		getOffers,
 		getOfferKeyForOfferItem,
-		getOfferItem)
+		confirmResourceBorrowed,
+		confirmResourceReturned,
+		confirmServiceGiven,
+		confirmResourceGiven,
+		declineOffer,
+		acceptOffer,
+		submitOffer,
+	)
 
 	tradingHandler.Register(v1)
 
@@ -294,7 +324,7 @@ func NewServer() (*Server, error) {
 		)
 	}
 
-	handler := listeners.NewTransactionHistoryHandler(db, catchUpListenerFactory)
+	handler := tradinglisteners.NewTransactionHistoryHandler(db, catchUpListenerFactory)
 	g.Go(func() error {
 		if err := handler.Start(ctx); err != nil {
 			return err
@@ -302,7 +332,7 @@ func NewServer() (*Server, error) {
 		return nil
 	})
 
-	offerRm := listeners.NewOfferReadModelHandler(db, catchUpListenerFactory)
+	offerRm := tradinglisteners.NewOfferReadModelHandler(db, catchUpListenerFactory)
 	g.Go(func() error {
 		if err := offerRm.Start(ctx); err != nil {
 			return err
@@ -310,7 +340,7 @@ func NewServer() (*Server, error) {
 		return nil
 	})
 
-	groupRm := listeners2.NewGroupReadModelListener(catchUpListenerFactory, db)
+	groupRm := grouplisteners.NewGroupReadModelListener(catchUpListenerFactory, db)
 	g.Go(func() error {
 		if err := groupRm.Start(ctx); err != nil {
 			return err
@@ -318,7 +348,7 @@ func NewServer() (*Server, error) {
 		return nil
 	})
 
-	userRm := listeners3.NewUserReadModelListener(db, catchUpListenerFactory)
+	userRm := userlisteners.NewUserReadModelListener(db, catchUpListenerFactory)
 	g.Go(func() error {
 		if err := userRm.Start(ctx); err != nil {
 			return err
@@ -326,7 +356,7 @@ func NewServer() (*Server, error) {
 		return nil
 	})
 
-	resourceRm := listeners4.NewResourceReadModelHandler(db, catchUpListenerFactory)
+	resourceRm := resourcelisteners.NewResourceReadModelHandler(db, catchUpListenerFactory)
 	g.Go(func() error {
 		if err := resourceRm.Start(ctx); err != nil {
 			return err
@@ -343,7 +373,6 @@ func NewServer() (*Server, error) {
 		TransactionService: transactionService,
 		ChatStore:          chatStore,
 		ChatService:        chatService,
-		TradingStore:       tradingStore,
 		TradingService:     tradingService,
 		ChatHandler:        chatHandler,
 		ResourceHandler:    resourceHandler,
@@ -354,23 +383,34 @@ func NewServer() (*Server, error) {
 		RedisClient:        redisClient,
 		ClusterLocker:      clusterLocker,
 		CommandMapper:      commandMapper,
-		CommandBus:         commandBus,
+		CommandBus:         nil,
 		EventMapper:        eventMapper,
 		Group: Group{
 			Handler:    groupHandler,
 			Service:    groupService,
 			Repository: groupRepo,
 			Store:      groupStore,
-			Queries: GroupQueries{
-				GetGroup:                getGroup,
-				GetGroupByKeys:          getGroupByKeys,
-				GetMembership:           getMembership,
-				GetOfferKeyForOfferItem: getOfferKeyForOfferItemKeyQry,
-			},
 		},
-		User:     userModule,
-		ErrGroup: g,
-		Ctx:      ctx,
+		User:                        userModule,
+		ErrGroup:                    g,
+		Ctx:                         ctx,
+		GetOffer:                    getOffer,
+		GetOffers:                   getOffers,
+		GetOfferItem:                getOfferItem,
+		GetGroup:                    getGroup,
+		GetGroupByKeys:              getGroupByKeys,
+		GetMembership:               getMembership,
+		GetOfferKeyForOfferItem:     getOfferKeyForOfferItemKeyQry,
+		GetResource:                 getResource,
+		GetResourceWithSharings:     getResourceWithSharings,
+		SearchResources:             searchResources,
+		SearchResourcesWithSharings: searchResourcesWithSharings,
+		AcceptOffer:                 acceptOffer,
+		DeclineOffer:                declineOffer,
+		ConfirmResourceGiven:        confirmResourceGiven,
+		ConfirmResourceBorrowed:     confirmResourceBorrowed,
+		ConfirmServiceGiven:         confirmServiceGiven,
+		ConfirmResourceReturned:     confirmResourceReturned,
 	}, nil
 
 }

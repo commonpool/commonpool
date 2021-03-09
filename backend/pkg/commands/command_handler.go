@@ -5,5 +5,5 @@ import "context"
 type CommandHandler interface {
 	GetName() string
 	GetCommandTypes() []string
-	HandleCommand(ctx context.Context, cmd Command) error
+	HandleCommand(ctx context.Context, cmd Command) CommandResponse
 }

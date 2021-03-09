@@ -1,6 +1,7 @@
 package exceptions
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 )
@@ -21,6 +22,23 @@ func (e WebServiceException) Is(err error) bool {
 		return false
 	}
 	return e.Code == a.Code
+}
+
+func Is(err error, trg error) bool {
+	target, targetOk := trg.(WebServiceException)
+	src, srcOk := err.(WebServiceException)
+	if targetOk && srcOk {
+		return target.Code == src.Code
+	}
+	return errors.Is(err, trg)
+}
+
+func GetStatusCode(err error) int {
+	a, ok := err.(WebServiceException)
+	if !ok {
+		return a.Status
+	}
+	return http.StatusInternalServerError
 }
 
 func NewWebServiceException(message string, code string, status int) error {
@@ -85,8 +103,17 @@ var (
 	ErrValidation = func(msg string) error {
 		return NewWebServiceException(msg, "ErrValidation", http.StatusBadRequest)
 	}
+	ErrNotFoundf = func(msg string, args ...interface{}) error {
+		return NewWebServiceException(fmt.Sprintf(msg, args...), "ErrNotFound", http.StatusNotFound)
+	}
 	ErrBadRequest = func(msg string) error {
 		return NewWebServiceException(msg, "ErrBadRequest", http.StatusBadRequest)
+	}
+	ErrReadModelBackOff = func(readModel string, expected, actual int) error {
+		return NewWebServiceException(fmt.Sprintf("'%s' read model backoff. Expcected version: %d, Actual version: %d", readModel, expected, actual), "ErrBadRequest", http.StatusBadRequest)
+	}
+	ErrBadRequestf = func(msg string, args ...interface{}) error {
+		return NewWebServiceException(fmt.Sprintf(msg, args...), "ErrBadRequest", http.StatusBadRequest)
 	}
 	ErrInvalidResourceKey = func(key string) ErrorResponse {
 		return NewError(fmt.Sprintf("invalid resource key: '%s'", key), "ErrInvalidResourceKey", http.StatusBadRequest)

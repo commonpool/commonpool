@@ -37,7 +37,7 @@ type CancelOrDeclineInvitationRequest struct {
 	MembershipKey keys.MembershipKey
 }
 
-func NewDelineInvitationRequest(membershipKey keys.MembershipKey) *CancelOrDeclineInvitationRequest {
+func NewDeclineInvitationRequest(membershipKey keys.MembershipKey) *CancelOrDeclineInvitationRequest {
 	return &CancelOrDeclineInvitationRequest{
 		MembershipKey: membershipKey,
 	}

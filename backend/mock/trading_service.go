@@ -98,7 +98,7 @@ type TradingService struct {
 	FindApproversForOffersFunc func(offers *keys.OfferKeys) (*trading.OffersApprovers, error)
 
 	// FindTargetsForOfferItemFunc mocks the FindTargetsForOfferItem method.
-	FindTargetsForOfferItemFunc func(ctx context.Context, groupKey keys.GroupKey, itemType domain.OfferItemType, from *domain.Target, to *domain.Target) (*domain.Targets, error)
+	FindTargetsForOfferItemFunc func(ctx context.Context, groupKey keys.GroupKey, itemType domain.OfferItemType, from *keys.Target, to *keys.Target) (*keys.Targets, error)
 
 	// GetOfferFunc mocks the GetOffer method.
 	GetOfferFunc func(offerKey keys.OfferKey) (*trading.Offer, error)
@@ -181,9 +181,9 @@ type TradingService struct {
 			// ItemType is the itemType argument value.
 			ItemType domain.OfferItemType
 			// From is the from argument value.
-			From *domain.Target
+			From *keys.Target
 			// To is the to argument value.
-			To *domain.Target
+			To *keys.Target
 		}
 		// GetOffer holds details about calls to the GetOffer method.
 		GetOffer []struct {
@@ -241,24 +241,6 @@ type TradingService struct {
 	lockGetOffersForUser                sync.RWMutex
 	lockGetTradingHistory               sync.RWMutex
 	lockSendOffer                       sync.RWMutex
-}
-
-// AcceptOffer calls AcceptOfferFunc.
-func (mock *TradingService) AcceptOffer(ctx context.Context, offerKey keys.OfferKey) error {
-	if mock.AcceptOfferFunc == nil {
-		panic("TradingService.AcceptOfferFunc: method is nil but Service.AcceptOffer was just called")
-	}
-	callInfo := struct {
-		Ctx      context.Context
-		OfferKey keys.OfferKey
-	}{
-		Ctx:      ctx,
-		OfferKey: offerKey,
-	}
-	mock.lockAcceptOffer.Lock()
-	mock.calls.AcceptOffer = append(mock.calls.AcceptOffer, callInfo)
-	mock.lockAcceptOffer.Unlock()
-	return mock.AcceptOfferFunc(ctx, offerKey)
 }
 
 // AcceptOfferCalls gets all the calls that were made to AcceptOffer.
@@ -453,22 +435,6 @@ func (mock *TradingService) DeclineOfferCalls() []struct {
 	return calls
 }
 
-// FindApproversForOffer calls FindApproversForOfferFunc.
-func (mock *TradingService) FindApproversForOffer(offerKey keys.OfferKey) (trading.Approvers, error) {
-	if mock.FindApproversForOfferFunc == nil {
-		panic("TradingService.FindApproversForOfferFunc: method is nil but Service.FindApproversForOffer was just called")
-	}
-	callInfo := struct {
-		OfferKey keys.OfferKey
-	}{
-		OfferKey: offerKey,
-	}
-	mock.lockFindApproversForOffer.Lock()
-	mock.calls.FindApproversForOffer = append(mock.calls.FindApproversForOffer, callInfo)
-	mock.lockFindApproversForOffer.Unlock()
-	return mock.FindApproversForOfferFunc(offerKey)
-}
-
 // FindApproversForOfferCalls gets all the calls that were made to FindApproversForOffer.
 // Check the length with:
 //     len(mockedService.FindApproversForOfferCalls())
@@ -516,7 +482,7 @@ func (mock *TradingService) FindApproversForOffersCalls() []struct {
 }
 
 // FindTargetsForOfferItem calls FindTargetsForOfferItemFunc.
-func (mock *TradingService) FindTargetsForOfferItem(ctx context.Context, groupKey keys.GroupKey, itemType domain.OfferItemType, from *domain.Target, to *domain.Target) (*domain.Targets, error) {
+func (mock *TradingService) FindTargetsForOfferItem(ctx context.Context, groupKey keys.GroupKey, itemType domain.OfferItemType, from *keys.Target, to *keys.Target) (*keys.Targets, error) {
 	if mock.FindTargetsForOfferItemFunc == nil {
 		panic("TradingService.FindTargetsForOfferItemFunc: method is nil but Service.FindTargetsForOfferItem was just called")
 	}
@@ -524,8 +490,8 @@ func (mock *TradingService) FindTargetsForOfferItem(ctx context.Context, groupKe
 		Ctx      context.Context
 		GroupKey keys.GroupKey
 		ItemType domain.OfferItemType
-		From     *domain.Target
-		To       *domain.Target
+		From     *keys.Target
+		To       *keys.Target
 	}{
 		Ctx:      ctx,
 		GroupKey: groupKey,
@@ -546,15 +512,15 @@ func (mock *TradingService) FindTargetsForOfferItemCalls() []struct {
 	Ctx      context.Context
 	GroupKey keys.GroupKey
 	ItemType domain.OfferItemType
-	From     *domain.Target
-	To       *domain.Target
+	From     *keys.Target
+	To       *keys.Target
 } {
 	var calls []struct {
 		Ctx      context.Context
 		GroupKey keys.GroupKey
 		ItemType domain.OfferItemType
-		From     *domain.Target
-		To       *domain.Target
+		From     *keys.Target
+		To       *keys.Target
 	}
 	mock.lockFindTargetsForOfferItem.RLock()
 	calls = mock.calls.FindTargetsForOfferItem

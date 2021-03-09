@@ -7,7 +7,7 @@ import (
 
 type CreditTransferItem struct {
 	OfferItemBase
-	From               *Target       `json:"from"`
+	From               *keys.Target  `json:"from"`
 	Amount             time.Duration `json:"amount"`
 	CreditsTransferred bool          `json:"creditsTransferred"`
 }
@@ -49,8 +49,8 @@ type NewCreditTransferItemOptions struct {
 func NewCreditTransferItem(
 	offerKey keys.OfferKey,
 	offerItemKey keys.OfferItemKey,
-	from *Target,
-	to *Target,
+	from *keys.Target,
+	to *keys.Target,
 	duration time.Duration,
 	options ...NewCreditTransferItemOptions) *CreditTransferItem {
 

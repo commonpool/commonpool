@@ -16,9 +16,26 @@ type OfferItem interface {
 	IsAccepted() bool
 	IsInboundApproved() bool
 	IsOutboundApproved() bool
-	GetReceiverKey() *Target
+	GetReceiverKey() *keys.Target
 	AsCreditTransfer() (*CreditTransferItem, bool)
 	AsProvideService() (*ProvideServiceItem, bool)
 	AsBorrowResource() (*BorrowResourceItem, bool)
 	AsResourceTransfer() (*ResourceTransferItem, bool)
+}
+
+type ResourceKeyGetter interface {
+	GetResourceKey() keys.ResourceKey
+}
+
+type FromTargeter interface {
+	GetFrom() keys.Target
+}
+
+type ToTargeter interface {
+	GetTo() keys.Target
+}
+
+type ResourceOfferItem interface {
+	ToTargeter
+	ResourceKeyGetter
 }

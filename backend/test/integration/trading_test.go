@@ -6,6 +6,7 @@ import (
 	"github.com/commonpool/backend/pkg/auth/models"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/trading/domain"
+	readmodels "github.com/commonpool/backend/pkg/trading/readmodels"
 
 	handler2 "github.com/commonpool/backend/pkg/resource/handler"
 	"github.com/commonpool/backend/pkg/trading/handler"
@@ -15,30 +16,50 @@ import (
 	"time"
 )
 
-func (s *IntegrationTestSuite) SubmitOffer(t *testing.T, ctx context.Context, userSession *models.UserSession, request *handler.SendOfferRequest) (*handler.OfferResponse, *http.Response) {
+func (s *IntegrationTestSuite) SubmitOffer(ctx context.Context, userSession *models.UserSession, request *handler.SendOfferRequest) (*handler.OfferResponse, *http.Response) {
 	httpReq, recorder := NewRequest(ctx, userSession, http.MethodPost, "/api/v1/offers", request)
 	s.server.Router.ServeHTTP(recorder, httpReq)
 	response := &handler.OfferResponse{}
-	t.Log(recorder.Body.String())
 	return response, ReadResponse(s.T(), recorder, response)
 }
 
-func (s *IntegrationTestSuite) AcceptOffer(t *testing.T, ctx context.Context, userSession *models.UserSession, offerKey keys.OfferKey) *http.Response {
+func (s *IntegrationTestSuite) AcceptOffer(ctx context.Context, userSession *models.UserSession, offerKey keys.OfferKey) *http.Response {
 	httpReq, recorder := NewRequest(ctx, userSession, http.MethodPost, fmt.Sprintf("/api/v1/offers/%s/accept", offerKey.ID.String()), nil)
 	s.server.Router.ServeHTTP(recorder, httpReq)
 	return recorder.Result()
 }
 
-func (s *IntegrationTestSuite) ConfirmResourceTransfer(t *testing.T, ctx context.Context, userSession *models.UserSession, offerItemKey keys.OfferItemKey) *http.Response {
+func (s *IntegrationTestSuite) ConfirmResourceTransfer(ctx context.Context, userSession *models.UserSession, offerItemKey keys.OfferItemKey) *http.Response {
 	httpReq, recorder := NewRequest(ctx, userSession, http.MethodPost, fmt.Sprintf("/api/v1/offer-items/%s/confirm/resource-transferred", offerItemKey.ID.String()), nil)
 	s.server.Router.ServeHTTP(recorder, httpReq)
 	return recorder.Result()
 }
 
-func (s *IntegrationTestSuite) DeclineOffer(t *testing.T, ctx context.Context, userSession *models.UserSession, offerKey keys.OfferKey) *http.Response {
+func (s *IntegrationTestSuite) DeclineOffer(ctx context.Context, userSession *models.UserSession, offerKey keys.OfferKey) *http.Response {
 	httpReq, recorder := NewRequest(ctx, userSession, http.MethodPost, fmt.Sprintf("/api/v1/offers/%s/decline", offerKey.ID.String()), nil)
 	s.server.Router.ServeHTTP(recorder, httpReq)
 	return recorder.Result()
+}
+
+func (s *IntegrationTestSuite) AssertOfferStatus(ctx context.Context, offerKey keys.OfferKey, status domain.OfferStatus) bool {
+	offer, err := s.server.GetOffer.Get(ctx, offerKey)
+	if !assert.NoError(s.T(), err) {
+		return false
+	}
+	return assert.Equal(s.T(), status, offer.Status)
+}
+
+func (s *IntegrationTestSuite) AssertOfferPending(ctx context.Context, offerKey keys.OfferKey) bool {
+	return s.AssertOfferStatus(ctx, offerKey, domain.Pending)
+}
+func (s *IntegrationTestSuite) AssertOfferAccepted(ctx context.Context, offerKey keys.OfferKey) bool {
+	return s.AssertOfferStatus(ctx, offerKey, domain.Approved)
+}
+func (s *IntegrationTestSuite) AssertOfferCompleted(ctx context.Context, offerKey keys.OfferKey) bool {
+	return s.AssertOfferStatus(ctx, offerKey, domain.Completed)
+}
+func (s *IntegrationTestSuite) AssertOfferDeclined(ctx context.Context, offerKey keys.OfferKey) bool {
+	return s.AssertOfferStatus(ctx, offerKey, domain.Declined)
 }
 
 // func GetTradingHistory(t *testing.T, ctx context.Context, userSession *auth.UserSession, request *GetTradingHistoryRequest) (*GetTradingHistoryResponse, *http.Response) {
@@ -50,6 +71,7 @@ func (s *IntegrationTestSuite) DeclineOffer(t *testing.T, ctx context.Context, u
 // }
 
 func (s *IntegrationTestSuite) TestUserCanSubmitOfferBetweenUsers() {
+	s.T().Parallel()
 
 	user1, delUser1 := s.testUser(s.T())
 	defer delUser1()
@@ -64,34 +86,33 @@ func (s *IntegrationTestSuite) TestUserCanSubmitOfferBetweenUsers() {
 
 	ctx := context.Background()
 
-	resp, _ := s.CreateResource(s.T(), ctx, user1, &handler2.CreateResourceRequest{
+	resp, _ := s.CreateResource(ctx, user1, &handler2.CreateResourceRequest{
 		Resource: handler2.CreateResourcePayload{
-			SharedWith: []handler2.InputResourceSharing{
-				{
-					GroupID: group.ID,
-				},
-			},
+			SharedWith: handler2.NewInputResourceSharings().WithGroups(group.GroupKey),
 		},
 	})
 
-	offerResp, httpResponse := s.SubmitOffer(s.T(), ctx, user1, &handler.SendOfferRequest{
+	offerResp, httpResponse := s.SubmitOffer(ctx, user1, &handler.SendOfferRequest{
 		Offer: handler.SendOfferPayload{
-			Items: []handler.SendOfferPayloadItem{
-				*handler.NewResourceTransferItem(handler.NewUserTarget(user2.Subject), resp.Resource.Id),
-				*handler.NewCreditTransferItem(handler.NewUserTarget(user1.Subject), handler.NewUserTarget(user1.Subject), time.Hour*2),
+			Items: []domain.SubmitOfferItemBase{
+				domain.NewResourceTransferItemInputBase(keys.NewUserTarget(user2.GetUserKey()), resp.Resource.ResourceKey),
+				domain.NewCreditTransferItemInputBase(keys.NewUserTarget(user1.GetUserKey()), keys.NewUserTarget(user1.GetUserKey()), time.Hour*2),
 			},
-			Message: "",
-			GroupID: group.ID,
+			Message:  "",
+			GroupKey: group.GroupKey,
 		},
 	})
+
 	if !AssertStatusCreated(s.T(), httpResponse) {
 		return
 	}
-	assert.Equal(s.T(), 2, len(offerResp.Offer.Items))
+
+	assert.Equal(s.T(), 2, len(offerResp.Offer.OfferItems))
 
 }
 
 func (s *IntegrationTestSuite) TestUserCanSubmitOfferBetweenUsersAndGroup() {
+	s.T().Parallel()
 
 	user1, delUser1 := s.testUser(s.T())
 	defer delUser1()
@@ -106,37 +127,34 @@ func (s *IntegrationTestSuite) TestUserCanSubmitOfferBetweenUsersAndGroup() {
 
 	ctx := context.Background()
 
-	resource, httpResponse := s.CreateResource(s.T(), ctx, user1, &handler2.CreateResourceRequest{
+	resource, httpResponse := s.CreateResource(ctx, user1, &handler2.CreateResourceRequest{
 		Resource: handler2.CreateResourcePayload{
-			SharedWith: []handler2.InputResourceSharing{
-				{
-					GroupID: group.ID,
-				},
-			},
+			SharedWith: handler2.NewInputResourceSharings().WithGroups(group.GroupKey),
 		},
 	})
 	if !AssertStatusCreated(s.T(), httpResponse) {
 		return
 	}
 
-	offer, httpResponse := s.SubmitOffer(s.T(), ctx, user1, &handler.SendOfferRequest{
+	offer, httpResponse := s.SubmitOffer(ctx, user1, &handler.SendOfferRequest{
 		Offer: handler.SendOfferPayload{
-			Items: []handler.SendOfferPayloadItem{
-				*handler.NewResourceTransferItem(handler.NewUserTarget(user2.Subject), resource.Resource.Id),
-				*handler.NewCreditTransferItem(handler.NewUserTarget(user2.Subject), handler.NewGroupTarget(group.ID), time.Hour*1),
+			Items: []domain.SubmitOfferItemBase{
+				domain.NewResourceTransferItemInputBase(keys.NewUserTarget(user2.GetUserKey()), resource.Resource.ResourceKey),
+				domain.NewCreditTransferItemInputBase(keys.NewUserTarget(user2.GetUserKey()), keys.NewGroupTarget(group.GroupKey), time.Hour*1),
 			},
-			Message: "",
-			GroupID: group.ID,
+			Message:  "",
+			GroupKey: group.GroupKey,
 		},
 	})
 	if !AssertStatusCreated(s.T(), httpResponse) {
 		return
 	}
-	assert.Equal(s.T(), 2, len(offer.Offer.Items))
+	assert.Equal(s.T(), 2, len(offer.Offer.OfferItems))
 
 }
 
 func (s *IntegrationTestSuite) TestUserCanSubmitOfferBetweenGroupAndMultipleUsers() {
+	s.T().Parallel()
 
 	user1, delUser1 := s.testUser(s.T())
 	defer delUser1()
@@ -154,35 +172,33 @@ func (s *IntegrationTestSuite) TestUserCanSubmitOfferBetweenGroupAndMultipleUser
 
 	ctx := context.Background()
 
-	resp, httpResponse := s.CreateResource(s.T(), ctx, user1, &handler2.CreateResourceRequest{
+	resp, httpResponse := s.CreateResource(ctx, user1, &handler2.CreateResourceRequest{
 		Resource: handler2.CreateResourcePayload{
-			SharedWith: []handler2.InputResourceSharing{
-				{
-					GroupID: group.ID,
-				},
-			},
+			SharedWith: handler2.NewInputResourceSharings().WithGroups(group.GroupKey),
 		},
 	})
 	if !AssertStatusCreated(s.T(), httpResponse) {
 		return
 	}
 
-	offerResp, httpResponse := s.SubmitOffer(s.T(), ctx, user1, &handler.SendOfferRequest{
+	offerResp, httpResponse := s.SubmitOffer(ctx, user1, &handler.SendOfferRequest{
 		Offer: handler.SendOfferPayload{
-			Items: []handler.SendOfferPayloadItem{
-				*handler.NewResourceTransferItem(handler.NewUserTarget(user2.Subject), resp.Resource.Id),
-				*handler.NewCreditTransferItem(handler.NewUserTarget(user2.Subject), handler.NewUserTarget(user1.Subject), time.Hour*1),
-				*handler.NewCreditTransferItem(handler.NewUserTarget(user2.Subject), handler.NewGroupTarget(group.ID), time.Hour*1),
+			Items: []domain.SubmitOfferItemBase{
+				domain.NewResourceTransferItemInputBase(keys.NewUserTarget(user2.GetUserKey()), resp.Resource.ResourceKey),
+				domain.NewCreditTransferItemInputBase(keys.NewUserTarget(user2.GetUserKey()), keys.NewUserTarget(user1.GetUserKey()), time.Hour*1),
+				domain.NewCreditTransferItemInputBase(keys.NewUserTarget(user2.GetUserKey()), keys.NewGroupTarget(group.GroupKey), time.Hour*1),
 			},
-			Message: "",
-			GroupID: group.ID,
+			Message:  "",
+			GroupKey: group.GroupKey,
 		},
 	})
 	if !AssertStatusCreated(s.T(), httpResponse) {
 		return
 	}
 
-	assert.Equal(s.T(), 3, len(offerResp.Offer.Items))
+	if !assert.Equal(s.T(), 3, len(offerResp.Offer.OfferItems)) {
+		return
+	}
 
 	if err := s.UsersAcceptOffer(s.T(), ctx, offerResp.Offer, []*models.UserSession{user1, user2}); !assert.NoError(s.T(), err) {
 		return
@@ -191,6 +207,7 @@ func (s *IntegrationTestSuite) TestUserCanSubmitOfferBetweenGroupAndMultipleUser
 }
 
 func (s *IntegrationTestSuite) TestUsersCanAcceptOfferBetweenUsers() {
+	s.T().Parallel()
 
 	user1, delUser1 := s.testUser(s.T())
 	defer delUser1()
@@ -205,57 +222,55 @@ func (s *IntegrationTestSuite) TestUsersCanAcceptOfferBetweenUsers() {
 
 	ctx := context.Background()
 
-	resp, httpResponse := s.CreateResource(s.T(), ctx, user1, &handler2.CreateResourceRequest{
+	resp, httpResponse := s.CreateResource(ctx, user1, &handler2.CreateResourceRequest{
 		Resource: handler2.CreateResourcePayload{
-			SharedWith: []handler2.InputResourceSharing{
-				{
-					GroupID: group.ID,
-				},
-			},
+			SharedWith: handler2.NewInputResourceSharings().WithGroups(group.GroupKey),
 		},
 	})
 	if !AssertStatusCreated(s.T(), httpResponse) {
 		return
 	}
 
-	offerResp, httpResponse := s.SubmitOffer(s.T(), ctx, user1, &handler.SendOfferRequest{
+	offerResp, httpResponse := s.SubmitOffer(ctx, user1, &handler.SendOfferRequest{
 		Offer: handler.SendOfferPayload{
-			Items: []handler.SendOfferPayloadItem{
-				*handler.NewResourceTransferItem(handler.NewUserTarget(user2.Subject), resp.Resource.Id),
-				*handler.NewCreditTransferItem(handler.NewUserTarget(user2.Subject), handler.NewUserTarget(user1.Subject), time.Hour*2),
+			Items: []domain.SubmitOfferItemBase{
+				domain.NewResourceTransferItemInputBase(user2.GetUserKey().Target(), resp.Resource.ResourceKey),
+				domain.NewCreditTransferItemInputBase(user2.GetUserKey().Target(), user1.GetUserKey().Target(), time.Hour*2),
 			},
-			Message: "Howdy :)",
-			GroupID: group.ID,
+			Message:  "Howdy :)",
+			GroupKey: group.GroupKey,
 		},
 	})
 	if !AssertStatusCreated(s.T(), httpResponse) {
 		return
 	}
 
-	key, err := keys.ParseOfferKey(offerResp.Offer.ID)
-	assert.NoError(s.T(), err)
-
-	httpResponse = s.AcceptOffer(s.T(), ctx, user2, key)
+	httpResponse = s.AcceptOffer(ctx, user2, offerResp.Offer.OfferKey)
 	if !AssertStatusAccepted(s.T(), httpResponse) {
 		return
 	}
 
-	offer, err := s.server.TradingStore.GetOffer(key)
-	assert.NoError(s.T(), err)
-	assert.Equal(s.T(), domain.Pending, offer.Status)
+	time.Sleep(1 * time.Second)
 
-	httpResponse = s.AcceptOffer(s.T(), ctx, user1, key)
+	if !s.AssertOfferPending(ctx, offerResp.Offer.OfferKey) {
+		return
+	}
+
+	httpResponse = s.AcceptOffer(ctx, user1, offerResp.Offer.OfferKey)
 	if !AssertStatusAccepted(s.T(), httpResponse) {
 		return
 	}
 
-	offer, err = s.server.TradingStore.GetOffer(key)
-	assert.NoError(s.T(), err)
-	assert.Equal(s.T(), domain.Approved, offer.Status)
+	time.Sleep(1 * time.Second)
+
+	if !s.AssertOfferAccepted(ctx, offerResp.Offer.OfferKey) {
+		return
+	}
 
 }
 
 func (s *IntegrationTestSuite) TestUserCannotCreateOfferForResourceNotSharedWithGroup() {
+	s.T().Parallel()
 
 	user1, delUser1 := s.testUser(s.T())
 	defer delUser1()
@@ -274,27 +289,23 @@ func (s *IntegrationTestSuite) TestUserCannotCreateOfferForResourceNotSharedWith
 		return
 	}
 
-	resource, httpResponse := s.CreateResource(s.T(), ctx, user1, &handler2.CreateResourceRequest{
+	resource, httpResponse := s.CreateResource(ctx, user1, &handler2.CreateResourceRequest{
 		Resource: handler2.CreateResourcePayload{
-			SharedWith: []handler2.InputResourceSharing{
-				{
-					GroupID: group2.ID,
-				},
-			},
+			SharedWith: handler2.NewInputResourceSharings().WithGroups(group2.GroupKey),
 		},
 	})
 	if !AssertStatusCreated(s.T(), httpResponse) {
 		return
 	}
 
-	_, httpResponse = s.SubmitOffer(s.T(), ctx, user1, &handler.SendOfferRequest{
+	_, httpResponse = s.SubmitOffer(ctx, user1, &handler.SendOfferRequest{
 		Offer: handler.SendOfferPayload{
-			Items: []handler.SendOfferPayloadItem{
-				*handler.NewResourceTransferItem(handler.NewUserTarget(user2.Subject), resource.Resource.Id),
-				*handler.NewCreditTransferItem(handler.NewUserTarget(user2.Subject), handler.NewUserTarget(user1.Subject), time.Hour*2),
+			Items: []domain.SubmitOfferItemBase{
+				domain.NewResourceTransferItemInputBase(keys.NewUserTarget(user2.GetUserKey()), resource.Resource.ResourceKey),
+				domain.NewCreditTransferItemInputBase(keys.NewUserTarget(user2.GetUserKey()), keys.NewUserTarget(user1.GetUserKey()), time.Hour*2),
 			},
-			GroupID: group1.ID,
-			Message: "Howdy :)",
+			GroupKey: group1.GroupKey,
+			Message:  "Howdy :)",
 		},
 	})
 	if !AssertStatusForbidden(s.T(), httpResponse) {
@@ -304,6 +315,7 @@ func (s *IntegrationTestSuite) TestUserCannotCreateOfferForResourceNotSharedWith
 }
 
 func (s *IntegrationTestSuite) TestCannotCreateResourceTransferItemForResourceAlreadyOwned() {
+	s.T().Parallel()
 
 	user1, delUser1 := s.testUser(s.T())
 	defer delUser1()
@@ -318,36 +330,32 @@ func (s *IntegrationTestSuite) TestCannotCreateResourceTransferItemForResourceAl
 		return
 	}
 
-	resource, httpResponse := s.CreateResource(s.T(), ctx, user1, &handler2.CreateResourceRequest{
+	resource, httpResponse := s.CreateResource(ctx, user1, &handler2.CreateResourceRequest{
 		Resource: handler2.CreateResourcePayload{
-			SharedWith: []handler2.InputResourceSharing{
-				{
-					GroupID: group.ID,
-				},
-			},
+			SharedWith: handler2.NewInputResourceSharings().WithGroups(group.GroupKey),
 		},
 	})
 	if !AssertStatusCreated(s.T(), httpResponse) {
 		return
 	}
 
-	_, httpResponse = s.SubmitOffer(s.T(), ctx, user1, &handler.SendOfferRequest{
+	_, httpResponse = s.SubmitOffer(ctx, user1, &handler.SendOfferRequest{
 		Offer: handler.SendOfferPayload{
-			Items: []handler.SendOfferPayloadItem{
-				*handler.NewResourceTransferItem(handler.NewUserTarget(user2.Subject), resource.Resource.Id),
-				*handler.NewCreditTransferItem(handler.NewUserTarget(user2.Subject), handler.NewUserTarget(user1.Subject), time.Hour*2),
+			Items: []domain.SubmitOfferItemBase{
+				domain.NewResourceTransferItemInputBase(keys.NewUserTarget(user1.GetUserKey()), resource.Resource.ResourceKey),
 			},
-			GroupID: group.ID,
-			Message: "Howdy :)",
+			GroupKey: group.GroupKey,
+			Message:  "Howdy :)",
 		},
 	})
-	if !AssertStatusForbidden(s.T(), httpResponse) {
+	if !AssertStatusBadRequest(s.T(), httpResponse) {
 		return
 	}
 
 }
 
 func (s *IntegrationTestSuite) TestUsersCanDeclineOffer() {
+	s.T().Parallel()
 
 	user1, delUser1 := s.testUser(s.T())
 	defer delUser1()
@@ -362,52 +370,51 @@ func (s *IntegrationTestSuite) TestUsersCanDeclineOffer() {
 
 	ctx := context.Background()
 
-	resp, httpResponse := s.CreateResource(s.T(), ctx, user1, &handler2.CreateResourceRequest{
+	resp, httpResponse := s.CreateResource(ctx, user1, &handler2.CreateResourceRequest{
 		Resource: handler2.CreateResourcePayload{
-			SharedWith: []handler2.InputResourceSharing{
-				{
-					GroupID: group.ID,
-				},
-			},
+			SharedWith: handler2.NewInputResourceSharings().WithGroups(group.GroupKey),
 		},
 	})
 	if !AssertStatusCreated(s.T(), httpResponse) {
 		return
 	}
 
-	createOffer, httpResponse := s.SubmitOffer(s.T(), ctx, user1, &handler.SendOfferRequest{
+	createOffer, httpResponse := s.SubmitOffer(ctx, user1, &handler.SendOfferRequest{
 		Offer: handler.SendOfferPayload{
-			Items: []handler.SendOfferPayloadItem{
-				*handler.NewResourceTransferItem(handler.NewUserTarget(user2.Subject), resp.Resource.Id),
-				*handler.NewCreditTransferItem(handler.NewUserTarget(user2.Subject), handler.NewUserTarget(user1.Subject), time.Hour*2),
+			Items: []domain.SubmitOfferItemBase{
+				domain.NewResourceTransferItemInputBase(keys.NewUserTarget(user2.GetUserKey()), resp.Resource.ResourceKey),
+				domain.NewCreditTransferItemInputBase(keys.NewUserTarget(user2.GetUserKey()), keys.NewUserTarget(user1.GetUserKey()), time.Hour*2),
 			},
-			Message: "Howdy :)",
-			GroupID: group.ID,
+			Message:  "Howdy :)",
+			GroupKey: group.GroupKey,
 		},
 	})
 	if !AssertStatusCreated(s.T(), httpResponse) {
 		return
 	}
 
-	offerKey := keys.MustParseOfferKey(createOffer.Offer.ID)
+	httpResponse = s.AcceptOffer(ctx, user2, createOffer.Offer.OfferKey)
+	if !AssertStatusAccepted(s.T(), httpResponse) {
+		return
+	}
 
-	acceptOffer := s.AcceptOffer(s.T(), ctx, user2, offerKey)
-	AssertOK(s.T(), acceptOffer)
+	if !s.AssertOfferPending(ctx, createOffer.Offer.OfferKey) {
+		return
+	}
 
-	offer, err := s.server.TradingStore.GetOffer(offerKey)
-	assert.NoError(s.T(), err)
-	assert.Equal(s.T(), domain.Pending, offer.Status)
+	declineOffer := s.DeclineOffer(ctx, user1, createOffer.Offer.OfferKey)
+	AssertStatusAccepted(s.T(), declineOffer)
 
-	declineOffer := s.DeclineOffer(s.T(), ctx, user1, offerKey)
-	AssertStatusNoContent(s.T(), declineOffer)
+	time.Sleep(600 * time.Millisecond)
 
-	offer, err = s.server.TradingStore.GetOffer(offerKey)
-	assert.NoError(s.T(), err)
-	assert.Equal(s.T(), domain.Declined, offer.Status)
+	if !s.AssertOfferDeclined(ctx, createOffer.Offer.OfferKey) {
+		return
+	}
 
 }
 
 func (s *IntegrationTestSuite) TestSendingOfferShouldCreateChatChannelBetweenUsers() {
+	s.T().Parallel()
 
 	user1, delUser1 := s.testUser(s.T())
 	defer delUser1()
@@ -422,27 +429,23 @@ func (s *IntegrationTestSuite) TestSendingOfferShouldCreateChatChannelBetweenUse
 
 	ctx := context.Background()
 
-	resp, httpResponse := s.CreateResource(s.T(), ctx, user1, &handler2.CreateResourceRequest{
+	resp, httpResponse := s.CreateResource(ctx, user1, &handler2.CreateResourceRequest{
 		Resource: handler2.CreateResourcePayload{
-			SharedWith: []handler2.InputResourceSharing{
-				{
-					GroupID: group.ID,
-				},
-			},
+			SharedWith: handler2.NewInputResourceSharings().WithGroups(group.GroupKey),
 		},
 	})
 	if !AssertStatusCreated(s.T(), httpResponse) {
 		return
 	}
 
-	_, httpResponse = s.SubmitOffer(s.T(), ctx, user1, &handler.SendOfferRequest{
+	_, httpResponse = s.SubmitOffer(ctx, user1, &handler.SendOfferRequest{
 		Offer: handler.SendOfferPayload{
-			Items: []handler.SendOfferPayloadItem{
-				*handler.NewResourceTransferItem(handler.NewUserTarget(user2.Subject), resp.Resource.Id),
-				*handler.NewCreditTransferItem(handler.NewUserTarget(user2.Subject), handler.NewUserTarget(user1.Subject), time.Hour*2),
+			Items: []domain.SubmitOfferItemBase{
+				domain.NewResourceTransferItemInputBase(keys.NewUserTarget(user2.GetUserKey()), resp.Resource.ResourceKey),
+				domain.NewCreditTransferItemInputBase(keys.NewUserTarget(user2.GetUserKey()), keys.NewUserTarget(user1.GetUserKey()), time.Hour*2),
 			},
-			Message: "Howdy :)",
-			GroupID: group.ID,
+			Message:  "Howdy :)",
+			GroupKey: group.GroupKey,
 		},
 	})
 	if !AssertStatusCreated(s.T(), httpResponse) {
@@ -463,6 +466,8 @@ func (s *IntegrationTestSuite) TestSendingOfferShouldCreateChatChannelBetweenUse
 
 func (s *IntegrationTestSuite) TestSendingOfferBetweenMultiplePeopleShouldCreateChatChannelBetweenUsers() {
 
+	s.T().Parallel()
+
 	user1, delUser1 := s.testUser(s.T())
 	defer delUser1()
 
@@ -479,20 +484,20 @@ func (s *IntegrationTestSuite) TestSendingOfferBetweenMultiplePeopleShouldCreate
 
 	ctx := context.Background()
 
-	res1, httpResponse := s.CreateResource(s.T(), ctx, user1, &handler2.CreateResourceRequest{
+	res1, httpResponse := s.CreateResource(ctx, user1, &handler2.CreateResourceRequest{
 		Resource: handler2.CreateResourcePayload{
-			SharedWith: []handler2.InputResourceSharing{
-				{GroupID: group.ID},
-			},
+			SharedWith: handler2.NewInputResourceSharings().WithGroups(group.GroupKey),
 		},
 	})
 	if !AssertStatusCreated(s.T(), httpResponse) {
 		return
 	}
-	res2, httpResponse := s.CreateResource(s.T(), ctx, user2, &handler2.CreateResourceRequest{
+	res2, httpResponse := s.CreateResource(ctx, user2, &handler2.CreateResourceRequest{
 		Resource: handler2.CreateResourcePayload{
 			SharedWith: []handler2.InputResourceSharing{
-				{GroupID: group.ID},
+				{
+					GroupKey: group.GroupKey,
+				},
 			},
 		},
 	})
@@ -500,16 +505,16 @@ func (s *IntegrationTestSuite) TestSendingOfferBetweenMultiplePeopleShouldCreate
 		return
 	}
 
-	_, httpResponse = s.SubmitOffer(s.T(), ctx, user1, &handler.SendOfferRequest{
+	_, httpResponse = s.SubmitOffer(ctx, user1, &handler.SendOfferRequest{
 		Offer: handler.SendOfferPayload{
-			Items: []handler.SendOfferPayloadItem{
-				*handler.NewResourceTransferItem(handler.NewUserTarget(user2.Subject), res1.Resource.Id),
-				*handler.NewCreditTransferItem(handler.NewUserTarget(user2.Subject), handler.NewUserTarget(user1.Subject), time.Hour*2),
-				*handler.NewResourceTransferItem(handler.NewUserTarget(user1.Subject), res2.Resource.Id),
-				*handler.NewCreditTransferItem(handler.NewUserTarget(user3.Subject), handler.NewUserTarget(user2.Subject), time.Hour*2),
+			Items: []domain.SubmitOfferItemBase{
+				domain.NewResourceTransferItemInputBase(keys.NewUserTarget(user2.GetUserKey()), res1.Resource.ResourceKey),
+				domain.NewCreditTransferItemInputBase(keys.NewUserTarget(user2.GetUserKey()), keys.NewUserTarget(user1.GetUserKey()), time.Hour*2),
+				domain.NewResourceTransferItemInputBase(keys.NewUserTarget(user1.GetUserKey()), res2.Resource.ResourceKey),
+				domain.NewCreditTransferItemInputBase(keys.NewUserTarget(user3.GetUserKey()), keys.NewUserTarget(user2.GetUserKey()), time.Hour*2),
 			},
-			Message: "Howdy :)",
-			GroupID: group.ID,
+			Message:  "Howdy :)",
+			GroupKey: group.GroupKey,
 		},
 	})
 	if !AssertStatusCreated(s.T(), httpResponse) {
@@ -546,9 +551,9 @@ func (s *IntegrationTestSuite) TestCanGetTradingHistory() {
 	//
 	// offer1, offer1Http, _ := SubmitOffer(s.T(), ctx, user1, &handler.SendOfferRequest{
 	// 	Offer: handler.SendOfferPayload{
-	// 		Items: []handler.SendOfferPayloadItem{
-	// 			*handler.NewResourceTransferItem(handler.NewUserTarget(user1.Subject), resource1.Resource.Id),
-	// 			*handler.NewCreditTransferItem(handler.NewUserTarget(user2.Subject), handler.NewUserTarget(user1.Subject), time.Hour*2),
+	// 		Items: []domain.SubmitOfferItemBase{
+	// 			*domain.NewResourceTransferItemInputBase(domain.NewUserTarget(user1.GetUserKey()), resource1.Resource.Id),
+	// 			*domain.NewCreditTransferItemInputBase(domain.NewUserTarget(user2.GetUserKey()), domain.NewUserTarget(user1.GetUserKey()), time.Hour*2),
 	// 		},
 	// 		Message: "Howdy :)",
 	// 	},
@@ -560,9 +565,9 @@ func (s *IntegrationTestSuite) TestCanGetTradingHistory() {
 	//
 	// offer2, offer2Http, _ := SubmitOffer(s.T(), ctx, user1, &handler.SendOfferRequest{
 	// 	Offer: handler.SendOfferPayload{
-	// 		Items: []handler.SendOfferPayloadItem{
-	// 			*handler.NewResourceTransferItem(handler.NewUserTarget(user2.Subject), resource2.Resource.Id),
-	// 			*handler.NewCreditTransferItem(handler.NewUserTarget(user2.Subject), handler.NewUserTarget(user1.Subject), time.Hour*2),
+	// 		Items: []domain.SubmitOfferItemBase{
+	// 			*domain.NewResourceTransferItemInputBase(domain.NewUserTarget(user2.GetUserKey()), resource2.Resource.Id),
+	// 			*domain.NewCreditTransferItemInputBase(domain.NewUserTarget(user2.GetUserKey()), domain.NewUserTarget(user1.GetUserKey()), time.Hour*2),
 	// 		},
 	// 		Message: "Howdy :)",
 	// 	},
@@ -596,7 +601,7 @@ func (s *IntegrationTestSuite) TestCanGetTradingHistory() {
 // 	SubmitConfirmAcceptOffer(s.T(), ctx, user1, []*auth.UserSession{user1, user2, user3}, &web.SendOfferRequest{
 // 		Offer: web.SendOfferPayload{
 // 			Items: []web.SendOfferPayloadItem{
-// 				*web.NewResourceTransferItem(user1.Subject, user3.Subject, resource1.Resource.Id),
+// 				*web.NewResourceTransferItemInputBase(user1.Subject, user3.Subject, resource1.Resource.Id),
 // 				*web.NewCreditTransferItem(user3.Subject, user1.Subject, 6000),
 // 			},
 // 			Message: "Howdy :)",
@@ -605,7 +610,7 @@ func (s *IntegrationTestSuite) TestCanGetTradingHistory() {
 // 	SubmitConfirmAcceptOffer(s.T(), ctx, user2, []*auth.UserSession{user1, user2, user3}, &web.SendOfferRequest{
 // 		Offer: web.SendOfferPayload{
 // 			Items: []web.SendOfferPayloadItem{
-// 				*web.NewResourceTransferItem(user2.Subject, user3.Subject, resource2.Resource.Id),
+// 				*web.NewResourceTransferItemInputBase(user2.Subject, user3.Subject, resource2.Resource.Id),
 // 				*web.NewCreditTransferItem(user3.Subject, user1.Subject, 6000),
 // 			},
 // 			Message: "Howdy :)",
@@ -614,7 +619,7 @@ func (s *IntegrationTestSuite) TestCanGetTradingHistory() {
 // 	SubmitConfirmAcceptOffer(s.T(), ctx, user2, []*auth.UserSession{user1, user2, user3}, &web.SendOfferRequest{
 // 		Offer: web.SendOfferPayload{
 // 			Items: []web.SendOfferPayloadItem{
-// 				*web.NewResourceTransferItem(user3.Subject, user1.Subject, resource1.Resource.Id),
+// 				*web.NewResourceTransferItemInputBase(user3.Subject, user1.Subject, resource1.Resource.Id),
 // 				*web.NewCreditTransferItem(user3.Subject, user1.Subject, 6000),
 // 			},
 // 			Message: "Howdy :)",
@@ -623,9 +628,9 @@ func (s *IntegrationTestSuite) TestCanGetTradingHistory() {
 //
 // }
 
-func (s *IntegrationTestSuite) UsersConfirmResourceTransferred(t *testing.T, ctx context.Context, offer *handler.Offer, users []*models.UserSession) error {
-	for _, offerItem := range offer.Items {
+func (s *IntegrationTestSuite) UsersConfirmResourceTransferred(t *testing.T, ctx context.Context, offer *readmodels.OfferReadModel, users []*models.UserSession) error {
 
+	for _, offerItem := range offer.OfferItems {
 		if offerItem.Type != domain.ResourceTransfer {
 			continue
 		}
@@ -643,15 +648,14 @@ func (s *IntegrationTestSuite) UsersConfirmResourceTransferred(t *testing.T, ctx
 			if offerItemUserSession == nil {
 				continue
 			}
-			offerKey := keys.MustParseOfferItemKey(offerItem.ID)
-			httpResponse := s.ConfirmResourceTransfer(s.T(), ctx, offerItemUserSession, offerKey)
+			httpResponse := s.ConfirmResourceTransfer(ctx, offerItemUserSession, offerItem.OfferItemKey)
 			assert.Equal(s.T(), http.StatusOK, httpResponse.StatusCode)
 		}
 	}
 	return nil
 }
 
-func (s *IntegrationTestSuite) UsersAcceptOffer(t *testing.T, ctx context.Context, offer *handler.Offer, users []*models.UserSession) error {
+func (s *IntegrationTestSuite) UsersAcceptOffer(t *testing.T, ctx context.Context, offer *readmodels.OfferReadModel, users []*models.UserSession) error {
 
 	usersAccepted := map[keys.UserKey]bool{}
 
@@ -673,13 +677,8 @@ func (s *IntegrationTestSuite) UsersAcceptOffer(t *testing.T, ctx context.Contex
 				continue
 			}
 
-			offerKey, err := keys.ParseOfferKey(offer.ID)
-			if err != nil {
-				return err
-			}
-
-			httpResponse := s.AcceptOffer(s.T(), ctx, offerItemUserSession, offerKey)
-			assert.Equal(s.T(), http.StatusOK, httpResponse.StatusCode)
+			httpResponse := s.AcceptOffer(ctx, offerItemUserSession, offer.OfferKey)
+			assert.Equal(s.T(), http.StatusAccepted, httpResponse.StatusCode)
 
 		}
 	}

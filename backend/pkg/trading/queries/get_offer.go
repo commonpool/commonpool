@@ -2,9 +2,10 @@ package queries
 
 import (
 	"context"
+	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/pkg/keys"
-	"github.com/commonpool/backend/pkg/trading/domain"
 	readmodels "github.com/commonpool/backend/pkg/trading/readmodels"
+	"golang.org/x/sync/errgroup"
 	"gorm.io/gorm"
 	"strings"
 )
@@ -25,41 +26,103 @@ func NewGetOffer(db *gorm.DB) *GetOffer {
 }
 
 func (q *GetOffer) Get(ctx context.Context, offerKey keys.OfferKey) (*readmodels.OfferReadModel, error) {
-
-	var offer readmodels.DBOfferReadModel
-	if err := q.db.Model(&readmodels.DBOfferReadModel{}).Find(&offer, "offer_key = ?", offerKey).Error; err != nil {
+	offers, err := getOffers(ctx, keys.NewOfferKeys([]keys.OfferKey{offerKey}), q.db)
+	if err != nil {
 		return nil, err
 	}
+	if len(offers) == 0 {
+		return nil, exceptions.ErrOfferNotFound
+	}
+	return offers[0], nil
+}
 
+func getOffers(ctx context.Context, offerKeys *keys.OfferKeys, db *gorm.DB) ([]*readmodels.OfferReadModel, error) {
+
+	if len(offerKeys.Items) == 0 {
+		return []*readmodels.OfferReadModel{}, nil
+	}
+
+	var sb strings.Builder
+	sb.WriteString("offer_key in (")
+	var offerKeysLen = len(offerKeys.Items)
+	var params = make([]interface{}, offerKeysLen)
+	for i := 0; i < offerKeysLen; i++ {
+		sb.WriteString("?")
+		if i < offerKeysLen-1 {
+			sb.WriteString(",")
+		}
+		params[i] = offerKeys.Items[i]
+	}
+	sb.WriteString(")")
+
+	var offers []*readmodels.DBOfferReadModel
 	var offerItems []*readmodels.OfferItemReadModel
-	if err := q.db.
-		Model(&readmodels.OfferItemReadModel{}).
-		Find(&offerItems, "offer_key = ?", offerKey).Error; err != nil {
+	g, ctx := errgroup.WithContext(ctx)
+
+	g.Go(func() error {
+		query := db.Model(&readmodels.DBOfferReadModel{}).
+			Where(sb.String(), params...).
+			Find(&offers)
+		if err := query.Error; err != nil {
+			return err
+		}
+		return nil
+	})
+
+	g.Go(func() error {
+		return db.
+			Model(&readmodels.OfferItemReadModel{}).
+			Where(sb.String(), params...).
+			Find(&offerItems).Error
+	})
+
+	if err := g.Wait(); err != nil {
 		return nil, err
+	}
+	if len(offers) == 0 {
+		return []*readmodels.OfferReadModel{}, nil
 	}
 
 	cache := NewReadModelCache()
-	cache.processOffer(&offer)
+
+	for _, offer := range offers {
+		cache.processOffer(offer)
+	}
+
 	for _, item := range offerItems {
 		cache.processOfferItem(item)
 	}
-	if err := cache.retrieve(q.db); err != nil {
+
+	if err := cache.retrieve(ctx, db); err != nil {
 		return nil, err
 	}
 
-	mappedItems := q.mapOfferItems(offerItems, cache)
-	mappedOffer := readmodels.OfferReadModel{
-		OfferReadModelBase: offer.OfferReadModelBase,
-		DeclinedBy:         cache.getUserReadModel(offer.DeclinedBy),
-		SubmittedBy:        cache.getUserReadModel(offer.SubmittedBy),
-		OfferItems:         mappedItems,
+	mappedItems := mapOfferItems(offerItems, cache)
+	groupedItems := map[keys.OfferKey][]*readmodels.OfferItemReadModel2{}
+	for _, mappedItem := range mappedItems {
+		if _, ok := groupedItems[mappedItem.OfferKey]; !ok {
+			groupedItems[mappedItem.OfferKey] = []*readmodels.OfferItemReadModel2{}
+		}
+		groupedItems[mappedItem.OfferKey] = append(groupedItems[mappedItem.OfferKey], mappedItem)
 	}
 
-	return &mappedOffer, nil
+	var mappedOffers []*readmodels.OfferReadModel
+	for _, offer := range offers {
+		mappedItemsForOffer := groupedItems[offer.OfferKey]
+		mappedOffer := readmodels.OfferReadModel{
+			OfferReadModelBase: offer.OfferReadModelBase,
+			DeclinedBy:         cache.getUserReadModel(offer.DeclinedBy),
+			SubmittedBy:        cache.getUserReadModel(offer.SubmittedBy),
+			OfferItems:         mappedItemsForOffer,
+		}
+		mappedOffers = append(mappedOffers, &mappedOffer)
+	}
+
+	return mappedOffers, nil
 
 }
 
-func (q *GetOffer) mapOfferItems(offerItems []*readmodels.OfferItemReadModel, cache *readModelCache) []*readmodels.OfferItemReadModel2 {
+func mapOfferItems(offerItems []*readmodels.OfferItemReadModel, cache *readModelCache) []*readmodels.OfferItemReadModel2 {
 	var mappedItems = make([]*readmodels.OfferItemReadModel2, len(offerItems))
 	for i, item := range offerItems {
 		mappedItem := mapOfferItem(item, cache)
@@ -196,7 +259,7 @@ func (c *readModelCache) getResource(resourceKey *keys.ResourceKey) *readmodels.
 	return nil
 }
 
-func (c *readModelCache) getTargetReadModel(target *domain.Target) *readmodels.OfferItemTargetReadModel {
+func (c *readModelCache) getTargetReadModel(target *keys.Target) *readmodels.OfferItemTargetReadModel {
 	if target == nil {
 		return nil
 	}
@@ -229,49 +292,63 @@ func (c *readModelCache) getTargetReadModel(target *domain.Target) *readmodels.O
 	}
 }
 
-func (c *readModelCache) retrieve(db *gorm.DB) error {
-	if len(c.allGroupKeys) != 0 {
-		var groupKeyParams []interface{}
-		var groupKeyPlaceholders []string
-		for key, _ := range c.allGroupKeys {
-			groupKeyParams = append(groupKeyParams, key)
-			groupKeyPlaceholders = append(groupKeyPlaceholders, "?")
-		}
-		err := db.
-			Model(&readmodels.OfferGroupReadModel{}).
-			Where("group_key in ("+strings.Join(groupKeyPlaceholders, ",")+")", groupKeyParams...).
-			Find(&c.groups).Error
-		if err != nil {
-			return err
-		}
-	}
+func (c *readModelCache) retrieve(ctx context.Context, db *gorm.DB) error {
 
-	if len(c.allUserKeys) != 0 {
-		var userKeyParams []interface{}
-		var userKeyPlaceholders []string
-		for key, _ := range c.allUserKeys {
-			userKeyParams = append(userKeyParams, key)
-			userKeyPlaceholders = append(userKeyPlaceholders, "?")
-		}
-		err := db.Where("user_key in ("+strings.Join(userKeyPlaceholders, ",")+")", userKeyParams...).
-			Find(&c.users).Error
-		if err != nil {
-			return err
-		}
-	}
+	g, ctx := errgroup.WithContext(ctx)
 
-	if len(c.allResourceKeys) != 0 {
-		var resParams []interface{}
-		var resPlaceholders []string
-		for key, _ := range c.allResourceKeys {
-			resParams = append(resParams, key)
-			resPlaceholders = append(resPlaceholders, "?")
+	g.Go(func() error {
+		if len(c.allGroupKeys) != 0 {
+			var groupKeyParams []interface{}
+			var groupKeyPlaceholders []string
+			for key, _ := range c.allGroupKeys {
+				groupKeyParams = append(groupKeyParams, key)
+				groupKeyPlaceholders = append(groupKeyPlaceholders, "?")
+			}
+			err := db.
+				Model(&readmodels.OfferGroupReadModel{}).
+				Where("group_key in ("+strings.Join(groupKeyPlaceholders, ",")+")", groupKeyParams...).
+				Find(&c.groups).Error
+			if err != nil {
+				return err
+			}
 		}
-		err := db.Where("resource_key in ("+strings.Join(resPlaceholders, ",")+")", resParams...).
-			Find(&c.resources).Error
-		if err != nil {
-			return err
+		return nil
+	})
+
+	g.Go(func() error {
+		if len(c.allUserKeys) != 0 {
+			var userKeyParams []interface{}
+			var userKeyPlaceholders []string
+			for key, _ := range c.allUserKeys {
+				userKeyParams = append(userKeyParams, key)
+				userKeyPlaceholders = append(userKeyPlaceholders, "?")
+			}
+			err := db.Where("user_key in ("+strings.Join(userKeyPlaceholders, ",")+")", userKeyParams...).
+				Find(&c.users).Error
+			if err != nil {
+				return err
+			}
 		}
-	}
-	return nil
+		return nil
+	})
+
+	g.Go(func() error {
+		if len(c.allResourceKeys) != 0 {
+			var resParams []interface{}
+			var resPlaceholders []string
+			for key, _ := range c.allResourceKeys {
+				resParams = append(resParams, key)
+				resPlaceholders = append(resPlaceholders, "?")
+			}
+			err := db.Where("resource_key in ("+strings.Join(resPlaceholders, ",")+")", resParams...).
+				Find(&c.resources).Error
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+
+	return g.Wait()
+
 }

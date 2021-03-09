@@ -11,6 +11,7 @@ type ProvideServiceItem struct {
 	Duration                    time.Duration    `json:"duration"`
 	ServiceGivenConfirmation    bool             `json:"serviceGivenConfirmation"`
 	ServiceReceivedConfirmation bool             `json:"serviceReceivedConfirmation"`
+	From                        *keys.Target     `json:"from"`
 }
 
 func (p *ProvideServiceItem) AsCreditTransfer() (*CreditTransferItem, bool) {
@@ -27,6 +28,14 @@ func (p *ProvideServiceItem) AsBorrowResource() (*BorrowResourceItem, bool) {
 
 func (p *ProvideServiceItem) AsResourceTransfer() (*ResourceTransferItem, bool) {
 	return nil, false
+}
+
+func (b ProvideServiceItem) GetResourceKey() keys.ResourceKey {
+	return b.ResourceKey
+}
+
+func (b ProvideServiceItem) GetTo() keys.Target {
+	return *b.To
 }
 
 func (p ProvideServiceItem) IsCompleted() bool {
@@ -51,7 +60,8 @@ type NewProvideServiceItemOptions struct {
 func NewProvideServiceItem(
 	offerKey keys.OfferKey,
 	offerItemKey keys.OfferItemKey,
-	to *Target,
+	from *keys.Target,
+	to *keys.Target,
 	resourceKey keys.ResourceKey,
 	duration time.Duration,
 	options ...NewProvideServiceItemOptions) *ProvideServiceItem {
@@ -104,6 +114,7 @@ func NewProvideServiceItem(
 		Duration:                    duration,
 		ServiceGivenConfirmation:    defaultOptions.ServiceGivenConfirmation,
 		ServiceReceivedConfirmation: defaultOptions.ServiceReceivedConfirmation,
+		From:                        from,
 	}
 
 }

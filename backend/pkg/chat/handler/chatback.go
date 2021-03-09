@@ -1,11 +1,12 @@
 package handler
 
 import (
+	"context"
+	"fmt"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/keys"
+	"github.com/commonpool/backend/pkg/trading/domain"
 	"github.com/labstack/echo/v4"
-	uuid "github.com/satori/go.uuid"
-	"go.uber.org/zap"
 	"net/http"
 )
 
@@ -66,113 +67,111 @@ func (h *Handler) Chatback(c echo.Context) error {
 
 func (h *Handler) HandleChatbackConfirmServiceProvided(c echo.Context, req InteractionCallback) error {
 
-	ctx, l := handler.GetEchoContext(c, "HandleChatbackConfirmServiceProvided")
-
-	// retrieving item id from payload
-	offerItemId := req.Payload.Actions[0].Value
-	if offerItemId == nil {
-		l.Error("value is required")
-		return c.String(http.StatusBadRequest, "value is required")
-	}
-
-	// converting item id to item key
-	offerItemKey, err := keys.ParseOfferItemKey(*offerItemId)
+	ctx, _ := handler.GetEchoContext(c, "HandleChatbackConfirmServiceProvided")
+	offerKey, offerItemKey, err := h.getOfferKeyForChatbackAction(ctx, req)
 	if err != nil {
-		l.Error("could not get offer item id from request", zap.Error(err))
-		return c.String(http.StatusBadRequest, err.Error())
+		return err
 	}
 
-	return h.tradingService.ConfirmServiceProvided(ctx, offerItemKey)
+	err = h.confirmServiceGiven.Execute(ctx, domain.NewConfirmServiceGiven(ctx, offerKey, offerItemKey))
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, "OK")
 
 }
 
 func (h *Handler) HandleChatbackConfirmResourceTransferred(c echo.Context, req InteractionCallback) error {
 
-	ctx, l := handler.GetEchoContext(c, "HandleChatbackConfirmResourceTransferred")
-
-	// retrieving item id from payload
-	offerItemId := req.Payload.Actions[0].Value
-	if offerItemId == nil {
-		l.Error("value is required")
-		return c.String(http.StatusBadRequest, "value is required")
-	}
-
-	// converting item id to item key
-	offerItemKey, err := keys.ParseOfferItemKey(*offerItemId)
+	ctx, _ := handler.GetEchoContext(c, "HandleChatbackConfirmResourceTransferred")
+	offerKey, offerItemKey, err := h.getOfferKeyForChatbackAction(ctx, req)
 	if err != nil {
-		l.Error("could not get offer item id from request", zap.Error(err))
-		return c.String(http.StatusBadRequest, err.Error())
+		return err
 	}
 
-	return h.tradingService.ConfirmResourceTransferred(ctx, offerItemKey)
+	err = h.confirmResourceGiven.Execute(ctx, domain.NewConfirmResourceGiven(ctx, offerKey, offerItemKey))
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, "OK")
 
 }
 
 func (h *Handler) HandleChatbackConfirmResourceBorrowed(c echo.Context, req InteractionCallback) error {
 
-	ctx, l := handler.GetEchoContext(c, "HandleChatbackConfirmResourceBorrowed")
-
-	// retrieving item id from payload
-	offerItemId := req.Payload.Actions[0].Value
-	if offerItemId == nil {
-		l.Error("value is required")
-		return c.String(http.StatusBadRequest, "value is required")
-	}
-
-	// converting item id to item key
-	offerItemKey, err := keys.ParseOfferItemKey(*offerItemId)
+	ctx, _ := handler.GetEchoContext(c, "HandleChatbackConfirmResourceBorrowed")
+	offerKey, offerItemKey, err := h.getOfferKeyForChatbackAction(ctx, req)
 	if err != nil {
-		l.Error("could not get offer item id from request", zap.Error(err))
-		return c.String(http.StatusBadRequest, err.Error())
+		return err
 	}
 
-	return h.tradingService.ConfirmResourceBorrowed(ctx, offerItemKey)
+	err = h.confirmBorrowed.Execute(ctx, domain.NewConfirmResourceBorrowed(ctx, offerKey, offerItemKey))
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, "OK")
 
 }
 
 func (h *Handler) HandleChatbackConfirmResourceBorrowedReturned(c echo.Context, req InteractionCallback) error {
 
-	ctx, l := handler.GetEchoContext(c, "HandleChatbackConfirmResourceBorrowed")
-
-	// retrieving item id from payload
-	offerItemId := req.Payload.Actions[0].Value
-	if offerItemId == nil {
-		l.Error("value is required")
-		return c.String(http.StatusBadRequest, "value is required")
-	}
-
-	// converting item id to item key
-	offerItemKey, err := keys.ParseOfferItemKey(*offerItemId)
+	ctx, _ := handler.GetEchoContext(c, "HandleChatbackConfirmResourceBorrowedReturned")
+	offerKey, offerItemKey, err := h.getOfferKeyForChatbackAction(ctx, req)
 	if err != nil {
-		l.Error("could not get offer item id from request", zap.Error(err))
-		return c.String(http.StatusBadRequest, err.Error())
+		return err
 	}
 
-	return h.tradingService.ConfirmBorrowedResourceReturned(ctx, offerItemKey)
+	err = h.confirmReturned.Execute(ctx, domain.NewConfirmResourceReturned(ctx, offerKey, offerItemKey))
+	if err != nil {
+		return err
+	}
 
+	return c.JSON(http.StatusOK, "OK")
 }
 
 func (h *Handler) HandleChatbackOfferAccepted(c echo.Context, req InteractionCallback) error {
 
-	ctx, l := handler.GetEchoContext(c, "HandleChatbackOfferAccepted")
-
-	offerId := req.Payload.Actions[0].Value
-	if offerId == nil {
-		l.Error("offerId value is required")
-		return c.String(http.StatusBadRequest, "value is required")
+	ctx, _ := handler.GetEchoContext(c, "HandleChatbackOfferAccepted")
+	offerKey, err := h.parseChatbackOfferKey(req)
+	if err != nil {
+		return err
 	}
 
-	uid, err := uuid.FromString(*offerId)
+	err = h.acceptOffer.Execute(ctx, domain.NewAcceptOffer(ctx, offerKey))
 	if err != nil {
-		l.Error("could not parse offer id")
-		return c.String(http.StatusBadRequest, err.Error())
-	}
-
-	err = h.tradingService.AcceptOffer(ctx, keys.NewOfferKey(uid))
-	if err != nil {
-		l.Error("could not accept offer", zap.Error(err))
-		return c.JSON(http.StatusInternalServerError, err.Error())
+		return err
 	}
 
 	return c.JSON(http.StatusOK, "OK")
+}
+
+func (h *Handler) parseChatbackOfferKey(req InteractionCallback) (keys.OfferKey, error) {
+	offerId := req.Payload.Actions[0].Value
+	if offerId == nil {
+		return keys.OfferKey{}, fmt.Errorf("offerId value is required")
+	}
+	return keys.ParseOfferKey(*offerId)
+}
+
+func (h *Handler) parseChatbackOfferItemKey(req InteractionCallback) (keys.OfferItemKey, error) {
+	offerId := req.Payload.Actions[0].Value
+	if offerId == nil {
+		return keys.OfferItemKey{}, fmt.Errorf("offerItemId value is required")
+	}
+	return keys.ParseOfferItemKey(*offerId)
+}
+
+func (h *Handler) getOfferKeyForChatbackAction(ctx context.Context, req InteractionCallback) (keys.OfferKey, keys.OfferItemKey, error) {
+	offerItemKey, err := h.parseChatbackOfferItemKey(req)
+	if err != nil {
+		return keys.OfferKey{}, keys.OfferItemKey{}, err
+	}
+	offerKey, err := h.getOfferKeyForOfferItemKey.Get(ctx, offerItemKey)
+	if err != nil {
+		return keys.OfferKey{}, keys.OfferItemKey{}, err
+	}
+	return offerKey, offerItemKey, nil
 }

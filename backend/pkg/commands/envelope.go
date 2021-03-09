@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 	"github.com/commonpool/backend/pkg/auth/authenticator/oidc"
+	"github.com/commonpool/backend/pkg/exceptions"
 	uuid "github.com/satori/go.uuid"
 	"time"
 )
@@ -97,17 +98,55 @@ type Command interface {
 	GetPayload() interface{}
 }
 
-type CommandResponse struct {
-	Error      error
-	StatusCode int
-	Payload    interface{}
+type CommandResponse interface {
+	GetResponse() interface{}
+	GetCommand() Command
+	GetStatusCode() int
+	GetError() error
 }
 
 type CommandResponseEnvelope struct {
-	CommandEnvelope
-	ResponseDuration time.Duration
-	ResponseTime     time.Time
-	Error            error
-	StatusCode       int
-	Response         interface{}
+	Command    Command
+	Error      error
+	StatusCode int
+	Response   interface{}
 }
+
+func NewCommandResponseEnvelope(ctx context.Context, command Command, statusCode int, response interface{}, error error) CommandResponseEnvelope {
+	return CommandResponseEnvelope{
+		Command:    command,
+		Error:      error,
+		StatusCode: statusCode,
+		Response:   response,
+	}
+}
+
+func NewCommandSuccessResponse(ctx context.Context, command Command, statusCode int, response interface{}) CommandResponseEnvelope {
+	return NewCommandResponseEnvelope(ctx, command, statusCode, response, nil)
+}
+
+func NewCommandErrResponse(ctx context.Context, command Command, statusCode int, error error) CommandResponseEnvelope {
+	return NewCommandResponseEnvelope(ctx, command, statusCode, nil, error)
+}
+
+func NewCommandErrFrom(ctx context.Context, command Command, err error) CommandResponseEnvelope {
+	return NewCommandErrResponse(ctx, command, exceptions.GetStatusCode(err), err)
+}
+
+func (c CommandResponseEnvelope) GetResponse() interface{} {
+	return c.Response
+}
+
+func (c CommandResponseEnvelope) GetCommand() Command {
+	return c.Command
+}
+
+func (c CommandResponseEnvelope) GetError() error {
+	return c.Error
+}
+
+func (c CommandResponseEnvelope) GetStatusCode() int {
+	return c.StatusCode
+}
+
+var _ CommandResponse = &CommandResponseEnvelope{}

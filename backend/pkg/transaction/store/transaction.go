@@ -2,7 +2,6 @@ package store
 
 import (
 	"github.com/commonpool/backend/pkg/keys"
-	"github.com/commonpool/backend/pkg/trading/domain"
 	"github.com/commonpool/backend/pkg/transaction"
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
@@ -29,13 +28,13 @@ func (t TransactionStore) SaveEntry(entry *transaction.Entry) error {
 		resourceID = &resourceKeyVal
 	}
 
-	var recipientType *domain.TargetType
+	var recipientType *keys.TargetType
 	if entry.Recipient != nil {
 		recipientTypeVal := entry.Recipient.Type
 		recipientType = &recipientTypeVal
 	}
 
-	var fromType *domain.TargetType
+	var fromType *keys.TargetType
 	if entry.From != nil {
 		fromTypeVal := entry.From.Type
 		fromType = &fromTypeVal
@@ -139,9 +138,9 @@ type TransactionEntry struct {
 	GroupID       uuid.UUID
 	ResourceID    *uuid.UUID
 	Duration      *time.Duration
-	RecipientType *domain.TargetType
+	RecipientType *keys.TargetType
 	RecipientID   *string
-	FromType      *domain.TargetType
+	FromType      *keys.TargetType
 	FromID        *string
 	Timestamp     time.Time
 }
@@ -177,17 +176,17 @@ func mapDbTransactionEntry(dbTransactionEntry *TransactionEntry) (*transaction.E
 
 }
 
-func mapTarget(targetType *domain.TargetType, targetId *string) (*domain.Target, error) {
-	var target *domain.Target
+func mapTarget(targetType *keys.TargetType, targetId *string) (*keys.Target, error) {
+	var target *keys.Target
 	if targetType != nil && targetId != nil {
 		if targetType.IsUser() {
-			target = domain.NewUserTarget(keys.NewUserKey(*targetId))
+			target = keys.NewUserTarget(keys.NewUserKey(*targetId))
 		} else if targetType.IsGroup() {
 			groupKey, err := keys.ParseGroupKey(*targetId)
 			if err != nil {
 				return nil, err
 			}
-			target = domain.NewGroupTarget(groupKey)
+			target = keys.NewGroupTarget(groupKey)
 		}
 	}
 	return target, nil

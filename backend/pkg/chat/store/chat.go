@@ -113,7 +113,7 @@ func NewChatStore(db *gorm.DB) *ChatStore {
 //
 // 		subscription := chat.ChannelSubscription{
 // 			ResourceName:          strings.Join(userNames, " "),
-// 			UserID:        key.String(),
+// 			UserKey:        key.String(),
 // 			ChannelID:     channelKey.String(),
 // 			LastMessageAt: time.Unix(0, 0),
 // 			LastTimeRead:  time.Unix(0, 0),

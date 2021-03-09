@@ -9,7 +9,7 @@ type OfferItemBase struct {
 	Type             OfferItemType     `json:"type"`
 	Key              keys.OfferItemKey `json:"id"`
 	OfferKey         keys.OfferKey     `json:"offerId"`
-	To               *Target           `json:"to"`
+	To               *keys.Target      `json:"to"`
 	ApprovedInbound  bool              `json:"approvedInbound"`
 	ApprovedOutbound bool              `json:"approvedOutbound"`
 	CreatedAt        time.Time         `json:"createdAt"`
@@ -39,7 +39,7 @@ func (c OfferItemBase) IsResourceTransfer() bool {
 	return c.Type == ResourceTransfer
 }
 
-func (c OfferItemBase) GetReceiverKey() *Target {
+func (c OfferItemBase) GetReceiverKey() *keys.Target {
 	return c.To
 }
 

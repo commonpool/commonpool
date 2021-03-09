@@ -35,25 +35,23 @@ func (s *RepositoryTestSuite) SetupSuite() {
 		return
 	}
 	s.eventStore = postgres.NewPostgresEventStore(s.db, eventMapper)
-	s.repository = &EventSourcedOfferRepository{
-		eventStore: s.eventStore,
-	}
+	s.repository = NewEventSourcedOfferRepository(s.eventStore)
 	s.ctx = context.Background()
 }
 
 func (s *RepositoryTestSuite) TestSaveOffer() {
 
 	groupKey := keys.NewGroupKey(uuid.NewV4())
-	offerItemKey := keys.NewOfferItemKey(uuid.NewV4())
 	user1Key := keys.NewUserKey("key1")
 	user2Key := keys.NewUserKey("key2")
-	user1Target := domain.NewUserTarget(user1Key)
-	user2Target := domain.NewUserTarget(user2Key)
+	user1Target := keys.NewUserTarget(user1Key)
+	user2Target := keys.NewUserTarget(user2Key)
+	offerItemKey := keys.GenerateOfferItemKey()
 
-	offer := domain.NewOffer()
-	assert.NoError(s.T(), offer.Submit(user1Key, groupKey, domain.NewOfferItems([]domain.OfferItem{
-		domain.NewCreditTransferItem(offer.GetKey(), offerItemKey, user1Target, user2Target, time.Hour*3),
-	})))
+	offer := domain.NewOffer(keys.GenerateOfferKey())
+	assert.NoError(s.T(), offer.Submit(user1Key, groupKey, []domain.SubmitOfferItem{
+		domain.NewCreditTransferItemInput(offerItemKey, user1Target, user2Target, time.Hour*3),
+	}))
 
 	assert.NoError(s.T(), s.repository.Save(s.ctx, offer))
 

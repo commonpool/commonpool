@@ -166,7 +166,7 @@ func (h *Handler) Websocket(c echo.Context) error {
 	// 	if err != nil {
 	// 		l.Error("could not create rabbitmq binding for subscription",
 	// 			zap.String("channel_id", item.ChannelID),
-	// 			zap.String("user_id", item.UserID),
+	// 			zap.String("user_id", item.UserKey),
 	// 			zap.Error(err),
 	// 		)
 	// 		return err

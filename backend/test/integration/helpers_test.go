@@ -69,8 +69,8 @@ func (s *IntegrationTestSuite) testGroup(t *testing.T, owner *models.UserSession
 
 	for _, member := range members {
 		_, httpResponse = s.CreateOrAcceptInvitation(t, ctx, owner, &handler.CreateOrAcceptInvitationRequest{
-			UserID:  member.Subject,
-			GroupID: response.Group.ID,
+			UserKey:  member.GetUserKey(),
+			GroupKey: response.Group.GroupKey,
 		})
 		if !AssertStatusAccepted(t, httpResponse) {
 			bytes, bytesErr := ioutil.ReadAll(httpResponse.Body)
@@ -80,8 +80,8 @@ func (s *IntegrationTestSuite) testGroup(t *testing.T, owner *models.UserSession
 			return nil, fmt.Errorf(string(bytes))
 		}
 		_, httpResponse = s.CreateOrAcceptInvitation(t, ctx, member, &handler.CreateOrAcceptInvitationRequest{
-			UserID:  member.Subject,
-			GroupID: response.Group.ID,
+			UserKey:  member.GetUserKey(),
+			GroupKey: response.Group.GroupKey,
 		})
 		if !AssertStatusAccepted(t, httpResponse) {
 			bytes, bytesErr := ioutil.ReadAll(httpResponse.Body)

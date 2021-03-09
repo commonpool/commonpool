@@ -32,6 +32,10 @@ func (k UserKey) String() string {
 	return k.subject
 }
 
+func (k UserKey) Target() *Target {
+	return NewUserTarget(k)
+}
+
 func (k UserKey) StreamKey() StreamKey {
 	return NewStreamKey("user", k.String())
 }

@@ -16,7 +16,7 @@ func ParseResourceType(str string) (ResourceType, error) {
 	case string(ObjectResource):
 		return ObjectResource, nil
 	default:
-		return "", exceptions.ErrBadRequest("invalid resource type")
+		return "", exceptions.ErrBadRequestf("invalid resource type: %s", str)
 	}
 }
 

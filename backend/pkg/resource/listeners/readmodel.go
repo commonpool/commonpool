@@ -6,8 +6,10 @@ import (
 	"github.com/commonpool/backend/pkg/eventbus"
 	"github.com/commonpool/backend/pkg/eventsource"
 	groupdomain "github.com/commonpool/backend/pkg/group/domain"
+	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/resource/domain"
 	"github.com/commonpool/backend/pkg/resource/readmodel"
+	"github.com/labstack/gommon/log"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"time"
@@ -42,7 +44,7 @@ func (l *ResourceReadModelHandler) Start(ctx context.Context) error {
 
 func (l *ResourceReadModelHandler) migrateDatabase() error {
 	if err := l.db.AutoMigrate(
-		&readmodel.ResourceReadModel{},
+		&readmodel.DbResourceReadModel{},
 		&readmodel.ResourceSharingReadModel{},
 		&readmodel.ResourceUserNameReadModel{},
 		&readmodel.ResourceGroupNameReadModel{}); err != nil {
@@ -78,6 +80,8 @@ func (l *ResourceReadModelHandler) handleEvent(event eventsource.Event) error {
 		return l.handleResourceGroupSharingChanged(e)
 	case domain.ResourceDeleted:
 		return l.handleResourceDeleted(e)
+	default:
+		log.Warnf("unhandled event type: %s", event.GetEventType())
 	}
 	return nil
 }
@@ -156,7 +160,7 @@ func (l *ResourceReadModelHandler) handleUserInfoChanged(e userdomain.UserInfoCh
 
 func (l *ResourceReadModelHandler) handleUserUpdate(userId, username string, version int) error {
 	if err := l.db.
-		Model(readmodel.ResourceReadModel{}).
+		Model(readmodel.DbResourceReadModel{}).
 		Where("created_by = ? and created_by_version <= ?", userId, version).
 		Updates(map[string]interface{}{
 			"created_by_name": username,
@@ -165,7 +169,7 @@ func (l *ResourceReadModelHandler) handleUserUpdate(userId, username string, ver
 	}
 
 	if err := l.db.
-		Model(readmodel.ResourceReadModel{}).
+		Model(readmodel.DbResourceReadModel{}).
 		Where("updated_by = ? and updated_by_version <= ?", userId, version).
 		Updates(map[string]interface{}{
 			"updated_by_name": username,
@@ -177,9 +181,14 @@ func (l *ResourceReadModelHandler) handleUserUpdate(userId, username string, ver
 
 func (l *ResourceReadModelHandler) handleResourceRegistered(e domain.ResourceRegistered) error {
 
+	resourceKey, err := keys.ParseResourceKey(e.AggregateID)
+	if err != nil {
+		return err
+	}
+
 	var user readmodel.ResourceUserNameReadModel
 	qry := l.db.Model(&readmodel.ResourceUserNameReadModel{}).Where("user_key = ?", e.RegisteredBy.String()).Find(&user)
-	err := qry.Error
+	err = qry.Error
 	if err != nil {
 		return err
 	}
@@ -191,23 +200,28 @@ func (l *ResourceReadModelHandler) handleResourceRegistered(e domain.ResourceReg
 		userVersion = user.Version
 	}
 
-	return getOptimisticLocking(l.db, e.SequenceNo).Create(&readmodel.ResourceReadModel{
-		ResourceKey:             e.AggregateID,
-		ResourceName:            e.ResourceInfo.Name,
-		Description:             e.ResourceInfo.Description,
-		CreatedBy:               e.RegisteredBy.String(),
-		CreatedByName:           username,
-		CreatedByVersion:        userVersion,
-		CreatedAt:               e.EventTime,
-		UpdatedBy:               e.RegisteredBy.String(),
-		UpdatedByVersion:        userVersion,
-		UpdatedByName:           username,
-		UpdatedAt:               e.EventTime,
+	return getOptimisticLocking(l.db, e.SequenceNo).Create(&readmodel.DbResourceReadModel{
+		ResourceReadModelBase: readmodel.ResourceReadModelBase{
+			ResourceKey:       resourceKey,
+			CreatedBy:         e.RegisteredBy.String(),
+			CreatedByName:     username,
+			CreatedByVersion:  userVersion,
+			CreatedAt:         e.EventTime,
+			UpdatedBy:         e.RegisteredBy.String(),
+			UpdatedByVersion:  userVersion,
+			UpdatedByName:     username,
+			UpdatedAt:         e.EventTime,
+			GroupSharingCount: 0,
+			Version:           e.SequenceNo,
+			Owner:             e.RegisteredFor,
+		},
+		ResourceInfoBase: domain.ResourceInfoBase{
+			Name:         e.ResourceInfo.Name,
+			Description:  e.ResourceInfo.Description,
+			CallType:     e.ResourceInfo.CallType,
+			ResourceType: e.ResourceInfo.ResourceType,
+		},
 		ResourceValueEstimation: e.ResourceInfo.Value,
-		GroupSharingCount:       0,
-		Version:                 e.SequenceNo,
-		CallType:                e.ResourceInfo.CallType,
-		ResourceType:            e.ResourceInfo.ResourceType,
 	}).Error
 
 }
@@ -229,13 +243,14 @@ func (l *ResourceReadModelHandler) handleResourceInfoChanged(e domain.ResourceIn
 	}
 
 	updates := map[string]interface{}{
-		"resource_name":       e.NewResourceInfo.Name,
+		"name":                e.NewResourceInfo.Name,
 		"description":         e.NewResourceInfo.Description,
 		"value_type":          e.NewResourceInfo.Value.ValueType,
 		"value_from_duration": e.NewResourceInfo.Value.ValueFromDuration,
 		"value_to_duration":   e.NewResourceInfo.Value.ValueToDuration,
 		"updated_at":          e.EventTime,
 		"updated_by":          e.ChangedBy.String(),
+		"version":             e.SequenceNo,
 	}
 	if username != "" {
 		updates["updated_by_name"] = username
@@ -245,7 +260,7 @@ func (l *ResourceReadModelHandler) handleResourceInfoChanged(e domain.ResourceIn
 	}
 
 	return l.db.
-		Model(&readmodel.ResourceReadModel{}).
+		Model(&readmodel.DbResourceReadModel{}).
 		Where("resource_key = ? and version < ?", e.AggregateID, e.SequenceNo).
 		Updates(updates).
 		Error
@@ -253,6 +268,11 @@ func (l *ResourceReadModelHandler) handleResourceInfoChanged(e domain.ResourceIn
 }
 
 func (l *ResourceReadModelHandler) handleResourceGroupSharingChanged(e domain.ResourceGroupSharingChanged) error {
+
+	resourceKey, err := keys.ParseResourceKey(e.AggregateID)
+	if err != nil {
+		return err
+	}
 
 	if len(e.RemovedSharings) > 0 {
 		deleteSql := "resource_key = ? and group_key in ("
@@ -267,7 +287,7 @@ func (l *ResourceReadModelHandler) handleResourceGroupSharingChanged(e domain.Re
 			deleteParams = append(deleteParams, removedSharing.GroupKey.String())
 		}
 		deleteSql = deleteSql + ")"
-		if err := l.db.Where(deleteSql, deleteParams...).Delete(readmodel.ResourceSharingReadModel{}).Error; err != nil {
+		if err := l.db.Debug().Where(deleteSql, deleteParams...).Delete(readmodel.ResourceSharingReadModel{}).Error; err != nil {
 			return err
 		}
 	}
@@ -287,8 +307,8 @@ func (l *ResourceReadModelHandler) handleResourceGroupSharingChanged(e domain.Re
 		}
 
 		err := getOptimisticLocking(l.db, e.SequenceNo).Create(readmodel.ResourceSharingReadModel{
-			ResourceKey:  e.AggregateID,
-			GroupKey:     addedSharing.GroupKey.String(),
+			ResourceKey:  resourceKey,
+			GroupKey:     addedSharing.GroupKey,
 			GroupName:    groupName,
 			Version:      e.SequenceNo,
 			GroupVersion: groupVersion,
@@ -298,7 +318,7 @@ func (l *ResourceReadModelHandler) handleResourceGroupSharingChanged(e domain.Re
 		}
 	}
 
-	if err := l.db.Model(&readmodel.ResourceReadModel{}).Where("resource_key = ?", e.AggregateID).Updates(map[string]interface{}{
+	if err := l.db.Model(&readmodel.DbResourceReadModel{}).Where("resource_key = ?", e.AggregateID).Updates(map[string]interface{}{
 		"group_sharing_count": len(e.NewResourceSharings),
 		"version":             e.SequenceNo,
 		"updated_at":          e.EventTime,
@@ -315,7 +335,7 @@ func (l *ResourceReadModelHandler) handleResourceDeleted(e domain.ResourceDelete
 		return err
 	}
 
-	if err := l.db.Delete(&readmodel.ResourceReadModel{}, "resource_key = ?", e.AggregateID).Error; err != nil {
+	if err := l.db.Delete(&readmodel.DbResourceReadModel{}, "resource_key = ?", e.AggregateID).Error; err != nil {
 		return err
 	}
 

@@ -8,7 +8,9 @@ import (
 	"github.com/commonpool/backend/pkg/config"
 	"github.com/commonpool/backend/pkg/eventstore"
 	"github.com/commonpool/backend/pkg/group/readmodels"
+	readmodel2 "github.com/commonpool/backend/pkg/resource/readmodel"
 	"github.com/commonpool/backend/pkg/server"
+	keys "github.com/commonpool/backend/pkg/trading/readmodels"
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/suite"
 	"gorm.io/driver/postgres"
@@ -77,6 +79,14 @@ func (s *IntegrationTestSuite) cleanDb() {
 	s.server.Db.Delete(readmodel.UserReadModel{}, "1 = 1")
 	s.server.Db.Delete(readmodels.MembershipReadModel{}, "1 = 1")
 	s.server.Db.Delete(readmodels.GroupReadModel{}, "1 = 1")
+	s.server.Db.Delete(readmodel2.DbResourceReadModel{}, "1 = 1")
+	s.server.Db.Delete(readmodel2.ResourceGroupNameReadModel{}, "1 = 1")
+	s.server.Db.Delete(readmodel2.ResourceSharingReadModel{}, "1 = 1")
+	s.server.Db.Delete(keys.DBOfferReadModel{}, "1 = 1")
+	s.server.Db.Delete(keys.OfferItemReadModel{}, "1 = 1")
+	s.server.Db.Delete(keys.OfferResourceReadModel{}, "1 = 1")
+	s.server.Db.Delete(keys.OfferUserMembershipReadModel{}, "1 = 1")
+	s.server.Db.Delete(keys.OfferUserReadModel{}, "1 = 1")
 }
 
 func getDb(appConfig *config.AppConfig) *gorm.DB {

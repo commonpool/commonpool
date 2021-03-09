@@ -5,7 +5,6 @@ import (
 	"github.com/commonpool/backend/pkg/eventsource"
 	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/pkg/keys"
-	"github.com/commonpool/backend/pkg/trading/domain"
 	"strings"
 )
 
@@ -40,7 +39,7 @@ func NewFromEvents(key keys.ResourceKey, events []eventsource.Event) *Resource {
 	return r
 }
 
-func (r *Resource) Register(registeredBy keys.UserKey, registeredFor *domain.Target, resourceInfo ResourceInfo, resourceSharings *keys.GroupKeys) error {
+func (r *Resource) Register(registeredBy keys.UserKey, registeredFor *keys.Target, resourceInfo ResourceInfo, resourceSharings *keys.GroupKeys) error {
 	if err := r.assertIsNew(); err != nil {
 		return err
 	}
@@ -49,14 +48,14 @@ func (r *Resource) Register(registeredBy keys.UserKey, registeredFor *domain.Tar
 	case Offer:
 	case Request:
 	default:
-		return exceptions.ErrValidation("invalid resource call type")
+		return exceptions.ErrBadRequestf("invalid resource call type: %s", resourceInfo.CallType)
 	}
 
 	switch resourceInfo.ResourceType {
 	case ServiceResource:
 	case ObjectResource:
 	default:
-		return exceptions.ErrValidation("invalid resource type")
+		return exceptions.ErrBadRequestf("invalid resource type: %s", resourceInfo.ResourceType)
 	}
 
 	sanitizedInfo, err := r.sanitizeResourceInfo(resourceInfo)
@@ -75,7 +74,7 @@ func (r *Resource) Register(registeredBy keys.UserKey, registeredFor *domain.Tar
 		resourceSharings = keys.NewEmptyGroupKeys()
 	}
 
-	return r.ChangeSharings(registeredBy, *resourceSharings)
+	return r.ChangeSharings(registeredBy, resourceSharings)
 }
 
 func (r *Resource) handleResourceRegistered(e ResourceRegistered) {
@@ -84,28 +83,23 @@ func (r *Resource) handleResourceRegistered(e ResourceRegistered) {
 	r.info = e.ResourceInfo
 }
 
-func (r *Resource) ChangeInfo(changedBy keys.UserKey, resourceInfo ResourceInfo) error {
+func (r *Resource) ChangeInfo(changedBy keys.UserKey, resourceInfo ResourceInfoUpdate) error {
 	if err := r.assertIsNotNew(); err != nil {
 		return err
 	}
 	if err := r.assertNotDeleted(); err != nil {
 		return err
 	}
-	if r.info == resourceInfo {
-		return nil
-	}
 
-	sanitizedInfo, err := r.sanitizeResourceInfo(resourceInfo)
+	newInfo := r.info.WithName(resourceInfo.Name).WithDescription(resourceInfo.Description).WithValue(resourceInfo.Value)
+
+	sanitizedInfo, err := r.sanitizeResourceInfo(newInfo)
 	if err != nil {
 		return err
 	}
 
-	if resourceInfo.CallType != r.info.CallType {
-		return exceptions.ErrBadRequest("cannot change resource call type")
-	}
-
-	if resourceInfo.ResourceType != r.info.ResourceType {
-		return exceptions.ErrBadRequest("cannot change resource type")
+	if r.info == sanitizedInfo {
+		return nil
 	}
 
 	evt := NewResourceInfoChanged(changedBy, r.info, sanitizedInfo)
@@ -117,7 +111,7 @@ func (r *Resource) handleResourceInfoChanged(e ResourceInfoChanged) {
 	r.info = e.NewResourceInfo
 }
 
-func (r *Resource) ChangeSharings(changedBy keys.UserKey, sharedWith keys.GroupKeys) error {
+func (r *Resource) ChangeSharings(changedBy keys.UserKey, sharedWith *keys.GroupKeys) error {
 	if err := r.assertIsNotNew(); err != nil {
 		return err
 	}
@@ -193,11 +187,13 @@ func (r *Resource) handleResourceDeleted(e ResourceDeleted) {
 
 func (r *Resource) sanitizeResourceInfo(resourceInfo ResourceInfo) (ResourceInfo, error) {
 	sanitizedInfo := ResourceInfo{
-		Value:        resourceInfo.Value,
-		Name:         strings.TrimSpace(resourceInfo.Name),
-		Description:  strings.TrimSpace(resourceInfo.Description),
-		CallType:     resourceInfo.CallType,
-		ResourceType: resourceInfo.ResourceType,
+		ResourceInfoBase: ResourceInfoBase{
+			Name:         strings.TrimSpace(resourceInfo.Name),
+			Description:  strings.TrimSpace(resourceInfo.Description),
+			CallType:     resourceInfo.CallType,
+			ResourceType: resourceInfo.ResourceType,
+		},
+		Value: resourceInfo.Value,
 	}
 
 	if sanitizedInfo.Name == "" {

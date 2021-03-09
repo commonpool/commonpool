@@ -2,16 +2,17 @@ package readmodels
 
 import (
 	"github.com/commonpool/backend/pkg/group/domain"
+	"github.com/commonpool/backend/pkg/keys"
 	"time"
 )
 
 type GroupReadModel struct {
-	Version     int       `gorm:"not null"`
-	GroupKey    string    `gorm:"not null;type:varchar(128);primaryKey"`
-	Name        string    `gorm:"not null;type:varchar(128)"`
-	Description string    `gorm:"not null;type:varchar(2048)"`
-	CreatedBy   string    `gorm:"not null;type:varchar(128)"`
-	CreatedAt   time.Time `gorm:"not null"`
+	Version     int           `gorm:"not null"`
+	GroupKey    keys.GroupKey `gorm:"not null;type:varchar(128);primaryKey"`
+	Name        string        `gorm:"not null;type:varchar(128)"`
+	Description string        `gorm:"not null;type:varchar(2048)"`
+	CreatedBy   string        `gorm:"not null;type:varchar(128)"`
+	CreatedAt   time.Time     `gorm:"not null"`
 }
 
 type MembershipReadModel struct {

@@ -9,10 +9,10 @@ import (
 )
 
 type OfferGroupOrUserPickerItem struct {
-	Type    domain.TargetType `json:"type"`
-	UserID  *string           `json:"userId"`
-	GroupID *string           `json:"groupId"`
-	Name    string            `json:"name"`
+	Type    keys.TargetType `json:"type"`
+	UserID  *string         `json:"userId"`
+	GroupID *string         `json:"groupId"`
+	Name    string          `json:"name"`
 }
 
 type OfferGroupOrUserPickerResult struct {
@@ -58,7 +58,7 @@ func (h *TradingHandler) HandleOfferItemTargetPicker(c echo.Context) error {
 	for _, group := range groups.Items {
 		groupId := group.GetKey().String()
 		items = append(items, OfferGroupOrUserPickerItem{
-			Type:    domain.GroupTarget,
+			Type:    keys.GroupTarget,
 			GroupID: &groupId,
 			Name:    group.Name,
 		})
@@ -72,7 +72,7 @@ func (h *TradingHandler) HandleOfferItemTargetPicker(c echo.Context) error {
 	for _, item := range users.Items {
 		userKey := item.GetUserKey().String()
 		items = append(items, OfferGroupOrUserPickerItem{
-			Type:   domain.UserTarget,
+			Type:   keys.UserTarget,
 			UserID: &userKey,
 			Name:   item.Username,
 		})

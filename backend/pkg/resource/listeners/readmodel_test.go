@@ -12,7 +12,6 @@ import (
 	"github.com/commonpool/backend/pkg/resource/domain"
 	"github.com/commonpool/backend/pkg/resource/queries"
 	"github.com/commonpool/backend/pkg/resource/readmodel"
-	tradingdomain "github.com/commonpool/backend/pkg/trading/domain"
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -76,7 +75,7 @@ func (s *ReadModelTestSuite) SetupSuite() {
 	s.getSharings = queries.NewGetResourceSharings(s.db)
 
 	// clean the database
-	s.db.Delete(&readmodel.ResourceReadModel{}, "1 = 1")
+	s.db.Delete(&readmodel.DbResourceReadModel{}, "1 = 1")
 	s.db.Delete(&readmodel.ResourceSharingReadModel{}, "1 = 1")
 	s.db.Delete(&readmodel.ResourceGroupNameReadModel{}, "1 = 1")
 	s.db.Delete(&readmodel.ResourceUserNameReadModel{}, "1 = 1")
@@ -226,9 +225,9 @@ func (s *ReadModelTestSuite) TestShouldCreateResourceWhenResourceCreated() {
 
 	if err := resource.Register(
 		userKey,
-		*tradingdomain.NewUserTarget(userKey),
+		keys.NewUserTarget(userKey),
 		resourceInfo,
-		*keys.NewGroupKeys([]keys.GroupKey{groupKey})); !assert.NoError(s.T(), err) {
+		keys.NewGroupKeys([]keys.GroupKey{groupKey})); !assert.NoError(s.T(), err) {
 		return
 	}
 
@@ -243,20 +242,28 @@ func (s *ReadModelTestSuite) TestShouldCreateResourceWhenResourceCreated() {
 	}
 
 	assert.Equal(s.T(), readmodel.ResourceReadModel{
-		ResourceKey:             resourceKey.String(),
-		ResourceName:            resourceInfo.Name,
-		Description:             resourceInfo.Description,
-		CreatedBy:               userKey.String(),
-		CreatedByVersion:        0,
-		CreatedByName:           userInfo.Username,
-		CreatedAt:               evts[0].GetEventTime(),
-		UpdatedBy:               userKey.String(),
-		UpdatedByVersion:        0,
-		UpdatedByName:           userInfo.Username,
-		UpdatedAt:               evts[1].GetEventTime(),
-		ResourceValueEstimation: resourceInfo.Value,
-		GroupSharingCount:       1,
-		Version:                 1,
+		ResourceReadModelBase: readmodel.ResourceReadModelBase{
+			ResourceKey:       resourceKey,
+			CreatedBy:         userKey.String(),
+			CreatedByVersion:  0,
+			CreatedByName:     userInfo.Username,
+			CreatedAt:         evts[0].GetEventTime(),
+			UpdatedBy:         userKey.String(),
+			UpdatedByVersion:  0,
+			UpdatedByName:     userInfo.Username,
+			UpdatedAt:         evts[1].GetEventTime(),
+			GroupSharingCount: 1,
+			Version:           1,
+		},
+		ResourceInfo: domain.ResourceInfo{
+			ResourceInfoBase: domain.ResourceInfoBase{
+				Name:         resourceInfo.Name,
+				Description:  resourceInfo.Description,
+				CallType:     domain.Offer,
+				ResourceType: domain.ObjectResource,
+			},
+			Value: resourceInfo.Value,
+		},
 	}, *rm)
 
 	sharings, err := s.getSharings.Get(s.ctx, resourceKey)
@@ -268,8 +275,8 @@ func (s *ReadModelTestSuite) TestShouldCreateResourceWhenResourceCreated() {
 	}
 
 	assert.Equal(s.T(), readmodel.ResourceSharingReadModel{
-		ResourceKey:  resourceKey.String(),
-		GroupKey:     groupKey.String(),
+		ResourceKey:  resourceKey,
+		GroupKey:     groupKey,
 		GroupName:    groupInfo.Name,
 		Version:      1,
 		GroupVersion: 0,
@@ -300,14 +307,14 @@ func (s *ReadModelTestSuite) TestShouldUpdateResourceWhenResourceInfoChanged() {
 	resourceInfo := s.aResourceInfo("TestShouldCreateResourceWhenResourceCreated")
 
 	if err := resource.Register(
-		userKey1, *tradingdomain.NewUserTarget(userKey1),
+		userKey1, keys.NewUserTarget(userKey1),
 		resourceInfo,
-		*keys.NewGroupKeys([]keys.GroupKey{groupKey})); !assert.NoError(s.T(), err) {
+		keys.NewGroupKeys([]keys.GroupKey{groupKey})); !assert.NoError(s.T(), err) {
 		return
 	}
 
 	resourceInfo2 := s.aResourceInfo("TestShouldUpdateResourceWhenResourceInfoChanged2")
-	if err := resource.ChangeInfo(userKey2, resourceInfo2); !assert.NoError(s.T(), err) {
+	if err := resource.ChangeInfo(userKey2, resourceInfo2.AsUpdate()); !assert.NoError(s.T(), err) {
 		return
 	}
 
@@ -322,20 +329,28 @@ func (s *ReadModelTestSuite) TestShouldUpdateResourceWhenResourceInfoChanged() {
 	}
 
 	assert.Equal(s.T(), readmodel.ResourceReadModel{
-		ResourceKey:             resourceKey.String(),
-		ResourceName:            resourceInfo2.Name,
-		Description:             resourceInfo2.Description,
-		CreatedBy:               userKey1.String(),
-		CreatedByVersion:        0,
-		CreatedByName:           userInfo1.Username,
-		CreatedAt:               evts[0].GetEventTime(),
-		UpdatedBy:               userKey2.String(),
-		UpdatedByVersion:        0,
-		UpdatedByName:           userInfo2.Username,
-		UpdatedAt:               evts[2].GetEventTime(),
-		ResourceValueEstimation: resourceInfo2.Value,
-		GroupSharingCount:       1,
-		Version:                 1,
+		ResourceReadModelBase: readmodel.ResourceReadModelBase{
+			ResourceKey:       resourceKey,
+			CreatedBy:         userKey1.String(),
+			CreatedByVersion:  0,
+			CreatedByName:     userInfo1.Username,
+			CreatedAt:         evts[0].GetEventTime(),
+			UpdatedBy:         userKey2.String(),
+			UpdatedByVersion:  0,
+			UpdatedByName:     userInfo2.Username,
+			UpdatedAt:         evts[2].GetEventTime(),
+			GroupSharingCount: 1,
+			Version:           1,
+		},
+		ResourceInfo: domain.ResourceInfo{
+			ResourceInfoBase: domain.ResourceInfoBase{
+				Name:         resourceInfo2.Name,
+				Description:  resourceInfo2.Description,
+				CallType:     domain.Offer,
+				ResourceType: domain.ObjectResource,
+			},
+			Value: resourceInfo2.Value,
+		},
 	}, *rm)
 
 }
@@ -352,9 +367,9 @@ func (s *ReadModelTestSuite) TestShouldDeleteReadModelWhenResourceDeleted() {
 
 	if err := resource.Register(
 		user1Key,
-		*tradingdomain.NewUserTarget(user1Key),
+		keys.NewUserTarget(user1Key),
 		resourceInfo,
-		*keys.NewGroupKeys([]keys.GroupKey{groupKey})); !assert.NoError(s.T(), err) {
+		keys.NewGroupKeys([]keys.GroupKey{groupKey})); !assert.NoError(s.T(), err) {
 		return
 	}
 
@@ -397,9 +412,9 @@ func (s *ReadModelTestSuite) TestShouldUpdateSharings() {
 
 	if err := resource.Register(
 		userKey,
-		*tradingdomain.NewUserTarget(userKey),
+		keys.NewUserTarget(userKey),
 		resourceInfo,
-		*keys.NewGroupKeys([]keys.GroupKey{groupKey1})); !assert.NoError(s.T(), err) {
+		keys.NewGroupKeys([]keys.GroupKey{groupKey1})); !assert.NoError(s.T(), err) {
 		return
 	}
 
@@ -415,20 +430,28 @@ func (s *ReadModelTestSuite) TestShouldUpdateSharings() {
 	}
 
 	assert.Equal(s.T(), readmodel.ResourceReadModel{
-		ResourceKey:             resourceKey.String(),
-		ResourceName:            resourceInfo.Name,
-		Description:             resourceInfo.Description,
-		CreatedBy:               userKey.String(),
-		CreatedByVersion:        0,
-		CreatedByName:           userInfo.Username,
-		CreatedAt:               evts[0].GetEventTime(),
-		UpdatedBy:               userKey.String(),
-		UpdatedByVersion:        0,
-		UpdatedByName:           userInfo.Username,
-		UpdatedAt:               evts[2].GetEventTime(),
-		ResourceValueEstimation: resourceInfo.Value,
-		GroupSharingCount:       1,
-		Version:                 2,
+		ResourceReadModelBase: readmodel.ResourceReadModelBase{
+			ResourceKey:       resourceKey,
+			CreatedBy:         userKey.String(),
+			CreatedByVersion:  0,
+			CreatedByName:     userInfo.Username,
+			CreatedAt:         evts[0].GetEventTime(),
+			UpdatedBy:         userKey.String(),
+			UpdatedByVersion:  0,
+			UpdatedByName:     userInfo.Username,
+			UpdatedAt:         evts[2].GetEventTime(),
+			GroupSharingCount: 1,
+			Version:           2,
+		},
+		ResourceInfo: domain.ResourceInfo{
+			ResourceInfoBase: domain.ResourceInfoBase{
+				Name:         resourceInfo.Name,
+				Description:  resourceInfo.Description,
+				CallType:     domain.Offer,
+				ResourceType: domain.ObjectResource,
+			},
+			Value: resourceInfo.Value,
+		},
 	}, *rm)
 
 	sharings, err := s.getSharings.Get(s.ctx, resourceKey)
@@ -439,8 +462,8 @@ func (s *ReadModelTestSuite) TestShouldUpdateSharings() {
 		return
 	}
 	assert.Equal(s.T(), readmodel.ResourceSharingReadModel{
-		ResourceKey:  resourceKey.String(),
-		GroupKey:     groupKey2.String(),
+		ResourceKey:  resourceKey,
+		GroupKey:     groupKey2,
 		GroupName:    groupInfo2.Name,
 		Version:      2,
 		GroupVersion: 0,
@@ -493,11 +516,13 @@ func (s *ReadModelTestSuite) aResourceInfo(prefix string) domain.ResourceInfo {
 		ValueToDuration:   time.Duration(rand.Intn(10)+10) * time.Hour,
 	}
 	return domain.ResourceInfo{
-		Value:        valueEstimation,
-		Name:         prefix,
-		Description:  prefix + "-description",
-		CallType:     domain.Offer,
-		ResourceType: domain.ObjectResource,
+		Value: valueEstimation,
+		ResourceInfoBase: domain.ResourceInfoBase{
+			Name:         prefix,
+			Description:  prefix + "-description",
+			CallType:     domain.Offer,
+			ResourceType: domain.ObjectResource,
+		},
 	}
 }
 

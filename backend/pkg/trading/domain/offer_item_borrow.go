@@ -39,6 +39,14 @@ func (b BorrowResourceItem) Type() OfferItemType {
 	return BorrowResource
 }
 
+func (b BorrowResourceItem) GetResourceKey() keys.ResourceKey {
+	return b.ResourceKey
+}
+
+func (b BorrowResourceItem) GetTo() keys.Target {
+	return *b.To
+}
+
 var _ OfferItem = &BorrowResourceItem{}
 
 type NewBorrowResourceItemOptions struct {
@@ -56,7 +64,7 @@ func NewBorrowResourceItem(
 	offerKey keys.OfferKey,
 	offerItemKey keys.OfferItemKey,
 	resourceKey keys.ResourceKey,
-	to *Target,
+	to *keys.Target,
 	duration time.Duration,
 	options ...NewBorrowResourceItemOptions) *BorrowResourceItem {
 

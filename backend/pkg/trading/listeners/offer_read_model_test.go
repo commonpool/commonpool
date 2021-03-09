@@ -14,7 +14,6 @@ import (
 	tradingdomain "github.com/commonpool/backend/pkg/trading/domain"
 	"github.com/commonpool/backend/pkg/trading/queries"
 	readmodels "github.com/commonpool/backend/pkg/trading/readmodels"
-	"github.com/commonpool/backend/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"gorm.io/gorm"
@@ -35,6 +34,7 @@ type OfferReadModelTestSuite struct {
 	eventStore           eventstore.EventStore
 	listener             *OfferReadModelHandler
 	getOffer             *queries.GetOffer
+	getOffers            *queries.GetOffers
 	getOfferItem         *queries.GetOfferItem
 	getOfferItemOfferKey *queries.GetOfferKeyForOfferItemKey
 }
@@ -73,6 +73,7 @@ func (s *OfferReadModelTestSuite) SetupSuite() {
 	// s.cleanDb(db)
 
 	s.getOffer = queries.NewGetOffer(db)
+	s.getOffers = queries.NewGetOffers(db)
 	s.getOfferItem = queries.NewGetOfferItem(db)
 	s.getOfferItemOfferKey = queries.NewGetOfferKeyForOfferItemKey(db)
 }
@@ -130,7 +131,7 @@ func (s *OfferReadModelTestSuite) createGroup(group *groupdomain.Group, createdB
 func (s *OfferReadModelTestSuite) registerResource(
 	resource *resourcedomain.Resource,
 	createdBy keys.UserKey,
-	target *tradingdomain.Target,
+	target *keys.Target,
 	resourceInfo resourcedomain.ResourceInfo,
 	groupKeys ...keys.GroupKey) ([]eventsource.Event, error) {
 	err := resource.Register(createdBy, target, resourceInfo, keys.NewGroupKeys(groupKeys))
@@ -183,7 +184,7 @@ func (s *OfferReadModelTestSuite) Test() {
 		WithValue(resourcedomain.NewResourceValueEstimation().
 			WithFromToValueType().WithHoursFromTo(1, 2))
 	resource1 := resourcedomain.NewResource(resource1Key)
-	if _, err := s.registerResource(resource1, user1Key, tradingdomain.NewUserTarget(user1Key), resource1Info); !assert.NoError(s.T(), err) {
+	if _, err := s.registerResource(resource1, user1Key, keys.NewUserTarget(user1Key), resource1Info); !assert.NoError(s.T(), err) {
 		return
 	}
 
@@ -196,7 +197,7 @@ func (s *OfferReadModelTestSuite) Test() {
 		WithValue(resourcedomain.NewResourceValueEstimation().
 			WithFromToValueType().WithHoursFromTo(1, 2))
 	resource2 := resourcedomain.NewResource(resource2Key)
-	if _, err := s.registerResource(resource2, user1Key, tradingdomain.NewUserTarget(user2Key), resource2Info); !assert.NoError(s.T(), err) {
+	if _, err := s.registerResource(resource2, user1Key, keys.NewUserTarget(user2Key), resource2Info); !assert.NoError(s.T(), err) {
 		return
 	}
 
@@ -209,7 +210,7 @@ func (s *OfferReadModelTestSuite) Test() {
 		WithValue(resourcedomain.NewResourceValueEstimation().
 			WithFromToValueType().WithHoursFromTo(2, 3))
 	resource3 := resourcedomain.NewResource(resource3Key)
-	if _, err := s.registerResource(resource3, user2Key, tradingdomain.NewUserTarget(user2Key), resource3Info); !assert.NoError(s.T(), err) {
+	if _, err := s.registerResource(resource3, user2Key, keys.NewUserTarget(user2Key), resource3Info); !assert.NoError(s.T(), err) {
 		return
 	}
 
@@ -219,32 +220,29 @@ func (s *OfferReadModelTestSuite) Test() {
 	offerItem2Key := keys.GenerateOfferItemKey()
 	offerItem3Key := keys.GenerateOfferItemKey()
 	offerItem4Key := keys.GenerateOfferItemKey()
-	err = offer.Submit(user1Key, group1Key, tradingdomain.NewOfferItemsFrom(
-		tradingdomain.NewResourceTransferItem(
-			offerKey,
+	err = offer.Submit(user1Key, group1Key, tradingdomain.NewSubmitOfferItems(
+		tradingdomain.NewResourceTransferItemInput(
 			offerItemKey,
-			tradingdomain.NewGroupTarget(group1Key),
+			keys.NewGroupTarget(group1Key),
 			resource1Key,
 		),
-		tradingdomain.NewProvideServiceItem(
-			offerKey,
+		tradingdomain.NewProvideServiceItemInput(
 			offerItem2Key,
-			tradingdomain.NewUserTarget(user2Key),
+			keys.NewUserTarget(user1Key),
+			keys.NewUserTarget(user2Key),
 			resource2Key,
 			2*time.Hour,
 		),
-		tradingdomain.NewBorrowResourceItem(
-			offerKey,
+		tradingdomain.NewBorrowResourceInput(
 			offerItem3Key,
+			keys.NewUserTarget(user2Key),
 			resource3Key,
-			tradingdomain.NewUserTarget(user2Key),
 			2*time.Hour,
 		),
-		tradingdomain.NewCreditTransferItem(
-			offerKey,
+		tradingdomain.NewCreditTransferItemInput(
 			offerItem4Key,
-			tradingdomain.NewGroupTarget(group1Key),
-			tradingdomain.NewUserTarget(user1Key),
+			keys.NewGroupTarget(group1Key),
+			keys.NewUserTarget(user1Key),
 			time.Hour*5,
 		),
 	),
@@ -268,7 +266,7 @@ func (s *OfferReadModelTestSuite) Test() {
 	}
 
 	resource1Info = resource1Info.WithName("Changed Resource Name")
-	if err := resource1.ChangeInfo(user2Key, resource1Info); !assert.NoError(s.T(), err) {
+	if err := resource1.ChangeInfo(user2Key, resource1Info.AsUpdate()); !assert.NoError(s.T(), err) {
 		return
 	}
 	_, err = s.saveAndApply(resource1)
@@ -285,7 +283,7 @@ func (s *OfferReadModelTestSuite) Test() {
 		return
 	}
 
-	if err := offer.ApproveOfferItem(user1Key, offerItemKey, tradingdomain.Inbound, test.ApproveAllMatrix); !assert.NoError(s.T(), err) {
+	if err := offer.ApproveOfferItem(user1Key, offerItemKey, tradingdomain.Inbound, tradingdomain.ApproveAllMatrix); !assert.NoError(s.T(), err) {
 		return
 	}
 	approval1Events, err := s.saveAndApply(offer)
@@ -293,7 +291,7 @@ func (s *OfferReadModelTestSuite) Test() {
 		return
 	}
 
-	if err := offer.ApproveOfferItem(user2Key, offerItemKey, tradingdomain.Outbound, test.ApproveAllMatrix); !assert.NoError(s.T(), err) {
+	if err := offer.ApproveOfferItem(user2Key, offerItemKey, tradingdomain.Outbound, tradingdomain.ApproveAllMatrix); !assert.NoError(s.T(), err) {
 		return
 	}
 	approval2Events, err := s.saveAndApply(offer)
@@ -305,6 +303,20 @@ func (s *OfferReadModelTestSuite) Test() {
 	if !assert.NoError(s.T(), err) {
 		return
 	}
+
+	all, err := s.getOffers.Get(context.Background(), user1Key)
+	if !assert.NoError(s.T(), err) {
+		return
+	}
+	js, _ := json.MarshalIndent(all, "", " ")
+	s.T().Log("\n" + string(js))
+
+	all, err = s.getOffers.Get(context.Background(), user2Key)
+	if !assert.NoError(s.T(), err) {
+		return
+	}
+	js, _ = json.MarshalIndent(all, "", " ")
+	s.T().Log("\n" + string(js))
 
 	intPtr := func(i int) *int {
 		return &i
@@ -347,9 +359,9 @@ func (s *OfferReadModelTestSuite) Test() {
 					Version:            2,
 				},
 				To: &readmodels.OfferItemTargetReadModel{
-					Target: tradingdomain.Target{
+					Target: keys.Target{
 						GroupKey: &group1Key,
-						Type:     tradingdomain.GroupTarget,
+						Type:     keys.GroupTarget,
 					},
 					GroupName:    strPtr("Changed Group Name"),
 					GroupVersion: intPtr(2),
@@ -360,9 +372,9 @@ func (s *OfferReadModelTestSuite) Test() {
 					Version:      1,
 					ResourceType: resourcedomain.ServiceResource,
 					CallType:     resourcedomain.Offer,
-					Owner: tradingdomain.Target{
+					Owner: keys.Target{
 						UserKey: &user1Key,
-						Type:    tradingdomain.UserTarget,
+						Type:    keys.UserTarget,
 					},
 				},
 				ApprovedInboundBy: &readmodels.OfferUserReadModel{
@@ -383,9 +395,9 @@ func (s *OfferReadModelTestSuite) Test() {
 					Duration:     durationPtr(2 * time.Hour),
 				},
 				To: &readmodels.OfferItemTargetReadModel{
-					Target: tradingdomain.Target{
+					Target: keys.Target{
 						UserKey: &user2Key,
-						Type:    tradingdomain.UserTarget,
+						Type:    keys.UserTarget,
 					},
 					UserName:    strPtr("Test2"),
 					UserVersion: intPtr(0),
@@ -396,9 +408,9 @@ func (s *OfferReadModelTestSuite) Test() {
 					Version:      0,
 					ResourceType: resourcedomain.ServiceResource,
 					CallType:     resourcedomain.Offer,
-					Owner: tradingdomain.Target{
+					Owner: keys.Target{
 						UserKey: &user2Key,
-						Type:    tradingdomain.UserTarget,
+						Type:    keys.UserTarget,
 					},
 				},
 			}, {
@@ -409,9 +421,9 @@ func (s *OfferReadModelTestSuite) Test() {
 					Duration:     durationPtr(2 * time.Hour),
 				},
 				To: &readmodels.OfferItemTargetReadModel{
-					Target: tradingdomain.Target{
+					Target: keys.Target{
 						UserKey: &user2Key,
-						Type:    tradingdomain.UserTarget,
+						Type:    keys.UserTarget,
 					},
 					UserName:    strPtr("Test2"),
 					UserVersion: intPtr(0),
@@ -422,9 +434,9 @@ func (s *OfferReadModelTestSuite) Test() {
 					Version:      0,
 					ResourceType: resourcedomain.ServiceResource,
 					CallType:     resourcedomain.Offer,
-					Owner: tradingdomain.Target{
+					Owner: keys.Target{
 						UserKey: &user2Key,
-						Type:    tradingdomain.UserTarget,
+						Type:    keys.UserTarget,
 					},
 				},
 			}, {
@@ -435,17 +447,17 @@ func (s *OfferReadModelTestSuite) Test() {
 					Amount:       durationPtr(5 * time.Hour),
 				},
 				To: &readmodels.OfferItemTargetReadModel{
-					Target: tradingdomain.Target{
+					Target: keys.Target{
 						UserKey: &user1Key,
-						Type:    tradingdomain.UserTarget,
+						Type:    keys.UserTarget,
 					},
 					UserName:    strPtr("Test1-2"),
 					UserVersion: intPtr(1),
 				},
 				From: &readmodels.OfferItemTargetReadModel{
-					Target: tradingdomain.Target{
+					Target: keys.Target{
 						GroupKey: &group1Key,
-						Type:     tradingdomain.GroupTarget,
+						Type:     keys.GroupTarget,
 					},
 					GroupName:    strPtr("Changed Group Name"),
 					GroupVersion: intPtr(2),

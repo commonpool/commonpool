@@ -8,7 +8,7 @@ import (
 	"github.com/commonpool/backend/pkg/eventsource"
 	"github.com/commonpool/backend/pkg/eventstore"
 	"github.com/commonpool/backend/pkg/mq"
-	"github.com/labstack/gommon/log"
+	"go.uber.org/zap"
 )
 
 type RabbitMQListener struct {
@@ -58,7 +58,7 @@ func (s *RabbitMQListener) Initialize(ctx context.Context, name string, eventTyp
 func (s *RabbitMQListener) Listen(ctx context.Context, listenerFunc ListenerFunc) error {
 
 	l := logging.WithContext(ctx)
-	l = l.Named("RabbitMQListener")
+	l = l.Named("RabbitMQListener " + s.name)
 
 	if !s.initialized {
 		return fmt.Errorf("not initialized")
@@ -90,25 +90,28 @@ func (s *RabbitMQListener) Listen(ctx context.Context, listenerFunc ListenerFunc
 				return
 			case msg := <-msgs:
 				var streamEvent eventstore.StreamEvent
+
+				l.Debug("received event", zap.String("event_type", msg.Type))
+
 				err := json.Unmarshal(msg.Body, &streamEvent)
 				if err != nil {
-					log.Printf("could not unmarshal event: %v", err)
+					l.Error("could not unmarshal event", zap.Error(err))
 					continue
 				}
 
 				evt, err := s.eventMapper.Map(msg.Type, msg.Body)
 				if err != nil {
-					log.Errorf("could not map event with type %s: %v", msg.Type, err)
+					l.Error("could not map event with type", zap.String("event_type", msg.Type), zap.Error(err))
 					continue
 				}
 
 				err = listenerFunc([]eventsource.Event{evt})
 				if err != nil {
-					log.Printf("listener error: %v", err)
+					l.Error("listener error", zap.Error(err), zap.String("event_type", msg.Type))
 					continue
 				} else {
 					if err := msg.Acknowledger.Ack(msg.DeliveryTag, false); err != nil {
-						log.Printf("could not ack delivery: %v", err)
+						l.Error("could not ack delivery", zap.Error(err))
 						continue
 					}
 				}

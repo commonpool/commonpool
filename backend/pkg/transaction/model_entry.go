@@ -2,7 +2,6 @@ package transaction
 
 import (
 	"github.com/commonpool/backend/pkg/keys"
-	"github.com/commonpool/backend/pkg/trading/domain"
 	"time"
 )
 
@@ -12,7 +11,7 @@ type Entry struct {
 	GroupKey    keys.GroupKey
 	ResourceKey *keys.ResourceKey
 	Duration    *time.Duration
-	Recipient   *domain.Target
-	From        *domain.Target
+	Recipient   *keys.Target
+	From        *keys.Target
 	Timestamp   time.Time
 }

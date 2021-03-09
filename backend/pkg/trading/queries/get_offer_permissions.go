@@ -17,27 +17,32 @@ func NewGetOfferPermissions(db *gorm.DB) *GetOfferPermissions {
 	return &GetOfferPermissions{db: db}
 }
 
-func (q *GetOfferPermissions) Get(ctx context.Context, offerKey keys.OfferKey) (domain.OfferPermissionGetter, error) {
+func (q *GetOfferPermissions) getPermissionTuples(ctx context.Context, offerKey keys.OfferKey) (*PermissionTuples, error) {
 
 	g, ctx := errgroup.WithContext(ctx)
+
+	var offer groupreadmodels.DBOfferReadModel
+	if err := q.db.Model(&groupreadmodels.DBOfferReadModel{}).Where("offer_key = ?", offerKey).First(&offer).Error; err != nil {
+		return nil, err
+	}
 
 	var offerItems []*groupreadmodels.OfferItemReadModel
 	var groupAdmins []*groupreadmodels.OfferUserMembershipReadModel
 
 	g.Go(func() error {
-		return q.db.Model(&offerItems).Find("offer_key = ?", offerKey).Find(&offerItems).Error
+		return q.db.Model(&groupreadmodels.OfferItemReadModel{}).Find(&offerItems, "offer_key = ?", offerKey).Find(&offerItems).Error
 	})
 
 	g.Go(func() error {
 		return q.db.Model(&groupreadmodels.OfferUserMembershipReadModel{}).
-			Where("user_key = ? and group_key = ? and (is_member = true or is_owner = true)").
+			Where("group_key = ? and (is_member = ? or is_owner = ?)", offer.GroupKey, true, true).
 			Find(&groupAdmins).
 			Error
 	})
 
 	type resourceResult struct {
 		ResourceKey keys.ResourceKey
-		Owner       domain.Target
+		Owner       keys.Target `json:"owner" gorm:"embedded;embeddedPrefix:owner_"`
 	}
 	var resources []*resourceResult
 	g.Go(func() error {
@@ -45,7 +50,8 @@ func (q *GetOfferPermissions) Get(ctx context.Context, offerKey keys.OfferKey) (
 			select
 				offer_resource_read_models.resource_key,
 				offer_resource_read_models.owner_user_key,
-				offer_resource_read_models.owner_group_key
+				offer_resource_read_models.owner_group_key,
+				offer_resource_read_models.owner_type
 			from 
 				offer_item_read_models
 			join 
@@ -68,7 +74,7 @@ func (q *GetOfferPermissions) Get(ctx context.Context, offerKey keys.OfferKey) (
 			permissions.AddPermission(offerItem.OfferItemKey, offerItem.From.GetUserKey(), domain.Outbound)
 		}
 		if offerItem.To.IsForUser() {
-			permissions.AddPermission(offerItem.OfferItemKey, offerItem.To.GetUserKey(), domain.Outbound)
+			permissions.AddPermission(offerItem.OfferItemKey, offerItem.To.GetUserKey(), domain.Inbound)
 		}
 		if offerItem.From.IsForGroup() {
 			for _, groupAdmin := range groupAdmins {
@@ -99,7 +105,10 @@ func (q *GetOfferPermissions) Get(ctx context.Context, offerKey keys.OfferKey) (
 	}
 
 	return permissions, nil
+}
 
+func (q *GetOfferPermissions) Get(ctx context.Context, offerKey keys.OfferKey) (domain.OfferPermissionGetter, error) {
+	return q.getPermissionTuples(ctx, offerKey)
 }
 
 type PermissionTuples struct {
@@ -112,8 +121,8 @@ func NewPermissionTuples() *PermissionTuples {
 	}
 }
 
-func (p *PermissionTuples) Can(userKey keys.UserKey, key keys.OfferItemKey, direction domain.ApprovalDirection) bool {
-	permissions, ok := p.Permissions[key]
+func (p *PermissionTuples) Can(userKey keys.UserKey, offerItem domain.OfferItem, direction domain.ApprovalDirection) bool {
+	permissions, ok := p.Permissions[offerItem.GetKey()]
 	if !ok {
 		return false
 	}
@@ -130,6 +139,7 @@ func (p *PermissionTuples) AddPermission(offerItemKey keys.OfferItemKey, userKey
 	if _, ok := p.Permissions[offerItemKey]; !ok {
 		p.Permissions[offerItemKey] = NewPermissionTuple()
 	}
+	p.Permissions[offerItemKey].AddPermission(userKey, direction)
 }
 
 type PermissionTuple struct {

@@ -2,6 +2,8 @@ package eventbus
 
 import (
 	"context"
+	"github.com/commonpool/backend/logging"
+	"github.com/commonpool/backend/pkg/eventsource"
 	"github.com/commonpool/backend/pkg/eventstore"
 	"time"
 )
@@ -30,5 +32,9 @@ func (s *ReplayListener) Initialize(ctx context.Context, name string, eventTypes
 }
 
 func (s *ReplayListener) Listen(ctx context.Context, listenerFunc ListenerFunc) error {
-	return s.eventStore.ReplayEventsByType(ctx, s.eventTypes, s.getCurrentTimestamp(), listenerFunc)
+	l := logging.WithContext(ctx).Named("ReplayListener " + s.name)
+	return s.eventStore.ReplayEventsByType(ctx, s.eventTypes, s.getCurrentTimestamp(), func(events []eventsource.Event) error {
+		l.Debug("received events from event store")
+		return listenerFunc(events)
+	})
 }

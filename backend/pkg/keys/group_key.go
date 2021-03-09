@@ -28,6 +28,10 @@ func NewGroupKey(id uuid.UUID) GroupKey {
 	return GroupKey{ID: id}
 }
 
+func (k GroupKey) Target() *Target {
+	return NewGroupTarget(k)
+}
+
 func GenerateGroupKey() GroupKey {
 	return GroupKey{ID: uuid.NewV4()}
 }

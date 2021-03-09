@@ -7,6 +7,7 @@ import (
 	"github.com/commonpool/backend/pkg/eventsource"
 	"github.com/commonpool/backend/pkg/group/domain"
 	"github.com/commonpool/backend/pkg/group/readmodels"
+	"github.com/commonpool/backend/pkg/keys"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"time"
@@ -171,7 +172,12 @@ func (l *GroupReadModelListener) applyGroupInfoChangedEvent(e domain.GroupInfoCh
 }
 
 func (l *GroupReadModelListener) applyGroupCreatedEvent(e domain.GroupCreated) error {
-	err := l.db.Clauses(
+	groupKey, err := keys.ParseGroupKey(e.AggregateID)
+	if err != nil {
+		return err
+	}
+
+	return l.db.Clauses(
 		clause.OnConflict{
 			Where: clause.Where{
 				Exprs: []clause.Expression{
@@ -184,13 +190,12 @@ func (l *GroupReadModelListener) applyGroupCreatedEvent(e domain.GroupCreated) e
 			UpdateAll: true,
 		}).Create(&readmodels.GroupReadModel{
 		Version:     e.SequenceNo,
-		GroupKey:    e.AggregateID,
+		GroupKey:    groupKey,
 		Name:        e.GroupInfo.Name,
 		Description: e.GroupInfo.Description,
 		CreatedBy:   e.CreatedBy.String(),
 		CreatedAt:   e.EventTime,
 	}).Error
-	return err
 }
 
 func applyMembershipChanged(values map[string]interface{}, e domain.MembershipStatusChanged) {

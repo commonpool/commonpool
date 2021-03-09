@@ -21,7 +21,7 @@ func (q *GetOfferItem) Get(ctx context.Context, offerItemKey keys.OfferItemKey) 
 
 	cache := NewReadModelCache()
 	cache.processOfferItem(&result)
-	if err := cache.retrieve(q.db); err != nil {
+	if err := cache.retrieve(nil, q.db); err != nil {
 		return nil, err
 	}
 

@@ -1,189 +1,20 @@
 package service
 
 import (
-	"context"
-	"fmt"
-	"github.com/commonpool/backend/pkg/auth/models"
-	"github.com/commonpool/backend/pkg/auth/store"
-	"github.com/commonpool/backend/pkg/chat"
-	"github.com/commonpool/backend/pkg/chat/service"
 	group2 "github.com/commonpool/backend/pkg/group"
-	"github.com/commonpool/backend/pkg/keys"
 	trading2 "github.com/commonpool/backend/pkg/trading"
-	tradingdomain "github.com/commonpool/backend/pkg/trading/domain"
-	"github.com/commonpool/backend/pkg/trading/queries"
-	transaction2 "github.com/commonpool/backend/pkg/transaction"
-	"time"
 )
 
 type TradingService struct {
-	tradingStore                trading2.Store
-	transactionService          transaction2.Service
-	groupService                group2.Service
-	userStore                   store.Store
-	chatService                 service.Service
-	offerRepo                   tradingdomain.OfferRepository
-	getOfferKeyFromOfferItemKey *queries.GetOfferKeyForOfferItemKey
-	getOfferItem                *queries.GetOfferItem
+	groupService group2.Service
 }
 
 var _ trading2.Service = &TradingService{}
 
 func NewTradingService(
-	tradingStore trading2.Store,
-	authStore store.Store,
-	chatService service.Service,
 	groupService group2.Service,
-	transactionService transaction2.Service,
-	offerRepo tradingdomain.OfferRepository,
-	getOfferKeyFromOfferItemKey *queries.GetOfferKeyForOfferItemKey,
-	getOfferItem *queries.GetOfferItem,
 ) *TradingService {
 	return &TradingService{
-		tradingStore:                tradingStore,
-		userStore:                   authStore,
-		chatService:                 chatService,
-		groupService:                groupService,
-		transactionService:          transactionService,
-		offerRepo:                   offerRepo,
-		getOfferKeyFromOfferItemKey: getOfferKeyFromOfferItemKey,
-		getOfferItem:                getOfferItem,
+		groupService: groupService,
 	}
-}
-
-func (t TradingService) checkOfferCompleted(
-	ctx context.Context,
-	groupKey keys.GroupKey,
-	offerKey keys.OfferKey,
-	offerItems *tradingdomain.OfferItems,
-	userConfirmingItem models.UserReference,
-	usersInOffer *models.Users) error {
-
-	if offerItems.AllApproved() && offerItems.AllUserActionsCompleted() {
-		for _, offerItem := range offerItems.Items {
-			if offerItem.IsCreditTransfer() {
-				creditTransfer := offerItem.(*tradingdomain.CreditTransferItem)
-				_, err := t.transactionService.TimeCreditsExchanged(groupKey, creditTransfer.From, creditTransfer.To, creditTransfer.Amount)
-				if err != nil {
-					return err
-				}
-			}
-			if offerItem.IsServiceProviding() {
-				serviceProvision := offerItem.(*tradingdomain.ProvideServiceItem)
-				_, err := t.transactionService.ServiceWasProvided(groupKey, serviceProvision.ResourceKey, serviceProvision.Duration)
-				if err != nil {
-					return err
-				}
-			}
-			if offerItem.IsBorrowingResource() {
-				borrowResource := offerItem.(*tradingdomain.BorrowResourceItem)
-				_, err := t.transactionService.ResourceWasBorrowed(groupKey, borrowResource.ResourceKey, borrowResource.To, borrowResource.Duration)
-				if err != nil {
-					return err
-				}
-			}
-			if offerItem.IsResourceTransfer() {
-				transfer := offerItem.(*tradingdomain.ResourceTransferItem)
-				_, err := t.transactionService.ResourceWasTaken(groupKey, transfer.ResourceKey, transfer.To)
-				if err != nil {
-					return err
-				}
-			}
-		}
-
-		err := t.tradingStore.UpdateOfferStatus(offerKey, tradingdomain.Completed)
-		if err != nil {
-			return err
-		}
-
-		blocks, mainText, err := t.buildOfferCompletedMessage(ctx, offerItems, usersInOffer)
-		if err != nil {
-			return err
-		}
-
-		_, err = t.chatService.SendConversationMessage(ctx, service.NewSendConversationMessage(
-			userConfirmingItem.GetUserKey(),
-			userConfirmingItem.GetUsername(),
-			usersInOffer.GetUserKeys(),
-			fmt.Sprintf(mainText),
-			blocks,
-			[]chat.Attachment{},
-			nil,
-		))
-	}
-	return nil
-}
-
-func (t TradingService) buildOfferCompletedMessage(ctx context.Context, items *tradingdomain.OfferItems, users *models.Users) ([]chat.Block, string, error) {
-
-	var blocks []chat.Block
-
-	mainText := ":champagne: Alright! everybody confirmed having received and given their stuff."
-	blocks = append(blocks, *chat.NewHeaderBlock(
-		chat.NewMarkdownObject(mainText),
-		nil,
-	))
-
-	for _, offerItem := range items.Items {
-
-		if offerItem.IsCreditTransfer() {
-
-			creditTransfer := offerItem.(*tradingdomain.CreditTransferItem)
-
-			var toLink = ""
-			var fromLink = ""
-
-			if creditTransfer.To.IsForGroup() {
-				toLink = creditTransfer.To.GetGroupKey().GetFrontendLink()
-			} else if creditTransfer.To.IsForUser() {
-				toLink = creditTransfer.To.GetUserKey().GetFrontendLink()
-			}
-
-			if creditTransfer.From.IsForGroup() {
-				fromLink = creditTransfer.From.GetGroupKey().GetFrontendLink()
-			} else if creditTransfer.From.IsForUser() {
-				fromLink = creditTransfer.From.GetUserKey().GetFrontendLink()
-			}
-
-			blocks = append(blocks, *chat.NewSectionBlock(
-				chat.NewMarkdownObject(fmt.Sprintf("%s received `%s` timebank credits from %s",
-					toLink,
-					creditTransfer.Amount.Truncate(time.Minute*1).String(),
-					fromLink,
-				)),
-				nil,
-				nil,
-				nil,
-			))
-		}
-	}
-
-	return blocks, mainText, nil
-
-}
-
-func (t TradingService) checkIfAllItemsCompleted(ctx context.Context, loggerInUser models.UserReference, offerItem tradingdomain.OfferItem) error {
-
-	offer, err := t.tradingStore.GetOffer(offerItem.GetOfferKey())
-	if err != nil {
-		return err
-	}
-
-	offerItems, err := t.tradingStore.GetOfferItemsForOffer(offer.Key)
-	if err != nil {
-		return err
-	}
-
-	approvers, err := t.tradingStore.FindApproversForOffer(offer.Key)
-	if err != nil {
-		return err
-	}
-
-	allUsersInOffer, err := t.userStore.GetByKeys(ctx, approvers.AllUserKeys())
-	if err != nil {
-		return err
-	}
-
-	return t.checkOfferCompleted(ctx, offer.GroupKey, offer.Key, offerItems, loggerInUser, allUsersInOffer)
-
 }

@@ -28,6 +28,10 @@ func (i *OfferItems) AllApproved() bool {
 	return true
 }
 
+func NewEmptyOfferItems() *OfferItems {
+	return NewOfferItems([]OfferItem{})
+}
+
 func NewOfferItems(offerItems []OfferItem) *OfferItems {
 	copied := make([]OfferItem, len(offerItems))
 	copy(copied, offerItems)
@@ -53,6 +57,10 @@ func (i *OfferItems) GetOfferItem(key keys.OfferItemKey) OfferItem {
 
 func (i *OfferItems) ItemCount() int {
 	return len(i.Items)
+}
+
+func (i *OfferItems) Append(offerItem OfferItem) {
+	i.Items = append(i.Items, offerItem)
 }
 
 func (i *OfferItems) GetResourceKeys() *keys.ResourceKeys {

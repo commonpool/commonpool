@@ -69,7 +69,6 @@ type UserAuthResponse struct {
 // @Failure 400 {object} utils.Error
 // @Router /users/:id [get]
 func (h *UserHandler) GetUserInfo(c echo.Context) error {
-
 	userId := c.Param("id")
 	userKey := keys.NewUserKey(userId)
 
@@ -84,7 +83,6 @@ func (h *UserHandler) GetUserInfo(c echo.Context) error {
 		Id:       user.ID,
 	}
 	return c.JSON(http.StatusOK, response)
-
 }
 
 // GetUserInfo godoc
@@ -101,6 +99,7 @@ func (h *UserHandler) GetUserInfo(c echo.Context) error {
 // @Failure 400 {object} utils.Error
 // @Router /users [get]
 func (h *UserHandler) SearchUsers(c echo.Context) error {
+
 	skip, err := utils.ParseSkip(c)
 	if err != nil {
 		return err

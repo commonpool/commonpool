@@ -32,6 +32,14 @@ func (r ResourceTransferItem) IsCompleted() bool {
 	return r.ItemGiven && r.ItemReceived
 }
 
+func (b ResourceTransferItem) GetResourceKey() keys.ResourceKey {
+	return b.ResourceKey
+}
+
+func (b ResourceTransferItem) GetTo() keys.Target {
+	return *b.To
+}
+
 func (r ResourceTransferItem) Type() OfferItemType {
 	return ResourceTransfer
 }
@@ -50,7 +58,7 @@ type NewResourceTransferItemOptions struct {
 func NewResourceTransferItem(
 	offerKey keys.OfferKey,
 	offerItemKey keys.OfferItemKey,
-	to *Target,
+	to *keys.Target,
 	resourceKey keys.ResourceKey,
 	options ...NewResourceTransferItemOptions) *ResourceTransferItem {
 

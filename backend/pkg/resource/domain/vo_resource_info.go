@@ -52,39 +52,63 @@ func NewResourceValueEstimation() ResourceValueEstimation {
 	return ResourceValueEstimation{}
 }
 
+type ResourceInfoBase struct {
+	Name         string       `json:"name"`
+	Description  string       `json:"description"`
+	CallType     CallType     `json:"call_type"`
+	ResourceType ResourceType `json:"resource_type"`
+}
+
 type ResourceInfo struct {
-	Value        ResourceValueEstimation `json:"value"`
-	Name         string                  `json:"name"`
-	Description  string                  `json:"description"`
-	CallType     CallType                `json:"call_type"`
-	ResourceType ResourceType            `json:"resource_type"`
+	ResourceInfoBase
+	Value ResourceValueEstimation `json:"value"`
+}
+
+func (r ResourceInfo) AsUpdate() ResourceInfoUpdate {
+	return ResourceInfoUpdate{
+		Name:        r.Name,
+		Description: r.Description,
+		Value:       r.Value,
+	}
+}
+
+type ResourceInfoUpdate struct {
+	Name        string                  `json:"name"`
+	Description string                  `json:"description"`
+	Value       ResourceValueEstimation `json:"value"`
 }
 
 func (r ResourceInfo) WithName(name string) ResourceInfo {
 	return ResourceInfo{
-		Value:        r.Value,
-		Name:         name,
-		Description:  r.Description,
-		CallType:     r.CallType,
-		ResourceType: r.ResourceType,
+		ResourceInfoBase: ResourceInfoBase{
+			Name:         name,
+			Description:  r.Description,
+			CallType:     r.CallType,
+			ResourceType: r.ResourceType,
+		},
+		Value: r.Value,
 	}
 }
 func (r ResourceInfo) WithDescription(description string) ResourceInfo {
 	return ResourceInfo{
-		Value:        r.Value,
-		Name:         r.Name,
-		Description:  description,
-		CallType:     r.CallType,
-		ResourceType: r.ResourceType,
+		ResourceInfoBase: ResourceInfoBase{
+			Name:         r.Name,
+			Description:  description,
+			CallType:     r.CallType,
+			ResourceType: r.ResourceType,
+		},
+		Value: r.Value,
 	}
 }
 func (r ResourceInfo) WithCallType(callType CallType) ResourceInfo {
 	return ResourceInfo{
-		Value:        r.Value,
-		Name:         r.Name,
-		Description:  r.Description,
-		CallType:     callType,
-		ResourceType: r.ResourceType,
+		ResourceInfoBase: ResourceInfoBase{
+			Name:         r.Name,
+			Description:  r.Description,
+			CallType:     callType,
+			ResourceType: r.ResourceType,
+		},
+		Value: r.Value,
 	}
 }
 
@@ -98,11 +122,13 @@ func (r ResourceInfo) WithIsRequest() ResourceInfo {
 
 func (r ResourceInfo) WithResourceType(resourceType ResourceType) ResourceInfo {
 	return ResourceInfo{
-		Value:        r.Value,
-		Name:         r.Name,
-		Description:  r.Description,
-		CallType:     r.CallType,
-		ResourceType: resourceType,
+		Value: r.Value,
+		ResourceInfoBase: ResourceInfoBase{
+			Name:         r.ResourceInfoBase.Name,
+			Description:  r.ResourceInfoBase.Description,
+			CallType:     r.ResourceInfoBase.CallType,
+			ResourceType: resourceType,
+		},
 	}
 }
 
@@ -116,11 +142,13 @@ func (r ResourceInfo) WithIsObject() ResourceInfo {
 
 func (r ResourceInfo) WithValue(value ResourceValueEstimation) ResourceInfo {
 	return ResourceInfo{
-		Value:        value,
-		Name:         r.Name,
-		Description:  r.Description,
-		CallType:     r.CallType,
-		ResourceType: r.ResourceType,
+		ResourceInfoBase: ResourceInfoBase{
+			Name:         r.Name,
+			Description:  r.Description,
+			CallType:     r.CallType,
+			ResourceType: r.ResourceType,
+		},
+		Value: value,
 	}
 }
 

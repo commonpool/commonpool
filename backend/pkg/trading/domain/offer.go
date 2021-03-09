@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/commonpool/backend/pkg/eventsource"
+	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/pkg/keys"
 )
 
@@ -14,6 +15,7 @@ type Offer struct {
 	changes                             []eventsource.Event
 	version                             int
 	offerItemMap                        map[keys.OfferItemKey]OfferItem
+	offerItems                          *OfferItems
 	offerItemCount                      int
 	approvals                           []OfferItemApproval
 	inboundApproved                     ApprovalMap
@@ -78,6 +80,7 @@ func NewOffer(key keys.OfferKey) *Offer {
 		borrowerReturnedBorrowedResourceMap: ApprovalMap{},
 		creditTransferItemMap:               map[keys.OfferItemKey]*CreditTransferItem{},
 		changes:                             []eventsource.Event{},
+		offerItems:                          NewOfferItems([]OfferItem{}),
 	}
 }
 
@@ -97,17 +100,107 @@ func (o *Offer) GetEventType() string {
 // //  Commands  //
 // ////////////////
 
-func (o *Offer) Submit(submittedBy keys.UserKey, groupKey keys.GroupKey, offerItems *OfferItems) error {
+func (o *Offer) Submit(submittedBy keys.UserKey, groupKey keys.GroupKey, offerItems SubmitOfferItems) error {
 
 	if err := o.assertNew(); err != nil {
 		return fmt.Errorf("cannot submit offer: %v", err)
 	}
 
-	if len(offerItems.Items) == 0 {
+	if len(offerItems) == 0 {
 		return fmt.Errorf("cannot submit offer: must have at least one offerItem")
 	}
 
-	o.raise(NewOfferSubmitted(submittedBy, offerItems, groupKey))
+	var mappedItems = NewEmptyOfferItems()
+	for _, offerItem := range offerItems {
+
+		var item OfferItem
+		switch offerItem.OfferItemType {
+		case ResourceTransfer:
+			if offerItem.ResourceKey == nil {
+				return exceptions.ErrBadRequestf("OfferItem.ResourceKey is required for OfferItem type ResourceTransfer")
+			}
+			if offerItem.To == nil {
+				return exceptions.ErrBadRequest("OfferItem.To is required for OfferItem type ResourceTransfer")
+			}
+			if offerItem.From != nil {
+				return exceptions.ErrBadRequest("OfferItem.From is not valid for OfferItem type ResourceTransfer")
+			}
+			if offerItem.Duration != nil {
+				return exceptions.ErrBadRequest("OfferItem.Duration is not valid for OfferItem type ResourceTransfer")
+			}
+			if offerItem.Amount != nil {
+				return exceptions.ErrBadRequest("OfferItem.Amount is not valid for OfferItem type ResourceTransfer")
+			}
+			item = NewResourceTransferItem(o.key, offerItem.OfferItemKey, offerItem.To, *offerItem.ResourceKey)
+		case BorrowResource:
+			if offerItem.ResourceKey == nil {
+				return exceptions.ErrBadRequestf("OfferItem.ResourceKey is required for OfferItem type BorrowResource")
+			}
+			if offerItem.To == nil {
+				return exceptions.ErrBadRequest("OfferItem.To is required for OfferItem type BorrowResource")
+			}
+			if offerItem.From != nil {
+				return exceptions.ErrBadRequest("OfferItem.From is not valid for OfferItem type BorrowResource")
+			}
+			if offerItem.Duration == nil {
+				return exceptions.ErrBadRequest("OfferItem.Duration is required for OfferItem type BorrowResource")
+			}
+			if *offerItem.Duration < 0 {
+				return exceptions.ErrBadRequest("OfferItem.Duration must be positive")
+			}
+			if offerItem.Amount != nil {
+				return exceptions.ErrBadRequest("OfferItem.Amount is not valid for OfferItem type BorrowResource")
+			}
+			item = NewBorrowResourceItem(o.key, offerItem.OfferItemKey, *offerItem.ResourceKey, offerItem.To, *offerItem.Duration)
+		case ProvideService:
+			if offerItem.ResourceKey == nil {
+				return exceptions.ErrBadRequestf("OfferItem.ResourceKey is required for OfferItem type ProvideService")
+			}
+			if offerItem.To == nil {
+				return exceptions.ErrBadRequest("OfferItem.To is required for OfferItem type ProvideService")
+			}
+			if offerItem.From == nil {
+				return exceptions.ErrBadRequest("OfferItem.From is required for OfferItem type ProvideService")
+			}
+			if offerItem.Duration == nil {
+				return exceptions.ErrBadRequest("OfferItem.Duration is required for OfferItem type ProvideService")
+			}
+			if *offerItem.Duration < 0 {
+				return exceptions.ErrBadRequest("OfferItem.Duration must be positive")
+			}
+			if offerItem.Amount != nil {
+				return exceptions.ErrBadRequest("OfferItem.Amount is not valid for OfferItem type ProvideService")
+			}
+			item = NewProvideServiceItem(o.key, offerItem.OfferItemKey, offerItem.From, offerItem.To, *offerItem.ResourceKey, *offerItem.Duration)
+		case CreditTransfer:
+			if offerItem.ResourceKey != nil {
+				return exceptions.ErrBadRequestf("OfferItem.ResourceKey is not valid for OfferItem type CreditTransfer")
+			}
+			if offerItem.To == nil {
+				return exceptions.ErrBadRequest("OfferItem.To is required for OfferItem type CreditTransfer")
+			}
+			if offerItem.From == nil {
+				return exceptions.ErrBadRequest("OfferItem.From is required for OfferItem type CreditTransfer")
+			}
+			if offerItem.Duration != nil {
+				return exceptions.ErrBadRequest("OfferItem.Duration is not valid for OfferItem type CreditTransfer")
+			}
+			if offerItem.Amount == nil {
+				return exceptions.ErrBadRequest("OfferItem.Amount is required for OfferItem type CreditTransfer")
+			}
+			if *offerItem.Amount < 0 {
+				return exceptions.ErrBadRequest("OfferItem.Amount must be positive")
+			}
+			item = NewCreditTransferItem(o.key, offerItem.OfferItemKey, offerItem.From, offerItem.To, *offerItem.Amount)
+		default:
+			return exceptions.ErrBadRequestf("invalid offer item type: %s", offerItem.OfferItemType)
+		}
+
+		mappedItems.Append(item)
+
+	}
+
+	o.raise(NewOfferSubmitted(submittedBy, mappedItems, groupKey))
 
 	return nil
 }
@@ -552,6 +645,27 @@ func (o *Offer) GetChanges() []eventsource.Event {
 	return tmp
 }
 
+func (o *Offer) GetOfferItems() *OfferItems {
+	return o.offerItems
+}
+
+func (o *Offer) GetResourceKeys() *keys.ResourceKeys {
+	var result []keys.ResourceKey
+	for _, offerItem := range o.offerItems.Items {
+		if offerItem.IsBorrowingResource() {
+			borrowResource, _ := offerItem.AsBorrowResource()
+			result = append(result, borrowResource.ResourceKey)
+		} else if offerItem.IsServiceProviding() {
+			serviceProviding, _ := offerItem.AsProvideService()
+			result = append(result, serviceProviding.ResourceKey)
+		} else if offerItem.IsResourceTransfer() {
+			resourceTransfer, _ := offerItem.AsResourceTransfer()
+			result = append(result, resourceTransfer.ResourceKey)
+		}
+	}
+	return keys.NewResourceKeys(result)
+}
+
 func (o *Offer) GetKey() keys.OfferKey {
 	return o.key
 }
@@ -637,9 +751,11 @@ func (o *Offer) on(evt eventsource.Event, isNew bool) {
 		o.offerItemCount = len(e.OfferItems.Items)
 		o.SubmittedBy = e.SubmittedBy
 		for _, item := range e.OfferItems.Items {
+
 			o.outboundApproved[item.GetKey()] = false
 			o.inboundApproved[item.GetKey()] = false
 			o.offerItemMap[item.GetKey()] = item
+			o.offerItems.Append(item)
 
 			if service, ok := item.AsProvideService(); ok {
 				o.serviceItemMap[service.GetKey()] = service

@@ -5,85 +5,167 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7cd8279a-e3af-42a0-8513-69224f91376a" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/backend/pkg/keys/stream_key.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/commands/accept_offer.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/commands/confirm_borrowed.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/commands/confirm_service_given.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/commands/confirmed_transferred.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/commands/offer_item_command.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/listeners/offer_read_model_test.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/queries/get_offer_item.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/queries/get_offer_permissions.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/queries/get_offers.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/readmodels/offer_members.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/readmodels/readmodels.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/backend/test/utils.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/commands/rabbit/rabbit.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/keys/target.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/queries/get_resource_with_sharings.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/queries/get_resources_by_keys.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/resource/queries/search_resources_with_sharings.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/commandhandlers/accept_offer.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/commandhandlers/confirm_resource_borrowed.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/commandhandlers/confirm_resource_given.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/commandhandlers/confirm_resource_returned.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/commandhandlers/confirm_service_given.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/commandhandlers/decline_offer.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/commandhandlers/offer_item_command.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/commandhandlers/post_offer.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/cmd_accept_offer.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/cmd_confirm_resource_borrowed.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/cmd_confirm_resource_given.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/cmd_confirm_resource_returned.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/cmd_confirm_service_given.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/cmd_decline_offer.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/cmd_submit_offer.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/cmd_types.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/offer_item_input.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/test_helpers.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/auth/domain/agg_user.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/auth/domain/agg_user.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/auth/domain/vo_user_info.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/auth/domain/vo_user_info.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/auth/listeners/user_read_model_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/auth/listeners/user_read_model_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/auth/store/user_repository.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/auth/store/user_repository.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/mock/resource_service.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/mock/resource_service.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/mock/trading_service.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/mock/trading_service.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/auth/domain/cmd_change_user_info.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/auth/commands/cmd_change_user_info.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/auth/domain/cmd_discover_user.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/auth/commands/cmd_discover_user.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/auth/domain/cmd_types.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/auth/commands/cmd_types.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/auth/domain/cmdhandler.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/auth/commands/cmdhandler.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/auth/handler/handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/auth/handler/handler.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/chat/handler/chatback.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/chat/handler/chatback.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/chat/handler/handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/chat/handler/handler.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/chat/store/chat.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/chat/store/chat.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/commands/command_bus.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/commands/command_bus.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/commands/command_handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/commands/command_handler.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/pkg/commands/envelope.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/commands/envelope.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/eventsource/event.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/eventsource/event.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/eventstore/eventstore.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/eventstore/eventstore.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/eventstore/postgres/eventstore_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/eventstore/postgres/eventstore_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/eventstore/postgres/postgres.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/eventstore/postgres/postgres.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/eventstore/publish/publish.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/eventstore/publish/publish.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/domain/group.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/domain/group.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/domain/group_info.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/domain/group_info.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/listeners/group_read_model_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/listeners/group_read_model_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/group/store/group_repo.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/store/group_repo.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/eventbus/rabbit_listener.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/eventbus/rabbit_listener.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/eventbus/replay_listener.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/eventbus/replay_listener.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/exceptions/exceptions.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/exceptions/exceptions.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/group/handler/delete_membership.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/group/handler/get_group.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/group/handler/get_group_invite_picker.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/group/handler/get_group_memberships.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/group/handler/get_membership.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/group/handler/get_user_memberships.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/group/handler/group.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/group/handler/handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/handler/handler.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/group/handler/handler_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/handler/handler_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/group/handler/helpers.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/group/handler/membership.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/group/handler/post_group.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/group/handler/post_membership.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/group/listeners/group_read_model.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/listeners/group_read_model.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/group/readmodels/readmodels.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/readmodels/readmodels.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/group/service.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/group/service.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/pkg/keys/group_key.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/keys/group_key.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/keys/offer_item_key.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/keys/offer_item_key.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/keys/offer_key.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/keys/offer_key.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/keys/resource_key.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/keys/resource_key.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/pkg/keys/user_key.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/keys/user_key.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/claim.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/claim_type.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/claims.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/realtime/pubsub.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/realtime/pubsub.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/pkg/resource/domain/evt_resource_registered.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/domain/evt_resource_registered.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/pkg/resource/domain/resource.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/domain/resource.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/domain/resource_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/domain/resource_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/domain/resource_type.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/domain/resource_type.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/pkg/resource/domain/vo_resource_info.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/domain/vo_resource_info.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/handler/get_resource.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/handler/get_resources.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/handler/handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/handler/handler.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/handler/handler_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/handler/post_resource.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/handler/put_resource.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/handler/resource.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/listeners/readmodel.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/listeners/readmodel.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/pkg/resource/listeners/readmodel_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/listeners/readmodel_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/sharing.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/sharings.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/store/resource_repo.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/store/resource_repo.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/queries/get_resource.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/queries/get_resource.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/queries/get_resources_sharings.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/queries/get_resources_sharings.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/queries/search_resources.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/queries/search_resources.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/readmodel/resource.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/resource/readmodel/resource.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/resource.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/resources.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/store/models_resource.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/store/resource.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/subtype.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/resource/type.go" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/pkg/server/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/server/server.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/test/events.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/test/events.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/domain/evt_types.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/evt_types.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/shared/store/model.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/shared/store/model.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/approval_side.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/commands/accept_offer.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/commands/confirm_borrowed.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/commands/confirm_service_given.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/commands/confirmed_transferred.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/commands/offer_item_command.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/domain/domain_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/domain_test.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/pkg/trading/domain/offer.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/offer.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/domain/offer_item_type.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/offer_item_type.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/domain/permission_matrix.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/permission_matrix.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/domain/target_type.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/target_type.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/handler/get_offer.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/handler/get_offer.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/domain/offer_item.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/offer_item.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/domain/offer_item_base.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/offer_item_base.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/domain/offer_item_borrow.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/offer_item_borrow.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/domain/offer_item_credit_transfer.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/offer_item_credit_transfer.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/domain/offer_item_provide_service.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/offer_item_provide_service.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/domain/offer_item_resource_transfer.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/offer_item_resource_transfer.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/domain/offer_items.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/domain/offer_items.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/domain/target.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/domain/target_type.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/domain/targets.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/handler/get_offer.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/handler/get_offer_target_picker.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/handler/get_offer_target_picker.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/handler/get_offers.go" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/pkg/trading/handler/handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/handler/handler.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/pkg/trading/handler/helpers.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/handler/helpers.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/handler/offer.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/handler/offer.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/handler/offer_item.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/handler/offer_item.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/handler/offer_item_target.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/handler/offer_item_target.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/handler/post_offer_acceptance.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/handler/post_offer_acceptance.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/handler/post_offer_confirm_borrowed_resource_returned.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/handler/post_offer_confirm_borrowed_resource_returned.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/handler/post_offer_confirm_resource_borrowed.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/handler/post_offer_confirm_resource_borrowed.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/handler/post_offer_confirm_resource_transfer.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/handler/post_offer_confirm_resource_transfer.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/handler/post_offer_confirm_service_provided.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/handler/post_offer_confirm_service_provided.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/handler/post_offer_decline.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/handler/post_offer_decline.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/handler/offer.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/handler/offer_item.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/handler/offer_item_target.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/handler/post_offer.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/handler/post_offer_acceptance.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/handler/post_offer_confirm_borrowed_resource_returned.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/handler/post_offer_confirm_resource_borrowed.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/handler/post_offer_confirm_resource_transfer.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/handler/post_offer_confirm_service_provided.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/handler/post_offer_decline.go" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/pkg/trading/listeners/offer_read_model.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/listeners/offer_read_model.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/listeners/offer_read_model_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/listeners/offer_read_model_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/models.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/module.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/offer.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/offer_approver.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/offer_approvers.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/offers.go" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/pkg/trading/queries/get_offer.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/queries/get_offer.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/queries/get_offer_item_offer.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/queries/get_offer_item_offer_key.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/queries/get_offer_item.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/queries/get_offer_item.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/queries/get_offer_permissions.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/queries/get_offer_permissions.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/queries/get_offers.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/queries/get_offers.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/readmodels/offer_members.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/readmodels/readmodels.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/readmodels/readmodels.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/pkg/trading/service.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/service.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/service/confirm_borrowed_resource_returned.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/service/confirm_borrowed_resource_returned.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/service/confirm_resource_borrowed.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/service/confirm_resource_borrowed.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/service/confirm_resource_transferred.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/service/confirm_resource_transferred.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/service/confirm_service_provided.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/service/confirm_service_provided.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/service/decline_offer.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/service/get_history.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/service/get_offer.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/service/get_offer_item.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/service/get_offer_items.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/service/accept_offer.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/service/accept_offer.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/service/accept_offer_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/service/confirm_borrowed_resource_returned.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/service/confirm_resource_borrowed.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/service/confirm_resource_transferred.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/service/confirm_service_provided.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/service/find_offer_approvers.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/service/find_offer_item_targets.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/service/find_offer_item_targets.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/service/find_offers_approvers.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/service/get_user_offers.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/service/submit_offer.go" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/pkg/trading/service/trading.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/service/trading.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/store.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/store.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/store/repository.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/store/repository.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/store/trading.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/store/trading.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/service/trading_item_given_received_notify.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/service/trading_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/store.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/store/repository_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/trading/store/repository_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/trading/store/trading.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/transaction/model_entry.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/transaction/model_entry.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/transaction/service.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/transaction/service.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/transaction/service/transaction.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/transaction/service/transaction.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/pkg/transaction/store/transaction.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/pkg/transaction/store/transaction.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/test/integration/group_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test/integration/group_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/test/integration/helpers_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test/integration/helpers_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/test/integration/main_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test/integration/main_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/test/integration/resource_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test/integration/resource_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/test/integration/trading_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test/integration/trading_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/test/integration/utils_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test/integration/utils_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/test/utils.go" beforeDir="false" afterPath="$PROJECT_DIR$/backend/test/utils.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -97,7 +179,7 @@
       </list>
     </option>
   </component>
-  <component name="GOROOT" url="file://$USER_HOME$/go/go1.15.6" />
+  <component name="GOROOT" url="file://$USER_HOME$/go/go1.16" />
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
@@ -136,34 +218,34 @@
     <property name="go.sdk.automatically.set" value="true" />
     <property name="go.tried.to.enable.integration.vgo.integrator" value="true" />
     <property name="go.vendoring.notification.had.been.shown" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/backend/pkg/resource/queries" />
-    <property name="settings.editor.selected.configurable" value="com.intellij.kubernetes.view.ui.settings.KubernetesViewConfigurable" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/backend/pkg/trading/commandhandlers" />
+    <property name="settings.editor.selected.configurable" value="go" />
     <property name="two.files.diff.last.used.file" value="$PROJECT_DIR$/backend/pkg/trading/domain/repository_test" />
   </component>
   <component name="RecentsManager">
     <key name="GoMoveDeclarationDialog.RECENT_KEY">
-      <recent name="$PROJECT_DIR$/backend/pkg/trading/readmodels" />
       <recent name="$PROJECT_DIR$/backend/pkg/keys" />
+      <recent name="$PROJECT_DIR$/backend/pkg/commands/rabbit" />
+      <recent name="$PROJECT_DIR$/backend/pkg/trading/domain" />
+      <recent name="$PROJECT_DIR$/backend/pkg/trading/readmodels" />
       <recent name="$PROJECT_DIR$/backend/pkg/resource/listeners" />
-      <recent name="$PROJECT_DIR$/backend/pkg/auth/authenticator" />
-      <recent name="$PROJECT_DIR$/backend/pkg/test" />
     </key>
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/backend/pkg/trading/commandhandlers" />
+      <recent name="$PROJECT_DIR$/backend/pkg/trading/commands" />
       <recent name="$PROJECT_DIR$/backend/pkg/resource/queries" />
       <recent name="$PROJECT_DIR$/backend/pkg/group/queries" />
       <recent name="$PROJECT_DIR$/backend/pkg/eventbus" />
-      <recent name="$PROJECT_DIR$/backend/pkg/trading/domain" />
-      <recent name="$PROJECT_DIR$/platform/minikube" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/backend/pkg/trading/domain" />
+      <recent name="$PROJECT_DIR$/backend/pkg/trading/test" />
+      <recent name="$PROJECT_DIR$/backend/pkg/auth/commands" />
       <recent name="$PROJECT_DIR$/backend/pkg/auth/authenticator" />
       <recent name="$PROJECT_DIR$/backend/pkg/group/module" />
-      <recent name="$PROJECT_DIR$/backend/pkg/chat/module" />
-      <recent name="$PROJECT_DIR$/backend/pkg/chat/store" />
-      <recent name="$PROJECT_DIR$/backend/pkg/chat/service" />
     </key>
   </component>
-  <component name="RunManager" selected="Go Test.go test github.com/commonpool/backend/pkg/trading/listeners">
+  <component name="RunManager" selected="Go Test.TestGroups in github.com/commonpool/backend/test/integration (2)">
     <configuration name="go build github.com/commonpool/backend" type="GoApplicationRunConfiguration" factoryName="Go Application" nameIsGenerated="true">
       <module name="commonpool" />
       <working_directory value="$PROJECT_DIR$/backend" />
@@ -184,10 +266,10 @@
       <directory value="$PROJECT_DIR$/backend" />
       <method v="2" />
     </configuration>
-    <configuration name="Test in github.com/commonpool/backend/pkg/trading/listeners" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="TestCannotCreateResourceTransferItemForResourceAlreadyOwned in github.com/commonpool/backend/test/integration" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="commonpool" />
-      <working_directory value="$PROJECT_DIR$/backend/pkg/trading/listeners" />
-      <parameters value=" -testify.m ^Test$" />
+      <working_directory value="$PROJECT_DIR$/backend/test/integration" />
+      <parameters value=" -testify.m ^TestCannotCreateResourceTransferItemForResourceAlreadyOwned$" />
       <EXTENSION ID="net.ashald.envfile">
         <option name="IS_ENABLED" value="true" />
         <option name="IS_SUBST" value="false" />
@@ -201,16 +283,16 @@
       </EXTENSION>
       <framework value="gotest" />
       <kind value="PACKAGE" />
-      <package value="github.com/commonpool/backend/pkg/trading/listeners" />
+      <package value="github.com/commonpool/backend/test/integration" />
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
-      <pattern value="^\QTestReadModelSuite\E$/^\QTest\E$" />
+      <pattern value="^\QTestIntegration\E$/^\QTestCannotCreateResourceTransferItemForResourceAlreadyOwned\E$" />
       <method v="2" />
     </configuration>
-    <configuration name="TestReadModelSuite in github.com/commonpool/backend/pkg/trading/listeners" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="TestGroups in github.com/commonpool/backend/test/integration (1)" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="commonpool" />
-      <working_directory value="$PROJECT_DIR$/backend/pkg/trading/listeners" />
-      <parameters value=" -testify.m ^Test$" />
+      <working_directory value="$PROJECT_DIR$/backend/test/integration" />
+      <parameters value=" -testify.m ^TestGroups$" />
       <EXTENSION ID="net.ashald.envfile">
         <option name="IS_ENABLED" value="true" />
         <option name="IS_SUBST" value="false" />
@@ -224,10 +306,56 @@
       </EXTENSION>
       <framework value="gotest" />
       <kind value="PACKAGE" />
-      <package value="github.com/commonpool/backend/pkg/trading/listeners" />
+      <package value="github.com/commonpool/backend/test/integration" />
+      <directory value="$PROJECT_DIR$/backend/test/integration" />
+      <filePath value="$PROJECT_DIR$" />
+      <pattern value="^\Qgithub.com\E$/^\Qcommonpool\E$/^\Qbackend\E$/^\Qtest\E$/^\Qintegration\E$/^\QTestIntegration\E$/^\QTestGroups\E$/^\QInviteeShouldBeAbleToAcceptInvitationFromOwner\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="TestGroups in github.com/commonpool/backend/test/integration (2)" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="commonpool" />
+      <working_directory value="$PROJECT_DIR$/backend/test/integration" />
+      <parameters value=" -testify.m ^TestGroups$" />
+      <EXTENSION ID="net.ashald.envfile">
+        <option name="IS_ENABLED" value="true" />
+        <option name="IS_SUBST" value="false" />
+        <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
+        <option name="IS_IGNORE_MISSING_FILES" value="false" />
+        <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
+        <ENTRIES>
+          <ENTRY IS_ENABLED="true" PARSER="runconfig" />
+          <ENTRY IS_ENABLED="true" PARSER="env" PATH="backend/.env" />
+        </ENTRIES>
+      </EXTENSION>
+      <framework value="gotest" />
+      <kind value="PACKAGE" />
+      <package value="github.com/commonpool/backend/test/integration" />
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
-      <pattern value="^\QTestReadModelSuite\E$" />
+      <pattern value="^\QTestIntegration\E$/^\QTestGroups\E$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="TestGroups in github.com/commonpool/backend/test/integration" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="commonpool" />
+      <working_directory value="$PROJECT_DIR$/backend/test/integration" />
+      <parameters value=" -testify.m ^TestGroups$" />
+      <EXTENSION ID="net.ashald.envfile">
+        <option name="IS_ENABLED" value="true" />
+        <option name="IS_SUBST" value="false" />
+        <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
+        <option name="IS_IGNORE_MISSING_FILES" value="false" />
+        <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
+        <ENTRIES>
+          <ENTRY IS_ENABLED="true" PARSER="runconfig" />
+          <ENTRY IS_ENABLED="true" PARSER="env" PATH="backend/.env" />
+        </ENTRIES>
+      </EXTENSION>
+      <framework value="gotest" />
+      <kind value="PACKAGE" />
+      <package value="github.com/commonpool/backend/test/integration" />
+      <directory value="$PROJECT_DIR$" />
+      <filePath value="$PROJECT_DIR$" />
+      <pattern value="^\QTestIntegration\E$/^\QTestGroups\E$/^\QInviteeShouldBeAbleToAcceptInvitationFromOwner\E$" />
       <method v="2" />
     </configuration>
     <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
@@ -251,9 +379,9 @@
       <filePath value="$PROJECT_DIR$" />
       <method v="2" />
     </configuration>
-    <configuration name="go test github.com/commonpool/backend/pkg/resource/domain" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="go test integration" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="commonpool" />
-      <working_directory value="$PROJECT_DIR$/backend/pkg/resource/domain" />
+      <working_directory value="$PROJECT_DIR$/backend/test/integration" />
       <EXTENSION ID="net.ashald.envfile">
         <option name="IS_ENABLED" value="true" />
         <option name="IS_SUBST" value="false" />
@@ -266,69 +394,26 @@
         </ENTRIES>
       </EXTENSION>
       <framework value="gotest" />
-      <kind value="PACKAGE" />
-      <package value="github.com/commonpool/backend/pkg/resource/domain" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$" />
-      <method v="2" />
-    </configuration>
-    <configuration name="go test github.com/commonpool/backend/pkg/resource/listeners" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
-      <module name="commonpool" />
-      <working_directory value="$PROJECT_DIR$/backend/pkg/resource/listeners" />
-      <EXTENSION ID="net.ashald.envfile">
-        <option name="IS_ENABLED" value="true" />
-        <option name="IS_SUBST" value="false" />
-        <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
-        <option name="IS_IGNORE_MISSING_FILES" value="false" />
-        <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
-        <ENTRIES>
-          <ENTRY IS_ENABLED="true" PARSER="runconfig" />
-          <ENTRY IS_ENABLED="true" PARSER="env" PATH="backend/.env" />
-        </ENTRIES>
-      </EXTENSION>
-      <framework value="gotest" />
-      <kind value="PACKAGE" />
-      <package value="github.com/commonpool/backend/pkg/resource/listeners" />
-      <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$" />
-      <method v="2" />
-    </configuration>
-    <configuration name="go test github.com/commonpool/backend/pkg/trading/listeners" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
-      <module name="commonpool" />
-      <working_directory value="$PROJECT_DIR$/backend/pkg/trading/listeners" />
-      <EXTENSION ID="net.ashald.envfile">
-        <option name="IS_ENABLED" value="true" />
-        <option name="IS_SUBST" value="false" />
-        <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
-        <option name="IS_IGNORE_MISSING_FILES" value="false" />
-        <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
-        <ENTRIES>
-          <ENTRY IS_ENABLED="true" PARSER="runconfig" />
-          <ENTRY IS_ENABLED="true" PARSER="env" PATH="backend/.env" />
-        </ENTRIES>
-      </EXTENSION>
-      <framework value="gotest" />
-      <kind value="PACKAGE" />
-      <package value="github.com/commonpool/backend/pkg/trading/listeners" />
-      <directory value="$PROJECT_DIR$" />
+      <kind value="DIRECTORY" />
+      <directory value="$PROJECT_DIR$/backend/test/integration" />
       <filePath value="$PROJECT_DIR$" />
       <method v="2" />
     </configuration>
     <list>
       <item itemvalue="Go Build.go build github.com/commonpool/backend" />
-      <item itemvalue="Go Test.go test github.com/commonpool/backend/pkg/resource/listeners" />
-      <item itemvalue="Go Test.go test github.com/commonpool/backend/pkg/resource/domain" />
-      <item itemvalue="Go Test.Test in github.com/commonpool/backend/pkg/trading/listeners" />
-      <item itemvalue="Go Test.TestReadModelSuite in github.com/commonpool/backend/pkg/trading/listeners" />
-      <item itemvalue="Go Test.go test github.com/commonpool/backend/pkg/trading/listeners" />
+      <item itemvalue="Go Test.go test integration" />
+      <item itemvalue="Go Test.TestCannotCreateResourceTransferItemForResourceAlreadyOwned in github.com/commonpool/backend/test/integration" />
+      <item itemvalue="Go Test.TestGroups in github.com/commonpool/backend/test/integration" />
+      <item itemvalue="Go Test.TestGroups in github.com/commonpool/backend/test/integration (1)" />
+      <item itemvalue="Go Test.TestGroups in github.com/commonpool/backend/test/integration (2)" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Go Test.go test github.com/commonpool/backend/pkg/trading/listeners" />
-        <item itemvalue="Go Test.Test in github.com/commonpool/backend/pkg/trading/listeners" />
-        <item itemvalue="Go Test.TestReadModelSuite in github.com/commonpool/backend/pkg/trading/listeners" />
-        <item itemvalue="Go Test.go test github.com/commonpool/backend/pkg/resource/listeners" />
-        <item itemvalue="Go Test.go test github.com/commonpool/backend/pkg/resource/domain" />
+        <item itemvalue="Go Test.TestGroups in github.com/commonpool/backend/test/integration (2)" />
+        <item itemvalue="Go Test.TestGroups in github.com/commonpool/backend/test/integration" />
+        <item itemvalue="Go Test.TestGroups in github.com/commonpool/backend/test/integration (1)" />
+        <item itemvalue="Go Test.go test integration" />
+        <item itemvalue="Go Test.TestCannotCreateResourceTransferItemForResourceAlreadyOwned in github.com/commonpool/backend/test/integration" />
       </list>
     </recent_temporary>
   </component>
@@ -425,7 +510,14 @@
       <option name="project" value="LOCAL" />
       <updated>1615116217205</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="wrk">
+      <created>1615156374821</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1615156374821</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -464,23 +556,14 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/backend/pkg/server/server.go</url>
-          <line>315</line>
+          <line>345</line>
           <option name="timeStamp" value="222" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/backend/test/integration/group_test.go</url>
-          <line>606</line>
-          <option name="timeStamp" value="242" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
-          <url>file://$PROJECT_DIR$/backend/vendor/golang.org/x/sync/errgroup/errgroup.go</url>
-          <line>57</line>
-          <option name="timeStamp" value="278" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/commonpool$go_test_trading.out" NAME="go test trading Coverage Results" MODIFIED="1615209152509" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="GoCoverage" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
     <SUITE FILE_PATH="coverage/commonpool$go_test_github_com_commonpool_backend_pkg_resource_domain.out" NAME="go test github.com/commonpool/backend/pkg/resource/domain Coverage Results" MODIFIED="1615071081849" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="GoCoverage" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
     <SUITE FILE_PATH="coverage/commonpool$go_test_github_com_commonpool_backend_pkg_trading_listeners.out" NAME="go test github.com/commonpool/backend/pkg/trading/listeners Coverage Results" MODIFIED="1615141240002" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="GoCoverage" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
     <SUITE FILE_PATH="coverage/commonpool$go_test_github_com_commonpool_backend_pkg_resource_listeners.out" NAME="go test github.com/commonpool/backend/pkg/resource/listeners Coverage Results" MODIFIED="1615080908722" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="GoCoverage" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />

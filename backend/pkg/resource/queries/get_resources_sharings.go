@@ -33,8 +33,8 @@ func (q *GetResourcesSharings) Get(ctx context.Context, resourceKeys *keys.Resou
 		params = append(params, resourceKeyStr)
 		paramsStrs = append(paramsStrs, "?")
 	}
-	sql = "where resource_key in (" + strings.Join(paramsStrs, ",") + ")"
-	if err := q.db.Find(&sharings, sql).Error; err != nil {
+	sql = "resource_key in (" + strings.Join(paramsStrs, ",") + ")"
+	if err := q.db.Where(sql, params...).Find(&sharings).Error; err != nil {
 		return nil, err
 	}
 	return sharings, nil
