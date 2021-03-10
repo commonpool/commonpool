@@ -354,84 +354,6 @@ func (r RabbitMqChannel) QueueDelete(ctx context.Context, name string, ifUnused 
 
 //
 
-type RabbitConnection struct {
-	connection   *amqp.Connection
-	config       RabbitConfig
-	errorChannel chan *amqp.Error
-	retryChannel chan struct{}
-	closeChannel chan struct{}
-	closed       bool
-}
-
-func NewRabbitConnection(rabbitConfig RabbitConfig) *RabbitConnection {
-	var connection = &RabbitConnection{
-		config:       rabbitConfig,
-		errorChannel: make(chan *amqp.Error),
-	}
-	return connection
-}
-
-func (c *RabbitConnection) connect(ctx context.Context) (err error) {
-	l := logging.WithContext(ctx).Named("RabbitQueue.connect")
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		default:
-			l.Debug("Connecting to RabbitMQ")
-			conn, err := amqp.Dial(c.config.URL)
-			if err == nil {
-				c.connection = conn
-				c.connection.NotifyClose(c.errorChannel)
-				l.Debug("Connection established")
-				return nil
-			}
-			l.Error("Connection to rabbitMq failed. Retrying in 1 sec...", zap.Error(err))
-			time.Sleep(1 * time.Second)
-		}
-	}
-}
-
-func (q *RabbitConnection) reconnector(ctx context.Context) {
-	ctx, l := logging.With(ctx)
-	for {
-		select {
-		case err := <-q.errorChannel:
-			if !q.closed {
-				if err != nil {
-					l.Warn("Reconnecting after connection closed", zap.Error(err))
-				} else {
-					l.Warn("Reconnecting after connection closed")
-				}
-				if err := q.connect(ctx); err != nil {
-					q.retryChannel <- struct{}{}
-				}
-			} else {
-				return
-			}
-		case <-ctx.Done():
-			if q.closed {
-				return
-			}
-			q.close()
-		}
-	}
-}
-
-func (c *RabbitConnection) close() error {
-	if c.closed {
-		return nil
-	}
-	if err := c.connection.Close(); err != nil {
-		return err
-	}
-	c.closed = true
-	c.closeChannel <- struct{}{}
-	return nil
-}
-
-//
-
 type RabbitConfig struct {
 	URL string
 }
@@ -510,7 +432,6 @@ func (q QueueConfig) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
 }
 
 type RabbitQueue struct {
-	c            *RabbitConnection
 	RabbitConfig RabbitConfig
 	Config       QueueConfig
 	connection   *amqp.Connection
@@ -526,7 +447,6 @@ func NewRabbitQueue(rabbitConfig RabbitConfig, queueConfig QueueConfig) *RabbitQ
 	q := new(RabbitQueue)
 	q.RabbitConfig = rabbitConfig
 	q.Config = queueConfig
-	q.c = NewRabbitConnection(rabbitConfig)
 	return q
 }
 
