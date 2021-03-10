@@ -2,7 +2,7 @@ import {Component} from '@angular/core';
 import {BackendService} from '../../api/backend.service';
 import {combineLatest, of, ReplaySubject} from 'rxjs';
 import {catchError, debounceTime, distinctUntilChanged, map, startWith, switchMap, tap} from 'rxjs/operators';
-import {ExtendedResource, ResourceType, SearchResourceRequest} from '../../api/models';
+import {ExtendedResource, CallType, SearchResourceRequest} from '../../api/models';
 
 @Component({
   selector: 'app-resource-list-view',
@@ -17,7 +17,7 @@ export class ResourceListViewComponent {
   pendingSubject = new ReplaySubject<boolean>();
   pending$ = this.pendingSubject.asObservable().pipe(startWith(false));
 
-  resourceTypeSubject = new ReplaySubject<ResourceType>();
+  resourceTypeSubject = new ReplaySubject<CallType>();
   resourceType$ = this.resourceTypeSubject.asObservable().pipe(startWith(undefined));
 
   resources$ =

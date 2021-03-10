@@ -2,7 +2,7 @@ import {async, ComponentFixture, fakeAsync, flush, flushMicrotasks, TestBed, tic
 
 import {ResourceListViewComponent} from './resource-list-view.component';
 import {BackendService} from '../../api/backend.service';
-import {Resource, ResourceType, SearchResourcesResponse} from '../../api/models';
+import {Resource, CallType, SearchResourcesResponse} from '../../api/models';
 import {FormsModule} from '@angular/forms';
 import {By} from '@angular/platform-browser';
 import SpyObj = jasmine.SpyObj;
@@ -54,7 +54,7 @@ describe('ResourceListViewComponent', () => {
         'eb0f735d-7d00-466b-84bb-2e6d0f83aa9e',
         'summary',
         'description',
-        ResourceType.Offer,
+        CallType.Offer,
         10,
         20,
         'createdBy',

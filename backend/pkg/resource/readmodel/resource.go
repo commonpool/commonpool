@@ -7,16 +7,16 @@ import (
 )
 
 type ResourceReadModelBase struct {
-	ResourceKey       keys.ResourceKey `gorm:"type:varchar(128);primaryKey;not null" json:"resource_key"`
-	CreatedBy         string           `gorm:"not null;type:varchar(128)" json:"created_by"`
-	CreatedByVersion  int              `gorm:"not null" json:"created_by_version"`
-	CreatedByName     string           `gorm:"not null;type:varchar(128)" json:"created_by_name"`
-	CreatedAt         time.Time        `gorm:"not null" json:"created_at"`
-	UpdatedBy         string           `gorm:"not null;type:varchar(128)" json:"updated_by"`
-	UpdatedByVersion  int              `gorm:"not null" json:"updated_by_version"`
-	UpdatedByName     string           `gorm:"not null;type:varchar(128)" json:"updated_by_name"`
-	UpdatedAt         time.Time        `gorm:"not null" json:"updated_at"`
-	GroupSharingCount int              `gorm:"not null" json:"group_sharing_count"`
+	ResourceKey       keys.ResourceKey `gorm:"type:varchar(128);primaryKey;not null" json:"resourceId"`
+	CreatedBy         string           `gorm:"not null;type:varchar(128)" json:"createdBy"`
+	CreatedByVersion  int              `gorm:"not null" json:"createdByVersion"`
+	CreatedByName     string           `gorm:"not null;type:varchar(128)" json:"createdByName"`
+	CreatedAt         time.Time        `gorm:"not null" json:"createdAt"`
+	UpdatedBy         string           `gorm:"not null;type:varchar(128)" json:"updatedBy"`
+	UpdatedByVersion  int              `gorm:"not null" json:"updatedByVersion"`
+	UpdatedByName     string           `gorm:"not null;type:varchar(128)" json:"updatedByName"`
+	UpdatedAt         time.Time        `gorm:"not null" json:"updatedAt"`
+	GroupSharingCount int              `gorm:"not null" json:"groupSharingCount"`
 	Version           int              `gorm:"not null" json:"version"`
 	Owner             keys.Target      `json:"owner" gorm:"embedded;embeddedPrefix:owner_" json:"owner"`
 }
@@ -37,11 +37,11 @@ type ResourceReadModel struct {
 }
 
 type ResourceSharingReadModel struct {
-	ResourceKey  keys.ResourceKey `gorm:"primaryKey" json:"resource_key"`
-	GroupKey     keys.GroupKey    `gorm:"primaryKey" json:"group_key"`
-	GroupName    string           `gorm:"not null;type:varchar(128)" json:"group_name"`
+	ResourceKey  keys.ResourceKey `gorm:"primaryKey" json:"resourceId"`
+	GroupKey     keys.GroupKey    `gorm:"primaryKey" json:"groupId"`
+	GroupName    string           `gorm:"not null;type:varchar(128)" json:"groupName"`
 	Version      int              `gorm:"not null" json:"version"`
-	GroupVersion int              `gorm:"not null" json:"group_version"`
+	GroupVersion int              `gorm:"not null" json:"groupVersion"`
 }
 
 type ResourceUserNameReadModel struct {

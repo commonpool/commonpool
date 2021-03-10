@@ -7,6 +7,7 @@ import (
 	"github.com/commonpool/backend/pkg/validation"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"net/http"
 )
@@ -22,13 +23,15 @@ func GetEchoContext(c echo.Context, handler string) (context.Context, *zap.Logge
 
 var HttpErrorHandler = func(err error, c echo.Context) {
 
-	c.Logger().Error(err)
+	_, l := GetEchoContext(c, "ErrorHandler")
+	l.Error("", zap.Error(err))
 
-	if ws, ok := err.(*exceptions.WebServiceException); ok {
-		c.JSON(ws.Status, &exceptions.ErrorResponse{
-			Message:    ws.Message,
-			Code:       ws.Code,
-			StatusCode: ws.Status,
+	var wse *exceptions.WebServiceException
+	if errors.As(err, &wse) {
+		c.JSON(wse.Status, &exceptions.ErrorResponse{
+			Message:    wse.Message,
+			Code:       wse.Code,
+			StatusCode: wse.Status,
 		})
 		return
 	}

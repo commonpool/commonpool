@@ -15,6 +15,10 @@ var enLocale = en.New()
 var UniversalTranslator = ut.New(enLocale, enLocale)
 var DefaultTranslator, _ = UniversalTranslator.GetTranslator("en")
 
+type CustomValidator interface {
+	Validate() error
+}
+
 func NewValidator() *Validator {
 
 	var (
@@ -56,6 +60,16 @@ type Validator struct {
 	validator *validator.Validate
 }
 
+func (v *Validator) RegisterStruct(fn func(sl validator.StructLevel), types ...interface{}) {
+	v.validator.RegisterStructValidation(fn, types...)
+}
+
 func (v *Validator) Validate(i interface{}) error {
-	return v.validator.Struct(i)
+	if err := v.validator.Struct(i); err != nil {
+		return err
+	}
+	if c1, ok := i.(CustomValidator); ok {
+		return c1.Validate()
+	}
+	return nil
 }

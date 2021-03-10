@@ -13,11 +13,9 @@ import (
 	"github.com/commonpool/backend/pkg/resource/domain"
 	resourcequeries "github.com/commonpool/backend/pkg/resource/queries"
 	"github.com/commonpool/backend/pkg/resource/readmodel"
-	"github.com/commonpool/backend/pkg/utils"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -155,66 +153,23 @@ func (h *ResourceHandler) SearchResources(c echo.Context) error {
 	ctx, l := handler.GetEchoContext(c, "SearchResources")
 	l.Debug("searching resources")
 
-	skip, err := utils.ParseSkip(c)
-	if err != nil {
+	var query resourcequeries.SearchResourcesQuery
+	if err := c.Bind(&query); err != nil {
+		return exceptions.ErrBadRequest(err.Error())
+	}
+	if err := c.Validate(query); err != nil {
 		return err
 	}
 
-	take, err := utils.ParseTake(c, 0, 100)
-	if err != nil {
-		return err
-	}
-
-	searchQuery := strings.TrimSpace(c.QueryParam("query"))
-
-	var resourceType *domain.ResourceType
-	resourceTypeStr := c.QueryParam("type")
-	if resourceTypeStr != "" {
-		resourceTypeValue, err := domain.ParseResourceType(resourceTypeStr)
-		if err != nil {
-			return err
-		}
-		resourceType = &resourceTypeValue
-	}
-
-	var callType *domain.CallType
-	callTypeStr := c.QueryParam("sub_type")
-	if callTypeStr != "" {
-		callTypeValue, err := domain.ParseCallType(callTypeStr)
-		if err != nil {
-			return err
-		}
-		callType = &callTypeValue
-	}
-
-	var createdBy *string
-	createdByStr := c.QueryParam("created_by")
-	if createdByStr != "" {
-		createdBy = &createdByStr
-	}
-
-	var groupKey *keys.GroupKey
-	groupStr := c.QueryParam("group_id")
-	if groupStr != "" {
-		groupKey2, err := keys.ParseGroupKey(groupStr)
-		if err != nil {
-			return err
-		}
-		groupKey = &groupKey2
-	}
-
-	resourcesQuery := resourcequeries.NewSearchResourcesQuery(&searchQuery, resourceType, callType, skip, take, createdBy, groupKey)
-	l.Debug("querying resources", zap.Object("query", resourcesQuery))
-
-	resources, err := h.searchResourcesWithSharings.Get(ctx, resourcesQuery)
+	resources, err := h.searchResourcesWithSharings.Get(ctx, &query)
 	if err != nil {
 		return err
 	}
 
 	return c.JSON(http.StatusOK, SearchResourcesResponse{
 		Resources: resources,
-		Take:      take,
-		Skip:      skip,
+		Take:      query.Take,
+		Skip:      query.Skip,
 	})
 }
 

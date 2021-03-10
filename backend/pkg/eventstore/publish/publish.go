@@ -6,6 +6,7 @@ import (
 	"github.com/commonpool/backend/pkg/eventsource"
 	"github.com/commonpool/backend/pkg/eventstore"
 	"github.com/commonpool/backend/pkg/keys"
+	"github.com/pkg/errors"
 	"time"
 )
 
@@ -28,9 +29,12 @@ func (p PublishEventStore) Load(ctx context.Context, streamKey keys.StreamKey) (
 func (p PublishEventStore) Save(ctx context.Context, streamKey keys.StreamKey, expectedRevision int, events []eventsource.Event) ([]eventsource.Event, error) {
 	publishedEvents, err := p.eventStore.Save(ctx, streamKey, expectedRevision, events)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "could not save events")
 	}
 	err = p.eventPublisher.PublishEvents(ctx, publishedEvents)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not publish events")
+	}
 	return publishedEvents, err
 }
 

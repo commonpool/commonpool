@@ -2,7 +2,7 @@ import {Component, forwardRef, Input, OnDestroy, OnInit} from '@angular/core';
 import {BackendService} from '../../api/backend.service';
 import {combineLatest, of, ReplaySubject, Subject, Subscription} from 'rxjs';
 import {distinctUntilChanged, map, pluck, shareReplay, startWith, switchMap, tap} from 'rxjs/operators';
-import {Resource, ResourceSubType, ResourceType, SearchResourceRequest} from '../../api/models';
+import {Resource, ResourceType, CallType, SearchResourceRequest} from '../../api/models';
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
 
 @Component({
@@ -26,9 +26,9 @@ export class ResourcePickerComponent implements OnInit, OnDestroy, ControlValueA
     shareReplay()
   );
 
-  private subTypeSubject = new ReplaySubject<ResourceSubType>();
+  private subTypeSubject = new ReplaySubject<ResourceType>();
   private subType$ = this.subTypeSubject.asObservable().pipe(
-    startWith(undefined as ResourceSubType | undefined),
+    startWith(undefined as ResourceType | undefined),
     distinctUntilChanged(),
     shareReplay()
   );
@@ -50,7 +50,7 @@ export class ResourcePickerComponent implements OnInit, OnDestroy, ControlValueA
   items$ = combineLatest([this.query$, this.createdBy$, this.sharedWithGroup$, this.subType$])
     .pipe(
       switchMap(([q, c, g, subType]) => {
-        return this.backend.searchResources(new SearchResourceRequest(q, ResourceType.Offer, subType, c, g, 10, 0));
+        return this.backend.searchResources(new SearchResourceRequest(q, CallType.Offer, subType, c, g, 10, 0));
       }),
       pluck('resources')
     );
@@ -67,7 +67,7 @@ export class ResourcePickerComponent implements OnInit, OnDestroy, ControlValueA
 
   @Input()
   set subType(value: string | undefined) {
-    this.subTypeSubject.next(value as ResourceSubType);
+    this.subTypeSubject.next(value as ResourceType);
   }
 
   selectedIdSubject = new Subject<string>();
@@ -83,11 +83,11 @@ export class ResourcePickerComponent implements OnInit, OnDestroy, ControlValueA
 
   selectedSubject = new Subject<Resource | null>();
   selected$ = this.selectedSubject.asObservable().pipe(
-    tap(a => this.propagateChange(a?.id))
+    tap(a => this.propagateChange(a?.resourceId))
   );
 
   selectedSub = combineLatest([this.selected$, this.createdBy$]).subscribe(([selected, createdBy]) => {
-    if (selected && createdBy && selected.createdById !== createdBy) {
+    if (selected && createdBy && selected.createdBy !== createdBy) {
       this.selectedIdSubject.next(null);
     }
   });
@@ -109,7 +109,7 @@ export class ResourcePickerComponent implements OnInit, OnDestroy, ControlValueA
       }),
       shareReplay()
     ).subscribe(res => {
-      this.selectedIdSubject.next(res ? res.id : null);
+      this.selectedIdSubject.next(res ? res.resourceId : null);
       this.selectedSubject.next(res);
     });
 
@@ -155,7 +155,7 @@ export class ResourcePickerComponent implements OnInit, OnDestroy, ControlValueA
 }
 
 function isResource(res: string | Resource): res is Resource {
-  return res && (res as Resource).id !== undefined;
+  return res && (res as Resource).resourceId !== undefined;
 }
 
 function isResourceId(res: string | Resource | undefined): res is string {

@@ -9,8 +9,8 @@
     [ngModel]="resourceType$ | async"
     (ngModelChange)="resourceTypeSubject.next($event)">
     <option [ngValue]="undefined">All posts</option>
-    <option [ngValue]="0">Offer</option>
-    <option [ngValue]="1">Request</option>
+    <option [ngValue]="'offer'">Offer</option>
+    <option [ngValue]="'request'">Request</option>
   </select>
 </div>
 
@@ -18,45 +18,43 @@
   <div *ngIf="resources$ | async as resources">
     <div *ngIf="!(pending$ | async); else pending">
       <h4>
-        <ng-container *ngIf="(resourceType$ | async) == 0">
+        <ng-container *ngIf="(resourceType$ | async) == 'offer'">
           Offers
         </ng-container>
-        <ng-container *ngIf="(resourceType$ | async) == 1">
+        <ng-container *ngIf="(resourceType$ | async) == 'request'">
           Requests
         </ng-container>
         <ng-container *ngIf="(resourceType$ | async) == undefined">
           All Posts
         </ng-container>
       </h4>
-
       <div class="resource-shadow">
         <div class="resource" *ngFor="let resource of resources">
           <div class="resource-title">
-
             <h2
               class="mb-0"
               style="display:inline-block"
             >
               <b>
-                <app-resource-link2 [id]="resource.id"></app-resource-link2>
+                <a [routerLink]="'/resources/' + resource.resourceId">{{resource.info.name}}</a>
               </b>
             </h2>
-
-            <small> / value {{resource.valueInHoursFrom}}h-{{resource.valueInHoursTo}}h</small>
-
+            <small> / value {{resource.info.value.timeValueFrom}}h-{{resource.info.value.timeValueTo}}h</small>
           </div>
           <div>
             ---
           </div>
           <div>
-            {{resource.description}}
+            {{resource.info.description}}
           </div>
           <div>
             ---
           </div>
           <div>
-            <span *ngIf="resource.type === 0">offer </span> by <b><a
-            [routerLink]="'/users/' + resource.createdById">{{resource.createdBy}}</a></b>
+            <span *ngIf="resource.info.callType === 'offer'">offer </span>
+            <span *ngIf="resource.info.callType === 'request'">request </span>
+            by <b><a
+            [routerLink]="'/users/' + resource.createdBy">{{resource.createdByName}}</a></b>
             / {{resource.createdAtDistanceAgo}}
           </div>
         </div>

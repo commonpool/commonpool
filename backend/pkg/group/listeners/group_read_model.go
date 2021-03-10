@@ -72,19 +72,27 @@ func (l *GroupReadModelListener) applyEvent(ctx context.Context, event eventsour
 
 func (l *GroupReadModelListener) applyMembershipStatusChangedEvent(e domain.MembershipStatusChanged) error {
 
-	var userName string
-	var userVersion = -1
+	var memberName string
+	var memberVersion = -1
+	var changedByName string
+	var changedByVersion = -1
 
 	if e.IsNewMembership || !e.IsCanceledMembership {
-		var user readmodels.DBGroupUserReadModel
-		qry := l.db.Model(&readmodels.DBGroupUserReadModel{}).Where("user_key = ?", e.MemberKey).Find(&user)
+		var users []*readmodels.DBGroupUserReadModel
+		qry := l.db.Model(&readmodels.DBGroupUserReadModel{}).Where("user_key in (?, ?)", e.MemberKey, e.ChangedBy).Find(&users)
 		err := qry.Error
 		if err != nil {
 			return err
 		}
-		if qry.RowsAffected != 0 {
-			userName = user.Name
-			userVersion = user.Version
+		for _, user := range users {
+			if user.UserKey == e.MemberKey {
+				memberName = user.Name
+				memberVersion = user.Version
+			}
+			if user.UserKey == e.ChangedBy {
+				changedByName = user.Name
+				changedByVersion = user.Version
+			}
 		}
 	}
 
@@ -99,8 +107,12 @@ func (l *GroupReadModelListener) applyMembershipStatusChangedEvent(e domain.Memb
 			"group_confirmed_by": nil,
 			"group_confirmed_at": nil,
 			"group_name":         e.GroupName,
-			"user_name":          userName,
-			"user_version":       userVersion,
+			"user_name":          memberName,
+			"user_version":       memberVersion,
+			"created_at":         e.EventTime,
+			"created_by":         e.ChangedBy,
+			"created_by_name":    changedByName,
+			"created_by_version": changedByVersion,
 		}
 		populateMembershipUpdates(updates, e)
 		return l.db.Clauses(
@@ -207,10 +219,18 @@ func (l *GroupReadModelListener) handleUserDiscovered(ctx context.Context, e use
 		}).Error
 	})
 	g.Go(func() error {
-		return l.db.Model(&readmodels.MembershipReadModel{}).Where("user_version < ?", e.SequenceNo).Updates(map[string]interface{}{
-			"user_name":    e.UserInfo.Username,
-			"user_version": e.SequenceNo,
-		}).Error
+		return l.db.Model(&readmodels.MembershipReadModel{}).Where("user_key = ? and user_version < ?", userKey, e.SequenceNo).
+			Updates(map[string]interface{}{
+				"user_name":    e.UserInfo.Username,
+				"user_version": e.SequenceNo,
+			}).Error
+	})
+	g.Go(func() error {
+		return l.db.Model(&readmodels.MembershipReadModel{}).Where("created_by = ? and created_by_version < ?", userKey, e.SequenceNo).
+			Updates(map[string]interface{}{
+				"created_by_name":    e.UserInfo.Username,
+				"created_by_version": e.SequenceNo,
+			}).Error
 	})
 	return g.Wait()
 }
@@ -226,10 +246,17 @@ func (l *GroupReadModelListener) handleUserInfoChanged(ctx context.Context, e us
 		}).Error
 	})
 	g.Go(func() error {
-		return l.db.Where("user_version < ?", e.SequenceNo).Model(&readmodels.MembershipReadModel{}).Updates(map[string]interface{}{
+		return l.db.Where("user_key = ? and user_version < ?", userKey, e.SequenceNo).Model(&readmodels.MembershipReadModel{}).Updates(map[string]interface{}{
 			"user_name":    e.NewUserInfo.Username,
 			"user_version": e.SequenceNo,
 		}).Error
+	})
+	g.Go(func() error {
+		return l.db.Model(&readmodels.MembershipReadModel{}).Where("created_by = ? and created_by_version < ?", userKey, e.SequenceNo).
+			Updates(map[string]interface{}{
+				"created_by_name":    e.NewUserInfo.Username,
+				"created_by_version": e.SequenceNo,
+			}).Error
 	})
 	return g.Wait()
 }

@@ -1,28 +1,27 @@
 import {Component, Input} from '@angular/core';
-import {Resource, ResourceType} from '../../api/models';
+import {Resource, CallType} from '../../api/models';
 
 @Component({
   selector: 'app-resource-link',
   styleUrls: ['./resource-link.component.css'],
-  template: ` <a
-    [routerLink]="link">{{summary}}</a>`
+  template: `<a [routerLink]="link">{{name}}</a>`
 })
 export class ResourceLinkComponent {
 
   private accountId: string;
-  private resourceType: ResourceType;
+  private callType: CallType;
   private accountType = 'user';
   private _groupId: string;
   private _resourceId: string;
   public link: string;
-  public summary: string;
+  public name: string;
 
   @Input()
   set resource(value: Resource) {
-    this.resourceType = value.type;
-    this.accountId = value.createdById;
-    this._resourceId = value.id;
-    this.summary = value.summary;
+    this.callType = value?.info?.callType;
+    this.accountId = value.createdBy;
+    this._resourceId = value.resourceId;
+    this.name = value?.info?.name;
     this.refreshLink();
   }
 
@@ -33,7 +32,7 @@ export class ResourceLinkComponent {
   }
 
   private refreshLink() {
-    this.link = `/${this._groupId !== undefined ? 'groups' : 'users'}/${this._groupId !== undefined ? this._groupId : this.accountId}/${this.resourceType === ResourceType.Offer ? 'offers' : 'needs'}/${this._resourceId}`;
+    this.link = `/${this._groupId !== undefined ? 'groups' : 'users'}/${this._groupId !== undefined ? this._groupId : this.accountId}/${this.callType === CallType.Offer ? 'offers' : 'needs'}/${this._resourceId}`;
   }
 
 }

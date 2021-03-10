@@ -84,26 +84,26 @@ func (h *TradingHandler) Register(e *echo.Group) {
 	offerItems.POST("/:id/confirm/resource-borrowed-returned", h.HandleConfirmBorrowedResourceReturned)
 }
 
-type SendOfferRequest struct {
-	Offer SendOfferPayload `json:"offer" validate:"required"`
+type SubmitOfferRequest struct {
+	Offer SubmitOfferPayload `json:"offer" validate:"required"`
 }
 
-type SendOfferPayload struct {
+type SubmitOfferPayload struct {
 	Items    []domain.SubmitOfferItemBase `json:"items" validate:"min=1"`
 	GroupKey keys.GroupKey                `json:"groupId" validate:"uuid"`
 	Message  string                       `json:"message"`
 }
 
-func NewSendOfferPayload(groupKey keys.GroupKeyGetter, items ...domain.SubmitOfferItemBase) SendOfferPayload {
-	return SendOfferPayload{
+func NewSendOfferPayload(groupKey keys.GroupKeyGetter, items ...domain.SubmitOfferItemBase) SubmitOfferPayload {
+	return SubmitOfferPayload{
 		Items:    items,
 		GroupKey: groupKey.GetGroupKey(),
 		Message:  "",
 	}
 }
 
-func (p SendOfferPayload) AsRequest() *SendOfferRequest {
-	return &SendOfferRequest{
+func (p SubmitOfferPayload) AsRequest() *SubmitOfferRequest {
+	return &SubmitOfferRequest{
 		Offer: p,
 	}
 }
@@ -251,7 +251,7 @@ func (h *TradingHandler) HandleSendOffer(c echo.Context) error {
 	var err error
 
 	l.Debug("binding request")
-	req := SendOfferRequest{}
+	req := SubmitOfferRequest{}
 	if err = c.Bind(&req); err != nil {
 		l.Error("could not bind request", zap.Error(err))
 		return err

@@ -5,7 +5,7 @@ import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {NgSelectModule} from '@ng-select/ng-select';
 import {BackendService} from '../../api/backend.service';
 import {Component, ViewChild} from '@angular/core';
-import {GetResourceResponse, Resource, ResourceType} from '../../api/models';
+import {GetResourceResponse, Resource, CallType} from '../../api/models';
 import {of} from 'rxjs';
 
 @Component({
@@ -31,7 +31,7 @@ describe('ResourcePickerComponent', () => {
     '7c851fde-ea2d-49a1-a867-0367fe3e8634',
     'Summary1',
     'Description1',
-    ResourceType.Offer,
+    CallType.Offer,
     1,
     2,
     'user1',
@@ -43,7 +43,7 @@ describe('ResourcePickerComponent', () => {
     'c5f08bd1-338b-4a33-825f-359669bd510d',
     'Summary2',
     'Description2',
-    ResourceType.Offer,
+    CallType.Offer,
     2,
     2,
     'user1',
@@ -88,10 +88,10 @@ describe('ResourcePickerComponent', () => {
 
   it('should query the backend for the resource when provided with an id', fakeAsync(() => {
     backend.getResource.mockReturnValueOnce(of(new GetResourceResponse(resource1)));
-    component.resource = resource1.id;
+    component.resource = resource1.resourceId;
     fixture.detectChanges();
     flush();
-    expect(backend.getResource).toHaveBeenCalledWith(resource1.id);
+    expect(backend.getResource).toHaveBeenCalledWith(resource1.resourceId);
   }));
 
   it('should not query the backend for the resource when provided with a resource', fakeAsync(() => {

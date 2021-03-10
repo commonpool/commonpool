@@ -18,7 +18,7 @@ export class ResourceNameComponent implements OnInit {
   resourceName$ = this.resourceIdSubject.asObservable().pipe(
     filter(id => !!id),
     switchMap(id => this.backend.getResource(id)),
-    pluck('resource', 'summary')
+    pluck('resource', 'info', 'name')
   ).subscribe((a) => {
     console.log(a);
     this.resourceName = a;

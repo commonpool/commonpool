@@ -1,6 +1,10 @@
 package domain
 
-import "time"
+import (
+	"encoding/json"
+	"github.com/commonpool/backend/pkg/exceptions"
+	"time"
+)
 
 type ResourceValueType string
 
@@ -8,10 +12,24 @@ const (
 	FromToDuration ResourceValueType = "from_to_duration"
 )
 
+func (r *ResourceValueType) UnmarshalJSON(data []byte) error {
+	var str string
+	err := json.Unmarshal(data, &str)
+	if err != nil {
+		return err
+	}
+
+	if str != string(FromToDuration) {
+		return exceptions.ErrBadRequestf("invalid ResourceValueType '%s'", str)
+	}
+	*r = FromToDuration
+	return nil
+}
+
 type ResourceValueEstimation struct {
-	ValueType         ResourceValueType `json:"value_type" gorm:"not null;type:varchar(128)"`
-	ValueFromDuration time.Duration     `json:"time_value_from" gorm:"not null"`
-	ValueToDuration   time.Duration     `json:"time_value_to" gorm:"not null"`
+	ValueType         ResourceValueType `json:"valueType" gorm:"not null;type:varchar(128)"`
+	ValueFromDuration time.Duration     `json:"timeValueFrom" gorm:"not null"`
+	ValueToDuration   time.Duration     `json:"timeValueTo" gorm:"not null"`
 }
 
 func (r ResourceValueEstimation) WithValueType(valueType ResourceValueType) ResourceValueEstimation {
@@ -55,8 +73,8 @@ func NewResourceValueEstimation() ResourceValueEstimation {
 type ResourceInfoBase struct {
 	Name         string       `json:"name"`
 	Description  string       `json:"description"`
-	CallType     CallType     `json:"call_type"`
-	ResourceType ResourceType `json:"resource_type"`
+	CallType     CallType     `json:"callType"`
+	ResourceType ResourceType `json:"resourceType"`
 }
 
 type ResourceInfo struct {

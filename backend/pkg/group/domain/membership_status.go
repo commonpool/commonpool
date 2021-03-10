@@ -22,7 +22,7 @@ func ParseMembershipStatus(str string) (MembershipStatus, error) {
 	if err != nil {
 		return 0, fmt.Errorf("cannot parse MembershipStatus: %s", err.Error())
 	}
-	if i < 0 || i > int(PendingUserMembershipStatus) {
+	if i < 0 || i > int(ApprovedMembershipStatus) {
 		return 0, fmt.Errorf("cannot parse MembershipStatus")
 	}
 	return MembershipStatus(i), nil

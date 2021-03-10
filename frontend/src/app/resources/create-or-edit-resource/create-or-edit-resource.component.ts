@@ -4,8 +4,8 @@ import {
   CreateResourceRequest,
   GetMyMembershipsRequest,
   GetMyMembershipsResponse,
-  Membership, ResourceSubType,
-  ResourceType, SharedWithInput,
+  Membership, ResourceType,
+  CallType, SharedWithInput,
   UpdateResourceRequest
 } from '../../api/models';
 import {ActivatedRoute} from '@angular/router';
@@ -21,32 +21,38 @@ import {FormControl, FormGroup, Validators, FormArray} from '@angular/forms';
 export class CreateOrEditResourceComponent implements OnInit, OnDestroy {
 
   public submitted = false;
-
-  public resource = new FormGroup({
-    type: new FormControl(ResourceType.Offer, [
+  public info = new FormGroup({
+    callType: new FormControl(CallType.Offer, [
       Validators.required,
     ]),
-    subType: new FormControl(ResourceSubType.Object, [
+    resourceType: new FormControl(ResourceType.Object, [
       Validators.required,
     ]),
-    summary: new FormControl('', [
+    name: new FormControl('', [
       Validators.required
     ]),
     description: new FormControl('', [
       Validators.required
     ]),
-    valueInHoursFrom: new FormControl(0, [
-      Validators.required,
-      Validators.min(0)
-    ]),
-    valueInHoursTo: new FormControl(0, [
-      Validators.required,
-      Validators.min(0),
-    ]),
+    value: new FormGroup({
+      timeValueFrom: new FormControl(0, [
+        Validators.required,
+        Validators.min(0)
+      ]),
+      timeValueTo: new FormControl(0, [
+        Validators.required,
+        Validators.min(0),
+      ]),
+    })
+
+  });
+
+  public resource = new FormGroup({
+    info: this.info,
     sharedWith: new FormArray([])
   }, control => {
     const fg = control as FormGroup;
-    if (fg.controls.valueInHoursFrom > fg.controls.valueInHoursTo) {
+    if (fg.controls.timeValueFrom > fg.controls.timeValueTo) {
       return {hoursFromLargerThanValuesTo: {}};
     }
   });
@@ -60,12 +66,12 @@ export class CreateOrEditResourceComponent implements OnInit, OnDestroy {
 
   formValueChanged = this.form.valueChanges.subscribe((v) => {
     const resourceControls = (this.form.controls.resource as FormGroup);
-    if (v.resource.valueInHoursFrom < 0) {
-      resourceControls.controls.valueInHoursFrom.setValue(0);
-    } else if (v.resource.valueInHoursTo < 0) {
-      resourceControls.controls.valueInHoursTo.setValue(0);
-    } else if (v.resource.valueInHoursFrom > v.resource.valueInHoursTo) {
-      resourceControls.controls.valueInHoursFrom.setValue(v.resource.valueInHoursTo);
+    if (v.resource.timeValueFrom < 0) {
+      resourceControls.controls.timeValueFrom.setValue(0);
+    } else if (v.resource.timeValueTo < 0) {
+      resourceControls.controls.timeValueTo.setValue(0);
+    } else if (v.resource.timeValueFrom > v.resource.timeValueTo) {
+      resourceControls.controls.timeValueFrom.setValue(v.resource.timeValueTo);
     }
   });
 
@@ -75,10 +81,6 @@ export class CreateOrEditResourceComponent implements OnInit, OnDestroy {
     switchMap(id => this.api.getMyMemberships(new GetMyMembershipsRequest())),
     pluck<GetMyMembershipsResponse, Membership[]>('memberships'),
     map<Membership[], Membership[]>(ms => ms.filter(m => m.userConfirmed && m.groupConfirmed)),
-    tap(memberships => {
-
-      console.log(this.resource.controls.sharedWith);
-    }),
     shareReplay()
   );
 
@@ -87,22 +89,26 @@ export class CreateOrEditResourceComponent implements OnInit, OnDestroy {
     switchMap(id => this.api.getResource(id)),
     shareReplay(),
   ).subscribe((res) => {
-    this.sharedWith = new FormArray(res.resource.sharedWith.map(m => {
+    this.sharedWith = new FormArray(res.resource.sharings.map(m => {
       return new FormGroup({
         groupId: new FormControl(m.groupId),
       });
     }));
     this.resource.setControl('sharedWith', this.sharedWith);
     const value = {
-      id: res.resource.id,
+      id: res.resource.resourceId,
       resource: {
-        type: res.resource.type,
-        subType: res.resource.subType,
-        summary: res.resource.summary,
-        description: res.resource.description,
-        valueInHoursFrom: res.resource.valueInHoursFrom,
-        valueInHoursTo: res.resource.valueInHoursTo,
-        sharedWith: res.resource.sharedWith.map(s => ({groupId: s.groupId}))
+        info: {
+          callType: res.resource.info.callType,
+          resourceType: res.resource.info.resourceType,
+          name: res.resource.info.name,
+          description: res.resource.info.description,
+          value: {
+            timeValueFrom: res.resource.info.value.timeValueFrom / 1000000000,
+            timeValueTo: res.resource.info.value.timeValueTo / 1000000000,
+          }
+        },
+        sharedWith: res.resource.sharings.map(s => ({groupId: s.groupId}))
       }
     };
     this.form.setValue(value);
@@ -132,11 +138,16 @@ export class CreateOrEditResourceComponent implements OnInit, OnDestroy {
     this.success = undefined;
     this.pending = true;
 
+    const value = this.form.value;
+    value.resource.info.value.timeValueFrom *= 1000000000;
+    value.resource.info.value.timeValueTo *= 1000000000;
+
     if (this.form.value.id === null) {
+
       const request = CreateResourceRequest.from(this.form.value);
       this.api.createResource(request).subscribe(res => {
         this.success = true;
-        this.auth.goToMyResource(res.resource.id, res.resource.type);
+        this.auth.goToMyResource(res.resource.resourceId, res.resource.info.callType);
       }, err => {
         this.error = err;
         this.success = false;
@@ -148,7 +159,7 @@ export class CreateOrEditResourceComponent implements OnInit, OnDestroy {
       const request = UpdateResourceRequest.from(this.form.value);
       this.api.updateResource(request).subscribe(res => {
         this.success = true;
-        this.auth.goToMyResource(res.resource.id, res.resource.type);
+        this.auth.goToMyResource(res.resource.resourceId, res.resource.info.callType);
       }, err => {
         this.error = err;
         this.success = false;

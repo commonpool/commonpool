@@ -8,6 +8,7 @@ import (
 	"github.com/commonpool/backend/pkg/eventsource"
 	"github.com/commonpool/backend/pkg/eventstore"
 	"github.com/commonpool/backend/pkg/mq"
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 
@@ -67,7 +68,7 @@ func (s *RabbitMQListener) Listen(ctx context.Context, listenerFunc ListenerFunc
 	l.Debug("creating channel...")
 	channel, err := s.amqpClient.GetChannel()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "could not get channel")
 	}
 	l.Debug("creating channel... done!")
 	defer channel.Close()
@@ -79,7 +80,7 @@ func (s *RabbitMQListener) Listen(ctx context.Context, listenerFunc ListenerFunc
 		l.Debug("consuming RabbitMQ messages...")
 		msgs, err := channel.Consume(ctx, s.name, "", false, false, false, false, map[string]interface{}{})
 		if err != nil {
-			errChan <- err
+			errChan <- errors.Wrap(err, "could not start consuming")
 			return
 		}
 		l.Debug("consuming RabbitMQ messages... consuming!")
@@ -95,24 +96,24 @@ func (s *RabbitMQListener) Listen(ctx context.Context, listenerFunc ListenerFunc
 
 				err := json.Unmarshal(msg.Body, &streamEvent)
 				if err != nil {
-					l.Error("could not unmarshal event", zap.Error(err))
-					continue
+					errChan <- errors.Wrap(err, "could not unmarshal event")
+					return
 				}
 
 				evt, err := s.eventMapper.Map(msg.Type, msg.Body)
 				if err != nil {
-					l.Error("could not map event with type", zap.String("event_type", msg.Type), zap.Error(err))
-					continue
+					errChan <- errors.Wrapf(err, "could not map event with type '%s'", msg.Type)
+					return
 				}
 
 				err = listenerFunc(ctx, []eventsource.Event{evt})
 				if err != nil {
-					l.Error("listener error", zap.Error(err), zap.String("event_type", msg.Type))
-					continue
+					errChan <- errors.Wrap(err, "event listener error")
+					return
 				} else {
 					if err := msg.Acknowledger.Ack(msg.DeliveryTag, false); err != nil {
-						l.Error("could not ack delivery", zap.Error(err))
-						continue
+						errChan <- errors.Wrap(err, "could not acknowledge delivery")
+						return
 					}
 				}
 			}

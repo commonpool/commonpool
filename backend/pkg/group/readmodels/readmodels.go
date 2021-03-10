@@ -8,11 +8,11 @@ import (
 
 type GroupReadModel struct {
 	Version     int           `gorm:"not null" json:"version"`
-	GroupKey    keys.GroupKey `gorm:"not null;type:varchar(128);primaryKey" json:"group_key"`
+	GroupKey    keys.GroupKey `gorm:"not null;type:varchar(128);primaryKey" json:"groupId"`
 	Name        string        `gorm:"not null;type:varchar(128)" json:"name"`
 	Description string        `gorm:"not null;type:varchar(2048)" json:"description"`
-	CreatedBy   string        `gorm:"not null;type:varchar(128)" json:"created_by"`
-	CreatedAt   time.Time     `gorm:"not null" json:"created_at"`
+	CreatedBy   string        `gorm:"not null;type:varchar(128)" json:"createdBy"`
+	CreatedAt   time.Time     `gorm:"not null" json:"createdAt"`
 }
 
 func (g GroupReadModel) Target() *keys.Target {
@@ -21,20 +21,24 @@ func (g GroupReadModel) Target() *keys.Target {
 
 type MembershipReadModel struct {
 	Version          int                     `gorm:"not null" json:"version"`
-	GroupKey         keys.GroupKey           `gorm:"not null;type:varchar(128);primaryKey" json:"group_key"`
-	GroupName        string                  `gorm:"type:varchar(128)" json:"group_name"`
-	UserKey          keys.UserKey            `gorm:"not null;type:varchar(128);primaryKey" json:"user_key"`
-	IsOwner          bool                    `gorm:"not null" json:"is_owner"`
-	IsAdmin          bool                    `gorm:"not null" json:"is_admin"`
-	IsMember         bool                    `gorm:"not null" json:"is_member"`
-	GroupConfirmed   bool                    `gorm:"not null" json:"group_confirmed"`
-	GroupConfirmedBy *string                 `gorm:"type:varchar(128)" json:"group_confirmed_by"`
-	GroupConfirmedAt *time.Time              `json:"group_confirmed_at"`
-	UserConfirmed    bool                    `gorm:"not null" json:"user_confirmed"`
-	UserConfirmedAt  *time.Time              `json:"user_confirmed_at"`
+	GroupKey         keys.GroupKey           `gorm:"not null;type:varchar(128);primaryKey" json:"groupId"`
+	GroupName        string                  `gorm:"type:varchar(128)" json:"groupName"`
+	UserKey          keys.UserKey            `gorm:"not null;type:varchar(128);primaryKey" json:"userId"`
+	IsOwner          bool                    `gorm:"not null" json:"isOwner"`
+	IsAdmin          bool                    `gorm:"not null" json:"isAdmin"`
+	IsMember         bool                    `gorm:"not null" json:"isMember"`
+	GroupConfirmed   bool                    `gorm:"not null" json:"groupConfirmed"`
+	GroupConfirmedBy *string                 `gorm:"type:varchar(128)" json:"groupConfirmedBy"`
+	GroupConfirmedAt *time.Time              `json:"groupConfirmedAt"`
+	UserConfirmed    bool                    `gorm:"not null" json:"userConfirmed"`
+	UserConfirmedAt  *time.Time              `json:"userConfirmedAt"`
 	Status           domain.MembershipStatus `gorm:"not null" json:"status"`
-	UserVersion      int                     `gorm:"not null" json:"user_version"`
-	UserName         string                  `gorm:"type:varchar(128)" json:"user_name"`
+	UserVersion      int                     `gorm:"not null" json:"userVersion"`
+	UserName         string                  `gorm:"type:varchar(128)" json:"userName"`
+	CreatedBy        string                  `gorm:"type:varchar(128)" json:"createdBy"`
+	CreatedByName    string                  `gorm:"type:varchar(128)" json:"createdByName"`
+	CreatedByVersion int                     `gorm:"not null" json:"createdByVersion"`
+	CreatedAt        time.Time               `json:"createdAt"`
 }
 
 type DBGroupUserReadModel struct {

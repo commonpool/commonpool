@@ -220,11 +220,11 @@ export class BackendService {
     if (request.skip !== undefined) {
       params.skip = request.skip.toString();
     }
-    if (request.type !== undefined) {
-      params.type = request.type.toString();
+    if (request.callType !== undefined) {
+      params.call_type = request.callType.toString();
     }
-    if (request.subType !== undefined) {
-      params.sub_type = request.subType;
+    if (request.resourceType !== undefined) {
+      params.resource_type = request.resourceType;
     }
     if (request.query !== undefined) {
       params.query = request.query;

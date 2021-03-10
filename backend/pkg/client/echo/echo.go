@@ -40,7 +40,7 @@ func (e *Client) GetMembership(ctx context.Context, membershipKey keys.Membershi
 func (e *Client) GetMemberInvitationPicker(ctx context.Context, groupKey keys.GroupKey, query string, skip, take int, output *handler.GetUsersForGroupInvitePickerResponse) error {
 	return e.do(ctx, http.MethodGet, fmt.Sprintf("/api/v1/groups/%s/invite-member-picker?query=%s&skip=%d&take=%d", groupKey.String(), query, skip, take), http.StatusOK, nil, output)
 }
-func (e *Client) SubmitOffer(ctx context.Context, offer *tradinghandler.SendOfferRequest, out *tradinghandler.GetOfferResponse) error {
+func (e *Client) SubmitOffer(ctx context.Context, offer *tradinghandler.SubmitOfferRequest, out *tradinghandler.GetOfferResponse) error {
 	return e.do(ctx, http.MethodPost, "/api/v1/offers", http.StatusCreated, offer, out)
 }
 func (e *Client) GetOffer(ctx context.Context, offerKey keys.OfferKeyGetter, out *tradinghandler.GetOfferResponse) error {

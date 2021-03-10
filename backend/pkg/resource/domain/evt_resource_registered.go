@@ -6,9 +6,9 @@ import (
 )
 
 type ResourceRegisteredPayload struct {
-	RegisteredBy  keys.UserKey `json:"registered_by"`
-	RegisteredFor keys.Target  `json:"registered_for"`
-	ResourceInfo  ResourceInfo `json:"resource_info"`
+	RegisteredBy  keys.UserKey `json:"registeredBy"`
+	RegisteredFor keys.Target  `json:"registeredFor"`
+	ResourceInfo  ResourceInfo `json:"resourceInfo"`
 }
 
 type ResourceRegistered struct {

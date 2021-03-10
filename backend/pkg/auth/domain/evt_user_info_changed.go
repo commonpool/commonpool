@@ -6,8 +6,8 @@ import (
 )
 
 type UserInfoChangedPayload struct {
-	OldUserInfo UserInfo `json:"old_user_info"`
-	NewUserInfo UserInfo `json:"new_user_info"`
+	OldUserInfo UserInfo `json:"oldUserInfo"`
+	NewUserInfo UserInfo `json:"newUserInfo"`
 }
 
 // UserInfoChanged Emitted when a user changes his profile information

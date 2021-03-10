@@ -33,3 +33,9 @@ func WithContext(ctx context.Context) *zap.Logger {
 func NewContext(ctx context.Context, fields ...zap.Field) context.Context {
 	return context.WithValue(ctx, loggerKey, WithContext(ctx).With(fields...))
 }
+
+func With(ctx context.Context, fields ...zap.Field) (context.Context, *zap.Logger) {
+	logger := WithContext(ctx).With(fields...)
+	ctx = context.WithValue(ctx, loggerKey, logger)
+	return ctx, logger
+}

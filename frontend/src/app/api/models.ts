@@ -1,12 +1,12 @@
 import {HttpResponse} from '@angular/common/http';
 import {formatDistanceToNow, format} from 'date-fns';
 
-export enum ResourceType {
-  Offer = 0,
-  Request = 1
+export enum CallType {
+  Offer = 'offer',
+  Request = 'request'
 }
 
-export enum ResourceSubType {
+export enum ResourceType {
   Object = 'object',
   Service = 'service'
 }
@@ -38,33 +38,39 @@ export class SharedWithInput {
 
 export class Resource {
   constructor(
-    public id: string,
-    public summary: string,
-    public description: string,
-    public type: ResourceType,
-    public subType: ResourceSubType,
-    public valueInHoursFrom: number,
-    public valueInHoursTo: number,
+    public resourceId: string,
     public createdBy: string,
-    public createdById: string,
+    public createdByVersion: number,
+    public createdByName: string,
     public createdAt: string,
-    public sharedWith: SharedWithOutput[]
+    public updatedBy: string,
+    public updatedByVersion: number,
+    public updatedByName: string,
+    public updatedAt: string,
+    public groupSharingCount: number,
+    public version: number,
+    public owner: Target,
+    public info: ResourceInfo,
+    public sharings: SharedWithOutput[]
   ) {
   }
 
-  public static from(res: Resource): Resource {
+  public static from(r: Resource): Resource {
     return new Resource(
-      res.id,
-      res.summary,
-      res.description,
-      res.type,
-      res.subType,
-      res.valueInHoursFrom,
-      res.valueInHoursTo,
-      res.createdBy,
-      res.createdById,
-      res.createdAt,
-      res.sharedWith.map(s => SharedWithOutput.from(s)));
+      r.resourceId,
+      r.createdBy,
+      r.createdByVersion,
+      r.createdByName,
+      r.createdAt,
+      r.updatedBy,
+      r.updatedByVersion,
+      r.updatedByName,
+      r.updatedAt,
+      r.groupSharingCount,
+      r.version,
+      Target.from(r.owner),
+      ResourceInfo.from(r.info),
+      r.sharings.map(s => SharedWithOutput.from(s)));
   }
 }
 
@@ -72,21 +78,69 @@ export class ExtendedResource extends Resource {
   public createdAtDistance: string;
   public createdAtDistanceAgo: string;
 
-  constructor(resource: Resource) {
+  constructor(r: Resource) {
     super(
-      resource.id,
-      resource.summary,
-      resource.description,
-      resource.type,
-      resource.subType,
-      resource.valueInHoursFrom,
-      resource.valueInHoursTo,
-      resource.createdBy,
-      resource.createdById,
-      resource.createdAt,
-      resource.sharedWith);
-    this.createdAtDistance = formatDistanceToNow(Date.parse(resource.createdAt));
-    this.createdAtDistanceAgo = formatDistanceToNow(Date.parse(resource.createdAt), {addSuffix: true});
+      r.resourceId,
+      r.createdBy,
+      r.createdByVersion,
+      r.createdByName,
+      r.createdAt,
+      r.updatedBy,
+      r.updatedByVersion,
+      r.updatedByName,
+      r.updatedAt,
+      r.groupSharingCount,
+      r.version,
+      r.owner,
+      r.info,
+      r.sharings);
+    this.createdAtDistance = formatDistanceToNow(Date.parse(r.createdAt));
+    this.createdAtDistanceAgo = formatDistanceToNow(Date.parse(r.createdAt), {addSuffix: true});
+  }
+}
+
+export class ResourceValue {
+  public valueType: string;
+
+  public constructor(
+    public timeValueFrom: number,
+    public timeValueTo: number
+  ) {
+    this.valueType = 'from_to_duration';
+  }
+
+  public static from(r: ResourceValue): ResourceValue {
+    return new ResourceValue(r.timeValueFrom, r.timeValueTo);
+  }
+}
+
+export class ResourceInfoUpdate {
+  public constructor(
+    public name: string,
+    public description: string,
+    public value: ResourceValue,
+  ) {
+
+  }
+
+  public static from(r: ResourceInfoUpdate): ResourceInfoUpdate {
+    return new ResourceInfoUpdate(r.name, r.description, ResourceValue.from(r.value));
+  }
+}
+
+export class ResourceInfo extends ResourceInfoUpdate {
+  public constructor(
+    public name: string,
+    public description: string,
+    public value: ResourceValue,
+    public callType: CallType,
+    public resourceType: ResourceType,
+  ) {
+    super(name, description, value);
+  }
+
+  public static from(r: ResourceInfo): ResourceInfo {
+    return new ResourceInfo(r.name, r.description, ResourceValue.from(r.value), r.callType, r.resourceType);
   }
 }
 
@@ -113,8 +167,8 @@ export class SearchResourcesResponse {
 export class SearchResourceRequest {
   constructor(
     public query: string,
-    public type: ResourceType,
-    public subType: ResourceSubType,
+    public callType: CallType,
+    public resourceType: ResourceType,
     public createdBy: string,
     public groupId,
     public take: number,
@@ -124,23 +178,13 @@ export class SearchResourceRequest {
 
 export class CreateResourcePayload {
   constructor(
-    public summary: string,
-    public description: string,
-    public type: ResourceType,
-    public valueInHoursFrom: number,
-    public valueInHoursTo: number,
-    public subType: ResourceSubType,
+    public info: ResourceInfo,
     public sharedWith: SharedWithInput[]) {
   }
 
   public static from(p: CreateResourcePayload): CreateResourcePayload {
     return new CreateResourcePayload(
-      p.summary,
-      p.description,
-      p.type,
-      p.valueInHoursFrom,
-      p.valueInHoursTo,
-      p.subType,
+      ResourceInfo.from(p.info),
       p.sharedWith ? p.sharedWith.map(w => SharedWithInput.from(w)) : []
     );
   }
@@ -148,19 +192,13 @@ export class CreateResourcePayload {
 
 export class UpdateResourcePayload {
   constructor(
-    public summary: string,
-    public description: string,
-    public valueInHoursFrom: number,
-    public valueInHoursTo: number,
+    public info: ResourceInfoUpdate,
     public sharedWith: SharedWithInput[]) {
   }
 
   public static from(r: UpdateResourcePayload): UpdateResourcePayload {
     return new UpdateResourcePayload(
-      r.summary,
-      r.description,
-      r.valueInHoursFrom,
-      r.valueInHoursTo,
+      ResourceInfoUpdate.from(r.info),
       r.sharedWith ? r.sharedWith.map(w => SharedWithInput.from(w)) : []
     );
   }
@@ -579,17 +617,25 @@ export class Group {
 
 export class Membership {
   constructor(
-    public userId: string,
+    public version: number,
     public groupId: string,
+    public groupName: string,
+    public userId: string,
+    public isOwner: boolean,
     public isAdmin: boolean,
     public isMember: boolean,
-    public isOwner: boolean,
     public groupConfirmed: boolean,
+    public groupConfirmedBy: boolean,
+    public groupConfirmedAt: string,
     public userConfirmed: boolean,
-    public createdAt: string,
-    public isDeactivated: boolean,
-    public groupName: string,
-    public userName: string
+    public userConfirmedAt: string,
+    public status: MembershipStatus,
+    public userVersion: number,
+    public userName: string,
+    public createdBy: string,
+    public createdByName: string,
+    public createdByVersion: number,
+    public createdAt: string
   ) {
     this.createdAtDate = new Date(Date.parse(createdAt));
     this.createdAtDistance = formatDistanceToNow(this.createdAtDate, {addSuffix: true});
@@ -600,17 +646,25 @@ export class Membership {
 
   public static from(m: Membership): Membership {
     return new Membership(
-      m.userId,
+      m.version,
       m.groupId,
+      m.groupName,
+      m.userId,
+      m.isOwner,
       m.isAdmin,
       m.isMember,
-      m.isOwner,
       m.groupConfirmed,
+      m.groupConfirmedBy,
+      m.groupConfirmedAt,
       m.userConfirmed,
-      m.createdAt,
-      m.isDeactivated,
-      m.groupName,
-      m.userName
+      m.userConfirmedAt,
+      m.status,
+      m.userVersion,
+      m.userName,
+      m.createdBy,
+      m.createdByName,
+      m.createdByVersion,
+      m.createdAt
     );
   }
 }
@@ -718,10 +772,10 @@ export class GetMyMembershipsResponse {
 }
 
 export enum MembershipStatus {
-  ApprovedMembershipStatus,
-  PendingStatus,
   PendingGroupMembershipStatus,
-  PendingUserMembershipStatus
+  PendingUserMembershipStatus,
+  ApprovedMembershipStatus,
+
 }
 
 export class GetUserMembershipsRequest {

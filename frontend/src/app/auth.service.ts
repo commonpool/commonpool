@@ -2,7 +2,7 @@ import {Injectable, OnDestroy} from '@angular/core';
 import {BehaviorSubject, interval, Observable, ReplaySubject, Subject} from 'rxjs';
 import {catchError, map, pluck, startWith, switchMap, tap} from 'rxjs/operators';
 import {BackendService} from './api/backend.service';
-import {ResourceType, SessionResponse, UserInfoResponse} from './api/models';
+import {CallType, SessionResponse, UserInfoResponse} from './api/models';
 import {Router} from '@angular/router';
 
 @Injectable({
@@ -47,9 +47,9 @@ export class AuthService implements OnDestroy {
     }
   }
 
-  public goToMyResource(resourceId: string, resourceType: ResourceType) {
+  public goToMyResource(resourceId: string, resourceType: CallType) {
     if (this.sessionSubject.value !== undefined) {
-      const typeUrl = resourceType === ResourceType.Offer ? 'offers' : 'needs';
+      const typeUrl = resourceType === CallType.Offer ? 'offers' : 'needs';
       const url = '/users/' + this.sessionSubject.value.id + '/' + typeUrl + '/' + resourceId;
       this.router.navigateByUrl(url);
     }

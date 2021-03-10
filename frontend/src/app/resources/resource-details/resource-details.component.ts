@@ -3,6 +3,8 @@ import {BackendService} from '../../api/backend.service';
 import {ActivatedRoute, Router} from '@angular/router';
 import {distinctUntilChanged, filter, pluck, switchMap, tap} from 'rxjs/operators';
 import {AuthService} from '../../auth.service';
+import {Observable} from 'rxjs';
+import {ExtendedResource} from '../../api/models';
 
 @Component({
   selector: 'app-resource-details',
@@ -15,7 +17,7 @@ export class ResourceDetailsComponent implements OnInit {
     pluck('resourceId'),
     filter(r => !!r),
     distinctUntilChanged());
-  resource$ = this.resourceId$.pipe(
+  resource$: Observable<ExtendedResource> = this.resourceId$.pipe(
     tap(console.log),
     switchMap(id => this.backend.getResource(id)),
     pluck('resource')

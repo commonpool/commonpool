@@ -5,153 +5,156 @@
         <h4 class="card-header">Post offer or request</h4>
         <div class="card-body">
           <div [formGroup]="form">
-            <div [formGroup]="resource">
+            <div formGroupName="resource">
+              <div formGroupName="info">
 
-              <div class="input-group">
+                <div class="input-group">
 
-                <div class="input-group-prepend">
-                  <label class="input-group-text" for="resource-type" style="width: 8rem">Type</label>
-                </div>
-                <select class="custom-select"
-                        name="resource-type"
-                        id="resource-type"
-                        data-cy="type"
-                        formControlName="type">
-                  <option [ngValue]="0">Offer</option>
-                  <option [ngValue]="1">Request</option>
-                </select>
-              </div>
-
-              <div class="input-group mt-3">
-
-                <div class="input-group-prepend">
-                  <label class="input-group-text" for="resource-type" style="width: 8rem">Sub Type</label>
-                </div>
-                <select class="custom-select"
-                        name="resource-sub-type"
-                        id="resource-sub-type"
-                        data-cy="sub-type"
-                        formControlName="subType">
-                  <option [ngValue]="'service'">Service</option>
-                  <option [ngValue]="'object'">Object</option>
-                </select>
-              </div>
-
-              <div class="input-group mt-3">
-                <div class="input-group-prepend">
-                  <span class="input-group-text" style="width: 8rem">Title</span>
-                </div>
-                <input
-                  class="form-control"
-                  formControlName="summary"
-                  type="text"
-                  id="commonpool-new-post-summary"
-                  name="commonpool-new-post-summary"
-                  data-cy="summary"
-                  autofocus
-                  [ngClass]="{ 'is-invalid': submitted && resource.controls.summary.errors }"
-                >
-                <div *ngIf="submitted && resource.controls.summary.errors" class="invalid-feedback">
-                  <div *ngIf="resource.controls.summary.errors.required">Title is required</div>
-                </div>
-              </div>
-
-              <div class="input-group mt-3">
-                <div class="input-group-prepend">
-                  <span class="input-group-text" style="width: 8rem">Description</span>
-                </div>
-                <textarea
-                  class="form-control"
-                  formControlName="description"
-                  id="description"
-                  name="description"
-                  rows="5"
-                  cols="40"
-                  data-cy="description"
-                  [ngClass]="{ 'is-invalid': submitted && resource.controls.description.errors }"
-                ></textarea>
-                <div *ngIf="submitted && resource.controls.description.errors" class="invalid-feedback">
-                  <div *ngIf="resource.controls.description.errors.required">Description is required</div>
-                </div>
-              </div>
-
-
-              <div class="input-group mt-3">
-                <div class="input-group-prepend">
-                  <span class="input-group-text">Value between</span>
+                  <div class="input-group-prepend">
+                    <label class="input-group-text" for="call-type" style="width: 8rem">Type</label>
+                  </div>
+                  <select class="custom-select"
+                          name="call-type"
+                          id="call-type"
+                          data-cy="call-type"
+                          formControlName="callType">
+                    <option [ngValue]="'offer'">Offer</option>
+                    <option [ngValue]="'request'">Request</option>
+                  </select>
                 </div>
 
-                <input
-                  formControlName="valueInHoursFrom"
-                  name="necessity-level"
-                  type="number"
-                  id="value-in-hours-to"
-                  class="form-control"
-                  data-cy="valueInHoursFrom"
-                  min="0"
-                >
+                <div class="input-group mt-3">
 
-                <input
-                  formControlName="valueInHoursTo"
-                  name="necessity-level"
-                  type="number"
-                  id="value-in-hours-from"
-                  class="form-control"
-                  data-cy="valueInHoursTo"
-                  min="0"
-                >
-                <div class="input-group-append">
-                  <span class="input-group-text">hours</span>
+                  <div class="input-group-prepend">
+                    <label class="input-group-text" for="resource-type" style="width: 8rem">Sub Type</label>
+                  </div>
+                  <select class="custom-select"
+                          name="resource-type"
+                          id="resource-type"
+                          data-cy="sub-type"
+                          formControlName="resourceType">
+                    <option [ngValue]="'service'">Service</option>
+                    <option [ngValue]="'object'">Object</option>
+                  </select>
                 </div>
-              </div>
 
-              <div class="card mt-4 mb-5" formArrayName="sharedWith">
-                <div class="card-body">
-                  <div *ngIf="memberships$ | async; let memberships">
-                    <h5>Share with group(s):</h5>
-
-                    <ng-container *ngIf="memberships.length == 0">
-                      You are not a member of any group yet.
-                    </ng-container>
-                    <ng-container *ngIf="memberships.length > 0">
-                      <ul class="list-group mt-3">
-                        <li class="list-group-item" *ngFor="let membership of memberships; let i = index">
-                          <div class="form-check">
-
-                            <input
-                              class="form-check-input"
-                              type="checkbox"
-                              id="defaultCheck1"
-
-                              [checked]="isToggled(membership.groupId)"
-                              (click)="toggleGroup(membership.groupId)"
-                            >
-                            <label class="form-check-label ml-1" for="defaultCheck1">
-                              {{membership.groupName}}
-                            </label>
-                          </div>
-                        </li>
-                      </ul>
-                    </ng-container>
-
+                <div class="input-group mt-3">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text" style="width: 8rem">Title</span>
+                  </div>
+                  <input
+                    class="form-control"
+                    formControlName="name"
+                    type="text"
+                    id="commonpool-post-name"
+                    name="commonpool-post-name"
+                    data-cy="name"
+                    autofocus
+                    [ngClass]="{ 'is-invalid': submitted && info.controls.name.errors }"
+                  >
+                  <div *ngIf="submitted && info.controls.name.errors" class="invalid-feedback">
+                    <div *ngIf="info.controls.name.errors.required">Title is required</div>
                   </div>
                 </div>
-              </div>
+
+                <div class="input-group mt-3">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text" style="width: 8rem">Description</span>
+                  </div>
+                  <textarea
+                    class="form-control"
+                    formControlName="description"
+                    id="description"
+                    name="description"
+                    rows="5"
+                    cols="40"
+                    data-cy="description"
+                    [ngClass]="{ 'is-invalid': submitted && info.controls.description.errors }"
+                  ></textarea>
+                  <div *ngIf="submitted && info.controls.description.errors" class="invalid-feedback">
+                    <div *ngIf="info.controls.description.errors.required">Description is required</div>
+                  </div>
+                </div>
 
 
-              <div class="input-group mt-3">
-                <button
-                  class="btn btn-primary"
-                  type="button"
-                  [disabled]="pending"
-                  (click)="submit()"
-                  data-cy="submit"
-                >Submit
-                </button>
+
+                <div class="input-group mt-3" formGroupName="value">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text">Value between</span>
+                  </div>
+
+                  <input
+                    formControlName="timeValueFrom"
+                    name="timeValueFrom"
+                    type="number"
+                    id="timeValueFrom"
+                    class="form-control"
+                    data-cy="timeValueFrom"
+                    min="0"
+                  >
+
+                  <input
+                    formControlName="timeValueTo"
+                    name="timeValueTo"
+                    type="number"
+                    id="timeValueTo"
+                    class="form-control"
+                    data-cy="timeValueTo"
+                    min="0"
+                  >
+                  <div class="input-group-append">
+                    <span class="input-group-text">hours</span>
+                  </div>
+                </div>
+
               </div>
-              <div>
-                {{ error}}
-              </div>
+                <div class="card mt-4 mb-5" formArrayName="sharedWith">
+                  <div class="card-body">
+                    <div *ngIf="memberships$ | async; let memberships">
+                      <h5>Share with group(s):</h5>
+
+                      <ng-container *ngIf="memberships.length == 0">
+                        You are not a member of any group yet.
+                      </ng-container>
+                      <ng-container *ngIf="memberships.length > 0">
+                        <ul class="list-group mt-3">
+                          <li class="list-group-item" *ngFor="let membership of memberships; let i = index">
+                            <div class="form-check">
+
+                              <input
+                                class="form-check-input"
+                                type="checkbox"
+                                id="defaultCheck1"
+
+                                [checked]="isToggled(membership.groupId)"
+                                (click)="toggleGroup(membership.groupId)"
+                              >
+                              <label class="form-check-label ml-1" for="defaultCheck1">
+                                {{membership.groupName}}
+                              </label>
+                            </div>
+                          </li>
+                        </ul>
+                      </ng-container>
+
+                    </div>
+                  </div>
+                </div>
+
+
+                <div class="input-group mt-3">
+                  <button
+                    class="btn btn-primary"
+                    type="button"
+                    [disabled]="pending"
+                    (click)="submit()"
+                    data-cy="submit"
+                  >Submit
+                  </button>
+                </div>
+                <div>
+                  {{ error}}
+                </div>
 
 
             </div>

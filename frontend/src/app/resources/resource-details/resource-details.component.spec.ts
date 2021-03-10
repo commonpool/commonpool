@@ -5,7 +5,7 @@ import {BackendService} from '../../api/backend.service';
 import {ActivatedRoute, convertToParamMap, Router} from '@angular/router';
 import {AuthService} from '../../auth.service';
 import {of} from 'rxjs';
-import {ExtendedResource, Resource, ResourceType} from '../../api/models';
+import {ExtendedResource, Resource, CallType} from '../../api/models';
 
 describe('ResourceDetailsComponent', () => {
   let component: ResourceDetailsComponent;
@@ -22,7 +22,7 @@ describe('ResourceDetailsComponent', () => {
           'id',
           'summary',
           'description',
-          ResourceType.Offer,
+          CallType.Offer,
           10,
           20,
           'createdBy',

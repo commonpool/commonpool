@@ -27,7 +27,7 @@ type Client interface {
 	UpdateResource(ctx context.Context, resourceKey keys.ResourceKeyGetter, resource *resourcehandler.UpdateResourceRequest, out *resourcehandler.GetResourceResponse) error
 	SearchResources(ctx context.Context, query string, callType *domain.CallType, resourceType *domain.ResourceType, skip, take int, sharedWithGroup keys.GroupKeyGetter, output *resourcehandler.SearchResourcesResponse) error
 	// Trading
-	SubmitOffer(ctx context.Context, offer *tradinghandler.SendOfferRequest, out *tradinghandler.GetOfferResponse) error
+	SubmitOffer(ctx context.Context, offer *tradinghandler.SubmitOfferRequest, out *tradinghandler.GetOfferResponse) error
 	GetOffer(ctx context.Context, offerKey keys.OfferKeyGetter, out *tradinghandler.GetOfferResponse) error
 	AcceptOffer(ctx context.Context, offerKey keys.OfferKeyGetter) error
 	DeclineOffer(ctx context.Context, offerKey keys.OfferKeyGetter) error

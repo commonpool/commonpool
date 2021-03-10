@@ -82,6 +82,15 @@ func (k *GroupKey) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (k *GroupKey) UnmarshalParam(param string) error {
+	id, err := uuid.FromString(param)
+	if err != nil {
+		return err
+	}
+	k.ID = id
+	return nil
+}
+
 func (k *GroupKey) Scan(value interface{}) error {
 	keyValue, ok := value.(string)
 	if !ok {

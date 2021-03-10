@@ -2,7 +2,7 @@ import {Component, OnInit} from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
 import {BackendService} from '../../api/backend.service';
 import {map, pluck, switchMap, tap} from 'rxjs/operators';
-import {ExtendedResource, ResourceType, SearchResourceRequest} from '../../api/models';
+import {ExtendedResource, CallType, SearchResourceRequest} from '../../api/models';
 import {combineLatest, Observable} from 'rxjs';
 import {UserInfoService} from '../user-info.service';
 
@@ -23,7 +23,7 @@ export enum ResourceTypeStr {
 })
 export class UserResourcesViewComponent implements OnInit {
 
-  resourceType$: Observable<ResourceType>;
+  resourceType$: Observable<CallType>;
   isOffers$: Observable<boolean>;
   isNeeds$: Observable<boolean>;
   accountId$: Observable<string>;
@@ -47,11 +47,11 @@ export class UserResourcesViewComponent implements OnInit {
     );
 
     this.resourceType$ = this.route.data.pipe(
-      map(d => d.resourceType === ResourceTypeStr.Offers ? ResourceType.Offer : ResourceType.Request),
+      map(d => d.resourceType === ResourceTypeStr.Offers ? CallType.Offer : CallType.Request),
     );
 
-    this.isOffers$ = this.resourceType$.pipe(map(r => r === ResourceType.Offer));
-    this.isNeeds$ = this.resourceType$.pipe(map(r => r === ResourceType.Request));
+    this.isOffers$ = this.resourceType$.pipe(map(r => r === CallType.Offer));
+    this.isNeeds$ = this.resourceType$.pipe(map(r => r === CallType.Request));
     this.accountId$ = this.route.parent.params.pipe(pluck('id'));
 
     this.resources$ = combineLatest([

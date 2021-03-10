@@ -54,15 +54,19 @@ func (c *CatchUpListener) Listen(ctx context.Context, listenerFunc ListenerFunc)
 }
 
 func (c *CatchUpListener) Initialize(ctx context.Context, name string, eventTypes []string) error {
-	listener := NewDeduplicateListener(
-		c.deduplicator,
-		NewLockedListener(
-			NewSequenceListener(
-				[]Listener{
-					NewReplayListener(c.eventStore, c.getTimestamp),
-					NewRabbitMqListener(c.amqpClient, c.eventMapper),
-				}), c.clusterLock, c.lockTTL, c.lockOptions))
+	// 	listener := NewDeduplicateListener(
+	// 		c.deduplicator,
+	// 		)
 
+	listener := NewLockedListener(
+		NewSequenceListener(
+			[]Listener{
+				NewReplayListener(c.eventStore, c.getTimestamp),
+				NewRabbitMqListener(c.amqpClient, c.eventMapper),
+			}),
+		c.clusterLock,
+		c.lockTTL,
+		c.lockOptions)
 	if err := listener.Initialize(ctx, name, eventTypes); err != nil {
 		return err
 	}

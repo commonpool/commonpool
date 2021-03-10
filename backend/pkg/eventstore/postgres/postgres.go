@@ -5,10 +5,13 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/commonpool/backend/logging"
 	"github.com/commonpool/backend/pkg/eventsource"
 	"github.com/commonpool/backend/pkg/eventstore"
 	"github.com/commonpool/backend/pkg/keys"
+	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"sync"
 	"time"
@@ -40,7 +43,7 @@ func (p *PostgresEventStore) Load(ctx context.Context, streamKey keys.StreamKey)
 		Where("stream_type = ? AND stream_id = ?", streamKey.StreamType, streamKey.StreamID).
 		Order("sequence_no asc").
 		Find(&events).Error; err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "could not load events")
 	}
 
 	mappedEvents, err := p.mapEvents(events)
@@ -56,7 +59,7 @@ func (p *PostgresEventStore) mapEvents(events []*eventstore.StreamEvent) ([]even
 	for i, event := range events {
 		mappedEvent, err := p.eventMapper.Map(event.EventType, []byte(event.Body))
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrapf(err, "could not map event with type '%s'", event.EventType)
 		}
 		mappedEvents[i] = mappedEvent
 	}
@@ -117,6 +120,8 @@ func eventTimeValueOrDefault(defaultValue time.Time, key string, tempStruct map[
 
 func (p *PostgresEventStore) Save(ctx context.Context, streamKey keys.StreamKey, expectedRevision int, events []eventsource.Event) ([]eventsource.Event, error) {
 
+	l := logging.WithContext(ctx).Named("PostgresEventStore")
+
 	if len(events) == 0 {
 		return []eventsource.Event{}, nil
 	}
@@ -129,7 +134,7 @@ func (p *PostgresEventStore) Save(ctx context.Context, streamKey keys.StreamKey,
 	var stream eventstore.Stream
 	query := p.db.Model(eventstore.Stream{}).Find(&stream, "stream_id = ? and stream_type = ?", streamKey.StreamID, streamKey.StreamType)
 	if err := query.Error; err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "could not retrieve events for stream '%s'.'%s'", streamKey.StreamType, streamKey.StreamID)
 	}
 	if query.RowsAffected == 0 {
 		stream = eventstore.Stream{
@@ -138,7 +143,8 @@ func (p *PostgresEventStore) Save(ctx context.Context, streamKey keys.StreamKey,
 			LatestVersion: 0,
 		}
 		if err := p.db.Create(stream).Error; err != nil {
-			return nil, err
+			l.Error("could not save events", zap.Error(err))
+			return nil, errors.Wrapf(err, "could not save events for stream '%s'.'%s'", streamKey.StreamType, streamKey.StreamID)
 		}
 	}
 
@@ -157,7 +163,7 @@ func (p *PostgresEventStore) Save(ctx context.Context, streamKey keys.StreamKey,
 		var stream eventstore.Stream
 		query := tx.Model(eventstore.Stream{}).Find(&stream, "stream_id = ? and stream_type = ?", streamKey.StreamID, streamKey.StreamType)
 		if err := query.Error; err != nil {
-			return err
+			return errors.Wrapf(err, "could not retrieve stream '%s'.'%s'", streamKey.StreamType, streamKey.StreamID)
 		}
 		if query.RowsAffected == 0 {
 			return fmt.Errorf("stream not found")
@@ -172,13 +178,13 @@ func (p *PostgresEventStore) Save(ctx context.Context, streamKey keys.StreamKey,
 
 			evtJson, err := json.Marshal(event)
 			if err != nil {
-				return err
+				return errors.Wrap(err, "could not marshal event")
 			}
 
 			var tempStruct map[string]interface{}
 			err = json.Unmarshal(evtJson, &tempStruct)
 			if err != nil {
-				return err
+				return errors.Wrap(err, "could not unmarshal event")
 			}
 
 			evtCorrelationId := eventStringValueOrDefault(correlationID, "correlation_id", tempStruct)
@@ -191,12 +197,12 @@ func (p *PostgresEventStore) Save(ctx context.Context, streamKey keys.StreamKey,
 
 			eventBody, err := json.Marshal(tempStruct)
 			if err != nil {
-				return err
+				return errors.Wrap(err, "could not unmarshal event body")
 			}
 
 			publishedEvent, err := p.eventMapper.Map(event.GetEventType(), eventBody)
 			if err != nil {
-				return err
+				return errors.Wrap(err, "could not map event")
 			}
 			publishedEvents[i] = publishedEvent
 
@@ -220,13 +226,13 @@ func (p *PostgresEventStore) Save(ctx context.Context, streamKey keys.StreamKey,
 		}
 
 		if err := tx.Create(streamEvents).Error; err != nil {
-			return fmt.Errorf("could not save events: %v", err)
+			return errors.Wrap(err, "could not save new events")
 		}
 
 		stream.LatestVersion = stream.LatestVersion + len(events)
 
 		if err := tx.Save(stream).Error; err != nil {
-			return err
+			return errors.Wrap(err, "could not save stream")
 		}
 
 		return nil
@@ -237,7 +243,7 @@ func (p *PostgresEventStore) Save(ctx context.Context, streamKey keys.StreamKey,
 	return publishedEvents, err
 }
 
-func (p PostgresEventStore) ReplayEventsByType(
+func (p *PostgresEventStore) ReplayEventsByType(
 	ctx context.Context,
 	eventTypes []string,
 	timestamp time.Time,
@@ -276,7 +282,7 @@ func (p PostgresEventStore) ReplayEventsByType(
 			Limit(batchSize).
 			Offset(skip).
 			Find(&streamEvents).Error; err != nil {
-			return err
+			return errors.Wrap(err, "could not retrieve events")
 		}
 
 		resultSize := len(streamEvents)
@@ -285,10 +291,10 @@ func (p PostgresEventStore) ReplayEventsByType(
 
 			evts, err := p.mapEvents(streamEvents)
 			if err != nil {
-				return err
+				return errors.Wrap(err, "could not map events")
 			}
 			if err := replayFunc(evts); err != nil {
-				return err
+				return errors.Wrap(err, "could not replay events")
 			}
 		}
 

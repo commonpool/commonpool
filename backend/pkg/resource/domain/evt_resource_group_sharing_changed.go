@@ -8,11 +8,11 @@ import (
 type ResourceSharings []ResourceSharing
 
 type ResourceGroupSharingChangedPayload struct {
-	ChangedBy           keys.UserKey     `json:"registered_by"`
-	OldResourceSharings ResourceSharings `json:"old_resource_sharings"`
-	NewResourceSharings ResourceSharings `json:"new_resource_sharings"`
-	AddedSharings       ResourceSharings `json:"added_sharings"`
-	RemovedSharings     ResourceSharings `json:"removed_sharings"`
+	ChangedBy           keys.UserKey     `json:"registeredBy"`
+	OldResourceSharings ResourceSharings `json:"oldResourceSharings"`
+	NewResourceSharings ResourceSharings `json:"newResourceSharings"`
+	AddedSharings       ResourceSharings `json:"addedSharings"`
+	RemovedSharings     ResourceSharings `json:"removedSharings"`
 }
 
 type ResourceGroupSharingChanged struct {

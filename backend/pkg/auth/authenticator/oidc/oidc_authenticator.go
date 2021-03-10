@@ -366,7 +366,7 @@ func (a *OidcAuthenticator) Register(c *echo.Group) {
 		setAccessTokenCookie(c, rawIdToken, a.appConfig)
 		setRefreshTokenCookie(c, refreshToken, a.appConfig)
 
-		err = SaveAuthenticatedUser(c, ctx, a.userRepo, a.authStore, resp.IDTokenClaims.Subject, resp.IDTokenClaims.Email, resp.IDTokenClaims.Email)
+		err = SaveAuthenticatedUser(c, ctx, a.userRepo, a.authStore, resp.IDTokenClaims.Subject, resp.IDTokenClaims.PreferredUsername, resp.IDTokenClaims.Email)
 		if err != nil {
 			return err
 		}
