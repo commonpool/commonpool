@@ -8,7 +8,7 @@ export class GroupOrMembership {
   public constructor(public groupOrMembership: Group | Membership) {
     if (groupOrMembership instanceof Group) {
       this.groupName = (groupOrMembership as Group).name;
-      this.groupId = (groupOrMembership as Group).id;
+      this.groupId = (groupOrMembership as Group).groupId;
     } else if (groupOrMembership instanceof Membership) {
       this.groupName = (groupOrMembership as Membership).groupName;
       this.groupId = (groupOrMembership as Membership).groupId;

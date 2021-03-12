@@ -37,8 +37,8 @@ func (h *Hub) run() {
 			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)
 				close(client.send)
-				if client.amqpChannel != nil {
-					_ = client.amqpChannel.Close()
+				if client.queue != nil {
+					_ = client.queue.Close()
 				}
 			}
 		case _ = <-h.broadcast:
@@ -47,23 +47,23 @@ func (h *Hub) run() {
 	}
 }
 
-func NewClient(hub *Hub, conn *websocket.Conn, amqpChannel mq.Channel, queueName *string, key *string) *Client {
+func NewClient(hub *Hub, conn *websocket.Conn, queueFactory mq.QueueFactory, queueName *string, key *string) *Client {
 	return &Client{
 		hub:                 hub,
 		websocketConnection: conn,
 		send:                make(chan []byte, 256),
-		amqpChannel:         amqpChannel,
+		queue:               queueFactory(mq.NewQueueConfig().WithName(*queueName).WithExclusive(true).WithAutoDelete(true)),
 		queueName:           queueName,
 		consumerKey:         key,
 	}
 }
 
-func NewAnonymousClient(hub *Hub, conn *websocket.Conn) *Client {
+func NewAnonymousClient(hub *Hub, conn *websocket.Conn, factory mq.QueueFactory) *Client {
 	return &Client{
 		hub:                 hub,
 		websocketConnection: conn,
 		send:                make(chan []byte, 256),
-		amqpChannel:         nil,
+		queue:               factory(mq.NewQueueConfig().WithName("").WithExclusive(true).WithAutoDelete(true)),
 		queueName:           nil,
 		consumerKey:         nil,
 	}

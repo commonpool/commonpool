@@ -2,17 +2,21 @@ package commandhandlers
 
 import (
 	"context"
-	"github.com/commonpool/backend/pkg/auth/authenticator/oidc"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/trading/domain"
+	"github.com/commonpool/backend/pkg/trading/queries"
 )
 
 type ConfirmServiceGivenHandler struct {
-	offerRepo domain.OfferRepository
+	offerRepo           domain.OfferRepository
+	getOfferPermissions *queries.GetOfferPermissions
 }
 
-func NewConfirmServiceGivenHandler(offerRepo domain.OfferRepository) *ConfirmServiceGivenHandler {
-	return &ConfirmServiceGivenHandler{offerRepo: offerRepo}
+func NewConfirmServiceGivenHandler(offerRepo domain.OfferRepository, getOfferPermissions *queries.GetOfferPermissions) *ConfirmServiceGivenHandler {
+	return &ConfirmServiceGivenHandler{
+		offerRepo:           offerRepo,
+		getOfferPermissions: getOfferPermissions,
+	}
 }
 
 func (c *ConfirmServiceGivenHandler) Execute(ctx context.Context, command domain.ConfirmServiceGiven) error {
@@ -24,15 +28,15 @@ func (c *ConfirmServiceGivenHandler) Execute(ctx context.Context, command domain
 		ctx,
 		offerKey,
 		c.offerRepo,
-		c.confirmServiceGiven(ctx, command))
+		c.confirmServiceGiven(ctx, command.Payload.OfferItemKey, command.Payload.ConfirmedBy))
 }
 
-func (c *ConfirmServiceGivenHandler) confirmServiceGiven(ctx context.Context, command domain.ConfirmServiceGiven) func(offer *domain.Offer) error {
+func (c *ConfirmServiceGivenHandler) confirmServiceGiven(ctx context.Context, offerItemKey keys.OfferItemKey, confirmedBy keys.UserKey) func(offer *domain.Offer) error {
 	return func(offer *domain.Offer) error {
-		loggedInUser, err := oidc.GetLoggedInUser(ctx)
+		offerPermissions, err := c.getOfferPermissions.Get(ctx, offer.GetKey())
 		if err != nil {
 			return err
 		}
-		return offer.NotifyBorrowerReturnedResource(loggedInUser.GetUserKey(), command.Payload.OfferItemKey)
+		return offer.ConfirmResourceReturned(confirmedBy, offerItemKey, offerPermissions)
 	}
 }

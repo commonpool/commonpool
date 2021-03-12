@@ -49,8 +49,7 @@ export class AuthService implements OnDestroy {
 
   public goToMyResource(resourceId: string, resourceType: CallType) {
     if (this.sessionSubject.value !== undefined) {
-      const typeUrl = resourceType === CallType.Offer ? 'offers' : 'needs';
-      const url = '/users/' + this.sessionSubject.value.id + '/' + typeUrl + '/' + resourceId;
+      const url = '/resources/' + resourceId;
       this.router.navigateByUrl(url);
     }
   }

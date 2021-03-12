@@ -204,7 +204,7 @@ func TestReceiveServiceCompletesOffer(t *testing.T) {
 	assert.NoError(t, err)
 	changeCount = assertChangeCount(t, offer, changeCount+1)
 
-	err = offer.NotifyServiceReceived(user1Key, offerItemKey)
+	err = offer.ConfirmServiceGiven(user1Key, offerItemKey)
 	assert.NoError(t, err)
 	changeCount = assertChangeCount(t, offer, changeCount+2)
 
@@ -235,7 +235,7 @@ func TestGiveServiceCompletesOffer(t *testing.T) {
 	assert.NoError(t, offer.ApproveOfferItem(user1Key, offerItemKey, Outbound, ApproveAllMatrix))
 	changeCount = assertChangeCount(t, offer, changeCount+2)
 
-	err = offer.NotifyServiceReceived(user1Key, offerItemKey)
+	err = offer.ConfirmServiceGiven(user1Key, offerItemKey)
 	assert.NoError(t, err)
 	changeCount = assertChangeCount(t, offer, changeCount+1)
 
@@ -274,7 +274,7 @@ func TestReceiveResourceCompletesOffer(t *testing.T) {
 	assert.NoError(t, err)
 	changeCount = assertChangeCount(t, offer, changeCount+1)
 
-	err = offer.NotifyResourceReceived(user1Key, offerItemKey)
+	err = offer.ConfirmResourceGiven(user1Key, offerItemKey)
 	assert.NoError(t, err)
 	changeCount = assertChangeCount(t, offer, changeCount+2)
 
@@ -307,7 +307,7 @@ func TestGiveResourceCompletesOffer(t *testing.T) {
 	assert.NoError(t, offer.ApproveOfferItem(user1Key, offerItemKey, Outbound, ApproveAllMatrix))
 	changeCount = assertChangeCount(t, offer, changeCount+2)
 
-	err = offer.NotifyResourceReceived(user1Key, offerItemKey)
+	err = offer.ConfirmResourceGiven(user1Key, offerItemKey)
 	assert.NoError(t, err)
 	changeCount = assertChangeCount(t, offer, changeCount+1)
 
@@ -344,7 +344,7 @@ func TestBorrowItem(t *testing.T) {
 	assert.NoError(t, offer.ApproveOfferItem(user1Key, offerItemKey, Outbound, ApproveAllMatrix))
 	changeCount = assertChangeCount(t, offer, changeCount+2)
 
-	err = offer.NotifyResourceBorrowed(user1Key, offerItemKey)
+	err = offer.ConfirmResourceBorrowed(user1Key, offerItemKey, nil)
 	assert.NoError(t, err)
 	changeCount = assertChangeCount(t, offer, changeCount+1)
 
@@ -352,7 +352,7 @@ func TestBorrowItem(t *testing.T) {
 	assert.NoError(t, err)
 	changeCount = assertChangeCount(t, offer, changeCount+1)
 
-	err = offer.NotifyBorrowerReturnedResource(user1Key, offerItemKey)
+	err = offer.ConfirmResourceReturned(user1Key, offerItemKey)
 	assert.NoError(t, err)
 	changeCount = assertChangeCount(t, offer, changeCount+1)
 
@@ -389,7 +389,7 @@ func TestCannotReturnItemBeforeBorrowingIt(t *testing.T) {
 	assert.NoError(t, offer.ApproveOfferItem(user1Key, offerItemKey, Outbound, ApproveAllMatrix))
 	changeCount = assertChangeCount(t, offer, changeCount+2)
 
-	err = offer.NotifyBorrowerReturnedResource(user1Key, offerItemKey)
+	err = offer.ConfirmResourceReturned(user1Key, offerItemKey)
 	assert.Error(t, err)
 	changeCount = assertChangeCount(t, offer, changeCount)
 
@@ -450,9 +450,9 @@ func TestFromEvents(t *testing.T) {
 	assert.NoError(t, offer.ApproveOfferItem(user1Key, offerItemKey, Inbound, ApproveAllMatrix))
 	assert.NoError(t, offer.ApproveOfferItem(user1Key, offerItemKey, Outbound, ApproveAllMatrix))
 
-	assert.NoError(t, offer.NotifyResourceBorrowed(user1Key, offerItemKey))
+	assert.NoError(t, offer.ConfirmResourceBorrowed(user1Key, offerItemKey, nil))
 	assert.NoError(t, offer.NotifyResourceLent(user1Key, offerItemKey))
-	assert.NoError(t, offer.NotifyBorrowerReturnedResource(user1Key, offerItemKey))
+	assert.NoError(t, offer.ConfirmResourceReturned(user1Key, offerItemKey))
 	assert.NoError(t, offer.NotifyLenderReceivedBackResource(user1Key, offerItemKey))
 
 	fromEvents := NewFromEvents(offer.key, offer.changes)

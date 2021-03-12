@@ -32,7 +32,7 @@ func (c CreditTransferItem) IsCompleted() bool {
 	return c.CreditsTransferred
 }
 
-func (c CreditTransferItem) Type() OfferItemType {
+func (c CreditTransferItem) GetType() OfferItemType {
 	return CreditTransfer
 }
 

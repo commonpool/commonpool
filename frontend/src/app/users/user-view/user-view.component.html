@@ -1,47 +1,17 @@
 <ng-container *ngIf="user$ | async; let user">
+  <ul class="nav nav-tabs pt-3">
+    <li class="nav-item">
+      <a class="nav-link" [routerLink]="'/users/' + user.id" >
+        <app-person></app-person>&nbsp;<b>{{user.username}}</b></a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" [routerLinkActive]="'active'" [routerLink]="'/users/'+user.id+'/posts'">posts</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" [routerLinkActive]="'active'" [routerLink]="'/users/'+user.id+'/groups'">groups</a>
+    </li>
+  </ul>
 
-  <div class="container-fluid">
-    <div class="row">
-      <div class="col">
-        <div class="group-header">
-          <h4 class="my-3">
-            <a [routerLink]="'/users/' + user.id">
-              <app-person></app-person>&nbsp;<b>{{user.username}}</b>
-            </a>
-          </h4>
-          <ul class="menu">
-            <li routerLinkActive="active">
-              <a routerLink="groups">
-                <app-people></app-people>
-                Groups <b>{{user.username}}</b> is part of
-              </a>
-            </li>
-            <li routerLinkActive="active">
-              <a routerLink="offers">
-                <app-asterix></app-asterix>
-                Stuff <b>{{user.username}}</b> is offering
-              </a>
-            </li>
-            <li routerLinkActive="active">
-              <a routerLink="needs">
-                <app-asterix></app-asterix>
-                Stuff <b>{{user.username}}</b> would need
-              </a>
-            </li>
-            <li routerLinkActive="active">
-              <a routerLink="transactions">
-                <app-asterix></app-asterix>
-                <b>&nbsp;{{user.username}}</b>'s transactions
-              </a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="group-border">
-  </div>
 
   <router-outlet></router-outlet>
 

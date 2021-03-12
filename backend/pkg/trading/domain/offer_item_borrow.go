@@ -35,7 +35,7 @@ func (b BorrowResourceItem) IsCompleted() bool {
 	return b.ItemTaken && b.ItemGiven && b.ItemReturnedBack && b.ItemReceivedBack
 }
 
-func (b BorrowResourceItem) Type() OfferItemType {
+func (b BorrowResourceItem) GetType() OfferItemType {
 	return BorrowResource
 }
 

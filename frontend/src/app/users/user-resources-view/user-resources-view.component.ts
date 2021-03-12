@@ -47,7 +47,7 @@ export class UserResourcesViewComponent implements OnInit {
     );
 
     this.resourceType$ = this.route.data.pipe(
-      map(d => d.resourceType === ResourceTypeStr.Offers ? CallType.Offer : CallType.Request),
+      map(d => d.resourceType === ResourceTypeStr.Offers ? CallType.Offer : d.resourceType === ResourceTypeStr.Needs ? CallType.Request : undefined),
     );
 
     this.isOffers$ = this.resourceType$.pipe(map(r => r === CallType.Offer));
@@ -63,7 +63,7 @@ export class UserResourcesViewComponent implements OnInit {
         if (data.accountType === AccountType.User) {
           return this.backend.searchResources(new SearchResourceRequest(undefined, resourceType, undefined, accountId, undefined, 10, 0));
         } else {
-          return this.backend.searchResources(new SearchResourceRequest(undefined, resourceType,  undefined, undefined, accountId, 10, 0));
+          return this.backend.searchResources(new SearchResourceRequest(undefined, resourceType, undefined, undefined, accountId, 10, 0));
         }
       }),
       pluck('resources')

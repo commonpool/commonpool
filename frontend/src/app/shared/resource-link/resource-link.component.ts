@@ -4,15 +4,14 @@ import {Resource, CallType} from '../../api/models';
 @Component({
   selector: 'app-resource-link',
   styleUrls: ['./resource-link.component.css'],
-  template: `<a [routerLink]="link">{{name}}</a>`
+  template: `<a [routerLink]="'/resources/' + resourceId">{{name}}</a>`
 })
 export class ResourceLinkComponent {
 
   private accountId: string;
   private callType: CallType;
-  private accountType = 'user';
   private _groupId: string;
-  private _resourceId: string;
+  public resourceId: string;
   public link: string;
   public name: string;
 
@@ -20,7 +19,7 @@ export class ResourceLinkComponent {
   set resource(value: Resource) {
     this.callType = value?.info?.callType;
     this.accountId = value.createdBy;
-    this._resourceId = value.resourceId;
+    this.resourceId = value.resourceId;
     this.name = value?.info?.name;
     this.refreshLink();
   }
@@ -32,7 +31,7 @@ export class ResourceLinkComponent {
   }
 
   private refreshLink() {
-    this.link = `/${this._groupId !== undefined ? 'groups' : 'users'}/${this._groupId !== undefined ? this._groupId : this.accountId}/${this.callType === CallType.Offer ? 'offers' : 'needs'}/${this._resourceId}`;
+    this.link = `/${this._groupId !== undefined ? 'groups' : 'users'}/${this._groupId !== undefined ? this._groupId : this.accountId}/${this.callType === CallType.Offer ? 'offers' : 'needs'}/${this.resourceId}`;
   }
 
 }

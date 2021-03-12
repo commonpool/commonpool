@@ -1,6 +1,6 @@
 import {Component, OnInit} from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
-import {map, pluck, startWith, switchMap, tap} from 'rxjs/operators';
+import {delay, map, pluck, startWith, switchMap, tap} from 'rxjs/operators';
 import {BackendService} from '../../api/backend.service';
 import {
   GetGroupMembershipsRequest,
@@ -24,12 +24,15 @@ export class GroupMembersViewComponent implements OnInit {
   }
 
   refreshSubject = new Subject<boolean>();
-  refresh$ = this.refreshSubject.asObservable().pipe(startWith(true));
+  refresh$ = this.refreshSubject.asObservable().pipe(
+    delay(500),
+    startWith(true)
+  );
   groupIdSubject = new BehaviorSubject(null as string);
   groupId$ = this.groupIdSubject.asObservable();
   members$ = combineLatest([this.refresh$, this.groupId$]).pipe(
     map(([_, groupId]) => groupId),
-    switchMap(id => this.backend.getGroupMemberships(new GetGroupMembershipsRequest(id, MembershipStatus.ApprovedMembershipStatus)))
+    switchMap(id => this.backend.getGroupMemberships(new GetGroupMembershipsRequest(id)))
   );
   myMembership$ = this.groupService.getMyMembership().pipe(tap((m) => console.log(m)));
 
@@ -40,13 +43,29 @@ export class GroupMembersViewComponent implements OnInit {
   pending = false;
   error = undefined;
 
+  refreshPickerSubject = new Subject<boolean>();
+
   fetchUsers(skip: number, take: number, query: string) {
-    return this.backend.getUsersForGroupInvitePicker(new GetUsersForGroupInvitePickerRequest(skip, take, query, this.groupIdSubject.value))
-      .pipe(pluck('users'));
+    return this.refreshPickerSubject.asObservable().pipe(
+      delay(500),
+      startWith(true)
+    )
+      .pipe(
+        switchMap(() => {
+          const getUsersQuery = new GetUsersForGroupInvitePickerRequest(skip, take, query, this.groupIdSubject.value);
+          return this.backend.getUsersForGroupInvitePicker(getUsersQuery);
+        }),
+        pluck('users')
+      );
   }
 
   ngOnInit(): void {
 
+  }
+
+  refresh() {
+    this.refreshSubject.next(true);
+    this.refreshPickerSubject.next(true);
   }
 
   inviteUser() {
@@ -56,6 +75,7 @@ export class GroupMembersViewComponent implements OnInit {
       this.pending = false;
       this.inviteUserId = null;
       this.refreshSubject.next(true);
+      this.refreshPickerSubject.next(true);
     }, err => {
       this.pending = false;
       this.error = err;

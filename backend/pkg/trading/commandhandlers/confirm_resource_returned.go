@@ -2,17 +2,21 @@ package commandhandlers
 
 import (
 	"context"
-	"github.com/commonpool/backend/pkg/auth/authenticator/oidc"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/trading/domain"
+	"github.com/commonpool/backend/pkg/trading/queries"
 )
 
 type ConfirmResourceReturnedHandler struct {
-	offerRepo domain.OfferRepository
+	offerRepo           domain.OfferRepository
+	getOfferPermissions *queries.GetOfferPermissions
 }
 
-func NewConfirmResourceReturnedHandler(offerRepo domain.OfferRepository) *ConfirmResourceReturnedHandler {
-	return &ConfirmResourceReturnedHandler{offerRepo: offerRepo}
+func NewConfirmResourceReturnedHandler(offerRepo domain.OfferRepository, getOfferPermissions *queries.GetOfferPermissions) *ConfirmResourceReturnedHandler {
+	return &ConfirmResourceReturnedHandler{
+		offerRepo:           offerRepo,
+		getOfferPermissions: getOfferPermissions,
+	}
 }
 
 func (c *ConfirmResourceReturnedHandler) Execute(ctx context.Context, command domain.ConfirmResourceReturned) error {
@@ -24,15 +28,15 @@ func (c *ConfirmResourceReturnedHandler) Execute(ctx context.Context, command do
 		ctx,
 		offerKey,
 		c.offerRepo,
-		c.confirmResourceReturned(ctx, command))
+		c.confirmResourceReturned(ctx, command.Payload.OfferItemKey, command.Payload.ConfirmedBy))
 }
 
-func (c *ConfirmResourceReturnedHandler) confirmResourceReturned(ctx context.Context, command domain.ConfirmResourceReturned) func(offer *domain.Offer) error {
+func (c *ConfirmResourceReturnedHandler) confirmResourceReturned(ctx context.Context, offerItemKey keys.OfferItemKey, confirmedBy keys.UserKey) func(offer *domain.Offer) error {
 	return func(offer *domain.Offer) error {
-		loggedInUser, err := oidc.GetLoggedInUser(ctx)
+		offerPermissions, err := c.getOfferPermissions.Get(ctx, offer.GetKey())
 		if err != nil {
 			return err
 		}
-		return offer.NotifyBorrowerReturnedResource(loggedInUser.GetUserKey(), command.Payload.OfferItemKey)
+		return offer.ConfirmResourceReturned(confirmedBy, offerItemKey, offerPermissions)
 	}
 }

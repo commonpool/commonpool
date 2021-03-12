@@ -13,7 +13,6 @@ import (
 type CatchUpListener struct {
 	eventStore   eventstore.EventStore
 	getTimestamp func() time.Time
-	amqpClient   mq.Client
 	deduplicator EventDeduplicator
 	clusterLock  clusterlock.Locker
 	lockTTL      time.Duration
@@ -21,26 +20,27 @@ type CatchUpListener struct {
 	initialized  bool
 	listener     Listener
 	eventMapper  *eventsource.EventMapper
+	mqClient     mq.MqClient
 }
 
 func NewCatchUpListener(
 	eventStore eventstore.EventStore,
 	getTimestamp func() time.Time,
-	amqpClient mq.Client,
 	deduplicator EventDeduplicator,
 	clusterLock clusterlock.Locker,
 	lockTTL time.Duration,
 	lockOptions *clusterlock.Options,
-	eventMapper *eventsource.EventMapper) *CatchUpListener {
+	eventMapper *eventsource.EventMapper,
+	mqClient mq.MqClient) *CatchUpListener {
 	return &CatchUpListener{
 		eventStore:   eventStore,
 		getTimestamp: getTimestamp,
-		amqpClient:   amqpClient,
 		deduplicator: deduplicator,
 		clusterLock:  clusterLock,
 		lockTTL:      lockTTL,
 		lockOptions:  lockOptions,
 		eventMapper:  eventMapper,
+		mqClient:     mqClient,
 	}
 }
 
@@ -62,7 +62,7 @@ func (c *CatchUpListener) Initialize(ctx context.Context, name string, eventType
 		NewSequenceListener(
 			[]Listener{
 				NewReplayListener(c.eventStore, c.getTimestamp),
-				NewRabbitMqListener(c.amqpClient, c.eventMapper),
+				NewRabbitMqListener(c.mqClient, c.eventMapper),
 			}),
 		c.clusterLock,
 		c.lockTTL,

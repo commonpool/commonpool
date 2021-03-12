@@ -5,22 +5,9 @@ import (
 )
 
 type OfferItem interface {
-	Type() OfferItemType
+	GetType() OfferItemType
 	GetOfferKey() keys.OfferKey
 	GetKey() keys.OfferItemKey
-	IsCreditTransfer() bool
-	IsServiceProviding() bool
-	IsBorrowingResource() bool
-	IsResourceTransfer() bool
-	IsCompleted() bool
-	IsAccepted() bool
-	IsInboundApproved() bool
-	IsOutboundApproved() bool
-	GetReceiverKey() *keys.Target
-	AsCreditTransfer() (*CreditTransferItem, bool)
-	AsProvideService() (*ProvideServiceItem, bool)
-	AsBorrowResource() (*BorrowResourceItem, bool)
-	AsResourceTransfer() (*ResourceTransferItem, bool)
 }
 
 type ResourceKeyGetter interface {

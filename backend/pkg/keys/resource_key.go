@@ -69,6 +69,10 @@ func (k *ResourceKey) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &uid); err != nil {
 		return err
 	}
+	if uid == "" {
+		k = nil
+		return nil
+	}
 	id, err := uuid.FromString(uid)
 	if err != nil {
 		return err

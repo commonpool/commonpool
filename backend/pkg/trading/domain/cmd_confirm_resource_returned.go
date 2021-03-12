@@ -7,7 +7,8 @@ import (
 )
 
 type ConfirmResourceReturnedPayload struct {
-	OfferItemKey keys.OfferItemKey `json:"offer_item_key"`
+	OfferItemKey keys.OfferItemKey `json:"offerItemKey"`
+	ConfirmedBy  keys.UserKey      `json:"confirmedBy"`
 }
 
 type ConfirmResourceReturned struct {
@@ -15,12 +16,9 @@ type ConfirmResourceReturned struct {
 	Payload ConfirmResourceReturnedPayload `json:"payload"`
 }
 
-func NewConfirmResourceReturned(
-	ctx context.Context,
-	offerKey keys.OfferKey,
-	offerItemKey keys.OfferItemKey) ConfirmResourceReturned {
+func NewConfirmResourceReturned(ctx context.Context, offerKey keys.OfferKey, offerItemKey keys.OfferItemKey, confirmedBy keys.UserKey) ConfirmResourceReturned {
 	return ConfirmResourceReturned{
 		commands.NewCommandEnvelope(ctx, ConfirmResourceReturnedCommand, "offer", offerKey.String()),
-		ConfirmResourceReturnedPayload{offerItemKey},
+		ConfirmResourceReturnedPayload{offerItemKey, confirmedBy},
 	}
 }

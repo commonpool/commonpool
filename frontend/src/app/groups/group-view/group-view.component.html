@@ -1,46 +1,26 @@
 <ng-container *ngIf="group$ | async; let group">
 
-  <div class="container-fluid">
-    <div class="row">
-      <div class="col">
-        <div class="group-header">
-          <h4 class="my-3">
-            <a [routerLink]="'/groups/' + group.id">
-              <app-box-seam></app-box-seam>&nbsp;<b>{{group.name}}</b></a>
-          </h4>
-          <ul class="menu">
-            <li routerLinkActive="active">
-              <a routerLink="members">
-                <app-people></app-people>
-                {{group.name}}'s Members
-              </a>
-            </li>
-            <li routerLinkActive="active">
-              <a routerLink="offers">
-                <app-asterix></app-asterix>
-                Stuff {{group.name}}'s is offering
-              </a>
-            </li>
-            <li routerLinkActive="active">
-              <a routerLink="needs">
-                <app-asterix></app-asterix>
-                Stuff {{group.name}}'s would need
-              </a>
-            </li>
-            <li routerLinkActive="active">
-              <a routerLink="invitations">
-                <app-mailbox></app-mailbox>
-                {{group.name}}'s Invites
-              </a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="group-border">
-  </div>
+  <ul class="nav nav-tabs pt-3">
+    <li class="nav-item">
+      <a class="nav-link" [routerLink]="'/groups/' + group.groupId">
+        <app-box-seam></app-box-seam>&nbsp;<b>{{group.name}}</b></a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" [routerLinkActive]="'active'" [routerLink]="'/groups/'+group.groupId+'/posts'">
+        <app-asterix></app-asterix>
+        posts</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" [routerLinkActive]="'active'" [routerLink]="'/groups/'+group.groupId+'/members'">
+        <app-people></app-people>
+        members</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" [routerLinkActive]="'active'" [routerLink]="'/groups/'+group.groupId+'/invitations'">
+        <app-mailbox></app-mailbox>
+        invitations</a>
+    </li>
+  </ul>
 
   <router-outlet></router-outlet>
 

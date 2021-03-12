@@ -24,11 +24,11 @@ func (t Target) Equals(target Target) bool {
 	return *t.UserKey == *target.UserKey
 }
 
-func (t Target) IsForGroup() bool {
+func (t Target) IsGroup() bool {
 	return t.Type == GroupTarget
 }
 
-func (t Target) IsForUser() bool {
+func (t Target) IsUser() bool {
 	return t.Type == UserTarget
 }
 
@@ -39,7 +39,7 @@ func (t Target) GetUserKey() UserKey {
 	return *t.UserKey
 }
 func (t Target) GetKeyAsString() string {
-	if t.IsForGroup() {
+	if t.IsGroup() {
 		return t.GroupKey.String()
 	} else {
 		return t.UserKey.String()
@@ -109,7 +109,7 @@ func NewEmptyTargets() *Targets {
 func (t *Targets) GetUserKeys() *UserKeys {
 	var userKeys []UserKey
 	for _, target := range t.Items {
-		if !target.IsForUser() {
+		if !target.IsUser() {
 			continue
 		}
 		userKeys = append(userKeys, target.GetUserKey())
@@ -120,7 +120,7 @@ func (t *Targets) GetUserKeys() *UserKeys {
 func (t *Targets) GetGroupKeys() *GroupKeys {
 	var groupKeys []GroupKey
 	for _, target := range t.Items {
-		if !target.IsForGroup() {
+		if !target.IsGroup() {
 			continue
 		}
 		groupKeys = append(groupKeys, target.GetGroupKey())

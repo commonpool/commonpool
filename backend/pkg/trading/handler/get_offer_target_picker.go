@@ -55,8 +55,8 @@ func (h *TradingHandler) HandleOfferItemTargetPicker(c echo.Context) error {
 		return err
 	}
 
-	for _, group := range groups.Items {
-		groupId := group.GetKey().String()
+	for _, group := range groups {
+		groupId := group.GroupKey.String()
 		items = append(items, OfferGroupOrUserPickerItem{
 			Type:    keys.GroupTarget,
 			GroupID: &groupId,

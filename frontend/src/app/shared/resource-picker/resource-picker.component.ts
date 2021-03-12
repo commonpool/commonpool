@@ -49,6 +49,7 @@ export class ResourcePickerComponent implements OnInit, OnDestroy, ControlValueA
   query$ = this.querySubject.asObservable().pipe(startWith(''), shareReplay(1));
   items$ = combineLatest([this.query$, this.createdBy$, this.sharedWithGroup$, this.subType$])
     .pipe(
+      tap(a => console.log),
       switchMap(([q, c, g, subType]) => {
         return this.backend.searchResources(new SearchResourceRequest(q, CallType.Offer, subType, c, g, 10, 0));
       }),
@@ -105,6 +106,7 @@ export class ResourcePickerComponent implements OnInit, OnDestroy, ControlValueA
         if (isResource(res)) {
           return of(res);
         }
+        console.log(res)
         return this.backend.getResource(res).pipe(pluck('resource'));
       }),
       shareReplay()

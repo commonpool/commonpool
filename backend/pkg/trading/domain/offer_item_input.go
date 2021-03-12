@@ -1,9 +1,59 @@
 package domain
 
 import (
+	"encoding/json"
 	"github.com/commonpool/backend/pkg/keys"
 	"time"
 )
+
+type JSONDuration struct {
+	time.Duration
+}
+
+func (d *SubmitOfferItemBase) UnmarshalJSON(data []byte) error {
+
+	type Temp struct {
+		OfferItemType OfferItemType     `json:"type"`
+		ResourceKey   *keys.ResourceKey `json:"resourceId"`
+		From          *keys.Target      `json:"from"`
+		To            *keys.Target      `json:"to"`
+		Amount        *string           `json:"amount"`
+		Duration      *string           `json:"duration"`
+	}
+
+	var tmp Temp
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+
+	var amount *time.Duration
+	if tmp.Amount != nil && *tmp.Amount != "" {
+		parsedAmount, err := time.ParseDuration(*tmp.Amount)
+		if err != nil {
+			return err
+		}
+		amount = &parsedAmount
+	}
+
+	var duration *time.Duration
+	if tmp.Duration != nil && *tmp.Duration != "" {
+		parsedDuration, err := time.ParseDuration(*tmp.Duration)
+		if err != nil {
+			return err
+		}
+		duration = &parsedDuration
+	}
+
+	*d = SubmitOfferItemBase{
+		OfferItemType: tmp.OfferItemType,
+		ResourceKey:   tmp.ResourceKey,
+		From:          tmp.From,
+		To:            tmp.To,
+		Amount:        amount,
+		Duration:      duration,
+	}
+	return nil
+}
 
 type SubmitOfferItems []SubmitOfferItem
 
@@ -12,12 +62,12 @@ func NewSubmitOfferItems(offerItems ...SubmitOfferItem) SubmitOfferItems {
 }
 
 type SubmitOfferItemBase struct {
-	OfferItemType OfferItemType
-	ResourceKey   *keys.ResourceKey
-	From          *keys.Target
-	To            *keys.Target
-	Amount        *time.Duration
-	Duration      *time.Duration
+	OfferItemType OfferItemType     `json:"type"`
+	ResourceKey   *keys.ResourceKey `json:"resourceId"`
+	From          *keys.Target      `json:"from"`
+	To            *keys.Target      `json:"to"`
+	Amount        *time.Duration    `json:"amount"`
+	Duration      *time.Duration    `json:"duration"`
 }
 
 type SubmitOfferItem struct {

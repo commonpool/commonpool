@@ -474,14 +474,14 @@ package service
 //
 // 			resourceTransfer := offerItem.(*domain.ResourceTransferItem)
 //
-// 			if resourceTransfer.To.IsForUser() {
+// 			if resourceTransfer.To.IsUser() {
 //
 // 				message = fmt.Sprintf("%s would take %s",
 // 					resourceTransfer.To.GetUserKey().GetFrontendLink(),
 // 					resourceTransfer.ResourceKey.GetFrontendLink(),
 // 				)
 //
-// 			} else if resourceTransfer.To.IsForGroup() {
+// 			} else if resourceTransfer.To.IsGroup() {
 //
 // 				message = fmt.Sprintf("The group %s would take %s",
 // 					resourceTransfer.To.GetGroupKey().GetFrontendLink(),
@@ -494,7 +494,7 @@ package service
 //
 // 			serviceProvision := offerItem.(*domain.ProvideServiceItem)
 //
-// 			if serviceProvision.To.IsForGroup() {
+// 			if serviceProvision.To.IsGroup() {
 //
 // 				message = fmt.Sprintf("group %s would get %s worth of %s",
 // 					serviceProvision.To.GetGroupKey().GetFrontendLink(),
@@ -502,7 +502,7 @@ package service
 // 					serviceProvision.ResourceKey.GetFrontendLink(),
 // 				)
 //
-// 			} else if serviceProvision.To.IsForUser() {
+// 			} else if serviceProvision.To.IsUser() {
 //
 // 				message = fmt.Sprintf("user %s would get %s worth of %s",
 // 					serviceProvision.To.GetUserKey().GetFrontendLink(),
@@ -516,7 +516,7 @@ package service
 //
 // 			resourceBorrow := offerItem.(*domain.BorrowResourceItem)
 //
-// 			if resourceBorrow.To.IsForUser() {
+// 			if resourceBorrow.To.IsUser() {
 //
 // 				message = fmt.Sprintf("user %s would borrow %s for %s",
 // 					resourceBorrow.To.GetUserKey().GetFrontendLink(),
@@ -524,7 +524,7 @@ package service
 // 					resourceBorrow.Duration.String(),
 // 				)
 //
-// 			} else if resourceBorrow.To.IsForGroup() {
+// 			} else if resourceBorrow.To.IsGroup() {
 //
 // 				message = fmt.Sprintf("group %s would borrow %s for %s",
 // 					resourceBorrow.To.GetGroupKey().GetFrontendLink(),
@@ -539,16 +539,16 @@ package service
 // 			creditTransfer := offerItem.(*domain.CreditTransferItem)
 //
 // 			fromLink := ""
-// 			if creditTransfer.From.IsForGroup() {
+// 			if creditTransfer.From.IsGroup() {
 // 				fromLink = creditTransfer.From.GetGroupKey().GetFrontendLink()
-// 			} else if creditTransfer.From.IsForUser() {
+// 			} else if creditTransfer.From.IsUser() {
 // 				fromLink = creditTransfer.From.GetUserKey().GetFrontendLink()
 // 			}
 //
 // 			toLink := ""
-// 			if creditTransfer.To.IsForGroup() {
+// 			if creditTransfer.To.IsGroup() {
 // 				toLink = "group " + creditTransfer.To.GetGroupKey().GetFrontendLink()
-// 			} else if creditTransfer.To.IsForUser() {
+// 			} else if creditTransfer.To.IsUser() {
 // 				toLink = "user " + creditTransfer.To.GetUserKey().GetFrontendLink()
 // 			}
 //
@@ -646,15 +646,15 @@ func (t TradingService) buildOfferCompletedMessage(ctx context.Context, items *t
 			var toLink = ""
 			var fromLink = ""
 
-			if creditTransfer.To.IsForGroup() {
+			if creditTransfer.To.IsGroup() {
 				toLink = creditTransfer.To.GetGroupKey().GetFrontendLink()
-			} else if creditTransfer.To.IsForUser() {
+			} else if creditTransfer.To.IsUser() {
 				toLink = creditTransfer.To.GetUserKey().GetFrontendLink()
 			}
 
-			if creditTransfer.From.IsForGroup() {
+			if creditTransfer.From.IsGroup() {
 				fromLink = creditTransfer.From.GetGroupKey().GetFrontendLink()
-			} else if creditTransfer.From.IsForUser() {
+			} else if creditTransfer.From.IsUser() {
 				fromLink = creditTransfer.From.GetUserKey().GetFrontendLink()
 			}
 

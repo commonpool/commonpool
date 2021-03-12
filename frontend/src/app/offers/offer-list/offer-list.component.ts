@@ -47,7 +47,6 @@ export class OfferListComponent implements OnInit {
           grouped.completed.push(offer);
         }
       }
-
       return grouped;
     }),
 
@@ -60,7 +59,6 @@ export class OfferListComponent implements OnInit {
 
   accept(id: string) {
     this.backend.acceptOffer(new AcceptOfferRequest(id)).subscribe(res => {
-      console.log("accepted")
       this.refreshSubject.next();
     });
   }

@@ -283,13 +283,15 @@ func (c *readModelCache) getTargetReadModel(target *keys.Target) *readmodels.Off
 			groupVersion = &group.Version
 		}
 	}
-	return &readmodels.OfferItemTargetReadModel{
+	result := &readmodels.OfferItemTargetReadModel{
 		Target:       *target,
 		GroupName:    groupName,
 		UserName:     userName,
 		UserVersion:  userVersion,
 		GroupVersion: groupVersion,
 	}
+	result.Name = result.GetName()
+	return result
 }
 
 func (c *readModelCache) retrieve(ctx context.Context, db *gorm.DB) error {

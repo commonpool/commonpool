@@ -7,7 +7,8 @@ import (
 )
 
 type ConfirmServiceGivenPayload struct {
-	OfferItemKey keys.OfferItemKey `json:"offer_item_key"`
+	OfferItemKey keys.OfferItemKey `json:"offerItemKey"`
+	ConfirmedBy  keys.UserKey      `json:"confirmedBy"`
 }
 
 type ConfirmServiceGiven struct {
@@ -15,12 +16,9 @@ type ConfirmServiceGiven struct {
 	Payload ConfirmServiceGivenPayload `json:"payload"`
 }
 
-func NewConfirmServiceGiven(
-	ctx context.Context,
-	offerKey keys.OfferKey,
-	offerItemKey keys.OfferItemKey) ConfirmServiceGiven {
+func NewConfirmServiceGiven(ctx context.Context, offerKey keys.OfferKey, offerItemKey keys.OfferItemKey, confirmedBy keys.UserKey) ConfirmServiceGiven {
 	return ConfirmServiceGiven{
 		commands.NewCommandEnvelope(ctx, ConfirmServiceGivenCommand, "offer", offerKey.String()),
-		ConfirmServiceGivenPayload{offerItemKey},
+		ConfirmServiceGivenPayload{offerItemKey, confirmedBy},
 	}
 }

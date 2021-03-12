@@ -104,8 +104,8 @@ export class CreateOrEditResourceComponent implements OnInit, OnDestroy {
           name: res.resource.info.name,
           description: res.resource.info.description,
           value: {
-            timeValueFrom: res.resource.info.value.timeValueFrom / 1000000000,
-            timeValueTo: res.resource.info.value.timeValueTo / 1000000000,
+            timeValueFrom: res.resource.info.value.timeValueFrom / 3600000000000,
+            timeValueTo: res.resource.info.value.timeValueTo / 3600000000000,
           }
         },
         sharedWith: res.resource.sharings.map(s => ({groupId: s.groupId}))
@@ -139,8 +139,8 @@ export class CreateOrEditResourceComponent implements OnInit, OnDestroy {
     this.pending = true;
 
     const value = this.form.value;
-    value.resource.info.value.timeValueFrom *= 1000000000;
-    value.resource.info.value.timeValueTo *= 1000000000;
+    value.resource.info.value.timeValueFrom *= 3600000000000;
+    value.resource.info.value.timeValueTo *= 3600000000000;
 
     if (this.form.value.id === null) {
 

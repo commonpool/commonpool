@@ -32,7 +32,6 @@ export class CreateOfferComponent implements OnDestroy {
     distinctUntilChanged(),
   ).subscribe((fromUserId: string) => {
     const predicate = (toUserId: string) => {
-      console.log(toUserId, fromUserId);
       return toUserId !== fromUserId;
     };
     predicate.bind(this);
@@ -58,7 +57,7 @@ export class CreateOfferComponent implements OnDestroy {
     const newItemForm = new CreateOfferItemForm();
     let resourceId = this.itemForm.resourceIdControl.value;
     if (!resourceId) {
-      resourceId = '';
+      resourceId = null;
     }
     newItemForm.setValue({
       ...this.itemForm.value,
@@ -67,12 +66,12 @@ export class CreateOfferComponent implements OnDestroy {
     this.form.items.push(newItemForm);
     this.itemForm.setParent(newItemForm);
     this.itemForm.setValue({
-      from: '',
-      to: '',
+      from: null,
+      to: null,
       type: OfferItemType.BorrowResource,
-      resourceId: '',
-      amount: '',
-      duration: ''
+      resourceId: null,
+      amount: null,
+      duration: null
     });
     this.itemFormToggled = false;
   }
@@ -93,6 +92,9 @@ export class CreateOfferComponent implements OnDestroy {
 
     this.pending = true;
     this.error = undefined;
+
+
+
     const request = {offer: this.form.value} as SendOfferRequest;
 
     this.backend.sendOffer(SendOfferRequest.from(request)).subscribe(res => {

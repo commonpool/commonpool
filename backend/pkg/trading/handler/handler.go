@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"github.com/avast/retry-go"
 	"github.com/commonpool/backend/pkg/auth/authenticator"
 	"github.com/commonpool/backend/pkg/auth/authenticator/oidc"
@@ -19,20 +20,21 @@ import (
 )
 
 type TradingHandler struct {
-	tradingService          trading.Service
-	groupService            group.Service
-	userService             service.Service
-	authorization           authenticator.Authenticator
-	getOfferKeyForOfferItem *queries.GetOfferKeyForOfferItemKey
-	getOffer                *queries.GetOffer
-	getOffers               *queries.GetOffers
-	confirmResourceBorrowed *commandhandlers.ConfirmResourceBorrowedHandler
-	confirmResourceReturned *commandhandlers.ConfirmResourceReturnedHandler
-	confirmServiceGiven     *commandhandlers.ConfirmServiceGivenHandler
-	confirmResourceGiven    *commandhandlers.ConfirmResourceGivenHandler
-	declineOffer            *commandhandlers.DeclineOfferHandler
-	acceptOffer             *commandhandlers.AcceptOfferHandler
-	submitOffer             *commandhandlers.SubmitOfferHandler
+	tradingService                 trading.Service
+	groupService                   group.Service
+	userService                    service.Service
+	authorization                  authenticator.Authenticator
+	getOfferKeyForOfferItem        *queries.GetOfferKeyForOfferItemKey
+	getOffer                       *queries.GetOffer
+	getOffers                      *queries.GetOffers
+	getOffersWithActions           *queries.GetUserOffersWithActions
+	confirmResourceBorrowedHandler *commandhandlers.ConfirmResourceBorrowedHandler
+	confirmResourceReturned        *commandhandlers.ConfirmResourceReturnedHandler
+	confirmServiceGiven            *commandhandlers.ConfirmServiceGivenHandler
+	confirmResourceGiven           *commandhandlers.ConfirmResourceGivenHandler
+	declineOffer                   *commandhandlers.DeclineOfferHandler
+	acceptOffer                    *commandhandlers.AcceptOfferHandler
+	submitOffer                    *commandhandlers.SubmitOfferHandler
 }
 
 func NewTradingHandler(
@@ -50,22 +52,24 @@ func NewTradingHandler(
 	declineOffer *commandhandlers.DeclineOfferHandler,
 	acceptOffer *commandhandlers.AcceptOfferHandler,
 	submitOffer *commandhandlers.SubmitOfferHandler,
+	getOffersWithActions *queries.GetUserOffersWithActions,
 ) *TradingHandler {
 	return &TradingHandler{
-		tradingService:          tradingService,
-		groupService:            groupService,
-		userService:             userService,
-		authorization:           auth,
-		getOfferKeyForOfferItem: getOfferKeyForOfferItem,
-		getOffer:                getOffer,
-		getOffers:               getOffers,
-		confirmResourceBorrowed: confirmBorrowed,
-		confirmResourceReturned: confirmReturned,
-		confirmServiceGiven:     confirmServiceGiven,
-		confirmResourceGiven:    confirmResourceGiven,
-		declineOffer:            declineOffer,
-		acceptOffer:             acceptOffer,
-		submitOffer:             submitOffer,
+		tradingService:                 tradingService,
+		groupService:                   groupService,
+		userService:                    userService,
+		authorization:                  auth,
+		getOfferKeyForOfferItem:        getOfferKeyForOfferItem,
+		getOffer:                       getOffer,
+		getOffers:                      getOffers,
+		getOffersWithActions:           getOffersWithActions,
+		confirmResourceBorrowedHandler: confirmBorrowed,
+		confirmResourceReturned:        confirmReturned,
+		confirmServiceGiven:            confirmServiceGiven,
+		confirmResourceGiven:           confirmResourceGiven,
+		declineOffer:                   declineOffer,
+		acceptOffer:                    acceptOffer,
+		submitOffer:                    submitOffer,
 	}
 }
 
@@ -74,14 +78,13 @@ func (h *TradingHandler) Register(e *echo.Group) {
 	offers.GET("/:id", h.HandleGetOffer)
 	offers.GET("", h.HandleGetOffers)
 	offers.POST("", h.HandleSendOffer)
-	offers.POST("/:id/accept", h.HandleAcceptOffer)
-	offers.POST("/:id/decline", h.HandleDeclineOffer)
+	offers.POST("/:id/actions/approve", h.HandleAcceptOffer)
+	offers.POST("/:id/actions/decline", h.HandleDeclineOffer)
 	offers.GET("/target-picker", h.HandleOfferItemTargetPicker)
-	offerItems := e.Group("/offer-items", h.authorization.Authenticate(true))
-	offerItems.POST("/:id/confirm/service-provided", h.HandleConfirmServiceProvided)
-	offerItems.POST("/:id/confirm/resource-transferred", h.HandleConfirmResourceTransferred)
-	offerItems.POST("/:id/confirm/resource-borrowed", h.HandleConfirmResourceBorrowed)
-	offerItems.POST("/:id/confirm/resource-borrowed-returned", h.HandleConfirmBorrowedResourceReturned)
+	offers.POST("/:id/offer-items/:offerItemId/actions/service-given", h.HandleConfirmServiceProvided)
+	offers.POST("/:id/offer-items/:offerItemId/actions/resource-given", h.HandleConfirmResourceTransferred)
+	offers.POST("/:id/offer-items/:offerItemId/actions/resource-borrowed", h.HandleConfirmResourceBorrowed)
+	offers.POST("/:id/offer-items/:offerItemId/actions/resource-returned", h.HandleConfirmBorrowedResourceReturned)
 }
 
 type SubmitOfferRequest struct {
@@ -122,7 +125,7 @@ type GetOfferResponse struct {
 }
 
 type GetOffersResponse struct {
-	Offers []*groupreadmodels.OfferReadModel
+	Offers []*groupreadmodels.OfferReadModelWithActions `json:"offers"`
 }
 
 func (g GetOfferResponse) GetOfferKey() keys.OfferKey {
@@ -150,7 +153,7 @@ func (h *TradingHandler) HandleGetOffers(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	offers, err := h.getOffers.Get(ctx, loggedInUser.GetUserKey())
+	offers, err := h.getOffersWithActions.Get(ctx, loggedInUser.GetUserKey())
 	return c.JSON(http.StatusOK, GetOffersResponse{
 		Offers: offers,
 	})
@@ -180,68 +183,55 @@ func (h *TradingHandler) HandleDeclineOffer(c echo.Context) error {
 	return c.NoContent(http.StatusAccepted)
 }
 
-func (h *TradingHandler) HandleConfirmBorrowedResourceReturned(c echo.Context) error {
-	ctx, _ := handler.GetEchoContext(c, "HandleConfirmBorrowedResourceReturned")
-	offerItemKey, err := keys.ParseOfferItemKey(c.Param("id"))
+type OfferItemConfirmationRequest struct {
+	OfferKey     keys.OfferKey     `param:"id"`
+	OfferItemKey keys.OfferItemKey `param:"offerItemId"`
+}
+
+func (h *TradingHandler) handleOfferItemAction(c echo.Context, do func(ctx context.Context, offerKey keys.OfferKey, offerItemKey keys.OfferItemKey, loggedInUserKey keys.UserKey) error) error {
+
+	ctx, _ := handler.GetEchoContext(c, "handleOfferItemAction")
+
+	var req OfferItemConfirmationRequest
+	if err := c.Bind(&req); err != nil {
+		return err
+	}
+
+	loggedInUser, err := oidc.GetLoggedInUser(ctx)
 	if err != nil {
 		return err
 	}
-	offerKey, err := h.getOfferKeyForOfferItem.Get(ctx, offerItemKey)
-	if err != nil {
+
+	if err := do(ctx, req.OfferKey, req.OfferItemKey, loggedInUser.GetUserKey()); err != nil {
 		return err
 	}
-	if err := h.confirmResourceReturned.Execute(ctx, domain.NewConfirmResourceReturned(ctx, offerKey, offerItemKey)); err != nil {
-		return err
-	}
+
 	return c.NoContent(http.StatusAccepted)
+
+}
+
+func (h *TradingHandler) HandleConfirmBorrowedResourceReturned(c echo.Context) error {
+	return h.handleOfferItemAction(c, func(ctx context.Context, offerKey keys.OfferKey, offerItemKey keys.OfferItemKey, loggedInUserKey keys.UserKey) error {
+		return h.confirmResourceReturned.Execute(ctx, domain.NewConfirmResourceReturned(ctx, offerKey, offerItemKey, loggedInUserKey))
+	})
 }
 
 func (h *TradingHandler) HandleConfirmResourceBorrowed(c echo.Context) error {
-	ctx, _ := handler.GetEchoContext(c, "HandleConfirmResourceBorrowed")
-	offerItemKey, err := keys.ParseOfferItemKey(c.Param("id"))
-	if err != nil {
-		return err
-	}
-	offerKey, err := h.getOfferKeyForOfferItem.Get(ctx, offerItemKey)
-	if err != nil {
-		return err
-	}
-	if err := h.confirmResourceBorrowed.Execute(ctx, domain.NewConfirmResourceBorrowed(ctx, offerKey, offerItemKey)); err != nil {
-		return err
-	}
-	return c.NoContent(http.StatusAccepted)
+	return h.handleOfferItemAction(c, func(ctx context.Context, offerKey keys.OfferKey, offerItemKey keys.OfferItemKey, loggedInUserKey keys.UserKey) error {
+		return h.confirmResourceBorrowedHandler.Execute(ctx, domain.NewConfirmResourceBorrowed(ctx, offerKey, offerItemKey, loggedInUserKey))
+	})
 }
 
 func (h *TradingHandler) HandleConfirmResourceTransferred(c echo.Context) error {
-	ctx, _ := handler.GetEchoContext(c, "HandleConfirmResourceTransferred")
-	offerItemKey, err := keys.ParseOfferItemKey(c.Param("id"))
-	if err != nil {
-		return err
-	}
-	offerKey, err := h.getOfferKeyForOfferItem.Get(ctx, offerItemKey)
-	if err != nil {
-		return err
-	}
-	if err := h.confirmResourceGiven.Execute(ctx, domain.NewConfirmResourceGiven(ctx, offerKey, offerItemKey)); err != nil {
-		return err
-	}
-	return c.NoContent(http.StatusAccepted)
+	return h.handleOfferItemAction(c, func(ctx context.Context, offerKey keys.OfferKey, offerItemKey keys.OfferItemKey, loggedInUserKey keys.UserKey) error {
+		return h.confirmResourceGiven.Execute(ctx, domain.NewConfirmResourceGiven(ctx, offerKey, offerItemKey, loggedInUserKey))
+	})
 }
 
 func (h *TradingHandler) HandleConfirmServiceProvided(c echo.Context) error {
-	ctx, _ := handler.GetEchoContext(c, "HandleConfirmServiceProvided")
-	offerItemKey, err := keys.ParseOfferItemKey(c.Param("id"))
-	if err != nil {
-		return err
-	}
-	offerKey, err := h.getOfferKeyForOfferItem.Get(ctx, offerItemKey)
-	if err != nil {
-		return err
-	}
-	if err := h.confirmServiceGiven.Execute(ctx, domain.NewConfirmServiceGiven(ctx, offerKey, offerItemKey)); err != nil {
-		return err
-	}
-	return c.NoContent(http.StatusAccepted)
+	return h.handleOfferItemAction(c, func(ctx context.Context, offerKey keys.OfferKey, offerItemKey keys.OfferItemKey, loggedInUserKey keys.UserKey) error {
+		return h.confirmServiceGiven.Execute(ctx, domain.NewConfirmServiceGiven(ctx, offerKey, offerItemKey, loggedInUserKey))
+	})
 }
 
 func (h *TradingHandler) HandleSendOffer(c echo.Context) error {

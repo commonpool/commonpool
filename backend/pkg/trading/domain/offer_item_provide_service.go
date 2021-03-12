@@ -42,7 +42,7 @@ func (p ProvideServiceItem) IsCompleted() bool {
 	return p.ServiceGivenConfirmation && p.ServiceReceivedConfirmation
 }
 
-func (p ProvideServiceItem) Type() OfferItemType {
+func (p ProvideServiceItem) GetType() OfferItemType {
 	return ProvideService
 }
 

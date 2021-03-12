@@ -28,12 +28,15 @@ const routes: Routes = [
     component: HomePageComponent
   },
   {
-    path: 'resources',
+    path: 'resources/search',
     component: ResourceListViewComponent
-  },
-  {
+  }, {
     path: 'resources/new',
     component: CreateOrEditResourceComponent
+  },
+  {
+    path: 'resources/:id',
+    component: ResourceDetailsComponent
   }, {
     path: 'resources/:id/inquire',
     component: ResourceInquiryComponent
@@ -44,20 +47,9 @@ const routes: Routes = [
     path: 'users/:id',
     component: UserViewComponent,
     children: [
-      {path: '', redirectTo: 'groups', pathMatch: 'full'},
+      {path: '', redirectTo: 'posts', pathMatch: 'full'},
       {path: 'groups', component: UserGroupsViewComponent},
-      {path: 'needs', component: UserResourcesViewComponent, data: {accountType: 'user', resourceType: 'needs'}},
-      {path: 'offers', component: UserResourcesViewComponent, data: {accountType: 'user', resourceType: 'offers'}},
-      {
-        path: 'needs/:resourceId',
-        component: ResourceDetailsComponent,
-        data: {accountType: 'user', resourceType: 'needs'}
-      },
-      {
-        path: 'offers/:resourceId',
-        component: ResourceDetailsComponent,
-        data: {accountType: 'user', resourceType: 'offers'}
-      },
+      {path: 'posts', component: UserResourcesViewComponent, data: {accountType: 'user'}},
       {path: 'transactions', component: OfferListComponent},
       {path: 'transactions/:id', component: OfferDetailsComponent},
     ]
@@ -96,12 +88,11 @@ const routes: Routes = [
     path: 'groups/:id',
     component: GroupViewComponent,
     children: [
-      {path: '', redirectTo: 'members', pathMatch: 'full'},
+      {path: '', redirectTo: 'posts', pathMatch: 'full'},
       {path: 'members', component: GroupMembersViewComponent},
       {path: 'invitations', component: GroupInvitesViewComponent},
       {path: 'resources', component: GroupResourcesViewComponent},
-      {path: 'needs', component: UserResourcesViewComponent, data: {accountType: 'group', resourceType: 'needs'}},
-      {path: 'offers', component: UserResourcesViewComponent, data: {accountType: 'group', resourceType: 'offers'}},
+      {path: 'posts', component: UserResourcesViewComponent, data: {accountType: 'group'}},
       {
         path: 'needs/:resourceId',
         component: ResourceDetailsComponent,

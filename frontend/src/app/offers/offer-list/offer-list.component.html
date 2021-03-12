@@ -1,54 +1,55 @@
 <div class="container mt-4" *ngIf="userId$ | async; let userId">
   <div class="row" *ngIf="offers$ | async; let offers">
     <div class="col">
-      <div class="card">
-        <div class="card-header">
-          Pending Offers:
+
+      <nav class="navbar navbar-light bg-light shadow-sm mb-4">
+        <div class="container-fluid">
+          <a class="navbar-brand">Pending Offers</a>
         </div>
-        <ng-container>
-          <ul class="list-group list-group-flush">
-            <li *ngFor="let offer of offers.pending" class="list-group-item">
-              <app-offer-list-item [offer]="offer" (approve)="accept(offer.id)" (decline)="decline(offer.id)"></app-offer-list-item>
-            </li>
-            <li class="list-group-item" *ngIf="offers.pending.length === 0">
-              <small>No pending offers</small>
-            </li>
-          </ul>
-        </ng-container>
+      </nav>
+
+      <div *ngFor="let offer of offers.pending" class="mb-3">
+        <app-offer-list-item [offer]="offer" (approve)="accept(offer.id)"
+                             (decline)="decline(offer.id)"></app-offer-list-item>
       </div>
 
-      <div class="card mt-4">
-        <div class="card-header">
-          Active Offers:
-        </div>
-        <ng-container>
-          <ul class="list-group list-group-flush">
-            <li *ngFor="let offer of offers.accepted" class="list-group-item">
-              <app-offer-list-item [offer]="offer"></app-offer-list-item>
+      <p *ngIf="offers.pending.length === 0">
+        <small>No pending offers</small>
+      </p>
 
-            </li>
-            <li class="list-group-item" *ngIf="offers.accepted.length === 0">
-              <small>No active offers</small>
-            </li>
-          </ul>
-        </ng-container>
+
+      <nav class="navbar navbar-light bg-light shadow-sm mb-4">
+        <div class="container-fluid">
+          <a class="navbar-brand">Active Offers</a>
+        </div>
+      </nav>
+
+      <div *ngFor="let offer of offers.accepted" class="mb-3">
+        <app-offer-list-item [offer]="offer" (approve)="accept(offer.id)"
+                             (decline)="decline(offer.id)"></app-offer-list-item>
       </div>
 
-      <div class="card mt-4">
-        <div class="card-header">
-          Previous Offers:
+      <p *ngIf="offers.accepted.length === 0">
+        <small>No approved offers</small>
+      </p>
+
+
+      <nav class="navbar navbar-light bg-light shadow-sm mb-4">
+        <div class="container-fluid">
+          <a class="navbar-brand">Completed Offers</a>
         </div>
-        <ng-container>
-          <ul class="list-group list-group-flush">
-            <li *ngFor="let offer of offers.completed" class="list-group-item">
-              <app-offer-list-item [offer]="offer"></app-offer-list-item>
-            </li>
-            <li class="list-group-item" *ngIf="offers.completed.length === 0">
-              <small>No previous offers</small>
-            </li>
-          </ul>
-        </ng-container>
+      </nav>
+
+      <div *ngFor="let offer of offers.completed" class="mb-3">
+        <app-offer-list-item [offer]="offer" (approve)="accept(offer.id)"
+                             (decline)="decline(offer.id)"></app-offer-list-item>
       </div>
+
+      <p *ngIf="offers.completed.length === 0">
+        <small>No approved offers</small>
+      </p>
+
+
     </div>
   </div>
 </div>

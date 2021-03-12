@@ -1,6 +1,8 @@
 package domain
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/commonpool/backend/pkg/exceptions"
 )
 
@@ -27,6 +29,26 @@ func ParseOfferItemType(str string) (OfferItemType, error) {
 	}
 }
 
-func (k OfferItemType) GormDataType() string {
+func (o OfferItemType) GormDataType() string {
 	return "varchar(64)"
+}
+
+func (o *OfferItemType) UnmarshalJSON(data []byte) error {
+	var str string
+	if err := json.Unmarshal(data, &str); err != nil {
+		return err
+	}
+	switch str {
+	case string(CreditTransfer):
+		*o = CreditTransfer
+	case string(ProvideService):
+		*o = ProvideService
+	case string(BorrowResource):
+		*o = BorrowResource
+	case string(ResourceTransfer):
+		*o = ResourceTransfer
+	default:
+		return fmt.Errorf("invalid offer item type : %s", str)
+	}
+	return nil
 }

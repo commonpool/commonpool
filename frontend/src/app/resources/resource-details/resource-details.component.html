@@ -1,20 +1,9 @@
-<div class="container-fluid mt-5" *ngIf="resource$ | async; let resource">
-  <div class="row" data-cy="resource-details-page">
-    <div class="col">
-      <div class="card">
-        <div class="card-body">
-          <a [routerLink]="'..'">
-          < Resources
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
+<div class="container-fluid mt-3" *ngIf="resource$ | async; let resource">
   <div class="row mt-2">
     <div class="col">
       <div class="card">
         <h1 class="display-3 card-header">
-          {{resource.info.name}}
+          {{resource.info.name}} <h1>({{resource.info.resourceType}} {{resource.info.callType}})</h1>
         </h1>
         <div class="card-body" id="resource-details">
           <div>
@@ -22,7 +11,10 @@
               {{resource.info.description}}
             </p>
             <code>
-Value: {{resource.info.value.timeValueFrom/1000000000}}h - {{resource.info.value.timeValueTo/1000000000}}h
+              Value:
+                <app-duration [duration]="resource.info.value.timeValueFrom"></app-duration>
+                -
+                <app-duration [duration]="resource.info.value.timeValueTo"></app-duration>
             </code>
             <p class="text-muted mt-3">Created by <a
               [routerLink]="'/users/' + resource.createdBy">{{resource.createdByName}}</a> {{resource.createdAtDistanceAgo}}

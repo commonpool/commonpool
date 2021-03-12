@@ -24,14 +24,14 @@ var upgrader = websocket.Upgrader{
 }
 
 type Handler struct {
-	amqp          mq.Client
 	chatService   service.Service
 	authorization authenticator.Authenticator
+	mq            mq.MqClient
 }
 
-func NewRealtimeHandler(amqpClient mq.Client, chatService service.Service, authorization authenticator.Authenticator) *Handler {
+func NewRealtimeHandler(mq mq.MqClient, chatService service.Service, authorization authenticator.Authenticator) *Handler {
 	return &Handler{
-		amqp:          amqpClient,
+		mq:            mq,
 		chatService:   chatService,
 		authorization: authorization,
 	}
@@ -58,7 +58,7 @@ func (h *Handler) websocketAnonymous(ctx context.Context, response *echo.Respons
 	hub := newHub()
 	go hub.run()
 
-	client := NewAnonymousClient(hub, ws)
+	client := NewAnonymousClient(hub, ws, h.mq.NewQueueFactory())
 
 	go client.writePump()
 	go client.readPump()
@@ -108,12 +108,8 @@ func (h *Handler) Websocket(c echo.Context) error {
 	consumerKey := utils.ShortUuid(uuid.NewV4())
 	queueName := "chat.ws." + userKey.String() + "." + consumerKey
 
-	amqpChannel, err := h.amqp.GetChannel()
-	if err != nil {
-		l.Error("cold not get amqp channel", zap.Error(err))
-		return err
-	}
-	defer amqpChannel.Close()
+	channel := h.mq.NewChannel()
+	defer channel.Close()
 
 	userExchangeName, err := h.chatService.CreateUserExchange(ctx, userKey)
 	if err != nil {
@@ -121,19 +117,17 @@ func (h *Handler) Websocket(c echo.Context) error {
 		return err
 	}
 
-	err = amqpChannel.QueueDeclare(ctx, queueName, false, true, false, false, nil)
-	if err != nil {
+	if err := channel.QueueDeclare(ctx, queueName, false, true, false, false, nil); err != nil {
 		l.Error("could not declare websocket amqp queue", zap.Error(err))
 		return err
 	}
 
-	err = amqpChannel.QueueBind(ctx, queueName, "", userExchangeName, false, nil)
-	if err != nil {
+	if err := channel.QueueBind(ctx, queueName, "", userExchangeName, false, nil); err != nil {
 		l.Error("could not bind consumer queue to exchange", zap.Error(err))
 		return err
 	}
 
-	client := NewClient(hub, ws, amqpChannel, &queueName, &consumerKey)
+	client := NewClient(hub, ws, h.mq.NewQueueFactory(), &queueName, &consumerKey)
 
 	client.hub.register <- client
 

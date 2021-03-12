@@ -13,7 +13,7 @@ import (
 )
 
 type RabbitMQListener struct {
-	amqpClient  mq.Client
+	mqClient    mq.MqClient
 	name        string
 	eventTypes  []string
 	initialized bool
@@ -22,9 +22,9 @@ type RabbitMQListener struct {
 
 type ListenerFunc func(ctx context.Context, events []eventsource.Event) error
 
-func NewRabbitMqListener(amqpClient mq.Client, eventMapper *eventsource.EventMapper) *RabbitMQListener {
+func NewRabbitMqListener(mqClient mq.MqClient, eventMapper *eventsource.EventMapper) *RabbitMQListener {
 	return &RabbitMQListener{
-		amqpClient:  amqpClient,
+		mqClient:    mqClient,
 		eventMapper: eventMapper,
 	}
 }
@@ -35,13 +35,14 @@ func (s *RabbitMQListener) Initialize(ctx context.Context, name string, eventTyp
 	s.name = name
 	s.eventTypes = eventTypes
 
-	channel, err := s.amqpClient.GetChannel()
-	if err != nil {
-		return err
-	}
+	channel := s.mqClient.NewChannel()
 	defer channel.Close()
 
-	if err := channel.QueueDeclare(ctx, s.name, true, false, false, false, map[string]interface{}{}); err != nil {
+	if err := channel.Connect(ctx); err != nil {
+		return err
+	}
+
+	if err := channel.QueueDeclare(ctx, s.name, false, false, false, false, map[string]interface{}{}); err != nil {
 		return err
 	}
 
@@ -66,60 +67,47 @@ func (s *RabbitMQListener) Listen(ctx context.Context, listenerFunc ListenerFunc
 	}
 
 	l.Debug("creating channel...")
-	channel, err := s.amqpClient.GetChannel()
-	if err != nil {
-		return errors.Wrap(err, "could not get channel")
+	queue := s.mqClient.NewQueue(mq.NewQueueConfig().WithName(s.name))
+	if err := queue.Connect(ctx); err != nil {
+		return err
 	}
-	l.Debug("creating channel... done!")
-	defer channel.Close()
 
 	errChan := make(chan error)
 
-	go func() {
+	if err := queue.Consume(ctx, mq.NewConsumerConfig(func(msg mq.Delivery) error {
 
-		l.Debug("consuming RabbitMQ messages...")
-		msgs, err := channel.Consume(ctx, s.name, "", false, false, false, false, map[string]interface{}{})
+		var streamEvent eventstore.StreamEvent
+
+		l.Debug("received event", zap.String("event_type", msg.Type))
+
+		err := json.Unmarshal(msg.Body, &streamEvent)
 		if err != nil {
-			errChan <- errors.Wrap(err, "could not start consuming")
-			return
+			errChan <- errors.Wrap(err, "could not unmarshal event")
+			return nil
 		}
-		l.Debug("consuming RabbitMQ messages... consuming!")
 
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case msg := <-msgs:
-				var streamEvent eventstore.StreamEvent
+		evt, err := s.eventMapper.Map(msg.Type, msg.Body)
+		if err != nil {
+			errChan <- errors.Wrapf(err, "could not map event with type '%s'", msg.Type)
+			return nil
+		}
 
-				l.Debug("received event", zap.String("event_type", msg.Type))
-
-				err := json.Unmarshal(msg.Body, &streamEvent)
-				if err != nil {
-					errChan <- errors.Wrap(err, "could not unmarshal event")
-					return
-				}
-
-				evt, err := s.eventMapper.Map(msg.Type, msg.Body)
-				if err != nil {
-					errChan <- errors.Wrapf(err, "could not map event with type '%s'", msg.Type)
-					return
-				}
-
-				err = listenerFunc(ctx, []eventsource.Event{evt})
-				if err != nil {
-					errChan <- errors.Wrap(err, "event listener error")
-					return
-				} else {
-					if err := msg.Acknowledger.Ack(msg.DeliveryTag, false); err != nil {
-						errChan <- errors.Wrap(err, "could not acknowledge delivery")
-						return
-					}
-				}
+		err = listenerFunc(ctx, []eventsource.Event{evt})
+		if err != nil {
+			errChan <- errors.Wrap(err, "event listener error")
+			return nil
+		} else {
+			if err := msg.Acknowledger.Ack(msg.DeliveryTag, false); err != nil {
+				errChan <- errors.Wrap(err, "could not acknowledge delivery")
+				return nil
 			}
 		}
 
-	}()
+		return nil
+
+	})); err != nil {
+		return err
+	}
 
 	for {
 		select {

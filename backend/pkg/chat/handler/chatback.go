@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"fmt"
+	"github.com/commonpool/backend/pkg/auth/authenticator/oidc"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/trading/domain"
@@ -73,7 +74,12 @@ func (h *Handler) HandleChatbackConfirmServiceProvided(c echo.Context, req Inter
 		return err
 	}
 
-	err = h.confirmServiceGiven.Execute(ctx, domain.NewConfirmServiceGiven(ctx, offerKey, offerItemKey))
+	loggedInUser, err := oidc.GetLoggedInUser(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = h.confirmServiceGiven.Execute(ctx, domain.NewConfirmServiceGiven(ctx, offerKey, offerItemKey, loggedInUser.GetUserKey()))
 	if err != nil {
 		return err
 	}
@@ -90,7 +96,12 @@ func (h *Handler) HandleChatbackConfirmResourceTransferred(c echo.Context, req I
 		return err
 	}
 
-	err = h.confirmResourceGiven.Execute(ctx, domain.NewConfirmResourceGiven(ctx, offerKey, offerItemKey))
+	loggedInUser, err := oidc.GetLoggedInUser(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = h.confirmResourceGiven.Execute(ctx, domain.NewConfirmResourceGiven(ctx, offerKey, offerItemKey, loggedInUser.GetUserKey()))
 	if err != nil {
 		return err
 	}
@@ -107,7 +118,12 @@ func (h *Handler) HandleChatbackConfirmResourceBorrowed(c echo.Context, req Inte
 		return err
 	}
 
-	err = h.confirmBorrowed.Execute(ctx, domain.NewConfirmResourceBorrowed(ctx, offerKey, offerItemKey))
+	loggedInUser, err := oidc.GetLoggedInUser(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = h.confirmBorrowed.Execute(ctx, domain.NewConfirmResourceBorrowed(ctx, offerKey, offerItemKey, loggedInUser.GetUserKey()))
 	if err != nil {
 		return err
 	}
@@ -124,7 +140,12 @@ func (h *Handler) HandleChatbackConfirmResourceBorrowedReturned(c echo.Context, 
 		return err
 	}
 
-	err = h.confirmReturned.Execute(ctx, domain.NewConfirmResourceReturned(ctx, offerKey, offerItemKey))
+	loggedInUser, err := oidc.GetLoggedInUser(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = h.confirmReturned.Execute(ctx, domain.NewConfirmResourceReturned(ctx, offerKey, offerItemKey, loggedInUser.GetUserKey()))
 	if err != nil {
 		return err
 	}

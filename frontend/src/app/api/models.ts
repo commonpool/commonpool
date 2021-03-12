@@ -435,6 +435,15 @@ export enum TargetType {
   Group = 'group'
 }
 
+// type OfferItemTargetReadModel struct {
+//   keys.Target
+//   GroupName    *string `json:"groupName,omitempty"`
+//   UserName     *string `json:"userName,omitempty"`
+//   UserVersion  *int    `json:"userVersion,omitempty"`
+//   GroupVersion *int    `json:"groupVersion,omitempty"`
+//   Name         string  `json:"name"`
+// }
+
 export class Target {
   constructor(public type: TargetType, public userId: string | undefined, public  groupId: string | undefined) {
   }
@@ -444,6 +453,22 @@ export class Target {
       return undefined;
     }
     return new Target(target.type, target.userId, target.groupId);
+  }
+}
+
+export class OfferItemTarget extends Target {
+  public constructor(
+    public  type: TargetType,
+    public userId: string | undefined,
+    public groupId: string | undefined,
+    public userName: string | undefined,
+    public groupName: string | undefined,
+    public name: string) {
+    super(type, userId, groupId);
+  }
+
+  public static from(o: OfferItemTarget): OfferItemTarget {
+    return new OfferItemTarget(o.type, o.userId, o.groupId, o.userName, o.groupName, o.name);
   }
 }
 
@@ -523,21 +548,42 @@ export class DeclineOfferReponse {
 }
 
 export enum OfferStatus {
-  PendingOffer = 0,
-  AcceptedOffer = 1,
-  CanceledOffer = 2,
-  DeclinedOffer = 3,
-  ExpiredOffer = 4,
-  CompletedOffer = 5,
+  PendingOffer = 'pending',
+  AcceptedOffer = 'approved',
+  CanceledOffer = 'canceled',
+  DeclinedOffer = 'declined',
+  ExpiredOffer = 'expired',
+  CompletedOffer = 'completed',
+}
+
+export class OfferItemResource {
+  public constructor(
+    public resourceId: string,
+    public resourceName: string,
+    public resourceType: ResourceType,
+    public callType: CallType,
+    public version: number
+  ) {
+  }
+
+  public static from(o: OfferItemResource): OfferItemResource {
+    return new OfferItemResource(
+      o.resourceId,
+      o.resourceName,
+      o.resourceType,
+      o.callType,
+      o.version
+    );
+  }
 }
 
 export class OfferItem {
   constructor(
-    public id: string,
-    public to: Target,
+    public offerItemId: string,
+    public to: OfferItemTarget,
     public type: OfferItemType,
-    public from: Target | undefined,
-    public resourceId: string | undefined,
+    public from: OfferItemTarget | undefined,
+    public resource: OfferItemResource,
     public duration: number | undefined,
     public amount: number | undefined,
     public receivingApprovers: string[],
@@ -554,11 +600,11 @@ export class OfferItem {
 
   public static from(res: OfferItem): OfferItem {
     return new OfferItem(
-      res.id,
-      Target.from(res.to),
+      res.offerItemId,
+      res.to ? OfferItemTarget.from(res.to) : undefined,
       res.type,
-      Target.from(res.from),
-      res.resourceId,
+      res.from ? OfferItemTarget.from(res.from) : undefined,
+      res.resource ? OfferItemResource.from(res.resource) : undefined,
       res.duration,
       res.amount,
       res.receivingApprovers,
@@ -574,6 +620,29 @@ export class OfferItem {
   }
 }
 
+export class Action {
+  public constructor(
+    public name: string,
+    public enabled: boolean,
+    public completed: boolean,
+    public actionUrl: string,
+    public offerItemId: string,
+    public style: string,
+  ) {
+  }
+
+  public static from(a: Action): Action {
+    return new Action(
+      a.name,
+      a.enabled,
+      a.completed,
+      a.actionUrl,
+      a.offerItemId,
+      a.style
+    );
+  }
+}
+
 export class Offer {
   constructor(
     public id: string,
@@ -582,7 +651,8 @@ export class Offer {
     public status: OfferStatus,
     public authorId: string,
     public authorUsername: string,
-    public items: OfferItem[]) {
+    public items: OfferItem[],
+    public actions: Action[]) {
   }
 
   public static from(o: Offer): Offer {
@@ -593,13 +663,15 @@ export class Offer {
       o.status,
       o.authorId,
       o.authorUsername,
-      o.items.map(i => OfferItem.from(i)));
+      o.items ? o.items.map(i => OfferItem.from(i)) : [],
+      o.actions ? o.actions.map(a => Action.from(a)) : []
+    );
   }
 }
 
 export class Group {
   constructor(
-    public id: string,
+    public groupId: string,
     public createdAt: string,
     public name: string,
     public description: string
@@ -608,7 +680,7 @@ export class Group {
 
   public static from(g: Group): Group {
     return new Group(
-      g.id,
+      g.groupId,
       g.createdAt,
       g.name,
       g.description);

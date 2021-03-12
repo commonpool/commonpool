@@ -57,6 +57,15 @@ func (k *OfferItemKey) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (ok *OfferItemKey) UnmarshalParam(param string) error {
+	offerItemID, err := uuid.FromString(param)
+	if err != nil {
+		return err
+	}
+	ok.ID = offerItemID
+	return nil
+}
+
 func (k *OfferItemKey) Scan(value interface{}) error {
 	keyValue, ok := value.(string)
 	if !ok {

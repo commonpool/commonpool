@@ -544,7 +544,7 @@ export class BackendService {
     );
   }
 
-  inviteUser(request: InviteUserRequest): Observable<InviteUserResponse> {
+  inviteUser(request: InviteUserRequest): Observable<null> {
     return this.http.post(`${environment.apiUrl}/api/v1/memberships`, {
       userId: request.userId,
       groupId: request.groupId
@@ -552,10 +552,10 @@ export class BackendService {
       observe: 'response'
     }).pipe(
       map((res) => {
-        if (res.status !== 201) {
+        if (res.status !== 202) {
           throwError(ErrorResponse.fromHttpResponse(res));
         }
-        return InviteUserResponse.from(res.body as InviteUserResponse);
+        return null;
       })
     );
   }
@@ -569,16 +569,17 @@ export class BackendService {
       headers: new HttpHeaders({
         'Content-Type': 'application/json'
       }),
+      observe: 'response',
       body: {
         userId: request.userId,
         groupId: request.groupId
       },
     }).pipe(
       map((res: HttpResponse<object>) => {
-        if (res.status !== 200) {
+        if (res.status !== 202) {
           throwError(ErrorResponse.fromHttpResponse(res));
         }
-        return DeclineInvitationResponse.from(res.body as DeclineInvitationResponse);
+        return null;
       })
     );
   }

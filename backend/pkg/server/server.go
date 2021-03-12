@@ -64,7 +64,6 @@ type Group struct {
 	Handler    *grouphandler.Handler
 	Repository groupdomain.GroupRepository
 	Service    *groupservice.GroupService
-	Store      *groupstore.GroupStore
 }
 
 type Server struct {
@@ -158,6 +157,8 @@ func NewServer() (*Server, error) {
 		return nil, err
 	}
 
+	mqClient := mq.NewRabbitClient2(mq.NewRabbitConfig(appConfig.AmqpUrl))
+
 	err = graph.InitGraphDatabase(ctx, appConfig)
 	if err != nil {
 		return nil, err
@@ -187,6 +188,9 @@ func NewServer() (*Server, error) {
 	}
 
 	eventPublisher := eventbus.NewAmqpPublisher(amqpCli)
+	if err := eventPublisher.Init(ctx); err != nil {
+		panic(err)
+	}
 	eventStore := publish.NewPublishEventStore(postgres2.NewPostgresEventStore(db, eventMapper), eventPublisher)
 	// userRepo := store.NewEventSourcedUserRepository(eventStore)
 	offerRepository := tradingstore.NewEventSourcedOfferRepository(eventStore)
@@ -208,10 +212,15 @@ func NewServer() (*Server, error) {
 	getResourceWithSharings := resourcequeries.NewGetResourceWithSharings(getResource, getResourceSharings)
 	searchResourcesWithSharings := resourcequeries.NewSearchResourcesWithSharings(db, searchResources, getResourcesSharings)
 	getOffer := queries.NewGetOffer(db)
-	getOffers := queries.NewGetOffers(db)
+	getUserAdministeredGroupKeys := queries.NewGetUserAdministeredGroupKeys(db)
+	getOfferKeysForUser := queries.NewGetOfferKeysForUser(db, getUserAdministeredGroupKeys)
+	getOffers := queries.NewGetOffers(db, getOfferKeysForUser)
 	getOfferItem := queries.NewGetOfferItem(db)
 	getOfferKeyForOfferItem := queries.NewGetOfferKeyForOfferItemKey(db)
-	getOfferPermissions := queries.NewGetOfferPermissions(db)
+	getOffersGroupKeys := queries.NewGetOffersGroupKeys(db)
+	getOffersPermissions := queries.NewGetOffersPermissions(db, getOffersGroupKeys)
+	getOfferPermissions := queries.NewGetOfferPermissions(getOffersPermissions)
+	getUserOffersWithActions := queries.NewGetUserOffersWithActions(db, getOffersPermissions, getOfferKeysForUser)
 
 	// commands
 	commandMapper := commands.NewCommandMapper()
@@ -221,10 +230,10 @@ func NewServer() (*Server, error) {
 	acceptOffer := tradingcmdhandlers.NewAcceptOfferHandler(offerRepository, getOfferPermissions)
 	declineOffer := tradingcmdhandlers.NewDeclineOfferHandler(offerRepository)
 	submitOffer := tradingcmdhandlers.NewSubmitOfferHandler(offerRepository, getOfferPermissions, getResourcesByKeysWithSharings)
-	confirmResourceBorrowed := tradingcmdhandlers.NewConfirmResourceBorrowedHandler(offerRepository)
-	confirmResourceGiven := tradingcmdhandlers.NewConfirmResourceGivenHandler(offerRepository)
-	confirmResourceReturned := tradingcmdhandlers.NewConfirmResourceReturnedHandler(offerRepository)
-	confirmServiceGiven := tradingcmdhandlers.NewConfirmServiceGivenHandler(offerRepository)
+	confirmResourceBorrowed := tradingcmdhandlers.NewConfirmResourceBorrowedHandler(offerRepository, getOfferPermissions)
+	confirmResourceGiven := tradingcmdhandlers.NewConfirmResourceGivenHandler(offerRepository, getOfferPermissions)
+	confirmResourceReturned := tradingcmdhandlers.NewConfirmResourceReturnedHandler(offerRepository, getOfferPermissions)
+	confirmServiceGiven := tradingcmdhandlers.NewConfirmServiceGivenHandler(offerRepository, getOfferPermissions)
 
 	r := NewRouter()
 	r.HTTPErrorHandler = handler2.HttpErrorHandler
@@ -242,9 +251,8 @@ func NewServer() (*Server, error) {
 	chatStore := chatstore.NewChatStore(db)
 	chatService := chatservice.NewChatService(userModule.Store, amqpCli, chatStore)
 
-	groupStore := groupstore.NewGroupStore(driver)
 	groupRepo := groupstore.NewEventSourcedGroupRepository(eventStore)
-	groupService := groupservice.NewGroupService(groupStore, amqpCli, chatService, userModule.Store, groupRepo, getGroup, getGroupByKeys, getGroupMemberships)
+	groupService := groupservice.NewGroupService(groupRepo, getGroup, getGroupByKeys, getGroupMemberships)
 
 	tradingService := tradingservice.NewTradingService(groupService)
 
@@ -305,6 +313,7 @@ func NewServer() (*Server, error) {
 		declineOffer,
 		acceptOffer,
 		submitOffer,
+		getUserOffersWithActions,
 	)
 
 	tradingHandler.Register(v1)
@@ -316,7 +325,6 @@ func NewServer() (*Server, error) {
 		return eventbus.NewCatchUpListener(
 			eventStore,
 			func() time.Time { return time.Time{} },
-			amqpCli,
 			eventbus.NewRedisDeduplicator(100, redisClient, key),
 			clusterLocker,
 			lockTTL,
@@ -324,6 +332,7 @@ func NewServer() (*Server, error) {
 				RetryStrategy: clusterlock.EverySecond,
 			},
 			eventMapper,
+			mqClient,
 		)
 	}
 
@@ -392,7 +401,6 @@ func NewServer() (*Server, error) {
 			Handler:    groupHandler,
 			Service:    groupService,
 			Repository: groupRepo,
-			Store:      groupStore,
 		},
 		User:                           userModule,
 		ErrGroup:                       g,
@@ -452,5 +460,12 @@ func getDb(appConfig *config.AppConfig) *gorm.DB {
 	if err != nil {
 		panic(err)
 	}
+	sqlDB, err := db.DB()
+	if err != nil {
+		panic(err)
+	}
+	sqlDB.SetConnMaxIdleTime(5 * time.Minute)
+	sqlDB.SetConnMaxLifetime(5 * time.Minute)
+
 	return db
 }

@@ -10,11 +10,13 @@ import (
 	"github.com/commonpool/backend/pkg/keys"
 	resourcedomain "github.com/commonpool/backend/pkg/resource/domain"
 	"github.com/commonpool/backend/pkg/trading/domain"
-	groupreadmodels "github.com/commonpool/backend/pkg/trading/readmodels"
+	readmodels "github.com/commonpool/backend/pkg/trading/readmodels"
 	"github.com/labstack/gommon/log"
+	"golang.org/x/sync/errgroup"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"reflect"
+	"strings"
 	"time"
 )
 
@@ -53,12 +55,12 @@ func (h *OfferReadModelHandler) Start(ctx context.Context) error {
 
 func (h *OfferReadModelHandler) migrateDatabase() error {
 	if err := h.db.AutoMigrate(
-		&groupreadmodels.OfferUserReadModel{},
-		&groupreadmodels.OfferResourceReadModel{},
-		&groupreadmodels.DBOfferReadModel{},
-		&groupreadmodels.OfferItemReadModel{},
-		&groupreadmodels.OfferGroupReadModel{},
-		&groupreadmodels.OfferUserMembershipReadModel{},
+		&readmodels.OfferUserReadModel{},
+		&readmodels.OfferResourceReadModel{},
+		&readmodels.DBOfferReadModel{},
+		&readmodels.OfferItemReadModel{},
+		&readmodels.OfferGroupReadModel{},
+		&readmodels.OfferUserMembershipReadModel{},
 	); err != nil {
 		return err
 	}
@@ -67,14 +69,14 @@ func (h *OfferReadModelHandler) migrateDatabase() error {
 
 func (h *OfferReadModelHandler) HandleEvents(ctx context.Context, events []eventsource.Event) error {
 	for _, event := range events {
-		if err := h.HandleEvent(event); err != nil {
+		if err := h.HandleEvent(ctx, event); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (h *OfferReadModelHandler) HandleEvent(event eventsource.Event) error {
+func (h *OfferReadModelHandler) HandleEvent(ctx context.Context, event eventsource.Event) error {
 	switch e := event.(type) {
 	case *domain.OfferSubmitted:
 		return h.handleOfferSubmitted(e)
@@ -107,9 +109,9 @@ func (h *OfferReadModelHandler) HandleEvent(event eventsource.Event) error {
 	case userdomain.UserInfoChanged:
 		return h.handleUserInfoChanged(e)
 	case resourcedomain.ResourceRegistered:
-		return h.handleResourceRegistered(e)
+		return h.handleResourceRegistered(ctx, e)
 	case resourcedomain.ResourceInfoChanged:
-		return h.handleResourceInfoChanged(e)
+		return h.handleResourceInfoChanged(ctx, e)
 	case groupdomain.GroupCreated:
 		return h.handleGroupCreated(e)
 	case groupdomain.GroupInfoChanged:
@@ -275,7 +277,7 @@ func (h *OfferReadModelHandler) handleOfferItemApproved(e *domain.OfferItemAppro
 }
 
 func (h *OfferReadModelHandler) handleOfferCompleted(e *domain.OfferCompleted) error {
-	return h.db.Model(&groupreadmodels.DBOfferReadModel{}).
+	return h.db.Model(&readmodels.DBOfferReadModel{}).
 		Where("offer_key = ? and version < ?", e.GetAggregateID(), e.GetSequenceNo()).
 		Updates(map[string]interface{}{
 			"status":       "completed",
@@ -285,7 +287,7 @@ func (h *OfferReadModelHandler) handleOfferCompleted(e *domain.OfferCompleted) e
 }
 
 func (h *OfferReadModelHandler) handleOfferApproved(e *domain.OfferApproved) error {
-	return h.db.Model(&groupreadmodels.DBOfferReadModel{}).
+	return h.db.Model(&readmodels.DBOfferReadModel{}).
 		Where("offer_key = ? and version < ?", e.GetAggregateID(), e.GetSequenceNo()).
 		Updates(map[string]interface{}{
 			"status":      "approved",
@@ -295,11 +297,11 @@ func (h *OfferReadModelHandler) handleOfferApproved(e *domain.OfferApproved) err
 }
 
 func (h *OfferReadModelHandler) updateOfferVersion(db *gorm.DB, offerKey keys.OfferKey, version int) error {
-	return db.Model(&groupreadmodels.DBOfferReadModel{}).Where("offer_key = ? and version < ?", offerKey, version).Update("version", version).Error
+	return db.Model(&readmodels.DBOfferReadModel{}).Where("offer_key = ? and version < ?", offerKey, version).Update("version", version).Error
 }
 
 func (h *OfferReadModelHandler) handleOfferDeclined(e *domain.OfferDeclined) error {
-	return h.db.Model(&groupreadmodels.DBOfferReadModel{}).
+	return h.db.Model(&readmodels.DBOfferReadModel{}).
 		Where("offer_key = ? and version < ?", e.GetAggregateID(), e.GetSequenceNo()).
 		Updates(map[string]interface{}{
 			"status":      "declined",
@@ -313,7 +315,7 @@ func (h *OfferReadModelHandler) updateOfferItem(offerItemId string, expectedVers
 	return h.db.Transaction(func(tx *gorm.DB) error {
 		updates["version"] = expectedVersion
 		return tx.
-			Model(&groupreadmodels.OfferItemReadModel{}).
+			Model(&readmodels.OfferItemReadModel{}).
 			Where("offer_item_key = ? and version < ?", offerItemId, expectedVersion).
 			Updates(updates).Error
 	}, &sql.TxOptions{
@@ -332,8 +334,8 @@ func (h *OfferReadModelHandler) handleOfferSubmitted(e *domain.OfferSubmitted) e
 
 		getOptimisticLocking(tx, e.GetSequenceNo(), []clause.Column{
 			{Name: "offer_key"},
-		}).Create(&groupreadmodels.DBOfferReadModel{
-			OfferReadModelBase: groupreadmodels.OfferReadModelBase{
+		}).Create(&readmodels.DBOfferReadModel{
+			OfferReadModelBase: readmodels.OfferReadModelBase{
 				OfferKey:    offerKey,
 				GroupKey:    e.GroupKey,
 				Status:      domain.Pending,
@@ -343,39 +345,83 @@ func (h *OfferReadModelHandler) handleOfferSubmitted(e *domain.OfferSubmitted) e
 			SubmittedBy: &e.SubmittedBy,
 		})
 
-		var offerItems []*groupreadmodels.OfferItemReadModel
+		var resourceKeys []keys.ResourceKey
+		var seenResourceKeys = map[keys.ResourceKey]bool{}
+		for _, item := range e.OfferItems.Items {
+			if kg, ok := item.(keys.ResourceKeyGetter); ok {
+				if seenResourceKeys[kg.GetResourceKey()] {
+					continue
+				}
+				resourceKeys = append(resourceKeys, kg.GetResourceKey())
+			}
+		}
 
+		var resources []*readmodels.OfferResourceReadModel
+		var resourceMap = map[keys.ResourceKey]*readmodels.OfferResourceReadModel{}
+		var resourceParams []interface{}
+		if len(resourceKeys) > 0 {
+			var sb strings.Builder
+			sb.WriteString("resource_key in (")
+			for i, key := range resourceKeys {
+				sb.WriteString("?")
+				resourceParams = append(resourceParams, key)
+				if i < len(resourceKeys)-1 {
+					sb.WriteString(",")
+				}
+			}
+			sb.WriteString(")")
+			err := tx.
+				Model(&readmodels.OfferResourceReadModel{}).
+				Where(sb.String(), resourceParams...).
+				Find(&resources).
+				Error
+			if err != nil {
+				return err
+			}
+			for _, resource := range resources {
+				resourceMap[resource.ResourceKey] = resource
+			}
+		}
+
+		var offerItems []*readmodels.OfferItemReadModel
 		for _, offerItem := range e.OfferItems.Items {
 
-			rm := &groupreadmodels.OfferItemReadModel{
-				OfferItemReadModelBase: groupreadmodels.OfferItemReadModelBase{
+			rm := &readmodels.OfferItemReadModel{
+				OfferItemReadModelBase: readmodels.OfferItemReadModelBase{
 					OfferItemKey:     offerItem.GetKey(),
 					OfferKey:         offerKey,
 					Version:          e.GetSequenceNo(),
-					Type:             offerItem.Type(),
+					Type:             offerItem.GetType(),
 					ApprovedInbound:  false,
 					ApprovedOutbound: false,
 				},
 			}
 
-			if resourceTransfer, ok := offerItem.AsResourceTransfer(); ok {
+			if rkg, ok := offerItem.(keys.ResourceKeyGetter); ok {
+				if res, ok := resourceMap[rkg.GetResourceKey()]; ok {
+					rm.ResourceName = res.ResourceName
+					rm.ResourceVersion = res.Version
+				}
+			}
+
+			if resourceTransfer, ok := offerItem.(*domain.ResourceTransferItem); ok {
 				rm.To = resourceTransfer.To
 				rm.ResourceKey = &resourceTransfer.ResourceKey
 			}
 
-			if provideService, ok := offerItem.AsProvideService(); ok {
+			if provideService, ok := offerItem.(*domain.ProvideServiceItem); ok {
 				rm.To = provideService.To
 				rm.ResourceKey = &provideService.ResourceKey
 				rm.Duration = &provideService.Duration
 			}
 
-			if borrowResource, ok := offerItem.AsBorrowResource(); ok {
+			if borrowResource, ok := offerItem.(*domain.BorrowResourceItem); ok {
 				rm.To = borrowResource.To
 				rm.ResourceKey = &borrowResource.ResourceKey
 				rm.Duration = &borrowResource.Duration
 			}
 
-			if creditTransfer, ok := offerItem.AsCreditTransfer(); ok {
+			if creditTransfer, ok := offerItem.(*domain.CreditTransferItem); ok {
 				rm.To = creditTransfer.To
 				rm.From = creditTransfer.From
 				rm.Amount = &creditTransfer.Amount
@@ -406,8 +452,8 @@ func (h *OfferReadModelHandler) createUser(id string, username string, version i
 	return getOptimisticLocking(h.db, version, []clause.Column{
 		{Name: "user_key"},
 	}).
-		Model(&groupreadmodels.OfferUserReadModel{}).
-		Create(&groupreadmodels.OfferUserReadModel{
+		Model(&readmodels.OfferUserReadModel{}).
+		Create(&readmodels.OfferUserReadModel{
 			UserKey:  userKey,
 			Username: username,
 			Version:  version,
@@ -417,7 +463,7 @@ func (h *OfferReadModelHandler) createUser(id string, username string, version i
 func (h *OfferReadModelHandler) handleUserInfoChanged(e userdomain.UserInfoChanged) error {
 	if e.OldUserInfo.Username != e.NewUserInfo.Username {
 		userKey := keys.NewUserKey(e.AggregateID)
-		qry := h.db.Model(&groupreadmodels.OfferUserReadModel{}).
+		qry := h.db.Model(&readmodels.OfferUserReadModel{}).
 			Where("version < ? and user_key = ?", e.SequenceNo, userKey).
 			Updates(map[string]interface{}{
 				"username": e.NewUserInfo.Username,
@@ -430,40 +476,69 @@ func (h *OfferReadModelHandler) handleUserInfoChanged(e userdomain.UserInfoChang
 	return nil
 }
 
-func (h *OfferReadModelHandler) handleResourceRegistered(e resourcedomain.ResourceRegistered) error {
+func (h *OfferReadModelHandler) handleResourceRegistered(ctx context.Context, e resourcedomain.ResourceRegistered) error {
 	resourceKey, err := keys.ParseResourceKey(e.AggregateID)
 	if err != nil {
 		return err
 	}
-	return getOptimisticLocking(h.db, e.SequenceNo, []clause.Column{
-		{Name: "resource_key"},
-	}).
-		Model(&groupreadmodels.OfferResourceReadModel{}).
-		Create(&groupreadmodels.OfferResourceReadModel{
-			ResourceKey:  resourceKey,
-			ResourceName: e.ResourceInfo.Name,
-			Version:      e.SequenceNo,
-			ResourceType: e.ResourceInfo.ResourceType,
-			CallType:     e.ResourceInfo.CallType,
-			Owner:        e.RegisteredFor,
-		}).Error
+
+	g, _ := errgroup.WithContext(ctx)
+
+	g.Go(func() error {
+		return h.db.Model(&readmodels.OfferItemReadModel{}).
+			Where("resource_key = ? and resource_version < ?", resourceKey, e.SequenceNo).
+			Updates(map[string]interface{}{
+				"resource_name":    e.ResourceInfo.Name,
+				"resource_version": e.SequenceNo,
+			}).Error
+	})
+
+	g.Go(func() error {
+		return getOptimisticLocking(h.db, e.SequenceNo, []clause.Column{
+			{Name: "resource_key"},
+		}).
+			Model(&readmodels.OfferResourceReadModel{}).
+			Create(&readmodels.OfferResourceReadModel{
+				ResourceKey:  resourceKey,
+				ResourceName: e.ResourceInfo.Name,
+				Version:      e.SequenceNo,
+				ResourceType: e.ResourceInfo.ResourceType,
+				CallType:     e.ResourceInfo.CallType,
+				Owner:        e.RegisteredFor,
+			}).Error
+	})
+
+	return g.Wait()
 }
 
-func (h *OfferReadModelHandler) handleResourceInfoChanged(e resourcedomain.ResourceInfoChanged) error {
+func (h *OfferReadModelHandler) handleResourceInfoChanged(ctx context.Context, e resourcedomain.ResourceInfoChanged) error {
 	resourceKey, err := keys.ParseResourceKey(e.AggregateID)
 	if err != nil {
 		return err
 	}
 	if e.OldResourceInfo.Name != e.NewResourceInfo.Name {
-		qry := h.db.Model(&groupreadmodels.OfferResourceReadModel{}).
-			Where("resource_key = ? and version < ?", resourceKey, e.SequenceNo).
-			Updates(map[string]interface{}{
-				"resource_name": e.NewResourceInfo.Name,
-				"version":       e.SequenceNo,
-			})
-		if qry.Error != nil {
-			return qry.Error
-		}
+
+		g, _ := errgroup.WithContext(ctx)
+
+		g.Go(func() error {
+			return h.db.Model(&readmodels.OfferResourceReadModel{}).
+				Where("resource_key = ? and version < ?", resourceKey, e.SequenceNo).
+				Updates(map[string]interface{}{
+					"resource_name": e.NewResourceInfo.Name,
+					"version":       e.SequenceNo,
+				}).Error
+		})
+
+		g.Go(func() error {
+			return h.db.Model(&readmodels.OfferItemReadModel{}).
+				Where("resource_key = ? and resource_version < ?", resourceKey, e.SequenceNo).
+				Updates(map[string]interface{}{
+					"resource_name":    e.NewResourceInfo.Name,
+					"resource_version": e.SequenceNo,
+				}).Error
+		})
+
+		return g.Wait()
 	}
 	return nil
 }
@@ -474,7 +549,7 @@ func (h *OfferReadModelHandler) handleGroupInfoChanged(e groupdomain.GroupInfoCh
 		return err
 	}
 	if e.OldGroupInfo.Name != e.NewGroupInfo.Name {
-		qry := h.db.Model(&groupreadmodels.OfferGroupReadModel{}).
+		qry := h.db.Model(&readmodels.OfferGroupReadModel{}).
 			Where("group_key = ? and version < ?", groupKey, e.SequenceNo).
 			Updates(map[string]interface{}{
 				"group_name": e.NewGroupInfo.Name,
@@ -495,8 +570,8 @@ func (h *OfferReadModelHandler) handleGroupCreated(e groupdomain.GroupCreated) e
 	return getOptimisticLocking(h.db, e.SequenceNo, []clause.Column{
 		{Name: "resource_key"},
 	}).
-		Model(&groupreadmodels.OfferGroupReadModel{}).
-		Create(&groupreadmodels.OfferGroupReadModel{
+		Model(&readmodels.OfferGroupReadModel{}).
+		Create(&readmodels.OfferGroupReadModel{
 			GroupKey:  groupKey,
 			GroupName: e.GroupInfo.Name,
 			Version:   e.SequenceNo,
@@ -511,8 +586,8 @@ func (h *OfferReadModelHandler) handleMembershipStatusChanged(e groupdomain.Memb
 	}
 	if e.IsNewMembership {
 		return getOptimisticLocking(h.db, e.SequenceNo, []clause.Column{}).
-			Model(&groupreadmodels.OfferUserMembershipReadModel{}).
-			Create(&groupreadmodels.OfferUserMembershipReadModel{
+			Model(&readmodels.OfferUserMembershipReadModel{}).
+			Create(&readmodels.OfferUserMembershipReadModel{
 				UserKey:  memberKey,
 				GroupKey: groupKey,
 				IsMember: e.NewPermissions.IsMember(),
@@ -521,16 +596,16 @@ func (h *OfferReadModelHandler) handleMembershipStatusChanged(e groupdomain.Memb
 				Version:  e.SequenceNo,
 			}).Error
 	} else if e.IsCanceledMembership {
-		return h.db.Model(&groupreadmodels.OfferUserMembershipReadModel{}).
+		return h.db.Model(&readmodels.OfferUserMembershipReadModel{}).
 			Delete(
-				&groupreadmodels.OfferUserMembershipReadModel{},
+				&readmodels.OfferUserMembershipReadModel{},
 				"user_key = ? and group_key = ? and version < ?",
 				memberKey,
 				groupKey,
 				e.SequenceNo,
 			).Error
 	} else {
-		return h.db.Model(&groupreadmodels.OfferUserMembershipReadModel{}).
+		return h.db.Model(&readmodels.OfferUserMembershipReadModel{}).
 			Where("user_key = ? and version < ?", e.MemberKey, e.SequenceNo).
 			Updates(map[string]interface{}{
 				"is_member": e.NewPermissions.IsMember(),

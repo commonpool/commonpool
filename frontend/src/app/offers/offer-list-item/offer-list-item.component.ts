@@ -1,5 +1,6 @@
 import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {
+  Action,
   ConfirmBorrowedResourceReturned,
   ConfirmResourceBorrowed,
   ConfirmResourceTransferred,
@@ -7,7 +8,7 @@ import {
   Offer
 } from '../../api/models';
 import {combineLatest, of, ReplaySubject, Subject} from 'rxjs';
-import {map} from 'rxjs/operators';
+import {map, tap} from 'rxjs/operators';
 import {AuthService} from '../../auth.service';
 import {BackendService} from '../../api/backend.service';
 
@@ -23,22 +24,34 @@ export class OfferListItemComponent implements OnInit {
 
   private offerSubject = new ReplaySubject<Offer>(1);
   public offerSubject$ = this.offerSubject.asObservable();
-
-  public offerItems$ = this.offerSubject$.pipe(
-    map(o => o.items)
+  public allOfferActions$ = this.offerSubject$.pipe(
+    map(o => o.actions)
   );
 
-  public offerItemsICanApprove$ = combineLatest([this.offerItems$, this.auth.authUserId$]).pipe(
-    map(([offerItems, userId]) => {
-      return offerItems.filter(offerItem => {
-        return (offerItem.givingApprovers.includes(userId) || offerItem.receivingApprovers.includes(userId));
-      });
+  public offerItemActions$ = this.allOfferActions$.pipe(
+    map((o) => {
+      const result: { [key: string]: Action[] } = {};
+      for (const action of o) {
+        if (action.offerItemId !== '') {
+          if (!result[action.offerItemId]) {
+            result[action.offerItemId] = [];
+          }
+          result[action.offerItemId].push(action);
+        }
+      }
+      return result;
+    })
+  );
+  public offerActions$ = this.allOfferActions$.pipe(
+    map((o) => {
+      return o.filter(action => !action.offerItemId);
     })
   );
 
   @Input()
   set offer(value: Offer) {
     this.offerSubject.next(value);
+
   }
 
   @Output()
@@ -57,28 +70,8 @@ export class OfferListItemComponent implements OnInit {
     });
   }
 
-  confirmResourceTransferred(id: string) {
-    const sub = this.backend.confirmResourceTransfer(new ConfirmResourceTransferred(id)).subscribe(res => {
-      sub.unsubscribe();
-      this.refresh.next();
-    });
-  }
-
-  confirmResourceBorrowed(id: string) {
-    const sub = this.backend.confirmResourceBorrowed(new ConfirmResourceBorrowed(id)).subscribe(res => {
-      sub.unsubscribe();
-      this.refresh.next();
-    });
-  }
-
-  confirmResourceBorrowedReturned(id: string) {
-    const sub = this.backend.confirmBorrowedResourceReturned(new ConfirmBorrowedResourceReturned(id)).subscribe(res => {
-      sub.unsubscribe();
-      this.refresh.next();
-    });
-  }
-
   ngOnInit(): void {
   }
 
 }
+

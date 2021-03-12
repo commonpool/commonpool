@@ -17,7 +17,7 @@ func NewGetGroupByKeys(db *gorm.DB) *GetGroupByKeys {
 	}
 }
 
-func (q *GetGroupByKeys) Get(groupKeys keys.GroupKeys) ([]*readmodels.GroupReadModel, error) {
+func (q *GetGroupByKeys) Get(groupKeys *keys.GroupKeys) ([]*readmodels.GroupReadModel, error) {
 
 	if len(groupKeys.Items) == 0 {
 		return []*readmodels.GroupReadModel{}, nil

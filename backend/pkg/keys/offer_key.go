@@ -59,6 +59,15 @@ func (ok OfferKey) MarshalJSON() ([]byte, error) {
 	return json.Marshal(ok.ID.String())
 }
 
+func (ok *OfferKey) UnmarshalParam(param string) error {
+	offerId, err := uuid.FromString(param)
+	if err != nil {
+		return err
+	}
+	ok.ID = offerId
+	return nil
+}
+
 func (k *OfferKey) UnmarshalJSON(data []byte) error {
 	var uid string
 	if err := json.Unmarshal(data, &uid); err != nil {

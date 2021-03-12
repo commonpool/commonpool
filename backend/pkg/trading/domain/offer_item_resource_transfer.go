@@ -40,7 +40,7 @@ func (b ResourceTransferItem) GetTo() keys.Target {
 	return *b.To
 }
 
-func (r ResourceTransferItem) Type() OfferItemType {
+func (r ResourceTransferItem) GetType() OfferItemType {
 	return ResourceTransfer
 }
 

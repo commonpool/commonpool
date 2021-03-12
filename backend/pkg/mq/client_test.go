@@ -2,6 +2,7 @@ package mq
 
 import (
 	"context"
+	"github.com/streadway/amqp"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
@@ -11,7 +12,9 @@ import (
 func TestClientConfigBuilder(t *testing.T) {
 	args := map[string]interface{}{}
 
-	c := NewConsumerConfig(func(d Delivery) {}).
+	c := NewConsumerConfig(func(d Delivery) error {
+		return nil
+	}).
 		WithName("name").
 		WithArgs(args).
 		WithAutoAck(true).
@@ -37,10 +40,15 @@ func TestRabbitClient(t *testing.T) {
 
 	done := make(chan struct{})
 
-	assert.NoError(t, q.Consume(ctx, NewConsumerConfig(func(d Delivery) {
-		t.Logf("received message: %s", string(d.Body))
-		done <- struct{}{}
-	})))
+	go func() {
+		assert.NoError(t, q.Consume(ctx, NewConsumerConfig(func(d Delivery) error {
+			t.Logf("received message: %s", string(d.Body))
+			done <- struct{}{}
+			return nil
+		})))
+	}()
+
+	time.Sleep(100 * time.Millisecond)
 
 	assert.NoError(t, q.Send(ctx, Message{Body: []byte("hello")}, false, false))
 
@@ -54,29 +62,70 @@ func TestReconnect(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	q := NewRabbitQueue(config, NewQueueConfig().WithName("test-rabbit-client-reconnect"))
+	p := NewRabbitPublisher(config)
 
 	assert.NoError(t, q.Connect(ctx))
-
-	done := make(chan struct{})
-
-	messageCount := 0
-	assert.NoError(t, q.Consume(ctx, NewConsumerConfig(func(d Delivery) {
-		t.Logf("received message: %s", string(d.Body))
-		messageCount++
-		if messageCount == 2 {
-			done <- struct{}{}
-		}
-	})))
-
-	assert.NoError(t, q.Send(ctx, Message{Body: []byte("hello")}, false, false))
+	assert.NoError(t, p.Start(ctx))
 
 	time.Sleep(100 * time.Millisecond)
 
 	assert.NoError(t, q.connection.Close())
+	assert.NoError(t, p.connection.Close())
 
 	time.Sleep(100 * time.Millisecond)
 
-	assert.NoError(t, q.Send(ctx, Message{Body: []byte("hello")}, false, false))
+	p.Publish(MessageEnvelope{
+		Exchange:  "",
+		Key:       q.Config.Name,
+		Mandatory: false,
+		Immediate: false,
+		Msg: amqp.Publishing{
+			Body: []byte("hello"),
+		},
+	})
+
+	time.Sleep(100 * time.Millisecond)
+
+	assert.NoError(t, q.connection.Close())
+	assert.NoError(t, p.connection.Close())
+
+	time.Sleep(100 * time.Millisecond)
+
+	done := make(chan struct{})
+	messageCount := 0
+	go func() {
+		err := q.Consume(ctx, NewConsumerConfig(func(d Delivery) error {
+			t.Logf("received message: %s", string(d.Body))
+			messageCount++
+			assert.NoError(t, d.Acknowledger.Ack(d.DeliveryTag, false))
+			if messageCount == 2 {
+				done <- struct{}{}
+			}
+			return nil
+		}))
+		assert.NoError(t, err)
+	}()
+
+	time.Sleep(100 * time.Millisecond)
+
+	assert.NoError(t, q.connection.Close())
+	assert.NoError(t, p.connection.Close())
+
+	time.Sleep(100 * time.Millisecond)
+
+	p.Publish(MessageEnvelope{
+		Exchange:  "",
+		Key:       q.Config.Name,
+		Mandatory: false,
+		Immediate: false,
+		Msg: amqp.Publishing{
+			Body: []byte("hello"),
+		},
+	})
+
+	cancel()
+
+	time.Sleep(1 * time.Second)
 
 	<-done
 

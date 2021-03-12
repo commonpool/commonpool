@@ -35,7 +35,7 @@ var (
 type Client struct {
 	hub                 *Hub
 	websocketConnection *websocket.Conn
-	amqpChannel         mq.Channel
+	queue               mq.Queue
 	send                chan []byte
 	id                  string
 	userKey             keys.UserKey
@@ -68,13 +68,7 @@ func (c *Client) eventPump(ctx context.Context) error {
 
 	ctx, l := handler.GetCtx(ctx, "eventPump")
 
-	ch, err := c.amqpChannel.Consume(ctx, *c.queueName, *c.consumerKey, false, false, false, false, nil)
-	if err != nil {
-		l.Error("could not consume amqp channel", zap.Error(err))
-		return err
-	}
-
-	for delivery := range ch {
+	err := c.queue.Consume(ctx, mq.NewConsumerConfig(func(delivery mq.Delivery) error {
 
 		l.Debug("received message from RabbitMQ")
 
@@ -99,6 +93,12 @@ func (c *Client) eventPump(ctx context.Context) error {
 
 		c.send <- js
 
+		return nil
+
+	}))
+
+	if err != nil {
+		return err
 	}
 
 	return nil

@@ -42,10 +42,10 @@ func (t TransactionStore) SaveEntry(entry *transaction.Entry) error {
 
 	var recipientID *string
 	if entry.Recipient != nil {
-		if entry.Recipient.IsForGroup() {
+		if entry.Recipient.IsGroup() {
 			recipientIDVal := entry.Recipient.GroupKey.String()
 			recipientID = &recipientIDVal
-		} else if entry.Recipient.IsForUser() {
+		} else if entry.Recipient.IsUser() {
 			recipientIDVal := entry.Recipient.UserKey.String()
 			recipientID = &recipientIDVal
 		}
@@ -53,10 +53,10 @@ func (t TransactionStore) SaveEntry(entry *transaction.Entry) error {
 
 	var fromID *string
 	if entry.From != nil {
-		if entry.From.IsForGroup() {
+		if entry.From.IsGroup() {
 			fromIdVal := entry.From.GroupKey.String()
 			fromID = &fromIdVal
-		} else if entry.From.IsForUser() {
+		} else if entry.From.IsUser() {
 			fromIdVal := entry.From.UserKey.String()
 			fromID = &fromIdVal
 		}

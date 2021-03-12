@@ -2,6 +2,7 @@ package mq
 
 import (
 	"context"
+	"github.com/avast/retry-go"
 	"github.com/commonpool/backend/logging"
 	"github.com/labstack/gommon/log"
 	"github.com/streadway/amqp"
@@ -352,6 +353,306 @@ func (r RabbitMqChannel) QueueDelete(ctx context.Context, name string, ifUnused 
 
 }
 
+type MqClient interface {
+	NewChannel() Channel2
+	NewQueue(queueConfig QueueConfig) Queue
+	NewProducer() Publisher
+	NewQueueFactory() QueueFactory
+}
+
+type RabbitClient2 struct {
+	rabbitConfig RabbitConfig
+}
+
+func (r *RabbitClient2) NewQueueFactory() QueueFactory {
+	return func(q QueueConfig) Queue {
+		return NewRabbitQueue(r.rabbitConfig, q)
+	}
+}
+
+func (r *RabbitClient2) NewChannel() Channel2 {
+	return NewChannel(r.rabbitConfig)
+}
+
+func (r *RabbitClient2) NewQueue(queueConfig QueueConfig) Queue {
+	return NewRabbitQueue(r.rabbitConfig, queueConfig)
+}
+
+func (r *RabbitClient2) NewProducer() Publisher {
+	return NewRabbitPublisher(r.rabbitConfig)
+}
+
+func NewRabbitClient2(rabbitConfig RabbitConfig) *RabbitClient2 {
+	return &RabbitClient2{
+		rabbitConfig: rabbitConfig,
+	}
+}
+
+type Channel2 interface {
+	ExchangeBind(ctx context.Context, destination string, key string, source string, nowait bool, args Args) error
+	ExchangeUnbind(ctx context.Context, destination string, key string, source string, noWait bool, args Args) error
+	ExchangeDeclare(ctx context.Context, name string, exchangeType string, durable bool, autoDelete bool, internal bool, nowait bool, args Args) error
+	ExchangeDelete(ctx context.Context, name string, ifUnused bool, noWait bool) error
+	QueueDeclare(ctx context.Context, name string, durable bool, autoDelete bool, exclusive bool, noWait bool, args Args) error
+	QueueBind(ctx context.Context, name string, key string, exchange string, nowait bool, args Args) error
+	QueueUnbind(ctx context.Context, name string, key string, exchange string, args Args) error
+	QueueDelete(ctx context.Context, name string, ifUnused bool, ifEmpty bool, noWait bool) error
+	Connect(ctx context.Context) error
+	Close() error
+}
+
+type RabbitChannel2 struct {
+	rabbitConfig RabbitConfig
+	errorChannel chan *amqp.Error
+	connection   *amqp.Connection
+	closed       bool
+	channel      *amqp.Channel
+}
+
+func (r *RabbitChannel2) ExchangeBind(ctx context.Context, destination string, key string, source string, nowait bool, args Args) error {
+	return r.channel.ExchangeBind(destination, key, source, nowait, map[string]interface{}(args))
+}
+func (r *RabbitChannel2) ExchangeUnbind(ctx context.Context, destination string, key string, source string, nowait bool, args Args) error {
+	return r.channel.ExchangeUnbind(destination, key, source, nowait, map[string]interface{}(args))
+}
+func (r *RabbitChannel2) ExchangeDeclare(ctx context.Context, name string, exchangeType string, durable bool, autoDelete bool, internal bool, nowait bool, args Args) error {
+	return r.channel.ExchangeDeclare(name, exchangeType, durable, autoDelete, internal, nowait, map[string]interface{}(args))
+}
+func (r *RabbitChannel2) ExchangeDelete(ctx context.Context, name string, ifUnused bool, noWait bool) error {
+	return r.channel.ExchangeDelete(name, ifUnused, noWait)
+}
+func (r *RabbitChannel2) QueueDeclare(ctx context.Context, name string, durable bool, autoDelete bool, exclusive bool, noWait bool, args Args) error {
+	_, err := r.channel.QueueDeclare(name, durable, autoDelete, exclusive, noWait, map[string]interface{}(args))
+	return err
+}
+func (r *RabbitChannel2) QueueBind(ctx context.Context, name string, key string, exchange string, nowait bool, args Args) error {
+	return r.channel.QueueBind(name, key, exchange, nowait, map[string]interface{}(args))
+}
+func (r *RabbitChannel2) QueueUnbind(ctx context.Context, name string, key string, exchange string, args Args) error {
+	return r.channel.QueueUnbind(name, key, exchange, map[string]interface{}(args))
+}
+func (r *RabbitChannel2) QueueDelete(ctx context.Context, name string, ifUnused bool, ifEmpty bool, noWait bool) error {
+	_, err := r.channel.QueueDelete(name, ifUnused, ifEmpty, noWait)
+	return err
+}
+
+func NewChannel(rabbitConfig RabbitConfig) *RabbitChannel2 {
+	var client = &RabbitChannel2{
+		rabbitConfig: rabbitConfig,
+	}
+	return client
+}
+
+func (c *RabbitChannel2) Connect(ctx context.Context) error {
+	if err := c.connect(ctx); err != nil {
+		return err
+	}
+	go c.reconnector(ctx)
+	return nil
+}
+
+func (c *RabbitChannel2) Close() error {
+	c.closed = true
+	if c.connection != nil && !c.connection.IsClosed() {
+		if err := c.channel.Close(); err != nil {
+			return err
+		}
+		if err := c.connection.Close(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (c *RabbitChannel2) connect(ctx context.Context) error {
+	l := logging.WithContext(ctx).Named("RabbitChannel2.connect")
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			l.Debug("Connecting to RabbitMQ")
+			conn, err := amqp.Dial(c.rabbitConfig.URL)
+			if err == nil {
+				c.connection = conn
+				c.errorChannel = make(chan *amqp.Error)
+				c.connection.NotifyClose(c.errorChannel)
+				l.Debug("Connection established")
+				if err = c.openChannel(ctx); err == nil {
+					return nil
+				}
+			}
+			l.Error("Connection to rabbitMq failed. Retrying in 1 sec...", zap.Error(err))
+			time.Sleep(1 * time.Second)
+		}
+	}
+}
+
+func (q *RabbitChannel2) openChannel(ctx context.Context) error {
+	l := logging.WithContext(ctx).Named("RabbitChannel2.openChannel")
+	channel, err := q.connection.Channel()
+	if err != nil {
+		l.Error("could not open channel", zap.Error(err))
+		return err
+	}
+	q.channel = channel
+	return nil
+}
+
+func (r *RabbitChannel2) reconnector(ctx context.Context) {
+	l := logging.WithContext(ctx).Named("RabbitPublisher.reconnector")
+	for {
+		select {
+		case err := <-r.errorChannel:
+			if !r.closed {
+				if err != nil {
+					l.Warn("Reconnecting after connection closed", zap.Error(err))
+				} else {
+					l.Warn("Reconnecting after connection closed")
+				}
+				_ = r.connect(ctx)
+			}
+		case <-ctx.Done():
+			_ = r.Close()
+			return
+		}
+	}
+}
+
+//
+
+type Publisher interface {
+	Start(ctx context.Context) error
+	Publish(message MessageEnvelope)
+	Close()
+}
+
+type PublisherFactory func(rabbitConfig RabbitConfig) Publisher
+
+type RabbitPublisher struct {
+	rabbitConfig RabbitConfig
+	errorChannel chan *amqp.Error
+	connection   *amqp.Connection
+	closed       bool
+	connected    bool
+	channel      *amqp.Channel
+	msgChannel   chan MessageEnvelope
+	cancelFunc   context.CancelFunc
+}
+
+func NewRabbitPublisher(rabbitConfig RabbitConfig) *RabbitPublisher {
+	return &RabbitPublisher{
+		rabbitConfig: rabbitConfig,
+		msgChannel:   make(chan MessageEnvelope, 200),
+	}
+}
+
+type MessageEnvelope struct {
+	Exchange  string
+	Key       string
+	Mandatory bool
+	Immediate bool
+	Msg       amqp.Publishing
+}
+
+func (r *RabbitPublisher) Start(ctx context.Context) error {
+	err := r.connect(ctx)
+	if err == nil {
+		go r.reconnector(ctx)
+	}
+	return err
+}
+
+func (r *RabbitPublisher) Close() {
+	if !r.closed {
+		r.closed = true
+		r.channel.Close()
+		r.connection.Close()
+	}
+}
+
+func (r *RabbitPublisher) connect(ctx context.Context) error {
+	l := logging.WithContext(ctx).Named("RabbitPublisher.connect")
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			l.Debug("Connecting to RabbitMQ")
+			conn, err := amqp.Dial(r.rabbitConfig.URL)
+			if err == nil {
+				r.connection = conn
+				r.errorChannel = make(chan *amqp.Error)
+				r.connection.NotifyClose(r.errorChannel)
+				l.Debug("Connection established")
+				if err = r.openChannel(ctx); err == nil {
+					ctx, cancel := context.WithCancel(ctx)
+					r.cancelFunc = cancel
+					go r.publisher(ctx)
+					return nil
+				}
+				r.connected = true
+			}
+			l.Error("Connection to rabbitMq failed. Retrying in 1 sec...", zap.Error(err))
+			time.Sleep(1 * time.Second)
+		}
+	}
+}
+
+func (r *RabbitPublisher) reconnector(ctx context.Context) {
+	l := logging.WithContext(ctx).Named("RabbitPublisher.reconnector")
+	for {
+		select {
+		case err := <-r.errorChannel:
+			r.connected = false
+			if !r.closed {
+				if r.cancelFunc != nil {
+					r.cancelFunc()
+				}
+				if err != nil {
+					l.Warn("Reconnecting after connection closed", zap.Error(err))
+				} else {
+					l.Warn("Reconnecting after connection closed")
+				}
+				_ = r.connect(ctx)
+			}
+		case <-ctx.Done():
+			return
+		}
+	}
+}
+
+func (r *RabbitPublisher) publisher(ctx context.Context) {
+	l := logging.WithContext(ctx).Named("RabbitPublisher.publisher")
+	for {
+		select {
+		case <-ctx.Done():
+			l.Debug("context cancelled")
+			return
+		case e := <-r.msgChannel:
+			l.Debug("publishing message")
+			_ = retry.Do(func() error {
+				return r.channel.Publish(e.Exchange, e.Key, e.Mandatory, e.Immediate, e.Msg)
+			})
+		}
+	}
+}
+
+func (q *RabbitPublisher) openChannel(ctx context.Context) error {
+	l := logging.WithContext(ctx).Named("RabbitPublisher.openChannel")
+	channel, err := q.connection.Channel()
+	if err != nil {
+		l.Error("could not open channel", zap.Error(err))
+		return err
+	}
+	q.channel = channel
+	return nil
+}
+
+func (r *RabbitPublisher) Publish(message MessageEnvelope) {
+	r.msgChannel <- message
+}
+
 //
 
 type RabbitConfig struct {
@@ -431,22 +732,32 @@ func (q QueueConfig) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
 	return encoder.AddObject("args", q.Args)
 }
 
+type Queue interface {
+	Connect(ctx context.Context) error
+	Close() error
+	Consume(ctx context.Context, consumerConfig ConsumerConfig) error
+}
+
+type QueueFactory func(queueConfig QueueConfig) Queue
+
 type RabbitQueue struct {
-	RabbitConfig RabbitConfig
-	Config       QueueConfig
-	connection   *amqp.Connection
-	errorChannel chan *amqp.Error
-	channel      *amqp.Channel
-	consumers    []ConsumerConfig
-	consume      func(delivery Delivery)
-	closed       bool
-	l            *zap.Logger
+	RabbitConfig    RabbitConfig
+	Config          QueueConfig
+	connection      *amqp.Connection
+	errorChannel    chan *amqp.Error
+	channel         *amqp.Channel
+	consumers       []ConsumerConfig
+	consume         func(delivery Delivery)
+	closed          bool
+	l               *zap.Logger
+	deliveryErrChan chan error
 }
 
 func NewRabbitQueue(rabbitConfig RabbitConfig, queueConfig QueueConfig) *RabbitQueue {
 	q := new(RabbitQueue)
 	q.RabbitConfig = rabbitConfig
 	q.Config = queueConfig
+	q.deliveryErrChan = make(chan error)
 	return q
 }
 
@@ -488,9 +799,10 @@ func (q *RabbitQueue) connect(ctx context.Context) error {
 func (q *RabbitQueue) Consume(ctx context.Context, consumerConfig ConsumerConfig) error {
 	ctx, _ = logging.With(ctx, zap.Object("queue_config", q.Config), zap.Object("consumer_config", consumerConfig))
 	deliveries, err := q.registerConsumer(ctx, consumerConfig)
-	if err == nil {
-		q.executeMessageConsumer(consumerConfig, deliveries, false)
+	if err != nil {
+		return err
 	}
+	q.executeMessageConsumer(ctx, consumerConfig, deliveries, false)
 	return nil
 }
 
@@ -500,10 +812,16 @@ func (q *RabbitQueue) Send(ctx context.Context, message Message, mandatory bool,
 	return q.channel.Publish(q.Config.Exchange, q.Config.Name, mandatory, immediate, mapMessage(message))
 }
 
-func (q *RabbitQueue) Close() {
+func (q *RabbitQueue) Close() error {
 	q.closed = true
-	q.channel.Close()
-	q.connection.Close()
+	err := q.channel.Close()
+	if err != nil {
+		return err
+	}
+	if !q.connection.IsClosed() {
+		return q.connection.Close()
+	}
+	return nil
 }
 
 func (q *RabbitQueue) openChannel(ctx context.Context) error {
@@ -533,10 +851,12 @@ type ConsumerConfig struct {
 	NoLocal      bool
 	NoWait       bool
 	Args         Args
-	Consume      func(d Delivery)
+	Consume      ConsumerFunc
 }
 
-func NewConsumerConfig(consume func(d Delivery)) ConsumerConfig {
+type ConsumerFunc func(d Delivery) error
+
+func NewConsumerConfig(consume ConsumerFunc) ConsumerConfig {
 	return ConsumerConfig{
 		Consume: consume,
 	}
@@ -569,7 +889,7 @@ func (c ConsumerConfig) WithArgs(args Args) ConsumerConfig {
 	r.Args = args
 	return *r
 }
-func (c ConsumerConfig) WithConsume(consume func(d Delivery)) ConsumerConfig {
+func (c ConsumerConfig) WithConsume(consume ConsumerFunc) ConsumerConfig {
 	var r = &c
 	r.Consume = consume
 	return *r
@@ -615,26 +935,31 @@ func (q *RabbitQueue) recoverConsumers(ctx context.Context) {
 		l.Debug("recovering consumer")
 		msgs, err := q.registerConsumer(ctx, consumer)
 		if err != nil {
-			q.executeMessageConsumer(consumer, msgs, true)
+			q.executeMessageConsumer(ctx, consumer, msgs, true)
 		}
 	}
 
 }
 
-func (q *RabbitQueue) executeMessageConsumer(consumerConfig ConsumerConfig, deliveries <-chan amqp.Delivery, isRecovery bool) {
+func (q *RabbitQueue) executeMessageConsumer(ctx context.Context, consumerConfig ConsumerConfig, deliveries <-chan amqp.Delivery, isRecovery bool) {
 	if !isRecovery {
 		q.consumers = append(q.consumers, consumerConfig)
 	}
 	go func() {
 		for delivery := range deliveries {
-			d := mapDelivery(delivery)
-			consumerConfig.Consume(d)
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				d := mapDelivery(delivery)
+				consumerConfig.Consume(d)
+			}
 		}
 	}()
 }
 
 func (q *RabbitQueue) reconnector(ctx context.Context) {
-	ctx, l := logging.With(ctx)
+	l := logging.WithContext(ctx).Named("RabbitQueue.reconnector")
 	for {
 		select {
 		case err := <-q.errorChannel:
@@ -644,12 +969,16 @@ func (q *RabbitQueue) reconnector(ctx context.Context) {
 				} else {
 					l.Warn("Reconnecting after connection closed")
 				}
-
 				if err := q.connect(ctx); err != nil {
 					q.recoverConsumers(ctx)
 				}
 			}
 		case <-ctx.Done():
+			l.Debug("context cancelled")
+			if !q.connection.IsClosed() {
+				l.Debug("closing connection")
+				q.Close()
+			}
 			return
 		}
 	}

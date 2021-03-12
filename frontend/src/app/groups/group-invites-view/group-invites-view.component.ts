@@ -1,5 +1,5 @@
 import {Component, OnInit} from '@angular/core';
-import {map, pluck, share, shareReplay, startWith, switchMap} from 'rxjs/operators';
+import {delay, map, pluck, share, shareReplay, startWith, switchMap} from 'rxjs/operators';
 import {GetGroupMembershipsRequest, GetMembershipRequest, GetUserMembershipsRequest, MembershipStatus} from '../../api/models';
 import {ActivatedRoute} from '@angular/router';
 import {BackendService} from '../../api/backend.service';
@@ -17,12 +17,14 @@ export class GroupInvitesViewComponent implements OnInit {
   }
 
   refreshSubject = new Subject<boolean>();
-  refresh$ = this.refreshSubject.asObservable().pipe(startWith(true));
+  refresh$ = this.refreshSubject.asObservable().pipe(startWith(true), delay(100));
   groupId$ = this.route.parent.params.pipe(pluck('id'));
 
   memberships$ = combineLatest([this.refresh$, this.groupId$]).pipe(
     map(([_, userId]) => userId),
-    switchMap(id => this.backend.getGroupMemberships(new GetGroupMembershipsRequest(id, MembershipStatus.PendingStatus))),
+    switchMap(id => {
+      return this.backend.getGroupMemberships(new GetGroupMembershipsRequest(id));
+    }),
     pluck('memberships'),
     shareReplay()
   );

@@ -36,6 +36,13 @@ var HttpErrorHandler = func(err error, c echo.Context) {
 		return
 	}
 
+	if httpErr, ok := err.(*echo.HTTPError); ok {
+		c.JSON(httpErr.Code, &exceptions.WebServiceException{
+			Status: httpErr.Code,
+		})
+		return
+	}
+
 	if _, ok := err.(validator.ValidationErrors); ok {
 		validationError := err.(validator.ValidationErrors)
 

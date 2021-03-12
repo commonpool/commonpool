@@ -10,10 +10,7 @@ import (
 type Service interface {
 	CreateGroup(ctx context.Context, request *CreateGroupRequest) (keys.GroupKey, error)
 	GetGroup(ctx context.Context, key keys.GroupKey) (*readmodels.GroupReadModel, error)
-	GetGroups(ctx context.Context, request *GetGroupsRequest) (*GetGroupsResult, error)
-	GetGroupsByKeys(ctx context.Context, groupKeys *keys.GroupKeys) (*Groups, error)
-	GetMembership(ctx context.Context, request *GetMembershipRequest) (*GetMembershipResponse, error)
-	GetUserMemberships(ctx context.Context, request *GetMembershipsForUserRequest) (*GetMembershipsForUserResponse, error)
+	GetGroupsByKeys(ctx context.Context, groupKeys *keys.GroupKeys) ([]*readmodels.GroupReadModel, error)
 	GetGroupMemberships(ctx context.Context, request *GetMembershipsForGroupRequest) (*GetMembershipsForGroupResponse, error)
 	CreateOrAcceptInvitation(ctx context.Context, request *CreateOrAcceptInvitationRequest) error
 	CancelOrDeclineInvitation(ctx context.Context, request *CancelOrDeclineInvitationRequest) error

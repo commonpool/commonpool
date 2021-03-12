@@ -14,7 +14,7 @@ import {ExtendedResource} from '../../api/models';
 export class ResourceDetailsComponent implements OnInit {
 
   resourceId$ = this.route.params.pipe(
-    pluck('resourceId'),
+    pluck('id'),
     filter(r => !!r),
     distinctUntilChanged());
   resource$: Observable<ExtendedResource> = this.resourceId$.pipe(
