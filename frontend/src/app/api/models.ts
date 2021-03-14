@@ -1687,3 +1687,83 @@ export class DimensionValue {
 
 }
 
+export class GetMyResourceEvaluationsRequest {
+  public constructor(public resourceId: string) {
+  }
+
+  public static from(r: GetMyResourceEvaluationsRequest): GetMyResourceEvaluationsRequest {
+    return new GetMyResourceEvaluationsRequest(r.resourceId);
+  }
+}
+
+export class GetResourceEvaluationsResponse {
+  public constructor(public evaluations: DimensionValue[]) {
+  }
+
+  public static from(r: GetResourceEvaluationsResponse): GetResourceEvaluationsResponse {
+    return new GetResourceEvaluationsResponse(
+      r.evaluations ? r.evaluations.map(e => DimensionValue.from(e)) : []
+    );
+  }
+}
+
+export class UpdateResourceEvaluationRequest {
+  public constructor(public resourceId: string, public values: DimensionValue[]) {
+  }
+
+  public static from(r: UpdateResourceEvaluationRequest): UpdateResourceEvaluationRequest {
+    return new UpdateResourceEvaluationRequest(r.resourceId, r.values ? r.values.map(v => DimensionValue.from(v)) : []);
+  }
+}
+
+export class GroupReportItem {
+  public constructor(
+    public id: string,
+    public groupId: string,
+    public activity: string,
+    public groupingId: string,
+    public itemsReceived: number,
+    public itemsGiven: number,
+    public itemsOwned: number,
+    public itemsLent: number,
+    public itemsBorrowed: number,
+    public servicesGiven: number,
+    public servicesReceived: number,
+    public offerCount: number,
+    public requestCount: number,
+    public hoursInBank: number,
+    public eventTime: string
+  ) {
+  }
+
+  public static from(g: GroupReportItem): GroupReportItem {
+    return new GroupReportItem(
+      g.id,
+      g.groupId,
+      g.activity,
+      g.groupingId,
+      g.itemsReceived,
+      g.itemsGiven,
+      g.itemsOwned,
+      g.itemsLent,
+      g.itemsBorrowed,
+      g.servicesGiven,
+      g.servicesReceived,
+      g.offerCount,
+      g.requestCount,
+      g.hoursInBank,
+      g.eventTime
+    );
+  }
+}
+
+export class GroupReportResponse {
+  public constructor(public entries: GroupReportItem[]) {
+  }
+
+  public static from(r: GroupReportResponse): GroupReportResponse {
+    return new GroupReportResponse(
+      r.entries ? r.entries.map(e => GroupReportItem.from(e)) : []
+    );
+  }
+}

@@ -191,4 +191,5 @@ type GroupReportItem struct {
 	OfferCount       int           `json:"offerCount"`
 	RequestsCount    int           `json:"requestCount"`
 	HoursInBank      time.Duration `json:"hoursInBank"`
+	EventTime        time.Time     `json:"eventTime"`
 }

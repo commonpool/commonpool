@@ -19,7 +19,7 @@ func (q *GetResourceEvaluations) Get(ctx context.Context, resourceKey keys.Resou
 	var result []*readmodel.ResourceEvaluationReadModel
 	if err := q.db.Model(&readmodel.ResourceEvaluationReadModel{}).
 		Where("resource_key = ?", resourceKey).
-		Order("evaluated_at asc").
+		Order("evaluated_at desc").
 		Find(&result).Error; err != nil {
 		return nil, err
 	}

@@ -352,10 +352,11 @@ func (l *ResourceReadModelHandler) handleResourceEvaluated(ctx context.Context, 
 		return err
 	}
 	g, ctx := errgroup.WithContext(ctx)
+	evaluationID := uuid.NewV4().String()
 	for _, value := range e.NewEvaluation {
 		var rm = &readmodel.ResourceEvaluationReadModel{
 			ID:             uuid.NewV4().String(),
-			EvaluationID:   uuid.NewV4().String(),
+			EvaluationID:   evaluationID,
 			ResourceKey:    resourceKey,
 			EvaluatedBy:    e.EvaluatedBy,
 			EvaluatedAt:    e.EventTime,

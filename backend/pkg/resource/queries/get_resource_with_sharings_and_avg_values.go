@@ -9,20 +9,23 @@ import (
 )
 
 type GetResourceWithSharingsAndValues struct {
-	getResource         *GetResource
-	getResourceSharings *GetResourceSharings
-	getEvaluations      *GetResourceEvaluations
+	getResource               *GetResource
+	getResourceSharings       *GetResourceSharings
+	getEvaluations            *GetResourceEvaluations
+	getUserResourceEvaluation *GetUserResourceEvaluation
 }
 
 func NewGetResourceWithSharingsAndValues(
 	getResource *GetResource,
 	getResourceSharings *GetResourceSharings,
 	getEvaluations *GetResourceEvaluations,
+	getUserResourceEvaluation *GetUserResourceEvaluation,
 ) *GetResourceWithSharingsAndValues {
 	return &GetResourceWithSharingsAndValues{
-		getResource:         getResource,
-		getResourceSharings: getResourceSharings,
-		getEvaluations:      getEvaluations,
+		getResource:               getResource,
+		getResourceSharings:       getResourceSharings,
+		getEvaluations:            getEvaluations,
+		getUserResourceEvaluation: getUserResourceEvaluation,
 	}
 }
 
@@ -55,6 +58,13 @@ func (q *GetResourceWithSharingsAndValues) Get(
 		return err
 	})
 
+	var userEvaluations []*readmodel.ResourceEvaluationReadModel
+	g.Go(func() error {
+		var err error
+		userEvaluations, err = q.getUserResourceEvaluation.Get(ctx, resourceKey, userKey)
+		return err
+	})
+
 	if err := g.Wait(); err != nil {
 		return nil, err
 	}
@@ -66,16 +76,11 @@ func (q *GetResourceWithSharingsAndValues) Get(
 	averagesTo := map[string]domain.Value{}
 	dimensionNames := map[string]bool{}
 
-	userEstimations := map[string]*readmodel.ResourceEvaluationReadModel{}
-
 	for _, evaluation := range evaluations {
 		sumsTo[evaluation.DimensionName] += evaluation.ValueRange.From
 		sumsFrom[evaluation.DimensionName] += evaluation.ValueRange.To
 		counts[evaluation.DimensionName] += 1
 		dimensionNames[evaluation.DimensionName] = true
-		if evaluation.EvaluatedBy == userKey {
-			userEstimations[evaluation.DimensionName] = evaluation
-		}
 	}
 
 	for key, sum := range sumsFrom {
@@ -106,7 +111,7 @@ func (q *GetResourceWithSharingsAndValues) Get(
 	}
 
 	var userEstimationList domain.ValueEstimations
-	for _, model := range userEstimations {
+	for _, model := range userEvaluations {
 		userEstimationList = append(userEstimationList, model.DimensionValue)
 	}
 

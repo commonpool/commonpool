@@ -52,31 +52,36 @@
                 <p>{{resource.info.description}}</p>
               </td>
             </tr>
-
             </tbody>
           </table>
-          <div class="d-flex">
-            <div>
-              <p>Average evaluation</p>
+          <div class="row">
+            <div class="col-6 col-lg-3">
+              <h5>Average evaluation</h5>
+              <hr>
               <app-values [disabled]="true" [ngModel]="resource.averageValues"></app-values>
             </div>
-            <div class="ms-2">
-              <p>My evaluation</p>
+            <div class="col-6 col-lg-3">
+              <h5>My evaluation</h5>
+              <hr>
               <app-values [disabled]="true" [ngModel]="resource.values"></app-values>
             </div>
+
           </div>
           <div class="m-2 mt-4" *ngIf="auth.session$ | async; let session">
 
-            <div *ngIf="session.id === resource.createdBy">
+            <ng-container *ngIf="session.id === resource.createdBy">
               <button class="btn btn-sm btn-primary me-2" (click)="editResource(resource.resourceId)">Edit</button>
               <button class="btn btn-sm btn-danger me-2">Delete</button>
-            </div>
-            <button *ngIf="session.id !== resource.createdBy" class="me-2 btn btn-sm btn-secondary"
-                    [routerLink]="'/resources/' + resource.resourceId + '/inquire'">Contact
-            </button>
-            <button *ngIf="session.id !== resource.createdBy" class="me-2 btn btn-sm btn-secondary"
-                    [routerLink]="'/resources/' + resource.resourceId + '/inquire'">Make Offer
-            </button>
+            </ng-container>
+
+            <button class="me-2 btn btn-sm btn-secondary" (click)="evaluateResource(resource.resourceId)">Evaluate</button>
+
+<!--            <button *ngIf="session.id !== resource.createdBy" class="me-2 btn btn-sm btn-secondary"-->
+<!--                    [routerLink]="'/resources/' + resource.resourceId + '/inquire'">Contact-->
+<!--            </button>-->
+<!--            <button *ngIf="session.id !== resource.createdBy" class="me-2 btn btn-sm btn-secondary"-->
+<!--                    [routerLink]="'/resources/' + resource.resourceId + '/inquire'">Make Offer-->
+<!--            </button>-->
           </div>
 
         </div>

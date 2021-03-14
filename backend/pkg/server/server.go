@@ -200,7 +200,8 @@ func NewServer() (*Server, error) {
 	getResourcesSharings := resourcequeries.NewGetResourcesSharings(db)
 	getResourceWithSharings := resourcequeries.NewGetResourceWithSharings(getResource, getResourceSharings)
 	getResourceEvaluations := resourcequeries.NewGetResourceEvaluations(db)
-	getResourceWithSharingsAndValues := resourcequeries.NewGetResourceWithSharingsAndValues(getResource, getResourceSharings, getResourceEvaluations)
+	getUserResourceEvaluation := resourcequeries.NewGetUserResourceEvaluation(db)
+	getResourceWithSharingsAndValues := resourcequeries.NewGetResourceWithSharingsAndValues(getResource, getResourceSharings, getResourceEvaluations, getUserResourceEvaluation)
 	searchResourcesWithSharings := resourcequeries.NewSearchResourcesWithSharings(db, searchResources, getResourcesSharings)
 	getOffer := queries.NewGetOffer(db)
 	getUserAdministeredGroupKeys := queries.NewGetUserAdministeredGroupKeys(db)
@@ -212,6 +213,7 @@ func NewServer() (*Server, error) {
 	getOffersPermissions := queries.NewGetOffersPermissions(db, getOffersGroupKeys)
 	getOfferPermissions := queries.NewGetOfferPermissions(getOffersPermissions)
 	getUserOffersWithActions := queries.NewGetUserOffersWithActions(db, getOffersPermissions, getOfferKeysForUser)
+	getGroupHistory := queries.NewGetGroupHistory(db)
 	getUsersByKeys := queries2.NewGetUserByKeys(db)
 	getValueDimensions := queries.NewGetValueDimensions()
 	// commands
@@ -285,7 +287,8 @@ func NewServer() (*Server, error) {
 		searchResources,
 		getResourceWithSharings,
 		searchResourcesWithSharings,
-		getResourceWithSharingsAndValues)
+		getResourceWithSharingsAndValues,
+		getUserResourceEvaluation)
 	resourceHandler.Register(v1)
 
 	realtimeHandler := realtime.NewRealtimeHandler(mqClient, chatService, userModule.Authenticator)
@@ -308,6 +311,7 @@ func NewServer() (*Server, error) {
 		getUserOffersWithActions,
 		getUsersByKeys,
 		getValueDimensions,
+		getGroupHistory,
 	)
 
 	tradingHandler.Register(v1)

@@ -37,6 +37,7 @@ type TradingHandler struct {
 	declineOffer                   *commandhandlers.DeclineOfferHandler
 	acceptOffer                    *commandhandlers.AcceptOfferHandler
 	submitOffer                    *commandhandlers.SubmitOfferHandler
+	getGroupReport                 *queries.GetGroupHistory
 }
 
 func NewTradingHandler(
@@ -56,6 +57,7 @@ func NewTradingHandler(
 	getOffersWithActions *queries.GetUserOffersWithActions,
 	getUsersByKeys *userqueries.GetUsersByKeys,
 	getValueDimensions *queries.GetValueDimensions,
+	getGroupReport *queries.GetGroupHistory,
 ) *TradingHandler {
 	return &TradingHandler{
 		tradingService:                 tradingService,
@@ -74,6 +76,7 @@ func NewTradingHandler(
 		acceptOffer:                    acceptOffer,
 		submitOffer:                    submitOffer,
 		getValueDimensions:             getValueDimensions,
+		getGroupReport:                 getGroupReport,
 	}
 }
 
@@ -91,6 +94,8 @@ func (h *TradingHandler) Register(e *echo.Group) {
 	offers.POST("/:id/offer-items/:offerItemId/actions/resource-returned", h.HandleConfirmBorrowedResourceReturned)
 	values := e.Group("/values")
 	values.GET("/dimensions", h.HandleGetValueDimensions)
+	reports := e.Group("/reports")
+	reports.GET("/group-history", h.HandleGetGroupHistory)
 }
 
 type SubmitOfferRequest struct {
@@ -299,6 +304,30 @@ func (h *TradingHandler) HandleSendOffer(c echo.Context) error {
 
 	return c.JSON(http.StatusCreated, GetOfferResponse{
 		Offer: offer,
+	})
+
+}
+
+type GroupReportResponse struct {
+	Entries []*groupreadmodels.GroupReportItem `json:"entries"`
+}
+
+func (h *TradingHandler) HandleGetGroupHistory(c echo.Context) error {
+	ctx, _ := handler.GetEchoContext(c, "HandleSendOffer")
+
+	groupId := c.QueryParam("groupId")
+	groupKey, err := keys.ParseGroupKey(groupId)
+	if err != nil {
+		return err
+	}
+
+	histry, err := h.getGroupReport.Get(ctx, groupKey)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, &GroupReportResponse{
+		Entries: histry,
 	})
 
 }

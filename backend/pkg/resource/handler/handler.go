@@ -31,6 +31,7 @@ type ResourceHandler struct {
 	getResourceWithSharings          *resourcequeries.GetResourceWithSharings
 	getResourceWithSharingsAndValues *resourcequeries.GetResourceWithSharingsAndValues
 	searchResourcesWithSharings      *resourcequeries.SearchResourcesWithSharings
+	getUserResourceEvaluation        *resourcequeries.GetUserResourceEvaluation
 }
 
 func NewHandler(
@@ -45,6 +46,7 @@ func NewHandler(
 	getResourceWithSharings *resourcequeries.GetResourceWithSharings,
 	searchResourcesWithSharings *resourcequeries.SearchResourcesWithSharings,
 	getResourceWithSharingsAndValues *resourcequeries.GetResourceWithSharingsAndValues,
+	getUserResourceEvaluation *resourcequeries.GetUserResourceEvaluation,
 ) *ResourceHandler {
 	return &ResourceHandler{
 		groupService:                     groupService,
@@ -58,6 +60,7 @@ func NewHandler(
 		getResourceWithSharings:          getResourceWithSharings,
 		searchResourcesWithSharings:      searchResourcesWithSharings,
 		getResourceWithSharingsAndValues: getResourceWithSharingsAndValues,
+		getUserResourceEvaluation:        getUserResourceEvaluation,
 	}
 }
 
@@ -68,6 +71,8 @@ func (h *ResourceHandler) Register(e *echo.Group) {
 	resources.GET("/:id", h.GetResource)
 	resources.PUT("/:id", h.UpdateResource)
 	resources.POST("/:id/inquire", h.InquireAboutResource)
+	resources.PUT("/:id/evaluations", h.EvaluateResource)
+	resources.GET("/:id/evaluations", h.GetMyEvaluation)
 }
 
 type GetResourceResponse struct {
@@ -457,5 +462,82 @@ func (h *ResourceHandler) UpdateResource(c echo.Context) error {
 	return c.JSON(http.StatusOK, GetResourceResponse{
 		Resource: rm,
 	})
+
+}
+
+type GetUserResourceEvaluationsResponse struct {
+	Evaluations []domain.DimensionValue `json:"values"`
+}
+
+func (h *ResourceHandler) GetMyEvaluation(c echo.Context) error {
+
+	ctx, l := handler.GetEchoContext(c, "UpdateResource")
+	l = l.Named("ResourceHandler.GetMyEvaluation")
+
+	loggedInUser, err := oidc.GetLoggedInUser(ctx)
+	if err != nil {
+		return err
+	}
+
+	resourceKey, err := keys.ParseResourceKey(c.Param("id"))
+	if err != nil {
+		return err
+	}
+
+	evaluations, err := h.getUserResourceEvaluation.Get(ctx, resourceKey, loggedInUser.GetUserKey())
+	if err != nil {
+		return err
+	}
+
+	var response GetUserResourceEvaluationsResponse
+	for _, evaluation := range evaluations {
+		response.Evaluations = append(response.Evaluations, evaluation.DimensionValue)
+	}
+
+	return c.JSON(http.StatusOK, response)
+
+}
+
+type EvaluateResourceRequest struct {
+	Values domain.ValueEstimations `json:"values"`
+}
+
+func (h *ResourceHandler) EvaluateResource(c echo.Context) error {
+
+	ctx, l := handler.GetEchoContext(c, "UpdateResource")
+	l = l.Named("ResourceHandler.GetMyEvaluation")
+
+	loggedInUser, err := oidc.GetLoggedInUser(ctx)
+	if err != nil {
+		return err
+	}
+
+	resourceKey, err := keys.ParseResourceKey(c.Param("id"))
+	if err != nil {
+		return err
+	}
+
+	req := EvaluateResourceRequest{}
+	if err := c.Bind(&req); err != nil {
+		return err
+	}
+	if err := c.Validate(req); err != nil {
+		return err
+	}
+
+	resource, err := h.resourceRepo.Load(ctx, resourceKey)
+	if err != nil {
+		return err
+	}
+
+	if err := resource.EvaluateResource(loggedInUser.GetUserKey(), req.Values); err != nil {
+		return err
+	}
+
+	if err := h.resourceRepo.Save(ctx, resource); err != nil {
+		return err
+	}
+
+	return c.NoContent(http.StatusAccepted)
 
 }

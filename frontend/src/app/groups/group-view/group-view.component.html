@@ -21,6 +21,10 @@
         <app-mailbox></app-mailbox>
         invitations</a>
     </li>
+    <li class="nav-item">
+      <a class="nav-link" [routerLinkActive]="'active'" [routerLink]="'/groups/'+group.groupId+'/history'">
+        History</a>
+    </li>
   </ul>
 
   <router-outlet></router-outlet>

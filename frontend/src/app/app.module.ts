@@ -88,6 +88,7 @@ import {ValueComponent} from './scratch/value.component';
 import {ValueThresholdComponent} from './scratch/value-threshold.component';
 import {DimensionValueComponent} from './scratch/dimension-value.component';
 import {ResourceEvaluationComponent} from './resources/resource-evaluation/resource-evaluation.component';
+import {GroupHistoryComponent} from './groups/history/group-history.component';
 
 const rendererFactory = (domSanitizer: DomSanitizer): MarkedOptions => {
   return {
@@ -173,7 +174,8 @@ const rendererFactory = (domSanitizer: DomSanitizer): MarkedOptions => {
     ValueComponent,
     ValueThresholdComponent,
     DimensionValueComponent,
-    ResourceEvaluationComponent
+    ResourceEvaluationComponent,
+    GroupHistoryComponent
   ],
   imports: [
     CommonModule,

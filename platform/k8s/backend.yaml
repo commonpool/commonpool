@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: commonpool/backend:latest
+          env:
+            - name: SECURE_COOKIES
+              value: "true"
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  key: username
+                  name: postgres
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: postgres
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: database
+                  name: postgres
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_HOST
+              value: postgres
+            - name: BASE_URL
+              value: https://commonpool.net
+            - name: OIDC_DISCOVERY_URL
+              value: https://auth.commonpool.net/auth/realms/commonpool-staging
+            - name: OIDC_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: client-id
+                  name: commonpool-staging-oidc-creds
+            - name: OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: client-secret
+                  name: commonpool-staging-oidc-creds
+            - name: CALLBACK_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: token
+                  name: callback-token
+            - name: AMQP_URL
+              valueFrom:
+                secretKeyRef:
+                  key: amqp-url
+                  name: amqp
+            - name: REDIS_HOST
+              value: redis-master
+            - name: REDIS_PASSWORD
+              value: ""
+            - name: REDIS_PORT
+              value: "6379"
+            - name: REDIS_ENABLE_TLS
+              value: "false"
+            - name: REDIS_TLS_SKIP_VERIFY
+              value: "false"
+            - name: DEBUG
+              value: "false"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+spec:
+  selector:
+    app: backend
+  ports:
+    - port: 8585

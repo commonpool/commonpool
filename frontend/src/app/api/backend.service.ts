@@ -56,7 +56,11 @@ import {
   ConfirmBorrowedResourceReturned,
   ConfirmResourceBorrowed,
   ConfirmResourceTransferred,
-  GetValueDimensionsRequest, GetValueDimensionsResponse
+  GetValueDimensionsRequest,
+  GetValueDimensionsResponse,
+  GetMyResourceEvaluationsRequest,
+  GetResourceEvaluationsResponse,
+  UpdateResourceEvaluationRequest, GroupReportResponse
 } from './models';
 
 import {Observable, of, Subject, throwError} from 'rxjs';
@@ -69,7 +73,7 @@ import {
   HttpRequest,
   HttpResponse
 } from '@angular/common/http';
-import {catchError, map, retry, switchAll, tap} from 'rxjs/operators';
+import {catchError, map, retry, switchAll, switchMap, tap} from 'rxjs/operators';
 import {environment} from '../../environments/environment';
 import {WebSocketSubject} from 'rxjs/internal-compatibility';
 import {webSocket} from 'rxjs/webSocket';
@@ -98,7 +102,7 @@ export class AppHttpInterceptor implements HttpInterceptor {
             window.location = err.error.meta.redirectTo;
           }, 1000);
         }
-        return of(err);
+        return throwError(err);
       }));
   }
 }
@@ -110,6 +114,8 @@ export class BackendService {
 
   constructor(private http: HttpClient) {
     this.connect();
+    this.evaluateResource$ = this.evaluateResource$.bind(this);
+    this.groupHistoryReport$ = this.groupHistoryReport$.bind(this);
   }
 
   private socket$: WebSocketSubject<any>;
@@ -713,6 +719,59 @@ export class BackendService {
         }
         return GetValueDimensionsResponse.from(res.body as GetValueDimensionsResponse);
       })
+    );
+  }
+
+  getMyResourceEvaluations(request: GetMyResourceEvaluationsRequest): Observable<GetResourceEvaluationsResponse> {
+    return this.http.get(`${environment.apiUrl}/api/v1/resources/${request.resourceId}/evaluations`, {
+      observe: 'response'
+    }).pipe(
+      map((res: HttpResponse<object>) => {
+        if (res.status !== 200) {
+          throwError(ErrorResponse.fromHttpResponse(res));
+        }
+        return GetResourceEvaluationsResponse.from(res.body as GetResourceEvaluationsResponse);
+      })
+    );
+  }
+
+  getMyResourceEvaluation$(request$: Observable<GetMyResourceEvaluationsRequest>): Observable<GetResourceEvaluationsResponse> {
+    return request$.pipe(
+      switchMap(r => {
+        return this.http.get(`${environment.apiUrl}/api/v1/resources/${r.resourceId}/evaluations`);
+      }),
+      map(r => GetResourceEvaluationsResponse.from(r as GetResourceEvaluationsResponse))
+    );
+  }
+
+  evaluateResource(request: UpdateResourceEvaluationRequest): Observable<null> {
+    return this.http.put(`${environment.apiUrl}/api/v1/resources/${request.resourceId}/evaluations`, request, {})
+      .pipe(
+        catchError(err => {
+          console.log('evaluateResource error', err);
+          return throwError(err);
+        }),
+        map(() => null)
+      );
+  }
+
+  evaluateResource$(request: Observable<UpdateResourceEvaluationRequest>): Observable<null> {
+    return request.pipe(
+      switchMap((r) => {
+        return this.http.put(`${environment.apiUrl}/api/v1/resources/${r.resourceId}/evaluations`, r, {});
+      }),
+      map(() => null)
+    );
+  }
+
+  groupHistoryReport$(groupId$: Observable<string>): Observable<GroupReportResponse> {
+    return groupId$.pipe(
+      switchMap((groupId) => {
+        return this.http.get(`${environment.apiUrl}/api/v1/reports/group-history`, {
+          params: {groupId}
+        });
+      }),
+      map(r => GroupReportResponse.from(r as GroupReportResponse))
     );
   }
 

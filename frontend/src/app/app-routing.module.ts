@@ -23,6 +23,7 @@ import {SampleComponent} from './sample/sample/sample.component';
 import {TradingHistoryComponent} from './trading/history/trading-history.component';
 import {ValuesComponent} from './scratch/values.component';
 import {ResourceEvaluationComponent} from './resources/resource-evaluation/resource-evaluation.component';
+import {GroupHistoryComponent} from './groups/history/group-history.component';
 
 const routes: Routes = [
   {
@@ -95,6 +96,7 @@ const routes: Routes = [
       {path: 'invitations', component: GroupInvitesViewComponent},
       {path: 'resources', component: GroupResourcesViewComponent},
       {path: 'posts', component: UserResourcesViewComponent, data: {accountType: 'group'}},
+      {path: 'history', component: GroupHistoryComponent},
       {
         path: 'needs/:resourceId',
         component: ResourceDetailsComponent,

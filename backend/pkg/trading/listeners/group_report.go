@@ -2,6 +2,7 @@ package listeners
 
 import (
 	"context"
+	"fmt"
 	"github.com/commonpool/backend/pkg/eventbus"
 	"github.com/commonpool/backend/pkg/eventsource"
 	"github.com/commonpool/backend/pkg/keys"
@@ -13,6 +14,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/sync/errgroup"
 	"gorm.io/gorm"
+	"math"
 	"reflect"
 	"strings"
 	"time"
@@ -124,13 +126,15 @@ func (h *GroupReportListener) handleOfferCompleted(ctx context.Context, e *domai
 			if i.From.IsGroup() || i.To.IsGroup() {
 				var credit time.Duration = 0
 				var activity string
+				hours := i.Amount.Truncate(time.Hour).Hours()
+				hours = math.Round(hours*100) / 100
 				if i.From.IsGroup() {
 					credit = -i.Amount
-					activity = "time bank credits given"
+					activity = fmt.Sprintf("group gave %.2fh. of timebank credits", hours)
 				}
 				if i.To.IsGroup() {
 					credit = i.Amount
-					activity = "time bank credits received"
+					activity = fmt.Sprintf("group received %.2fh. of timebank credits", hours)
 				}
 				g.Go(func() error {
 					return h.db.Create(&readmodels.GroupReportItem{
@@ -139,6 +143,7 @@ func (h *GroupReportListener) handleOfferCompleted(ctx context.Context, e *domai
 						Activity:    activity,
 						HoursInBank: credit,
 						GroupingID:  e.AggregateID,
+						EventTime:   e.EventTime,
 					}).Error
 				})
 			}
@@ -149,9 +154,10 @@ func (h *GroupReportListener) handleOfferCompleted(ctx context.Context, e *domai
 					return h.db.Create(&readmodels.GroupReportItem{
 						ID:            uuid.NewV4().String(),
 						GroupKey:      e.GroupKey,
-						Activity:      "resource received",
+						Activity:      fmt.Sprintf("group received resource '%s'", resourceMap[i.ResourceKey].Name),
 						GroupingID:    e.AggregateID,
 						ItemsReceived: 1,
+						EventTime:     e.EventTime,
 					}).Error
 				})
 			}
@@ -161,9 +167,10 @@ func (h *GroupReportListener) handleOfferCompleted(ctx context.Context, e *domai
 					return h.db.Create(&readmodels.GroupReportItem{
 						ID:         uuid.NewV4().String(),
 						GroupKey:   resource.Owner.GetGroupKey(),
-						Activity:   "resource given",
+						Activity:   fmt.Sprintf("group gave resource '%s'", resourceMap[i.ResourceKey].Name),
 						GroupingID: e.AggregateID,
 						ItemsGiven: 1,
+						EventTime:  e.EventTime,
 					}).Error
 				})
 			}
@@ -176,20 +183,20 @@ func (h *GroupReportListener) handleOfferCompleted(ctx context.Context, e *domai
 					var serviceReceived int
 					if i.From != nil && i.From.IsGroup() {
 						serviceGiven = 1
-						activity = "service given"
+						activity = fmt.Sprintf("group gave service '%s'", resourceMap[i.ResourceKey].Name)
 					}
 					if i.To.IsGroup() {
 						serviceReceived = 1
-						activity = "service received"
+						activity = fmt.Sprintf("group received service '%s'", resourceMap[i.ResourceKey].Name)
 					}
 					return h.db.Create(&readmodels.GroupReportItem{
 						ID:               uuid.NewV4().String(),
 						GroupKey:         e.GroupKey,
 						Activity:         activity,
 						GroupingID:       e.AggregateID,
-						ItemsReceived:    1,
 						ServicesGiven:    serviceGiven,
 						ServicesReceived: serviceReceived,
+						EventTime:        e.EventTime,
 					}).Error
 				})
 			}
@@ -200,9 +207,10 @@ func (h *GroupReportListener) handleOfferCompleted(ctx context.Context, e *domai
 					return h.db.Create(&readmodels.GroupReportItem{
 						ID:            uuid.NewV4().String(),
 						GroupKey:      e.GroupKey,
-						Activity:      "item borrowed",
+						Activity:      fmt.Sprintf("group borrowed resource '%s'", resourceMap[i.ResourceKey].Name),
 						GroupingID:    e.AggregateID,
 						ItemsBorrowed: 1,
+						EventTime:     e.EventTime,
 					}).Error
 				})
 			}
@@ -212,9 +220,10 @@ func (h *GroupReportListener) handleOfferCompleted(ctx context.Context, e *domai
 					return h.db.Create(&readmodels.GroupReportItem{
 						ID:         uuid.NewV4().String(),
 						GroupKey:   resource.Owner.GetGroupKey(),
-						Activity:   "item lent",
+						Activity:   fmt.Sprintf("group lent resource '%s'", resourceMap[i.ResourceKey].Name),
 						GroupingID: e.AggregateID,
 						ItemsLent:  1,
+						EventTime:  e.EventTime,
 					}).Error
 				})
 			}
@@ -243,6 +252,7 @@ func (h *GroupReportListener) handleResourceGroupSharingChanged(ctx context.Cont
 				Activity:      "Post removed from group",
 				OfferCount:    offer,
 				RequestsCount: request,
+				EventTime:     e.EventTime,
 			}).Error
 		})
 	}
@@ -262,6 +272,7 @@ func (h *GroupReportListener) handleResourceGroupSharingChanged(ctx context.Cont
 				Activity:      "Post added in group",
 				OfferCount:    offer,
 				RequestsCount: request,
+				EventTime:     e.EventTime,
 			}).Error
 		})
 	}
