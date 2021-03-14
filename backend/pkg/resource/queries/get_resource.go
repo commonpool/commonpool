@@ -35,7 +35,6 @@ func mapResourceReadModel(resource *readmodel.DbResourceReadModel) *readmodel.Re
 		ResourceReadModelBase: resource.ResourceReadModelBase,
 		ResourceInfo: domain.ResourceInfo{
 			ResourceInfoBase: resource.ResourceInfoBase,
-			Value:            resource.ResourceValueEstimation,
 		},
 	}
 }
@@ -46,7 +45,6 @@ func mapResourceReadModels(resources []*readmodel.DbResourceReadModel) []*readmo
 			ResourceReadModelBase: resource.ResourceReadModelBase,
 			ResourceInfo: domain.ResourceInfo{
 				ResourceInfoBase: resource.ResourceInfoBase,
-				Value:            resource.ResourceValueEstimation,
 			},
 		})
 	}

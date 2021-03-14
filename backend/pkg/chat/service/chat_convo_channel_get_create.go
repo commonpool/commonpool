@@ -71,13 +71,13 @@ func (c ChatService) createSubscriptionsAndMqBindingsForUserConversation(ctx con
 		return nil, err
 	}
 
-	users, err := c.userStore.GetByKeys(ctx, userKeys)
+	users, err := c.getUsersByKeys.Get(userKeys)
 	if err != nil {
 		return nil, err
 	}
 
 	var subscriptions []chat.ChannelSubscription
-	for _, u := range users.Items {
+	for _, u := range users {
 		subscription, err := c.createSubscriptionAndMqBindingForUserConversation(ctx, u, users, channelKey)
 		if err != nil {
 			return nil, err
@@ -90,7 +90,7 @@ func (c ChatService) createSubscriptionsAndMqBindingsForUserConversation(ctx con
 func (c ChatService) createSubscriptionAndMqBindingForUserConversation(
 	ctx context.Context,
 	user *models.User,
-	conversationUsers *models.Users,
+	conversationUsers map[keys.UserKey]*models.User,
 	channelKey keys.ChannelKey,
 ) (*chat.ChannelSubscription, error) {
 
@@ -127,12 +127,15 @@ func (c ChatService) createSubscriptionAndMqBindingForUserConversation(
 // Mark would see "Dana, Joe"
 func (c ChatService) getConversationNameForUser(
 	ctx context.Context,
-	us *models.Users,
+	us map[keys.UserKey]*models.User,
 	u *models.User,
 ) string {
 
 	// First, sort the user names
-	userList := us.Items
+	var userList []*models.User
+	for _, user := range us {
+		userList = append(userList, user)
+	}
 
 	copied := make([]*models.User, len(userList))
 	copy(copied, userList)

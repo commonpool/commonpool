@@ -37,6 +37,6 @@ func (c *ConfirmServiceGivenHandler) confirmServiceGiven(ctx context.Context, of
 		if err != nil {
 			return err
 		}
-		return offer.ConfirmResourceReturned(confirmedBy, offerItemKey, offerPermissions)
+		return offer.ConfirmServiceGiven(confirmedBy, offerItemKey, offerPermissions)
 	}
 }

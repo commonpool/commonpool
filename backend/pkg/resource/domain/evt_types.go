@@ -10,6 +10,7 @@ const (
 	ResourceRegisteredEvent          = "resource_registered"
 	ResourceGroupSharingChangedEvent = "resource_group_sharing_changed"
 	ResourceInfoChangedEvent         = "resource_info_changed"
+	ResourceEvaluatedEvent           = "resource_evaluated"
 	ResourceDeletedEvent             = "resource_deleted"
 )
 
@@ -18,6 +19,7 @@ var AllEventTypes = []string{
 	ResourceGroupSharingChangedEvent,
 	ResourceInfoChangedEvent,
 	ResourceDeletedEvent,
+	ResourceEvaluatedEvent,
 }
 
 func RegisterEvents(eventMapper *eventsource.EventMapper) error {
@@ -45,6 +47,10 @@ func MapEvent(eventType string, bytes []byte) (eventsource.Event, error) {
 		return dest, err
 	case ResourceDeletedEvent:
 		var dest ResourceDeleted
+		err := json.Unmarshal(bytes, &dest)
+		return dest, err
+	case ResourceEvaluatedEvent:
+		var dest ResourceEvaluated
 		err := json.Unmarshal(bytes, &dest)
 		return dest, err
 	default:

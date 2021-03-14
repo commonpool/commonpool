@@ -28,9 +28,7 @@ export class ResourceDetailsComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     public auth: AuthService
-  ) {
-
-  }
+  ) {}
 
   async editResource(id: string) {
     await this.router.navigateByUrl('/resources/' + id + '/edit');

@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/commonpool/backend/pkg/handler"
-	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/mq"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/gommon/log"
@@ -37,16 +36,14 @@ type Client struct {
 	websocketConnection *websocket.Conn
 	queue               mq.Queue
 	send                chan []byte
-	id                  string
-	userKey             keys.UserKey
-	queueName           *string
-	consumerKey         *string
 }
 
 func (c *Client) readPump() {
 	defer func() {
 		c.hub.unregister <- c
 		c.websocketConnection.Close()
+		c.queue.Close()
+		log.Print("closing readPump")
 	}()
 	c.websocketConnection.SetReadLimit(maxMessageSize)
 	c.websocketConnection.SetReadDeadline(time.Now().Add(pongWait))
@@ -101,7 +98,11 @@ func (c *Client) eventPump(ctx context.Context) error {
 		return err
 	}
 
-	return nil
+	select {
+	case <-c.queue.Closed():
+		l.Info("event pump stopping")
+		return nil
+	}
 
 }
 
@@ -110,6 +111,7 @@ func (c *Client) writePump() {
 	defer func() {
 		ticker.Stop()
 		c.websocketConnection.Close()
+		log.Print("closing writePump")
 	}()
 	for {
 		select {

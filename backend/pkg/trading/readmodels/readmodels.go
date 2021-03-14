@@ -8,14 +8,15 @@ import (
 )
 
 type OfferReadModelBase struct {
-	OfferKey    keys.OfferKey      `gorm:"primaryKey;type:varchar(128)" json:"offerId,omitempty"`
-	GroupKey    keys.GroupKey      `gorm:"type:varchar(128)" json:"groupId"`
-	Status      domain.OfferStatus `gorm:"type:varchar(128)" json:"status,omitempty"`
-	Version     int                `json:"version,omitempty"`
-	DeclinedAt  *time.Time         `json:"declinedAt,omitempty"`
-	SubmittedAt time.Time          `json:"submittedAt,omitempty"`
-	ApprovedAt  *time.Time         `json:"approvedAt,omitempty"`
-	CompletedAt *time.Time         `json:"completedAt,omitempty"`
+	OfferKey            keys.OfferKey      `gorm:"primaryKey;type:varchar(128)" json:"offerId,omitempty"`
+	GroupKey            keys.GroupKey      `gorm:"type:varchar(128)" json:"groupId"`
+	Status              domain.OfferStatus `gorm:"type:varchar(128)" json:"status,omitempty"`
+	Version             int                `json:"version,omitempty"`
+	DeclinedAt          *time.Time         `json:"declinedAt,omitempty"`
+	SubmittedAt         time.Time          `json:"submittedAt,omitempty"`
+	ApprovedAt          *time.Time         `json:"approvedAt,omitempty"`
+	CompletedAt         *time.Time         `json:"completedAt,omitempty"`
+	StatusLastChangedAt *time.Time         `json:"last_status_changed_at;omitempty"`
 }
 
 type DBOfferReadModel struct {
@@ -173,4 +174,21 @@ type OfferItemReadModel struct {
 	ResourceKey            *keys.ResourceKey `gorm:"type:varchar(128)"`
 	ResourceName           string            `gorm:"type:varchar(128)"`
 	ResourceVersion        int
+}
+
+type GroupReportItem struct {
+	ID               string        `json:"id"`
+	GroupKey         keys.GroupKey `json:"groupId"`
+	Activity         string        `json:"activity"`
+	GroupingID       string        `json:"groupingId"`
+	ItemsReceived    int           `json:"itemsReceived"`
+	ItemsGiven       int           `json:"itemsGiven"`
+	ItemsOwned       int           `json:"itemsOwned"`
+	ItemsLent        int           `json:"itemsLent"`
+	ItemsBorrowed    int           `json:"itemsBorrowed"`
+	ServicesGiven    int           `json:"servicesGiven"`
+	ServicesReceived int           `json:"servicesReceived"`
+	OfferCount       int           `json:"offerCount"`
+	RequestsCount    int           `json:"requestCount"`
+	HoursInBank      time.Duration `json:"hoursInBank"`
 }

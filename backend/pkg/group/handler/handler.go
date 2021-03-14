@@ -431,7 +431,7 @@ func (h *Handler) GetUsersForGroupInvitePicker(c echo.Context) error {
 	responseItems := make([]*handler2.UserInfoResponse, len(users))
 	for i, u := range users {
 		responseItems[i] = &handler2.UserInfoResponse{
-			Id:       u.UserKey,
+			Id:       u.UserKey.String(),
 			Username: u.Username,
 		}
 	}

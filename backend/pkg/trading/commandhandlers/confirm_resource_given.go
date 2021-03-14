@@ -37,6 +37,6 @@ func (c *ConfirmResourceGivenHandler) confirmResourceGiven(ctx context.Context, 
 		if err != nil {
 			return err
 		}
-		return offer.ConfirmResourceReturned(by, offerItemKey, offerPermissions)
+		return offer.ConfirmResourceGiven(by, offerItemKey, offerPermissions)
 	}
 }

@@ -9,7 +9,6 @@ import (
 var _ group2.Service = &GroupService{}
 
 type GroupService struct {
-	groupStore          group2.Store
 	groupRepo           domain.GroupRepository
 	getByKeys           *queries.GetGroupByKeys
 	getGroup            *queries.GetGroup

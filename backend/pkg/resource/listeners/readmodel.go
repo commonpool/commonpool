@@ -10,6 +10,7 @@ import (
 	"github.com/commonpool/backend/pkg/resource/domain"
 	"github.com/commonpool/backend/pkg/resource/readmodel"
 	"github.com/labstack/gommon/log"
+	uuid "github.com/satori/go.uuid"
 	"golang.org/x/sync/errgroup"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -48,7 +49,9 @@ func (l *ResourceReadModelHandler) migrateDatabase() error {
 		&readmodel.DbResourceReadModel{},
 		&readmodel.ResourceSharingReadModel{},
 		&readmodel.ResourceUserNameReadModel{},
-		&readmodel.ResourceGroupNameReadModel{}); err != nil {
+		&readmodel.ResourceGroupNameReadModel{},
+		&readmodel.ResourceEvaluationReadModel{},
+	); err != nil {
 		return err
 	}
 	return nil
@@ -81,6 +84,8 @@ func (l *ResourceReadModelHandler) handleEvent(ctx context.Context, event events
 		return l.handleResourceGroupSharingChanged(ctx, e)
 	case domain.ResourceDeleted:
 		return l.handleResourceDeleted(ctx, e)
+	case domain.ResourceEvaluated:
+		return l.handleResourceEvaluated(ctx, e)
 	default:
 		log.Warnf("unhandled event type: %s", event.GetEventType())
 	}
@@ -228,7 +233,6 @@ func (l *ResourceReadModelHandler) handleResourceRegistered(e domain.ResourceReg
 			CallType:     e.ResourceInfo.CallType,
 			ResourceType: e.ResourceInfo.ResourceType,
 		},
-		ResourceValueEstimation: e.ResourceInfo.Value,
 	}).Error
 
 }
@@ -250,14 +254,11 @@ func (l *ResourceReadModelHandler) handleResourceInfoChanged(e domain.ResourceIn
 	}
 
 	updates := map[string]interface{}{
-		"name":                e.NewResourceInfo.Name,
-		"description":         e.NewResourceInfo.Description,
-		"value_type":          e.NewResourceInfo.Value.ValueType,
-		"value_from_duration": e.NewResourceInfo.Value.ValueFromDuration,
-		"value_to_duration":   e.NewResourceInfo.Value.ValueToDuration,
-		"updated_at":          e.EventTime,
-		"updated_by":          e.ChangedBy.String(),
-		"version":             e.SequenceNo,
+		"name":        e.NewResourceInfo.Name,
+		"description": e.NewResourceInfo.Description,
+		"updated_at":  e.EventTime,
+		"updated_by":  e.ChangedBy.String(),
+		"version":     e.SequenceNo,
 	}
 	if username != "" {
 		updates["updated_by_name"] = username
@@ -341,6 +342,34 @@ func (l *ResourceReadModelHandler) handleResourceDeleted(ctx context.Context, e 
 	})
 	g.Go(func() error {
 		return l.db.Delete(&readmodel.DbResourceReadModel{}, "resource_key = ?", e.AggregateID).Error
+	})
+	return g.Wait()
+}
+
+func (l *ResourceReadModelHandler) handleResourceEvaluated(ctx context.Context, e domain.ResourceEvaluated) error {
+	resourceKey, err := keys.ParseResourceKey(e.AggregateID)
+	if err != nil {
+		return err
+	}
+	g, ctx := errgroup.WithContext(ctx)
+	for _, value := range e.NewEvaluation {
+		var rm = &readmodel.ResourceEvaluationReadModel{
+			ID:             uuid.NewV4().String(),
+			EvaluationID:   uuid.NewV4().String(),
+			ResourceKey:    resourceKey,
+			EvaluatedBy:    e.EvaluatedBy,
+			EvaluatedAt:    e.EventTime,
+			DimensionValue: value,
+		}
+		g.Go(func() error {
+			return l.db.Create(rm).Error
+		})
+	}
+	g.Go(func() error {
+		return l.db.Model(&readmodel.DbResourceReadModel{}).Where("resource_key = ?", resourceKey).Updates(map[string]interface{}{
+			"version":    e.SequenceNo,
+			"updated_at": e.EventTime,
+		}).Error
 	})
 	return g.Wait()
 }

@@ -5,10 +5,11 @@ import (
 	"github.com/avast/retry-go"
 	"github.com/commonpool/backend/pkg/auth/authenticator"
 	"github.com/commonpool/backend/pkg/auth/authenticator/oidc"
-	"github.com/commonpool/backend/pkg/auth/service"
+	userqueries "github.com/commonpool/backend/pkg/auth/queries"
 	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/keys"
+	domain2 "github.com/commonpool/backend/pkg/resource/domain"
 	"github.com/commonpool/backend/pkg/trading"
 	"github.com/commonpool/backend/pkg/trading/commandhandlers"
 	"github.com/commonpool/backend/pkg/trading/domain"
@@ -22,12 +23,13 @@ import (
 type TradingHandler struct {
 	tradingService                 trading.Service
 	groupService                   group.Service
-	userService                    service.Service
 	authorization                  authenticator.Authenticator
 	getOfferKeyForOfferItem        *queries.GetOfferKeyForOfferItemKey
 	getOffer                       *queries.GetOffer
 	getOffers                      *queries.GetOffers
 	getOffersWithActions           *queries.GetUserOffersWithActions
+	getUsersByKeys                 *userqueries.GetUsersByKeys
+	getValueDimensions             *queries.GetValueDimensions
 	confirmResourceBorrowedHandler *commandhandlers.ConfirmResourceBorrowedHandler
 	confirmResourceReturned        *commandhandlers.ConfirmResourceReturnedHandler
 	confirmServiceGiven            *commandhandlers.ConfirmServiceGivenHandler
@@ -40,7 +42,6 @@ type TradingHandler struct {
 func NewTradingHandler(
 	tradingService trading.Service,
 	groupService group.Service,
-	userService service.Service,
 	auth authenticator.Authenticator,
 	getOffer *queries.GetOffer,
 	getOffers *queries.GetOffers,
@@ -53,16 +54,18 @@ func NewTradingHandler(
 	acceptOffer *commandhandlers.AcceptOfferHandler,
 	submitOffer *commandhandlers.SubmitOfferHandler,
 	getOffersWithActions *queries.GetUserOffersWithActions,
+	getUsersByKeys *userqueries.GetUsersByKeys,
+	getValueDimensions *queries.GetValueDimensions,
 ) *TradingHandler {
 	return &TradingHandler{
 		tradingService:                 tradingService,
 		groupService:                   groupService,
-		userService:                    userService,
 		authorization:                  auth,
 		getOfferKeyForOfferItem:        getOfferKeyForOfferItem,
 		getOffer:                       getOffer,
 		getOffers:                      getOffers,
 		getOffersWithActions:           getOffersWithActions,
+		getUsersByKeys:                 getUsersByKeys,
 		confirmResourceBorrowedHandler: confirmBorrowed,
 		confirmResourceReturned:        confirmReturned,
 		confirmServiceGiven:            confirmServiceGiven,
@@ -70,6 +73,7 @@ func NewTradingHandler(
 		declineOffer:                   declineOffer,
 		acceptOffer:                    acceptOffer,
 		submitOffer:                    submitOffer,
+		getValueDimensions:             getValueDimensions,
 	}
 }
 
@@ -85,6 +89,8 @@ func (h *TradingHandler) Register(e *echo.Group) {
 	offers.POST("/:id/offer-items/:offerItemId/actions/resource-given", h.HandleConfirmResourceTransferred)
 	offers.POST("/:id/offer-items/:offerItemId/actions/resource-borrowed", h.HandleConfirmResourceBorrowed)
 	offers.POST("/:id/offer-items/:offerItemId/actions/resource-returned", h.HandleConfirmBorrowedResourceReturned)
+	values := e.Group("/values")
+	values.GET("/dimensions", h.HandleGetValueDimensions)
 }
 
 type SubmitOfferRequest struct {
@@ -121,7 +127,7 @@ type SendOfferPayloadItem struct {
 }
 
 type GetOfferResponse struct {
-	Offer *groupreadmodels.OfferReadModel
+	Offer *groupreadmodels.OfferReadModel `json:"offer"`
 }
 
 type GetOffersResponse struct {
@@ -231,6 +237,18 @@ func (h *TradingHandler) HandleConfirmResourceTransferred(c echo.Context) error 
 func (h *TradingHandler) HandleConfirmServiceProvided(c echo.Context) error {
 	return h.handleOfferItemAction(c, func(ctx context.Context, offerKey keys.OfferKey, offerItemKey keys.OfferItemKey, loggedInUserKey keys.UserKey) error {
 		return h.confirmServiceGiven.Execute(ctx, domain.NewConfirmServiceGiven(ctx, offerKey, offerItemKey, loggedInUserKey))
+	})
+}
+
+type GetValueDimensionsResponse struct {
+	Dimensions domain2.ValueDimensions `json:"dimensions"`
+}
+
+func (h *TradingHandler) HandleGetValueDimensions(c echo.Context) error {
+	ctx, _ := handler.GetEchoContext(c, "HandleGetValueDimensions")
+	dimensions := h.getValueDimensions.Get(ctx)
+	return c.JSON(http.StatusOK, GetValueDimensionsResponse{
+		Dimensions: dimensions,
 	})
 }
 

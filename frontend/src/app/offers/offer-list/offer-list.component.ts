@@ -3,7 +3,7 @@ import {BackendService} from '../../api/backend.service';
 import {AcceptOfferRequest, DeclineOfferRequest, GetOffersRequest, Offer, OfferStatus} from '../../api/models';
 import {ActivatedRoute} from '@angular/router';
 import {AuthService} from '../../auth.service';
-import {distinctUntilChanged, filter, map, pluck, shareReplay, switchMap, tap} from 'rxjs/operators';
+import {delay, distinctUntilChanged, filter, map, pluck, shareReplay, switchMap, tap} from 'rxjs/operators';
 import {ReplaySubject, Subject} from 'rxjs';
 
 @Component({
@@ -26,6 +26,7 @@ export class OfferListComponent implements OnInit {
 
   refreshSubject = new ReplaySubject();
   offers$ = this.refreshSubject.asObservable().pipe(
+    delay(500),
     switchMap(() => this.backend.getOffers(new GetOffersRequest())),
     pluck('offers'),
     map((offers) => {
@@ -55,18 +56,6 @@ export class OfferListComponent implements OnInit {
 
   ngOnInit(): void {
     this.refresh();
-  }
-
-  accept(id: string) {
-    this.backend.acceptOffer(new AcceptOfferRequest(id)).subscribe(res => {
-      this.refreshSubject.next();
-    });
-  }
-
-  decline(id: string) {
-    this.backend.declineOffer(new DeclineOfferRequest(id)).subscribe(res => {
-      this.refreshSubject.next();
-    });
   }
 
   refresh() {

@@ -83,6 +83,8 @@ func (q *SearchResources) Get(ctx context.Context, query *SearchResourcesQuery) 
 		sb.WriteString(strings.Join(clauses, " and "))
 	}
 
+	sb.WriteString(" order by created_at desc ")
+
 	sb.WriteString(" limit ?")
 	params = append(params, query.Take)
 	sb.WriteString(" offset ? ")
@@ -90,7 +92,10 @@ func (q *SearchResources) Get(ctx context.Context, query *SearchResourcesQuery) 
 
 	var result []*readmodel.DbResourceReadModel
 	sql := sb.String()
-	err := q.db.Debug().Model(&readmodel.DbResourceReadModel{}).Raw(sql, params...).Scan(&result).Error
+	err := q.db.Debug().
+		Model(&readmodel.DbResourceReadModel{}).
+		Raw(sql, params...).
+		Scan(&result).Error
 	return mapResourceReadModels(result), err
 
 }

@@ -21,6 +21,8 @@ import {HomePageComponent} from './home/home-page/home-page.component';
 import {BlocksComponent} from './chat/blocks/blocks.component';
 import {SampleComponent} from './sample/sample/sample.component';
 import {TradingHistoryComponent} from './trading/history/trading-history.component';
+import {ValuesComponent} from './scratch/values.component';
+import {ResourceEvaluationComponent} from './resources/resource-evaluation/resource-evaluation.component';
 
 const routes: Routes = [
   {
@@ -111,6 +113,13 @@ const routes: Routes = [
   {
     path: 'sample',
     component: SampleComponent
+  }, {
+    path: 'values',
+    component: ValuesComponent
+  }, {
+    path: '',
+    component: ResourceEvaluationComponent,
+    outlet: 'modal'
   }
 ];
 

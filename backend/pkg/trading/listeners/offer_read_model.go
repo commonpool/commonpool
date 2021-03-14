@@ -280,9 +280,10 @@ func (h *OfferReadModelHandler) handleOfferCompleted(e *domain.OfferCompleted) e
 	return h.db.Model(&readmodels.DBOfferReadModel{}).
 		Where("offer_key = ? and version < ?", e.GetAggregateID(), e.GetSequenceNo()).
 		Updates(map[string]interface{}{
-			"status":       "completed",
-			"version":      e.GetSequenceNo(),
-			"completed_at": e.GetEventTime(),
+			"status":                 "completed",
+			"version":                e.GetSequenceNo(),
+			"completed_at":           e.GetEventTime(),
+			"status_last_changed_at": e.GetEventTime(),
 		}).Error
 }
 
@@ -290,9 +291,10 @@ func (h *OfferReadModelHandler) handleOfferApproved(e *domain.OfferApproved) err
 	return h.db.Model(&readmodels.DBOfferReadModel{}).
 		Where("offer_key = ? and version < ?", e.GetAggregateID(), e.GetSequenceNo()).
 		Updates(map[string]interface{}{
-			"status":      "approved",
-			"version":     e.GetSequenceNo(),
-			"approved_at": e.GetEventTime(),
+			"status":                 "approved",
+			"version":                e.GetSequenceNo(),
+			"approved_at":            e.GetEventTime(),
+			"status_last_changed_at": e.GetEventTime(),
 		}).Error
 }
 
@@ -304,10 +306,11 @@ func (h *OfferReadModelHandler) handleOfferDeclined(e *domain.OfferDeclined) err
 	return h.db.Model(&readmodels.DBOfferReadModel{}).
 		Where("offer_key = ? and version < ?", e.GetAggregateID(), e.GetSequenceNo()).
 		Updates(map[string]interface{}{
-			"status":      "declined",
-			"version":     e.GetSequenceNo(),
-			"declined_by": e.OfferDeclinedPayload.DeclinedBy,
-			"declined_at": e.GetEventTime(),
+			"status":                 "declined",
+			"version":                e.GetSequenceNo(),
+			"declined_by":            e.OfferDeclinedPayload.DeclinedBy,
+			"declined_at":            e.GetEventTime(),
+			"status_last_changed_at": e.GetEventTime(),
 		}).Error
 }
 
@@ -332,15 +335,17 @@ func (h *OfferReadModelHandler) handleOfferSubmitted(e *domain.OfferSubmitted) e
 
 	return h.db.Transaction(func(tx *gorm.DB) error {
 
+		eventTime := e.GetEventTime()
 		getOptimisticLocking(tx, e.GetSequenceNo(), []clause.Column{
 			{Name: "offer_key"},
 		}).Create(&readmodels.DBOfferReadModel{
 			OfferReadModelBase: readmodels.OfferReadModelBase{
-				OfferKey:    offerKey,
-				GroupKey:    e.GroupKey,
-				Status:      domain.Pending,
-				Version:     e.GetSequenceNo(),
-				SubmittedAt: e.GetEventTime(),
+				OfferKey:            offerKey,
+				GroupKey:            e.GroupKey,
+				Status:              domain.Pending,
+				Version:             e.GetSequenceNo(),
+				SubmittedAt:         eventTime,
+				StatusLastChangedAt: &eventTime,
 			},
 			SubmittedBy: &e.SubmittedBy,
 		})

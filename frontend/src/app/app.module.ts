@@ -82,6 +82,12 @@ import {OfferListItemComponent} from './offers/offer-list-item/offer-list-item.c
 import {TargetComponent} from './shared/target/target.component';
 import {OfferActionComponent} from './offers/offer-action/offer-action.component';
 import {DurationComponent} from './shared/duration/duration.component';
+import {GroupComponent} from './shared/group/group.component';
+import {ValuesComponent} from './scratch/values.component';
+import {ValueComponent} from './scratch/value.component';
+import {ValueThresholdComponent} from './scratch/value-threshold.component';
+import {DimensionValueComponent} from './scratch/dimension-value.component';
+import {ResourceEvaluationComponent} from './resources/resource-evaluation/resource-evaluation.component';
 
 const rendererFactory = (domSanitizer: DomSanitizer): MarkedOptions => {
   return {
@@ -161,7 +167,13 @@ const rendererFactory = (domSanitizer: DomSanitizer): MarkedOptions => {
     OfferListItemComponent,
     TargetComponent,
     OfferActionComponent,
-    DurationComponent
+    DurationComponent,
+    GroupComponent,
+    ValuesComponent,
+    ValueComponent,
+    ValueThresholdComponent,
+    DimensionValueComponent,
+    ResourceEvaluationComponent
   ],
   imports: [
     CommonModule,

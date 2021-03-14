@@ -1,23 +1,23 @@
 package service
 
 import (
-	"github.com/commonpool/backend/pkg/auth/store"
+	"github.com/commonpool/backend/pkg/auth/queries"
 	store2 "github.com/commonpool/backend/pkg/chat/store"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/mq"
 )
 
 type ChatService struct {
-	userStore  store.Store
-	amqpClient mq.Client
-	chatStore  store2.Store
+	amqpClient     mq.Client
+	chatStore      store2.Store
+	getUsersByKeys *queries.GetUsersByKeys
 }
 
-func NewChatService(us store.Store, mq mq.Client, cs store2.Store) *ChatService {
+func NewChatService(mq mq.Client, cs store2.Store, getUsersByKeys *queries.GetUsersByKeys) *ChatService {
 	return &ChatService{
-		userStore:  us,
-		amqpClient: mq,
-		chatStore:  cs,
+		amqpClient:     mq,
+		chatStore:      cs,
+		getUsersByKeys: getUsersByKeys,
 	}
 }
 

@@ -55,20 +55,7 @@ export class OfferListItemComponent implements OnInit {
   }
 
   @Output()
-  approve = new EventEmitter();
-
-  @Output()
-  decline = new EventEmitter();
-
-  @Output()
   refresh = new EventEmitter();
-
-  confirmServiceProvided(id: string) {
-    const sub = this.backend.confirmServiceProvided(new ConfirmServiceProvidedRequest(id)).subscribe(res => {
-      sub.unsubscribe();
-      this.refresh.next();
-    });
-  }
 
   ngOnInit(): void {
   }

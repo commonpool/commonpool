@@ -58,7 +58,12 @@ func (h *Handler) websocketAnonymous(ctx context.Context, response *echo.Respons
 	hub := newHub()
 	go hub.run()
 
-	client := NewAnonymousClient(hub, ws, h.mq.NewQueueFactory())
+	queue := h.mq.NewQueue(mq.NewQueueConfig().WithName("").WithExclusive(true).WithAutoDelete(true))
+	if err := queue.Connect(ctx); err != nil {
+		return err
+	}
+
+	client := NewAnonymousClient(hub, ws, queue)
 
 	go client.writePump()
 	go client.readPump()
@@ -84,6 +89,8 @@ func (h *Handler) websocketAnonymous(ctx context.Context, response *echo.Respons
 func (h *Handler) Websocket(c echo.Context) error {
 
 	ctx, l := handler.GetEchoContext(c, "Websocket")
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
 	upgrader.CheckOrigin = func(r *http.Request) bool {
 		return true
@@ -109,6 +116,10 @@ func (h *Handler) Websocket(c echo.Context) error {
 	queueName := "chat.ws." + userKey.String() + "." + consumerKey
 
 	channel := h.mq.NewChannel()
+	if err := channel.Connect(ctx); err != nil {
+		return err
+	}
+
 	defer channel.Close()
 
 	userExchangeName, err := h.chatService.CreateUserExchange(ctx, userKey)
@@ -117,25 +128,24 @@ func (h *Handler) Websocket(c echo.Context) error {
 		return err
 	}
 
-	if err := channel.QueueDeclare(ctx, queueName, false, true, false, false, nil); err != nil {
-		l.Error("could not declare websocket amqp queue", zap.Error(err))
+	queue := h.mq.NewQueue(mq.NewQueueConfig().WithExchange(userExchangeName).WithName(queueName).WithExclusive(false).WithAutoDelete(true))
+	if err := queue.Connect(ctx); err != nil {
 		return err
 	}
+	defer queue.Close()
 
 	if err := channel.QueueBind(ctx, queueName, "", userExchangeName, false, nil); err != nil {
 		l.Error("could not bind consumer queue to exchange", zap.Error(err))
 		return err
 	}
 
-	client := NewClient(hub, ws, h.mq.NewQueueFactory(), &queueName, &consumerKey)
-
+	client := NewClient(hub, ws, queue, &queueName, &consumerKey)
 	client.hub.register <- client
 
 	// Allow collection of memory referenced by the caller by doing all work in
 	// new goroutines.
 	go client.writePump()
 	go client.readPump()
-
 	return client.eventPump(ctx)
 
 	// ch, err := h.mq.RegisterWsChannel(ctx, clientId, userKey)

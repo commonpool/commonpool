@@ -11,14 +11,6 @@ type Event interface {
 	GetAggregateID() string
 	GetAggregateType() string
 	GetEventVersion() int
-	// SetEventType(eventType string)
-	// SetEventTime(eventTime time.Time)
-	// SetSequenceNo(sequenceNo int)
-	// SetCorrelationID(correlationID string)
-	// SetEventID(eventID string)
-	// SetAggregateID(aggregateID string)
-	// SetAggregateType(aggregateType string)
-	// SetEventVersion(eventVersion int)
 }
 
 type EventEnvelope struct {

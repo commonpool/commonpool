@@ -13,6 +13,7 @@ type ResourceGroupSharingChangedPayload struct {
 	NewResourceSharings ResourceSharings `json:"newResourceSharings"`
 	AddedSharings       ResourceSharings `json:"addedSharings"`
 	RemovedSharings     ResourceSharings `json:"removedSharings"`
+	ResourceInfo        ResourceInfo     `json:"resourceInfo"`
 }
 
 type ResourceGroupSharingChanged struct {
@@ -25,7 +26,8 @@ func NewResourceGroupSharingChanged(
 	oldResourceSharings,
 	newResourceSharings,
 	addedSharings,
-	removedSharings ResourceSharings) ResourceGroupSharingChanged {
+	removedSharings ResourceSharings,
+	resourceInfo ResourceInfo) ResourceGroupSharingChanged {
 	return ResourceGroupSharingChanged{
 		eventsource.NewEventEnvelope(ResourceGroupSharingChangedEvent, 1),
 		ResourceGroupSharingChangedPayload{
@@ -34,6 +36,7 @@ func NewResourceGroupSharingChanged(
 			NewResourceSharings: newResourceSharings,
 			AddedSharings:       addedSharings,
 			RemovedSharings:     removedSharings,
+			ResourceInfo:        resourceInfo,
 		},
 	}
 }

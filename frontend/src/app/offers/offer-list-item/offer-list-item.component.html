@@ -13,7 +13,7 @@
           </div>
         -->
 
-          <div class="mt-1 list-group d-flex">
+          <div class="list-group d-flex">
             <div *ngFor="let item of offer.items" class="list-group-item bg-white">
               <div class="d-flex">
                 <div>
@@ -27,7 +27,9 @@
                   </ng-container>
                   <ng-container *ngIf="item.type === 'borrow_resource'">
                     <b>{{item.to.name}}</b> would <u>borrow</u>&nbsp;<b>{{item.resource.resourceName}}</b> for
-                    <b><app-duration [duration]="item.duration"></app-duration></b>.
+                    <b>
+                      <app-duration [duration]="item.duration"></app-duration>
+                    </b>.
                   </ng-container>
                   <ng-container *ngIf="item.type === 'transfer_resource'">
                     <b>{{item.to.name}}</b> would <u>take</u> <b>{{item.resource.resourceName}}</b>
@@ -40,18 +42,21 @@
                 <div class="flex-grow-1"></div>
                 <div style="align-self: center">
                   <div *ngFor="let action of offerItemActions[item.offerItemId]" class="mr-2 mb-1">
-                    <app-offer-action [action]="action"></app-offer-action>
+                    <app-offer-action (submitted)="refresh.next()" [action]="action"></app-offer-action>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="mt-3 text-right">
-            <span *ngFor="let action of offerActions$ | async" class="mr-1">
-              <app-offer-action [action]="action"></app-offer-action>
-            </span>
-          </div>
+          <ng-container *ngIf="offerActions$ | async; let offerActions">
+            <div class="mt-3 text-right" *ngIf="offerActions?.length > 0">
+              <span *ngFor="let action of offerActions" class="mr-1">
+                <app-offer-action (submitted)="refresh.next()" [action]="action"></app-offer-action>
+              </span>
+            </div>
+          </ng-container>
+
 
         </div>
       </div>

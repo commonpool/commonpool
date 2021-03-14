@@ -25,7 +25,7 @@ export class CreateOrEditGroupComponent implements OnInit {
   submit() {
     this.pending = true;
     this.backend.createGroup(new CreateGroupRequest(this.name, this.description)).subscribe(res => {
-      this.router.navigateByUrl('/');
+      this.router.navigateByUrl('/groups/' + res.group.groupId);
       this.pending = false;
     }, err => {
       this.error = err;

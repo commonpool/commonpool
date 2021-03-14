@@ -9,7 +9,7 @@
 
         <ul class="list-group">
 
-          <li class="list-group-item" *ngFor="let resource of resources">
+          <li class="list-group-item bg-light" *ngFor="let resource of resources">
             {{resource.info.callType}} :
             <app-resource-link [resource]="resource"
                                [groupId]="(ownerType$ | async) === 'group' ? (accountId$ | async) : undefined ">
@@ -29,7 +29,7 @@
         <div *ngIf="resources.length === 0">
 
           <p>You don't have any posts yet</p>
-          <button class="btn btn-primary">Add some stuff to your profile</button>
+          <a [routerLink]="'/resources/new'"  class="btn btn-primary">Add some stuff to your profile</a>
 
         </div>
       </div>

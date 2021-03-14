@@ -52,7 +52,11 @@ import {
   OfferItemTargetRequest,
   OfferGroupOrUserPickerResult,
   ConfirmServiceProvidedRequest,
-  OfferItem, ConfirmBorrowedResourceReturned, ConfirmResourceBorrowed, ConfirmResourceTransferred
+  OfferItem,
+  ConfirmBorrowedResourceReturned,
+  ConfirmResourceBorrowed,
+  ConfirmResourceTransferred,
+  GetValueDimensionsRequest, GetValueDimensionsResponse
 } from './models';
 
 import {Observable, of, Subject, throwError} from 'rxjs';
@@ -384,7 +388,7 @@ export class BackendService {
       observe: 'response'
     }).pipe(
       map((res) => {
-        if (res.status !== 202) {
+        if (res.status !== 201) {
           throwError(ErrorResponse.fromHttpResponse(res));
         }
         return SendOfferResponse.from(res.body as SendOfferResponse);
@@ -698,4 +702,18 @@ export class BackendService {
       })
     );
   }
+
+  getValueDimensions(request: GetValueDimensionsRequest): Observable<GetValueDimensionsResponse> {
+    return this.http.get(`${environment.apiUrl}/api/v1/values/dimensions`, {
+      observe: 'response'
+    }).pipe(
+      map((res: HttpResponse<object>) => {
+        if (res.status !== 200) {
+          throwError(ErrorResponse.fromHttpResponse(res));
+        }
+        return GetValueDimensionsResponse.from(res.body as GetValueDimensionsResponse);
+      })
+    );
+  }
+
 }

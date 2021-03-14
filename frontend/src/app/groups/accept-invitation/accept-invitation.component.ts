@@ -36,7 +36,7 @@ export class AcceptInvitationComponent implements OnDestroy {
   public readonly acceptInvitationSubscription: Subscription;
 
   @Output()
-  accepted: EventEmitter<Membership> = new EventEmitter<Membership>();
+  accepted = new EventEmitter<null>();
 
   constructor(private auth: AuthService, private backend: BackendService) {
 
@@ -59,7 +59,7 @@ export class AcceptInvitationComponent implements OnDestroy {
       switchMap((request) => this.backend.acceptInvitation(request)),
     ).subscribe(response => {
       this.pendingSubject.next(false);
-      this.accepted.next(response.membership);
+      this.accepted.next();
     }, err => {
       this.pendingSubject.next(false);
       this.errorSubject.next(err);

@@ -3,9 +3,7 @@ package handler
 import (
 	"github.com/commonpool/backend/pkg/auth/authenticator"
 	"github.com/commonpool/backend/pkg/auth/authenticator/oidc"
-	"github.com/commonpool/backend/pkg/auth/service"
-	"github.com/commonpool/backend/pkg/auth/store"
-	"github.com/commonpool/backend/pkg/config"
+	"github.com/commonpool/backend/pkg/auth/queries"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/utils"
@@ -14,17 +12,16 @@ import (
 )
 
 type UserHandler struct {
-	userStore     store.Store
-	userService   service.Service
 	authenticator authenticator.Authenticator
-	appConfig     *config.AppConfig
+	getUser       *queries.GetUser
+	searchUsers   *queries.SearchUsers
 }
 
-func NewUserHandler(appConfig *config.AppConfig, userService service.Service, authenticator authenticator.Authenticator) *UserHandler {
+func NewUserHandler(authenticator authenticator.Authenticator, getUser *queries.GetUser, searchUsers *queries.SearchUsers) *UserHandler {
 	return &UserHandler{
-		userService:   userService,
 		authenticator: authenticator,
-		appConfig:     appConfig,
+		searchUsers:   searchUsers,
+		getUser:       getUser,
 	}
 }
 
@@ -72,16 +69,16 @@ func (h *UserHandler) GetUserInfo(c echo.Context) error {
 	userId := c.Param("id")
 	userKey := keys.NewUserKey(userId)
 
-	user, err := h.userService.GetUser(userKey)
-
+	user, err := h.getUser.Get(userKey)
 	if err != nil {
 		return err
 	}
 
 	response := UserInfoResponse{
 		Username: user.Username,
-		Id:       user.ID,
+		Id:       user.UserKey.String(),
 	}
+
 	return c.JSON(http.StatusOK, response)
 }
 
@@ -100,6 +97,8 @@ func (h *UserHandler) GetUserInfo(c echo.Context) error {
 // @Router /users [get]
 func (h *UserHandler) SearchUsers(c echo.Context) error {
 
+	ctx, _ := handler.GetEchoContext(c, "UserHandler")
+
 	skip, err := utils.ParseSkip(c)
 	if err != nil {
 		return err
@@ -112,21 +111,21 @@ func (h *UserHandler) SearchUsers(c echo.Context) error {
 
 	qry := c.QueryParam("query")
 
-	userQuery := store.Query{
+	userQuery := queries.Query{
 		Query: qry,
 		Skip:  skip,
 		Take:  take,
 	}
 
-	users, err := h.userService.Find(userQuery)
+	users, err := h.searchUsers.Get(ctx, userQuery)
 	if err != nil {
 		return err
 	}
 
-	responseItems := make([]UserInfoResponse, len(users.Items))
-	for i, u := range users.Items {
+	responseItems := make([]UserInfoResponse, len(users))
+	for i, u := range users {
 		responseItems[i] = UserInfoResponse{
-			Id:       u.ID,
+			Id:       u.UserKey.String(),
 			Username: u.Username,
 		}
 	}

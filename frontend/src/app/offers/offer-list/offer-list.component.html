@@ -9,8 +9,7 @@
       </nav>
 
       <div *ngFor="let offer of offers.pending" class="mb-3">
-        <app-offer-list-item [offer]="offer" (approve)="accept(offer.id)"
-                             (decline)="decline(offer.id)"></app-offer-list-item>
+        <app-offer-list-item [offer]="offer" (refresh)="refresh()" ></app-offer-list-item>
       </div>
 
       <p *ngIf="offers.pending.length === 0">
@@ -25,8 +24,7 @@
       </nav>
 
       <div *ngFor="let offer of offers.accepted" class="mb-3">
-        <app-offer-list-item [offer]="offer" (approve)="accept(offer.id)"
-                             (decline)="decline(offer.id)"></app-offer-list-item>
+        <app-offer-list-item [offer]="offer" (refresh)="refresh()"></app-offer-list-item>
       </div>
 
       <p *ngIf="offers.accepted.length === 0">
@@ -41,8 +39,7 @@
       </nav>
 
       <div *ngFor="let offer of offers.completed" class="mb-3">
-        <app-offer-list-item [offer]="offer" (approve)="accept(offer.id)"
-                             (decline)="decline(offer.id)"></app-offer-list-item>
+        <app-offer-list-item [offer]="offer" (refresh)="refresh()"></app-offer-list-item>
       </div>
 
       <p *ngIf="offers.completed.length === 0">

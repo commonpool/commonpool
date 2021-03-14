@@ -8,7 +8,6 @@ import (
 	"github.com/commonpool/backend/pkg/auth/authenticator"
 	"github.com/commonpool/backend/pkg/auth/domain"
 	"github.com/commonpool/backend/pkg/auth/models"
-	"github.com/commonpool/backend/pkg/auth/store"
 	"github.com/commonpool/backend/pkg/config"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/utils"
@@ -27,10 +26,8 @@ import (
 type OidcAuthenticator struct {
 	appConfig    *config.AppConfig
 	oauth2Config oauth2.Config
-	oidcConfig   *oidc.Config
 	oidcProvider *oidc.Provider
 	verifier     *oidc.IDTokenVerifier
-	authStore    store.Store
 	userRepo     domain.UserRepository
 }
 
@@ -92,7 +89,7 @@ func (a *OidcAuthenticator) Authenticate(redirectOnError bool) echo.MiddlewareFu
 				isAuthenticated := c.Request().Header.Get("X-Debug-Is-Authenticated")
 				if username != "" && email != "" && id != "" && isAuthenticated == "true" {
 					if isAuthenticated == "true" {
-						if err := SaveAuthenticatedUser(c, ctx, a.userRepo, a.authStore, id, username, email); err != nil {
+						if err := SaveAuthenticatedUser(c, ctx, a.userRepo, id, username, email); err != nil {
 							l.Error("could not save authenticated used", zap.Error(err))
 							return err
 						}
@@ -133,7 +130,7 @@ func (a *OidcAuthenticator) Authenticate(redirectOnError bool) echo.MiddlewareFu
 				}
 
 				// saving into context
-				err = SaveAuthenticatedUser(c, ctx, a.userRepo, a.authStore, idTokenClaims.Subject, idTokenClaims.PreferredUsername, idTokenClaims.Email)
+				err = SaveAuthenticatedUser(c, ctx, a.userRepo, idTokenClaims.Subject, idTokenClaims.PreferredUsername, idTokenClaims.Email)
 				if err != nil {
 					l.Error("could not save authenticated used", zap.Error(err))
 					return err
@@ -225,7 +222,7 @@ func (a *OidcAuthenticator) Authenticate(redirectOnError bool) echo.MiddlewareFu
 				setRefreshTokenCookie(c, tokenResponse.RefreshToken, a.appConfig)
 			}
 
-			err = SaveAuthenticatedUser(c, ctx, a.userRepo, a.authStore, idTokenClaims.Subject, idTokenClaims.PreferredUsername, idTokenClaims.Email)
+			err = SaveAuthenticatedUser(c, ctx, a.userRepo, idTokenClaims.Subject, idTokenClaims.PreferredUsername, idTokenClaims.Email)
 			if err != nil {
 				return err
 			}
@@ -366,7 +363,7 @@ func (a *OidcAuthenticator) Register(c *echo.Group) {
 		setAccessTokenCookie(c, rawIdToken, a.appConfig)
 		setRefreshTokenCookie(c, refreshToken, a.appConfig)
 
-		err = SaveAuthenticatedUser(c, ctx, a.userRepo, a.authStore, resp.IDTokenClaims.Subject, resp.IDTokenClaims.PreferredUsername, resp.IDTokenClaims.Email)
+		err = SaveAuthenticatedUser(c, ctx, a.userRepo, resp.IDTokenClaims.Subject, resp.IDTokenClaims.PreferredUsername, resp.IDTokenClaims.Email)
 		if err != nil {
 			return err
 		}

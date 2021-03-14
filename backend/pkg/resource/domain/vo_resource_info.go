@@ -3,7 +3,6 @@ package domain
 import (
 	"encoding/json"
 	"github.com/commonpool/backend/pkg/exceptions"
-	"time"
 )
 
 type ResourceValueType string
@@ -26,50 +25,6 @@ func (r *ResourceValueType) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-type ResourceValueEstimation struct {
-	ValueType         ResourceValueType `json:"valueType" gorm:"not null;type:varchar(128)"`
-	ValueFromDuration time.Duration     `json:"timeValueFrom" gorm:"not null"`
-	ValueToDuration   time.Duration     `json:"timeValueTo" gorm:"not null"`
-}
-
-func (r ResourceValueEstimation) WithValueType(valueType ResourceValueType) ResourceValueEstimation {
-	return ResourceValueEstimation{
-		ValueType:         valueType,
-		ValueFromDuration: r.ValueFromDuration,
-		ValueToDuration:   r.ValueFromDuration,
-	}
-}
-
-func (r ResourceValueEstimation) WithFromToValueType() ResourceValueEstimation {
-	return r.WithValueType(FromToDuration)
-}
-
-func (r ResourceValueEstimation) WithValueFromDuration(from time.Duration) ResourceValueEstimation {
-	return ResourceValueEstimation{
-		ValueType:         r.ValueType,
-		ValueFromDuration: from,
-		ValueToDuration:   r.ValueFromDuration,
-	}
-}
-
-func (r ResourceValueEstimation) WithHoursFromTo(fromHours, toHours int) ResourceValueEstimation {
-	return r.
-		WithValueFromDuration(time.Duration(fromHours) * time.Hour).
-		WithValueToDuration(time.Duration(toHours) * time.Hour)
-}
-
-func (r ResourceValueEstimation) WithValueToDuration(to time.Duration) ResourceValueEstimation {
-	return ResourceValueEstimation{
-		ValueType:         r.ValueType,
-		ValueFromDuration: r.ValueFromDuration,
-		ValueToDuration:   to,
-	}
-}
-
-func NewResourceValueEstimation() ResourceValueEstimation {
-	return ResourceValueEstimation{}
-}
-
 type ResourceInfoBase struct {
 	Name         string       `json:"name"`
 	Description  string       `json:"description"`
@@ -79,21 +34,18 @@ type ResourceInfoBase struct {
 
 type ResourceInfo struct {
 	ResourceInfoBase
-	Value ResourceValueEstimation `json:"value"`
 }
 
 func (r ResourceInfo) AsUpdate() ResourceInfoUpdate {
 	return ResourceInfoUpdate{
 		Name:        r.Name,
 		Description: r.Description,
-		Value:       r.Value,
 	}
 }
 
 type ResourceInfoUpdate struct {
-	Name        string                  `json:"name"`
-	Description string                  `json:"description"`
-	Value       ResourceValueEstimation `json:"value"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
 func (r ResourceInfo) WithName(name string) ResourceInfo {
@@ -104,7 +56,6 @@ func (r ResourceInfo) WithName(name string) ResourceInfo {
 			CallType:     r.CallType,
 			ResourceType: r.ResourceType,
 		},
-		Value: r.Value,
 	}
 }
 func (r ResourceInfo) WithDescription(description string) ResourceInfo {
@@ -115,7 +66,6 @@ func (r ResourceInfo) WithDescription(description string) ResourceInfo {
 			CallType:     r.CallType,
 			ResourceType: r.ResourceType,
 		},
-		Value: r.Value,
 	}
 }
 func (r ResourceInfo) WithCallType(callType CallType) ResourceInfo {
@@ -126,7 +76,6 @@ func (r ResourceInfo) WithCallType(callType CallType) ResourceInfo {
 			CallType:     callType,
 			ResourceType: r.ResourceType,
 		},
-		Value: r.Value,
 	}
 }
 
@@ -140,7 +89,6 @@ func (r ResourceInfo) WithIsRequest() ResourceInfo {
 
 func (r ResourceInfo) WithResourceType(resourceType ResourceType) ResourceInfo {
 	return ResourceInfo{
-		Value: r.Value,
 		ResourceInfoBase: ResourceInfoBase{
 			Name:         r.ResourceInfoBase.Name,
 			Description:  r.ResourceInfoBase.Description,
@@ -156,18 +104,6 @@ func (r ResourceInfo) WithIsService() ResourceInfo {
 
 func (r ResourceInfo) WithIsObject() ResourceInfo {
 	return r.WithResourceType(ObjectResource)
-}
-
-func (r ResourceInfo) WithValue(value ResourceValueEstimation) ResourceInfo {
-	return ResourceInfo{
-		ResourceInfoBase: ResourceInfoBase{
-			Name:         r.Name,
-			Description:  r.Description,
-			CallType:     r.CallType,
-			ResourceType: r.ResourceType,
-		},
-		Value: value,
-	}
 }
 
 func NewResourceInfo() ResourceInfo {

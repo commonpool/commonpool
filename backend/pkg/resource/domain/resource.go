@@ -19,15 +19,17 @@ type Resource struct {
 	registeredBy keys.UserKey
 	info         ResourceInfo
 	sharings     []ResourceSharing
+	evaluations  map[keys.UserKey][]ValueEstimations
 }
 
 func NewResource(key keys.ResourceKey) *Resource {
 	return &Resource{
-		key:       key,
-		version:   0,
-		changes:   []eventsource.Event{},
-		isNew:     true,
-		isDeleted: false,
+		key:         key,
+		version:     0,
+		changes:     []eventsource.Event{},
+		isNew:       true,
+		isDeleted:   false,
+		evaluations: map[keys.UserKey][]ValueEstimations{},
 	}
 }
 
@@ -39,7 +41,12 @@ func NewFromEvents(key keys.ResourceKey, events []eventsource.Event) *Resource {
 	return r
 }
 
-func (r *Resource) Register(registeredBy keys.UserKey, registeredFor *keys.Target, resourceInfo ResourceInfo, resourceSharings *keys.GroupKeys) error {
+func (r *Resource) Register(
+	registeredBy keys.UserKey,
+	registeredFor *keys.Target,
+	resourceInfo ResourceInfo,
+	resourceSharings *keys.GroupKeys,
+	values ValueEstimations) error {
 	if err := r.assertIsNew(); err != nil {
 		return err
 	}
@@ -67,14 +74,23 @@ func (r *Resource) Register(registeredBy keys.UserKey, registeredFor *keys.Targe
 		return exceptions.ErrBadRequest("registeredFor is required")
 	}
 
-	evt := NewResourceRegistered(registeredBy, *registeredFor, sanitizedInfo)
-	r.raise(evt)
+	r.raise(NewResourceRegistered(registeredBy, *registeredFor, sanitizedInfo))
 
 	if resourceSharings == nil {
 		resourceSharings = keys.NewEmptyGroupKeys()
 	}
 
-	return r.ChangeSharings(registeredBy, resourceSharings)
+	err = r.ChangeSharings(registeredBy, resourceSharings)
+	if err != nil {
+		return err
+	}
+
+	err = r.EvaluateResource(registeredBy, values)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *Resource) handleResourceRegistered(e ResourceRegistered) {
@@ -91,7 +107,9 @@ func (r *Resource) ChangeInfo(changedBy keys.UserKey, resourceInfo ResourceInfoU
 		return err
 	}
 
-	newInfo := r.info.WithName(resourceInfo.Name).WithDescription(resourceInfo.Description).WithValue(resourceInfo.Value)
+	newInfo := r.info.
+		WithName(resourceInfo.Name).
+		WithDescription(resourceInfo.Description)
 
 	sanitizedInfo, err := r.sanitizeResourceInfo(newInfo)
 	if err != nil {
@@ -109,6 +127,28 @@ func (r *Resource) ChangeInfo(changedBy keys.UserKey, resourceInfo ResourceInfoU
 
 func (r *Resource) handleResourceInfoChanged(e ResourceInfoChanged) {
 	r.info = e.NewResourceInfo
+}
+
+func (r *Resource) EvaluateResource(evaluatedBy keys.UserKey, evaluation ValueEstimations) error {
+	evaluations, ok := r.evaluations[evaluatedBy]
+	if evaluations == nil {
+		evaluations = []ValueEstimations{}
+	}
+
+	if len(evaluations) > 0 {
+		lastEvaluation := evaluations[len(evaluations)-1]
+		if lastEvaluation.Equals(evaluation) {
+			return nil
+		}
+	}
+
+	r.raise(NewResourceEvaluated(evaluatedBy, evaluation, evaluations, !ok))
+
+	return nil
+}
+
+func (r *Resource) handleResourceEvaluated(e ResourceEvaluated) {
+	r.evaluations[e.EvaluatedBy] = append(r.evaluations[e.EvaluatedBy], e.NewEvaluation)
 }
 
 func (r *Resource) ChangeSharings(changedBy keys.UserKey, sharedWith *keys.GroupKeys) error {
@@ -160,7 +200,7 @@ func (r *Resource) ChangeSharings(changedBy keys.UserKey, sharedWith *keys.Group
 		return nil
 	}
 
-	evt := NewResourceGroupSharingChanged(changedBy, r.sharings, desiredSharings, toAdd, toDelete)
+	evt := NewResourceGroupSharingChanged(changedBy, r.sharings, desiredSharings, toAdd, toDelete, r.info)
 	r.raise(evt)
 	return nil
 }
@@ -193,7 +233,6 @@ func (r *Resource) sanitizeResourceInfo(resourceInfo ResourceInfo) (ResourceInfo
 			CallType:     resourceInfo.CallType,
 			ResourceType: resourceInfo.ResourceType,
 		},
-		Value: resourceInfo.Value,
 	}
 
 	if sanitizedInfo.Name == "" {
@@ -276,6 +315,8 @@ func (o *Resource) on(evt eventsource.Event, isNew bool) {
 		o.handleResourceGroupSharingChanged(e)
 	case ResourceDeleted:
 		o.handleResourceDeleted(e)
+	case ResourceEvaluated:
+		o.handleResourceEvaluated(e)
 	}
 	if !isNew {
 		o.version++

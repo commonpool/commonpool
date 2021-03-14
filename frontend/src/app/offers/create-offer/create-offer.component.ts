@@ -12,21 +12,23 @@ import {AuthService} from '../../auth.service';
   styleUrls: ['./create-offer.component.css']
 })
 export class CreateOfferComponent implements OnDestroy {
-
   constructor(private backend: BackendService, private router: Router, private auth: AuthService) {
   }
 
   public form = new CreateOfferForm();
   public itemForm = new CreateOfferItemForm();
-
   submitted = false;
   pending = false;
   error = undefined;
-  offerItemType: OfferItemType = OfferItemType.BorrowResource;
-
   itemFormToggled = true;
   groupSelected = false;
-
+  disableGroupSub = this.form.valueChanges.subscribe(value => {
+    if (value.type && this.form.groupId.enabled) {
+      this.form.groupId.disable();
+    } else if (!value.type && this.form.groupId.disabled) {
+      this.form.groupId.enable();
+    }
+  });
   formValueSub = this.itemForm.valueChanges.pipe(
     pluck<any, string>('from'),
     distinctUntilChanged(),
@@ -42,14 +44,6 @@ export class CreateOfferComponent implements OnDestroy {
     this.groupSelected = true;
     this.form.groupId.disable();
   }
-
-  disableGroupSub = this.form.valueChanges.subscribe(value => {
-    if (value.type && this.form.groupId.enabled) {
-      this.form.groupId.disable();
-    } else if (!value.type && this.form.groupId.disabled) {
-      this.form.groupId.enable();
-    }
-  });
 
   toPredicate = (val: string) => true;
 
@@ -93,8 +87,6 @@ export class CreateOfferComponent implements OnDestroy {
     this.pending = true;
     this.error = undefined;
 
-
-
     const request = {offer: this.form.value} as SendOfferRequest;
 
     this.backend.sendOffer(SendOfferRequest.from(request)).subscribe(res => {
@@ -107,9 +99,8 @@ export class CreateOfferComponent implements OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (this.formValueSub) {
-      this.formValueSub.unsubscribe();
-    }
+    this.formValueSub.unsubscribe();
+    this.disableGroupSub.unsubscribe();
   }
 
 }

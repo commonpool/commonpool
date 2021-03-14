@@ -1,7 +1,7 @@
 
 <ng-container *ngIf="resource$ | async; let resource">
 
-  <a [ngClass]="{'text-danger': resource.resource.type == 1}" [routerLink]="'/resources/' + resource.resource.resourceId">{{resource.resource.name}}</a>
+  <a  [routerLink]="'/resources/' + resource.resource.resourceId">{{resource.resource.info.name}}</a>
 
 </ng-container>
 

@@ -176,6 +176,7 @@ func (q *GetOffersPermissions) getAdminsForOffers(ctx context.Context, offers ma
 
 	if err := q.db.Model(&groupreadmodels.OfferUserMembershipReadModel{}).
 		Where(adminSb.String(), adminParams...).
+		Debug().
 		Find(&groupAdmins).
 		Error; err != nil {
 		return nil, err

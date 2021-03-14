@@ -1,10 +1,10 @@
 package handler
 
 import (
+	"encoding/json"
 	"github.com/avast/retry-go"
 	"github.com/commonpool/backend/pkg/auth/authenticator"
 	"github.com/commonpool/backend/pkg/auth/authenticator/oidc"
-	"github.com/commonpool/backend/pkg/auth/service"
 	"github.com/commonpool/backend/pkg/exceptions"
 	"github.com/commonpool/backend/pkg/group"
 	"github.com/commonpool/backend/pkg/group/queries"
@@ -20,22 +20,21 @@ import (
 )
 
 type ResourceHandler struct {
-	groupService                group.Service
-	userService                 service.Service
-	authorization               authenticator.Authenticator
-	resourceRepo                domain.ResourceRepository
-	getUserMemberships          *queries.GetUserMemberships
-	getResource                 *resourcequeries.GetResource
-	getResourceSharings         *resourcequeries.GetResourceSharings
-	getResourcesSharings        *resourcequeries.GetResourcesSharings
-	searchResources             *resourcequeries.SearchResources
-	getResourceWithSharings     *resourcequeries.GetResourceWithSharings
-	searchResourcesWithSharings *resourcequeries.SearchResourcesWithSharings
+	groupService                     group.Service
+	authorization                    authenticator.Authenticator
+	resourceRepo                     domain.ResourceRepository
+	getUserMemberships               *queries.GetUserMemberships
+	getResource                      *resourcequeries.GetResource
+	getResourceSharings              *resourcequeries.GetResourceSharings
+	getResourcesSharings             *resourcequeries.GetResourcesSharings
+	searchResources                  *resourcequeries.SearchResources
+	getResourceWithSharings          *resourcequeries.GetResourceWithSharings
+	getResourceWithSharingsAndValues *resourcequeries.GetResourceWithSharingsAndValues
+	searchResourcesWithSharings      *resourcequeries.SearchResourcesWithSharings
 }
 
 func NewHandler(
 	groupService group.Service,
-	userService service.Service,
 	authenticator authenticator.Authenticator,
 	resourceRepo domain.ResourceRepository,
 	getUserMemberships *queries.GetUserMemberships,
@@ -44,19 +43,21 @@ func NewHandler(
 	getResourcesSharings *resourcequeries.GetResourcesSharings,
 	searchResources *resourcequeries.SearchResources,
 	getResourceWithSharings *resourcequeries.GetResourceWithSharings,
-	searchResourcesWithSharings *resourcequeries.SearchResourcesWithSharings) *ResourceHandler {
+	searchResourcesWithSharings *resourcequeries.SearchResourcesWithSharings,
+	getResourceWithSharingsAndValues *resourcequeries.GetResourceWithSharingsAndValues,
+) *ResourceHandler {
 	return &ResourceHandler{
-		groupService:                groupService,
-		userService:                 userService,
-		authorization:               authenticator,
-		resourceRepo:                resourceRepo,
-		getUserMemberships:          getUserMemberships,
-		getResource:                 getResource,
-		getResourceSharings:         getResourceSharings,
-		searchResources:             searchResources,
-		getResourcesSharings:        getResourcesSharings,
-		getResourceWithSharings:     getResourceWithSharings,
-		searchResourcesWithSharings: searchResourcesWithSharings,
+		groupService:                     groupService,
+		authorization:                    authenticator,
+		resourceRepo:                     resourceRepo,
+		getUserMemberships:               getUserMemberships,
+		getResource:                      getResource,
+		getResourceSharings:              getResourceSharings,
+		searchResources:                  searchResources,
+		getResourcesSharings:             getResourcesSharings,
+		getResourceWithSharings:          getResourceWithSharings,
+		searchResourcesWithSharings:      searchResourcesWithSharings,
+		getResourceWithSharingsAndValues: getResourceWithSharingsAndValues,
 	}
 }
 
@@ -70,7 +71,7 @@ func (h *ResourceHandler) Register(e *echo.Group) {
 }
 
 type GetResourceResponse struct {
-	Resource *readmodel.ResourceWithSharingsReadModel `json:"resource"`
+	Resource *readmodel.ResourceWithSharingsAndValuesReadModel `json:"resource"`
 }
 
 func (g GetResourceResponse) GetResourceKey() keys.ResourceKey {
@@ -105,11 +106,15 @@ func (g GetResourceResponse) AsUpdate() *UpdateResourceRequest {
 // @Router /resources/:id [get]
 func (h *ResourceHandler) GetResource(c echo.Context) error {
 	ctx, _ := handler.GetEchoContext(c, "GetResource")
+	loggedInUser, err := oidc.GetLoggedInUser(ctx)
+	if err != nil {
+		return err
+	}
 	resourceKey, err := keys.ParseResourceKey(c.Param("id"))
 	if err != nil {
 		return err
 	}
-	resource, err := h.getResourceWithSharings.Get(ctx, resourceKey)
+	resource, err := h.getResourceWithSharingsAndValues.Get(ctx, resourceKey, loggedInUser.GetUserKey())
 	if err != nil {
 		return err
 	}
@@ -184,8 +189,9 @@ func NewCreateResourceRequest(resource CreateResourcePayload) *CreateResourceReq
 }
 
 type CreateResourcePayload struct {
-	ResourceInfo domain.ResourceInfo   `json:"info"`
-	SharedWith   InputResourceSharings `json:"sharings"`
+	ResourceInfo domain.ResourceInfo     `json:"info"`
+	SharedWith   InputResourceSharings   `json:"sharings"`
+	Values       domain.ValueEstimations `json:"values"`
 }
 
 func NewCreateResourcePayload(resourceInfo domain.ResourceInfo, groupKeys ...keys.GroupKeyGetter) CreateResourcePayload {
@@ -223,6 +229,15 @@ type InputResourceSharing struct {
 }
 
 type InputResourceSharings []InputResourceSharing
+
+func (i *InputResourceSharings) UnmarshalJSON(data []byte) error {
+	var res []InputResourceSharing
+	if err := json.Unmarshal(data, &res); err != nil {
+		return err
+	}
+	*i = res
+	return nil
+}
 
 func NewInputResourceSharings() InputResourceSharings {
 	return InputResourceSharings{}
@@ -282,7 +297,8 @@ func (h *ResourceHandler) CreateResource(c echo.Context) error {
 		loggedInUser.GetUserKey(),
 		loggedInUser.GetUserKey().Target(),
 		req.Resource.ResourceInfo,
-		req.Resource.SharedWith.GetGroupKeys())
+		req.Resource.SharedWith.GetGroupKeys(),
+		req.Resource.Values)
 	if err != nil {
 		l.Error("could not register resource", zap.Error(err))
 		return err
@@ -293,9 +309,9 @@ func (h *ResourceHandler) CreateResource(c echo.Context) error {
 		return err
 	}
 
-	var rm *readmodel.ResourceWithSharingsReadModel
+	var rm *readmodel.ResourceWithSharingsAndValuesReadModel
 	err = retry.Do(func() error {
-		rm, err = h.getResourceWithSharings.Get(ctx, resourceKey)
+		rm, err = h.getResourceWithSharingsAndValues.Get(ctx, resourceKey, loggedInUser.GetUserKey())
 		if exceptions.Is(err, exceptions.ErrResourceNotFound) {
 			return err
 		}
@@ -343,6 +359,7 @@ func (u UpdateResourceRequest) WithShared(groups ...keys.GroupKeyGetter) *Update
 type UpdateResourcePayload struct {
 	ResourceInfo domain.ResourceInfoUpdate `json:"info"`
 	SharedWith   InputResourceSharings     `json:"sharedWith"`
+	Values       domain.ValueEstimations   `json:"values"`
 }
 
 func NewUpdateResourcePayload(resourceInfo domain.ResourceInfoUpdate, sharedWith ...keys.GroupKeyGetter) UpdateResourcePayload {
@@ -412,15 +429,16 @@ func (h *ResourceHandler) UpdateResource(c echo.Context) error {
 		return err
 	}
 	err = resource.ChangeSharings(loggedInUser.GetUserKey(), req.Resource.SharedWith.GetGroupKeys())
+	err = resource.EvaluateResource(loggedInUser.GetUserKey(), req.Resource.Values)
 
 	if err := h.resourceRepo.Save(ctx, resource); err != nil {
 		l.Error("could not save resource", zap.Error(err))
 		return err
 	}
 
-	var rm *readmodel.ResourceWithSharingsReadModel
+	var rm *readmodel.ResourceWithSharingsAndValuesReadModel
 	err = retry.Do(func() error {
-		rm, err = h.getResourceWithSharings.Get(ctx, resourceKey)
+		rm, err = h.getResourceWithSharingsAndValues.Get(ctx, resourceKey, loggedInUser.GetUserKey())
 		if err != nil {
 			return err
 		}

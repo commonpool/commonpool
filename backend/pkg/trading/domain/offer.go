@@ -159,9 +159,9 @@ func (o *Offer) Submit(submittedBy keys.UserKey, groupKey keys.GroupKey, offerIt
 			if offerItem.To == nil {
 				return exceptions.ErrBadRequest("OfferItem.To is required for OfferItem type ProvideService")
 			}
-			if offerItem.From == nil {
-				return exceptions.ErrBadRequest("OfferItem.From is required for OfferItem type ProvideService")
-			}
+			// if offerItem.From == nil {
+			// 	return exceptions.ErrBadRequest("OfferItem.From is required for OfferItem type ProvideService")
+			// }
 			if offerItem.Duration == nil {
 				return exceptions.ErrBadRequest("OfferItem.Duration is required for OfferItem type ProvideService")
 			}
@@ -209,7 +209,7 @@ func (o *Offer) ApproveAll(approver keys.UserKey, permissionGetter OfferPermissi
 	for _, direction := range []ApprovalDirection{Inbound, Outbound} {
 		for offerItemKey, item := range o.offerItemMap {
 			if o.status == Approved {
-				return nil
+				continue
 			}
 			if permissionGetter.Can(approver, item, direction) {
 				if err := o.ApproveOfferItem(approver, offerItemKey, direction, permissionGetter); err != nil {
@@ -309,10 +309,10 @@ func (o *Offer) ConfirmServiceGiven(notifiedBy keys.UserKey, serviceOfferItemKey
 	}
 
 	if !alreadyGiven && permissions.Can(notifiedBy, serviceItem, Outbound) {
-		o.raise(NewResourceGivenNotified(notifiedBy, serviceItem.GetKey()))
+		o.raise(NewServiceGivenNotified(notifiedBy, serviceItem.GetKey()))
 	}
 	if !alreadyReceived && permissions.Can(notifiedBy, serviceItem, Inbound) {
-		o.raise(NewResourceReceivedNotified(notifiedBy, serviceItem.GetKey()))
+		o.raise(NewServiceReceivedNotified(notifiedBy, serviceItem.GetKey()))
 	}
 
 	o.CheckOfferCompleted()
@@ -514,7 +514,7 @@ func (o *Offer) CheckOfferCompleted() {
 		}
 	}
 
-	o.raise(NewOfferCompleted())
+	o.raise(NewOfferCompleted(o.offerItems, o.groupKey))
 
 }
 

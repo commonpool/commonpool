@@ -18,10 +18,6 @@ type AppConfig struct {
 	DbPassword         string
 	CallbackToken      string
 	AmqpUrl            string
-	BoltUrl            string
-	BoltUsername       string
-	BoltPassword       string
-	Neo4jDatabase      string
 	RedisHost          string
 	RedisPort          string
 	RedisPassword      string
@@ -33,9 +29,6 @@ func GetAppConfig(readEnv EnvReader, readFile FileReader) (*AppConfig, error) {
 
 	var (
 		err                error
-		boltUrl            string
-		boltPassword       string
-		boltUsername       string
 		dbUser             string
 		dbPassword         string
 		dbName             string
@@ -48,7 +41,6 @@ func GetAppConfig(readEnv EnvReader, readFile FileReader) (*AppConfig, error) {
 		clientId           string
 		clientSecret       string
 		secureCookies      string
-		neo4jDatabase      string
 		redisHost          string
 		redisPort          string
 		redisPassword      string
@@ -73,22 +65,6 @@ func GetAppConfig(readEnv EnvReader, readFile FileReader) (*AppConfig, error) {
 	}
 
 	if dbPassword, err = readEnvVarOrFile(readFile, readEnv, dbPasswordEnv); err != nil {
-		return nil, err
-	}
-
-	if boltUrl, err = readEnvVarOrFile(readFile, readEnv, boltUrlEnv); err != nil {
-		return nil, err
-	}
-
-	if boltUsername, err = readEnvVarOrFile(readFile, readEnv, boltUsernameEnv); err != nil {
-		return nil, err
-	}
-
-	if boltPassword, err = readEnvVarOrFile(readFile, readEnv, boltPasswordEnv); err != nil {
-		return nil, err
-	}
-
-	if neo4jDatabase, err = readEnvVarOrFile(readFile, readEnv, neo4jDatabaseName); err != nil {
 		return nil, err
 	}
 
@@ -154,10 +130,6 @@ func GetAppConfig(readEnv EnvReader, readFile FileReader) (*AppConfig, error) {
 		SecureCookies:      secureCookies == "true",
 		CallbackToken:      callbackToken,
 		AmqpUrl:            amqpUrl,
-		BoltUrl:            boltUrl,
-		BoltUsername:       boltUsername,
-		BoltPassword:       boltPassword,
-		Neo4jDatabase:      neo4jDatabase,
 		RedisHost:          redisHost,
 		RedisPort:          redisPort,
 		RedisPassword:      redisPassword,
@@ -211,10 +183,6 @@ const (
 	redisTlsSkipVerifyEnv = "REDIS_TLS_SKIP_VERIFY"
 	callbackTokenEnv      = "CALLBACK_TOKEN"
 	amqpUrlEnv            = "AMQP_URL"
-	boltUrlEnv            = "BOLT_URL"
-	boltUsernameEnv       = "BOLT_USERNAME"
-	boltPasswordEnv       = "BOLT_PASSWORD"
-	neo4jDatabaseName     = "NEO4J_DATABASE_NAME"
 )
 
 type FileReader func(string) ([]byte, error)

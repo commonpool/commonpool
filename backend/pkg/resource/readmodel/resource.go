@@ -24,7 +24,6 @@ type ResourceReadModelBase struct {
 type DbResourceReadModel struct {
 	ResourceReadModelBase
 	domain.ResourceInfoBase
-	domain.ResourceValueEstimation
 }
 
 func (d DbResourceReadModel) TableName() string {
@@ -59,4 +58,20 @@ type ResourceGroupNameReadModel struct {
 type ResourceWithSharingsReadModel struct {
 	ResourceReadModel
 	Sharings []*ResourceSharingReadModel `json:"sharings"`
+}
+
+type ResourceWithSharingsAndValuesReadModel struct {
+	ResourceReadModel
+	Sharings      []*ResourceSharingReadModel     `json:"sharings"`
+	Values        domain.ValueEstimations         `json:"values"`
+	AverageValues []*domain.AverageDimensionValue `json:"averageValues"`
+}
+
+type ResourceEvaluationReadModel struct {
+	ID                    string           `gorm:"not null;primaryKey;type:varchar(128)" json:"id"`
+	EvaluationID          string           `gorm:"not null;primaryKey;type:varchar(128)" json:"evaluationId"`
+	ResourceKey           keys.ResourceKey `gorm:"type:varchar(128)" json:"resourceKey"`
+	EvaluatedBy           keys.UserKey     `json:"evaluatedBy"`
+	EvaluatedAt           time.Time        `json:"evaluatedAt"`
+	domain.DimensionValue `json:"value" gorm:"embedded;embeddedPrefix:value_"`
 }

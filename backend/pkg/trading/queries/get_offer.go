@@ -62,6 +62,7 @@ func getOffers(ctx context.Context, offerKeys *keys.OfferKeys, db *gorm.DB) ([]*
 	g.Go(func() error {
 		query := db.Model(&readmodels.DBOfferReadModel{}).
 			Where(sb.String(), params...).
+			Order("status_last_changed_at desc").
 			Find(&offers)
 		if err := query.Error; err != nil {
 			return err

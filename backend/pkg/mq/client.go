@@ -736,6 +736,7 @@ type Queue interface {
 	Connect(ctx context.Context) error
 	Close() error
 	Consume(ctx context.Context, consumerConfig ConsumerConfig) error
+	Closed() chan error
 }
 
 type QueueFactory func(queueConfig QueueConfig) Queue
@@ -749,6 +750,7 @@ type RabbitQueue struct {
 	consumers       []ConsumerConfig
 	consume         func(delivery Delivery)
 	closed          bool
+	closeChan       chan error
 	l               *zap.Logger
 	deliveryErrChan chan error
 }
@@ -758,7 +760,12 @@ func NewRabbitQueue(rabbitConfig RabbitConfig, queueConfig QueueConfig) *RabbitQ
 	q.RabbitConfig = rabbitConfig
 	q.Config = queueConfig
 	q.deliveryErrChan = make(chan error)
+	q.closeChan = make(chan error, 1)
 	return q
+}
+
+func (q *RabbitQueue) Closed() chan error {
+	return q.closeChan
 }
 
 func (q *RabbitQueue) Connect(ctx context.Context) error {
@@ -814,13 +821,11 @@ func (q *RabbitQueue) Send(ctx context.Context, message Message, mandatory bool,
 
 func (q *RabbitQueue) Close() error {
 	q.closed = true
-	err := q.channel.Close()
-	if err != nil {
-		return err
-	}
+	q.channel.Close()
 	if !q.connection.IsClosed() {
-		return q.connection.Close()
+		q.connection.Close()
 	}
+	q.closeChan <- nil
 	return nil
 }
 
@@ -972,6 +977,8 @@ func (q *RabbitQueue) reconnector(ctx context.Context) {
 				if err := q.connect(ctx); err != nil {
 					q.recoverConsumers(ctx)
 				}
+			} else {
+				return
 			}
 		case <-ctx.Done():
 			l.Debug("context cancelled")

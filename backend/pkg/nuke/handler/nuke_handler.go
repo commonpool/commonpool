@@ -2,7 +2,6 @@ package handler
 
 import (
 	"github.com/commonpool/backend/pkg/chat/store"
-	"github.com/commonpool/backend/pkg/graph"
 	"github.com/commonpool/backend/pkg/handler"
 	"github.com/commonpool/backend/pkg/keys"
 	"github.com/commonpool/backend/pkg/mq"
@@ -12,16 +11,14 @@ import (
 )
 
 type Handler struct {
-	db          *gorm.DB
-	amqpClient  mq.Client
-	graphClient graph.Driver
+	db         *gorm.DB
+	amqpClient mq.Client
 }
 
-func NewHandler(db *gorm.DB, amqpClient mq.Client, graphClient graph.Driver) *Handler {
+func NewHandler(db *gorm.DB, amqpClient mq.Client) *Handler {
 	return &Handler{
-		db:          db,
-		amqpClient:  amqpClient,
-		graphClient: graphClient,
+		db:         db,
+		amqpClient: amqpClient,
 	}
 }
 
@@ -69,16 +66,6 @@ func (h *Handler) Nuke(c echo.Context) error {
 	}
 	if err := h.db.Where("1 = 1").Delete(&store2.TransactionEntry{}).Error; err != nil {
 		return err
-	}
-
-	dbSession := h.graphClient.GetSession()
-	res, err := dbSession.Run(`MATCH (n) DETACH DELETE n`, map[string]interface{}{})
-	if err != nil {
-		return err
-	}
-
-	if res.Err() != nil {
-		return res.Err()
 	}
 
 	return nil

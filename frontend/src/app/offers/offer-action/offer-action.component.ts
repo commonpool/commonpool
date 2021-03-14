@@ -1,4 +1,4 @@
-import {Component, Input, OnInit} from '@angular/core';
+import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {Action} from '../../api/models';
 import {HttpClient} from '@angular/common/http';
 
@@ -30,12 +30,15 @@ export class OfferActionComponent implements OnInit {
   @Input()
   action: Action;
 
+  @Output()
+  submitted: EventEmitter<null> = new EventEmitter<null>();
+
   ngOnInit(): void {
   }
 
   submit() {
     this.http.post(this.action.actionUrl, null).subscribe(r => {
-      console.log(r);
+      this.submitted.next();
     });
   }
 }

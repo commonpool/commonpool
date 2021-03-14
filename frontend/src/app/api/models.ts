@@ -51,7 +51,9 @@ export class Resource {
     public version: number,
     public owner: Target,
     public info: ResourceInfo,
-    public sharings: SharedWithOutput[]
+    public sharings: SharedWithOutput[],
+    public values: DimensionValue[],
+    public averageValues: DimensionValue[],
   ) {
   }
 
@@ -70,7 +72,10 @@ export class Resource {
       r.version,
       Target.from(r.owner),
       ResourceInfo.from(r.info),
-      r.sharings.map(s => SharedWithOutput.from(s)));
+      r.sharings.map(s => SharedWithOutput.from(s)),
+      r.values ? r.values.map(v => DimensionValue.from(v)) : [],
+      r.averageValues ? r.averageValues.map(v => DimensionValue.from(v)) : [],
+    );
   }
 }
 
@@ -93,38 +98,26 @@ export class ExtendedResource extends Resource {
       r.version,
       r.owner,
       r.info,
-      r.sharings);
+      r.sharings,
+      r.values,
+      r.averageValues);
     this.createdAtDistance = formatDistanceToNow(Date.parse(r.createdAt));
     this.createdAtDistanceAgo = formatDistanceToNow(Date.parse(r.createdAt), {addSuffix: true});
-  }
-}
-
-export class ResourceValue {
-  public valueType: string;
-
-  public constructor(
-    public timeValueFrom: number,
-    public timeValueTo: number
-  ) {
-    this.valueType = 'from_to_duration';
-  }
-
-  public static from(r: ResourceValue): ResourceValue {
-    return new ResourceValue(r.timeValueFrom, r.timeValueTo);
   }
 }
 
 export class ResourceInfoUpdate {
   public constructor(
     public name: string,
-    public description: string,
-    public value: ResourceValue,
+    public description: string
   ) {
 
   }
 
   public static from(r: ResourceInfoUpdate): ResourceInfoUpdate {
-    return new ResourceInfoUpdate(r.name, r.description, ResourceValue.from(r.value));
+    return new ResourceInfoUpdate(
+      r.name,
+      r.description);
   }
 }
 
@@ -132,15 +125,18 @@ export class ResourceInfo extends ResourceInfoUpdate {
   public constructor(
     public name: string,
     public description: string,
-    public value: ResourceValue,
     public callType: CallType,
     public resourceType: ResourceType,
   ) {
-    super(name, description, value);
+    super(name, description);
   }
 
   public static from(r: ResourceInfo): ResourceInfo {
-    return new ResourceInfo(r.name, r.description, ResourceValue.from(r.value), r.callType, r.resourceType);
+    return new ResourceInfo(
+      r.name,
+      r.description,
+      r.callType,
+      r.resourceType);
   }
 }
 
@@ -179,13 +175,15 @@ export class SearchResourceRequest {
 export class CreateResourcePayload {
   constructor(
     public info: ResourceInfo,
-    public sharedWith: SharedWithInput[]) {
+    public sharedWith: SharedWithInput[],
+    public values: DimensionValue[]) {
   }
 
   public static from(p: CreateResourcePayload): CreateResourcePayload {
     return new CreateResourcePayload(
       ResourceInfo.from(p.info),
-      p.sharedWith ? p.sharedWith.map(w => SharedWithInput.from(w)) : []
+      p.sharedWith ? p.sharedWith.map(w => SharedWithInput.from(w)) : [],
+      p.values ? p.values.map(v => DimensionValue.from(v)) : []
     );
   }
 }
@@ -193,13 +191,16 @@ export class CreateResourcePayload {
 export class UpdateResourcePayload {
   constructor(
     public info: ResourceInfoUpdate,
-    public sharedWith: SharedWithInput[]) {
+    public sharedWith: SharedWithInput[],
+    public values: DimensionValue[]
+  ) {
   }
 
   public static from(r: UpdateResourcePayload): UpdateResourcePayload {
     return new UpdateResourcePayload(
       ResourceInfoUpdate.from(r.info),
-      r.sharedWith ? r.sharedWith.map(w => SharedWithInput.from(w)) : []
+      r.sharedWith ? r.sharedWith.map(w => SharedWithInput.from(w)) : [],
+      r.values ? r.values.map(v => DimensionValue.from(v)) : []
     );
   }
 }
@@ -1535,4 +1536,154 @@ export class ConfirmBorrowedResourceReturned {
   }
 }
 
+export class GetValueDimensionsRequest {
+
+}
+
+export class GetValueDimensionsResponse {
+  public constructor(public dimensions: ValueDimension[]) {
+  }
+
+  public static from(r: GetValueDimensionsResponse) {
+    return new GetValueDimensionsResponse(
+      r.dimensions ? r.dimensions.map(d => ValueDimension.from(d)) : undefined
+    );
+  }
+}
+
+export class ValueRange {
+  public constructor(
+    public from: number,
+    public to: number
+  ) {
+
+  }
+
+  public static from(v: ValueRange): ValueRange {
+    return new ValueRange(v.from, v.to);
+  }
+
+  public static equals(x, y: ValueRange) {
+    if (!x && !y) {
+      return true;
+    }
+    if (!!x !== !!y) {
+      return false;
+    }
+    return x.equals(y);
+  }
+
+  public equals(valueRange: ValueRange): boolean {
+    if (valueRange.to !== this.to) {
+      return false;
+    } else if (valueRange.from !== this.from) {
+      return false;
+    }
+    return true;
+  }
+}
+
+export class ValueThreshold {
+  public constructor(
+    public description: string
+  ) {
+
+  }
+
+  public static from(v: ValueThreshold): ValueThreshold {
+    return new ValueThreshold(v.description);
+  }
+}
+
+export class ValueDimension {
+  public constructor(
+    public name: string,
+    public summary: string,
+    public defaultValue: number,
+    public range: ValueRange,
+    public thresholds: ValueThreshold[]
+  ) {
+  }
+
+  public static from(v: ValueDimension): ValueDimension {
+    return new ValueDimension(
+      v.name,
+      v.summary,
+      v.defaultValue,
+      v.range ? ValueRange.from(v.range) : undefined,
+      v.thresholds ? v.thresholds.map(t => ValueThreshold.from(t)) : undefined
+    );
+  }
+
+  public static equals(x, y: ValueDimension): boolean {
+    if (!x && !y) {
+      return true;
+    }
+    if (!!x !== !!y) {
+      return false;
+    }
+    return x.equals(y);
+  }
+
+  public equals(d: ValueDimension): boolean {
+    if (d.name !== this.name) {
+      return false;
+    }
+    if (!ValueRange.equals(d.range, this.range)) {
+      return false;
+    }
+    if (d.summary !== this.summary) {
+      return false;
+    }
+    if (!d.thresholds && !d.thresholds) {
+      return true;
+    }
+    if (d.thresholds.length !== this.thresholds.length) {
+      return false;
+    }
+    for (let i = 0; i < d.thresholds.length; i++) {
+      if (d.thresholds[i].description !== this.thresholds[i].description) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+}
+
+export class DimensionValue {
+  public constructor(
+    public dimensionName: string,
+    public valueRange: ValueRange
+  ) {
+  }
+
+  public static from(d: DimensionValue): DimensionValue {
+    return new DimensionValue(d.dimensionName, d.valueRange ? ValueRange.from(d.valueRange) : undefined);
+  }
+
+  public static equals(x, y: DimensionValue) {
+    if (!x && !y) {
+      return true;
+    }
+    if (!!x !== !!y) {
+      return false;
+    }
+    return x.equals(y);
+  }
+
+  public equals(d: DimensionValue): boolean {
+    if (!d) {
+      return false;
+    }
+    if (!d.valueRange.equals(this.valueRange)) {
+      return false;
+    }
+    if (d.dimensionName !== this.dimensionName) {
+      return false;
+    }
+    return false;
+  }
+
+}
 

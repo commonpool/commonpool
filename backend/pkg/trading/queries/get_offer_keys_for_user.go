@@ -28,22 +28,6 @@ func (q *GetOfferKeysForUser) Get(ctx context.Context, userKey keys.UserKey) (*k
 		return nil, err
 	}
 
-	/**
-	select oi.offer_key
-	from offer_item_read_models oi
-	left join offer_read_models o on o.offer_key = oi.offer_key
-	left join offer_resource_read_models r on oi.resource_key = r.resource_key
-	where
-	    oi.from_user_key = 'b0819e0d-fdf8-4c90-90d5-f359d2c079a4'
-		or oi.to_user_key = 'b0819e0d-fdf8-4c90-90d5-f359d2c079a4'
-		or from_group_key in ('90448a69-9bf3-4c97-8287-e8843ccb3d7f')
-
-	   or r.owner_user_key = 'b0819e0d-fdf8-4c90-90d5-f359d2c079a4'
-	   or from_group_key in ('90448a69-9bf3-4c97-8287-e8843ccb3d7f')
-	   or oi.to_group_key in ('90448a69-9bf3-4c97-8287-e8843ccb3d7f')
-	   or r.owner_group_key in ('90448a69-9bf3-4c97-8287-e8843ccb3d7f')
-	*/
-
 	var groupsSb strings.Builder
 	var administeredGroupCount = administeredGroupKeys.Count()
 	var params = make([]interface{}, 3+3*administeredGroupCount)

@@ -34,27 +34,20 @@ export class CreateOrEditResourceComponent implements OnInit, OnDestroy {
     description: new FormControl('', [
       Validators.required
     ]),
-    value: new FormGroup({
-      timeValueFrom: new FormControl(0, [
-        Validators.required,
-        Validators.min(0)
-      ]),
-      timeValueTo: new FormControl(0, [
-        Validators.required,
-        Validators.min(0),
-      ]),
-    })
-
   });
 
   public resource = new FormGroup({
     info: this.info,
-    sharedWith: new FormArray([])
-  }, control => {
-    const fg = control as FormGroup;
-    if (fg.controls.timeValueFrom > fg.controls.timeValueTo) {
-      return {hoursFromLargerThanValuesTo: {}};
-    }
+    sharedWith: new FormArray([]),
+    values: new FormControl(
+      [{
+        dimensionName: 'time',
+        valueRange: {
+          from: 0.3,
+          to: 0.3,
+        }
+      }]
+    ),
   });
 
   public form = new FormGroup({
@@ -64,17 +57,6 @@ export class CreateOrEditResourceComponent implements OnInit, OnDestroy {
 
   public sharedWith = this.resource.controls.sharedWith as FormArray;
 
-  formValueChanged = this.form.valueChanges.subscribe((v) => {
-    const resourceControls = (this.form.controls.resource as FormGroup);
-    if (v.resource.timeValueFrom < 0) {
-      resourceControls.controls.timeValueFrom.setValue(0);
-    } else if (v.resource.timeValueTo < 0) {
-      resourceControls.controls.timeValueTo.setValue(0);
-    } else if (v.resource.timeValueFrom > v.resource.timeValueTo) {
-      resourceControls.controls.timeValueFrom.setValue(v.resource.timeValueTo);
-    }
-  });
-
   memberships$ = this.auth.session$.pipe(
     filter(s => !!s),
     pluck('id'),
@@ -83,6 +65,8 @@ export class CreateOrEditResourceComponent implements OnInit, OnDestroy {
     map<Membership[], Membership[]>(ms => ms.filter(m => m.userConfirmed && m.groupConfirmed)),
     shareReplay()
   );
+
+  isNewResource$ = this.route.params.pipe(pluck('id'), map(id => !id));
 
   resourceSub = this.route.params.pipe(pluck('id')).pipe(
     filter(id => !!id),
@@ -103,17 +87,14 @@ export class CreateOrEditResourceComponent implements OnInit, OnDestroy {
           resourceType: res.resource.info.resourceType,
           name: res.resource.info.name,
           description: res.resource.info.description,
-          value: {
-            timeValueFrom: res.resource.info.value.timeValueFrom / 3600000000000,
-            timeValueTo: res.resource.info.value.timeValueTo / 3600000000000,
-          }
         },
-        sharedWith: res.resource.sharings.map(s => ({groupId: s.groupId}))
+        sharedWith: res.resource.sharings.map(s => ({groupId: s.groupId})),
+        values: res.resource.values
       }
     };
     this.form.setValue(value);
-    this.resource.controls.type.disable();
-    this.resource.controls.subType.disable();
+    this.info.controls.resourceType.disable();
+    this.info.controls.callType.disable();
   });
 
   public error: any;
@@ -128,7 +109,6 @@ export class CreateOrEditResourceComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.resourceSub.unsubscribe();
-    this.formValueChanged.unsubscribe();
   }
 
   submit() {
@@ -137,10 +117,6 @@ export class CreateOrEditResourceComponent implements OnInit, OnDestroy {
     this.error = undefined;
     this.success = undefined;
     this.pending = true;
-
-    const value = this.form.value;
-    value.resource.info.value.timeValueFrom *= 3600000000000;
-    value.resource.info.value.timeValueTo *= 3600000000000;
 
     if (this.form.value.id === null) {
 

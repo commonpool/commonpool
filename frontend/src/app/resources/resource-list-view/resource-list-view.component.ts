@@ -36,7 +36,7 @@ export class ResourceListViewComponent {
         undefined,
         undefined,
         undefined,
-        10,
+        100,
         0)),
       tap(() => {
         this.pendingSubject.next(true);

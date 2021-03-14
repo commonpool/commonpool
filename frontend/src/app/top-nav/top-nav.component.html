@@ -22,9 +22,9 @@
               <a class="nav-link" [routerLinkActive]="'active'" [routerLink]="'/offers/new'">new proposal</a>
             </li>
 
-            <li class="nav-item">
-              <a class="nav-link" [routerLinkActive]="'active'" [routerLink]="'/trading-history'">history</a>
-            </li>
+<!--            <li class="nav-item">-->
+<!--              <a class="nav-link" [routerLinkActive]="'active'" [routerLink]="'/trading-history'">history</a>-->
+<!--            </li>-->
 
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
@@ -33,9 +33,10 @@
               </a>
               <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                 <li><a class="dropdown-item" [routerLink]="'/users/' + session.id">profile</a></li>
-                <li><a class="dropdown-item" [routerLink]="'/messages'">
-                  <app-envelope></app-envelope>
-                  messages</a></li>
+<!--                <li><a class="dropdown-item" [routerLink]="'/messages'">-->
+<!--                  <app-envelope></app-envelope>-->
+<!--                  messages</a>-->
+<!--                </li>-->
                 <li><a class="dropdown-item" href="#" (click)="backend.logout()">logout</a></li>
               </ul>
             </li>

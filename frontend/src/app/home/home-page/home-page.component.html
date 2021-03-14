@@ -5,11 +5,21 @@
         <h1 class="display-4">Commonpool</h1>
         <p class="lead">In Construction.</p>
         <hr class="my-4">
-        <p>Commonpool is an app. Stay tuned.</p>
-        <p class="lead">
-          <a class="btn btn-primary btn-lg" role="button" (click)="backend.login()">Login</a>
-        </p>
+        <p>Stay tuned.</p>
+        <div *ngIf="authService.authUserId$ | async; else loggedOut">
+          <p class="lead">
+            Welcome!
+          </p>
+          <p>
+            <button class="btn btn-primary" (click)="authService.goToMyProfile()">View my profile</button>
+          </p>
+        </div>
       </div>
     </div>
   </div>
 </div>
+
+
+<ng-template #loggedOut>
+  <a class="btn btn-primary btn-lg" role="button" (click)="backend.login()">Login</a>
+</ng-template>

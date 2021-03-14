@@ -10,6 +10,7 @@ import (
 	authdomain "github.com/commonpool/backend/pkg/auth/domain"
 	userlisteners "github.com/commonpool/backend/pkg/auth/listeners"
 	"github.com/commonpool/backend/pkg/auth/module"
+	queries2 "github.com/commonpool/backend/pkg/auth/queries"
 	chathandler "github.com/commonpool/backend/pkg/chat/handler"
 	chatservice "github.com/commonpool/backend/pkg/chat/service"
 	chatstore "github.com/commonpool/backend/pkg/chat/store"
@@ -21,7 +22,6 @@ import (
 	"github.com/commonpool/backend/pkg/eventsource"
 	postgres2 "github.com/commonpool/backend/pkg/eventstore/postgres"
 	"github.com/commonpool/backend/pkg/eventstore/publish"
-	"github.com/commonpool/backend/pkg/graph"
 	groupdomain "github.com/commonpool/backend/pkg/group/domain"
 	grouphandler "github.com/commonpool/backend/pkg/group/handler"
 	grouplisteners "github.com/commonpool/backend/pkg/group/listeners"
@@ -69,7 +69,6 @@ type Group struct {
 type Server struct {
 	AppConfig                      *config.AppConfig
 	AmqpClient                     mq.Client
-	GraphDriver                    graph.Driver
 	Db                             *gorm.DB
 	TransactionStore               transaction.Store
 	TransactionService             transaction.Service
@@ -159,16 +158,6 @@ func NewServer() (*Server, error) {
 
 	mqClient := mq.NewRabbitClient2(mq.NewRabbitConfig(appConfig.AmqpUrl))
 
-	err = graph.InitGraphDatabase(ctx, appConfig)
-	if err != nil {
-		return nil, err
-	}
-
-	driver, err := graph.NewNeo4jDriver(appConfig, appConfig.Neo4jDatabase)
-	if err != nil {
-		return nil, err
-	}
-
 	db := getDb(appConfig)
 	db2.AutoMigrate(db)
 
@@ -210,6 +199,8 @@ func NewServer() (*Server, error) {
 	getResourceSharings := resourcequeries.NewGetResourceSharings(db)
 	getResourcesSharings := resourcequeries.NewGetResourcesSharings(db)
 	getResourceWithSharings := resourcequeries.NewGetResourceWithSharings(getResource, getResourceSharings)
+	getResourceEvaluations := resourcequeries.NewGetResourceEvaluations(db)
+	getResourceWithSharingsAndValues := resourcequeries.NewGetResourceWithSharingsAndValues(getResource, getResourceSharings, getResourceEvaluations)
 	searchResourcesWithSharings := resourcequeries.NewSearchResourcesWithSharings(db, searchResources, getResourcesSharings)
 	getOffer := queries.NewGetOffer(db)
 	getUserAdministeredGroupKeys := queries.NewGetUserAdministeredGroupKeys(db)
@@ -221,7 +212,8 @@ func NewServer() (*Server, error) {
 	getOffersPermissions := queries.NewGetOffersPermissions(db, getOffersGroupKeys)
 	getOfferPermissions := queries.NewGetOfferPermissions(getOffersPermissions)
 	getUserOffersWithActions := queries.NewGetUserOffersWithActions(db, getOffersPermissions, getOfferKeysForUser)
-
+	getUsersByKeys := queries2.NewGetUserByKeys(db)
+	getValueDimensions := queries.NewGetValueDimensions()
 	// commands
 	commandMapper := commands.NewCommandMapper()
 	// commandBus := rabbit.NewRabbitCommandBus(amqpCli, commandMapper)
@@ -236,11 +228,12 @@ func NewServer() (*Server, error) {
 	confirmServiceGiven := tradingcmdhandlers.NewConfirmServiceGivenHandler(offerRepository, getOfferPermissions)
 
 	r := NewRouter()
+
 	r.HTTPErrorHandler = handler2.HttpErrorHandler
 	r.GET("/api/swagger/*", echoSwagger.WrapHandler)
 	v1 := r.Group("/api/v1", middleware.Recover())
 
-	userModule := module.NewUserModule(appConfig, db, driver, eventStore)
+	userModule := module.NewUserModule(appConfig, db, eventStore)
 	userModule.Register(v1)
 
 	transactionStore := transactionstore.NewTransactionStore(db)
@@ -249,7 +242,7 @@ func NewServer() (*Server, error) {
 	resourceRepository := resourcestore.NewEventSourcedResourceRepository(eventStore)
 
 	chatStore := chatstore.NewChatStore(db)
-	chatService := chatservice.NewChatService(userModule.Store, amqpCli, chatStore)
+	chatService := chatservice.NewChatService(amqpCli, chatStore, getUsersByKeys)
 
 	groupRepo := groupstore.NewEventSourcedGroupRepository(eventStore)
 	groupService := groupservice.NewGroupService(groupRepo, getGroup, getGroupByKeys, getGroupMemberships)
@@ -283,7 +276,6 @@ func NewServer() (*Server, error) {
 
 	resourceHandler := resourcehandler.NewHandler(
 		groupService,
-		userModule.Service,
 		userModule.Authenticator,
 		resourceRepository,
 		getUserMemberships,
@@ -292,16 +284,16 @@ func NewServer() (*Server, error) {
 		getResourcesSharings,
 		searchResources,
 		getResourceWithSharings,
-		searchResourcesWithSharings)
+		searchResourcesWithSharings,
+		getResourceWithSharingsAndValues)
 	resourceHandler.Register(v1)
 
-	realtimeHandler := realtime.NewRealtimeHandler(amqpCli, chatService, userModule.Authenticator)
+	realtimeHandler := realtime.NewRealtimeHandler(mqClient, chatService, userModule.Authenticator)
 	realtimeHandler.Register(v1)
 
 	tradingHandler := tradinghandler.NewTradingHandler(
 		tradingService,
 		groupService,
-		userModule.Service,
 		userModule.Authenticator,
 		getOffer,
 		getOffers,
@@ -314,11 +306,13 @@ func NewServer() (*Server, error) {
 		acceptOffer,
 		submitOffer,
 		getUserOffersWithActions,
+		getUsersByKeys,
+		getValueDimensions,
 	)
 
 	tradingHandler.Register(v1)
 
-	nukeHandler := nukehandler.NewHandler(db, amqpCli, driver)
+	nukeHandler := nukehandler.NewHandler(db, amqpCli)
 	nukeHandler.Register(v1)
 
 	var catchUpListenerFactory eventbus.CatchUpListenerFactory = func(key string, lockTTL time.Duration) *eventbus.CatchUpListener {
@@ -376,10 +370,17 @@ func NewServer() (*Server, error) {
 		return nil
 	})
 
+	groupReportRm := tradinglisteners.NewGroupReportListener(catchUpListenerFactory, db)
+	g.Go(func() error {
+		if err := groupReportRm.Start(ctx); err != nil {
+			return err
+		}
+		return nil
+	})
+
 	return &Server{
 		AppConfig:          appConfig,
 		AmqpClient:         amqpCli,
-		GraphDriver:        driver,
 		Db:                 db,
 		TransactionStore:   transactionStore,
 		TransactionService: transactionService,

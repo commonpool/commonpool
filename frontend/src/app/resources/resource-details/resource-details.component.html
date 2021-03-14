@@ -1,37 +1,84 @@
 <div class="container-fluid mt-3" *ngIf="resource$ | async; let resource">
   <div class="row mt-2">
     <div class="col">
-      <div class="card">
-        <h1 class="display-3 card-header">
-          {{resource.info.name}} <h1>({{resource.info.resourceType}} {{resource.info.callType}})</h1>
-        </h1>
+      <div class="card bg-light">
         <div class="card-body" id="resource-details">
-          <div>
-            <p class="lead">
-              {{resource.info.description}}
-            </p>
-            <code>
-              Value:
-                <app-duration [duration]="resource.info.value.timeValueFrom"></app-duration>
-                -
-                <app-duration [duration]="resource.info.value.timeValueTo"></app-duration>
-            </code>
-            <p class="text-muted mt-3">Created by <a
-              [routerLink]="'/users/' + resource.createdBy">{{resource.createdByName}}</a> {{resource.createdAtDistanceAgo}}
-            </p>
+          <table class="table table-borderless w-auto">
+            <tbody>
+            <tr>
+              <td>
+                Name
+              </td>
+              <td>
+                {{resource.info.name}}
+              </td>
+            </tr>
+            <tr>
+              <td>
+                Type
+              </td>
+              <td>
+                {{resource.info.resourceType}} {{resource.info.callType}}
+              </td>
+            </tr>
+            <tr>
+              <td>
+                Created
+              </td>
+              <td>
+                By
+                <a [routerLink]="'/users/' + resource.createdBy">{{resource.createdByName}}</a>
+                {{resource.createdAtDistanceAgo}}
+              </td>
+            </tr>
+            <tr>
+              <td>
+                Shared with
+              </td>
+              <td>
+                <span class="text-muted" *ngIf="resource.groupSharingCount ===0">
+                  Not shared with any group
+                </span>
+                <div *ngIf="resource.groupSharingCount > 0">
+                  <div *ngFor="let s of resource.sharings">
+                    {{s.groupName}}
+                  </div>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>Description</td>
+              <td>
+                <p>{{resource.info.description}}</p>
+              </td>
+            </tr>
+
+            </tbody>
+          </table>
+          <div class="d-flex">
+            <div>
+              <p>Average evaluation</p>
+              <app-values [disabled]="true" [ngModel]="resource.averageValues"></app-values>
+            </div>
+            <div class="ms-2">
+              <p>My evaluation</p>
+              <app-values [disabled]="true" [ngModel]="resource.values"></app-values>
+            </div>
           </div>
-        </div>
-        <div class="card-footer">
-          <div *ngIf="auth.session$ | async; let session">
+          <div class="m-2 mt-4" *ngIf="auth.session$ | async; let session">
+
             <div *ngIf="session.id === resource.createdBy">
-              <button class="btn btn-outline-secondary mr-2" (click)="editResource(resource.resourceId)">Edit</button>
-              <button class="btn btn-outline-danger">Delete</button>
+              <button class="btn btn-sm btn-primary me-2" (click)="editResource(resource.resourceId)">Edit</button>
+              <button class="btn btn-sm btn-danger me-2">Delete</button>
             </div>
-            <div class="btn-group" role="group">
-              <button *ngIf="session.id !== resource.createdBy" class="btn btn-outline-secondary" [routerLink]="'/resources/' + resource.resourceId + '/inquire'">Contact</button>
-              <button  *ngIf="session.id !== resource.createdBy" class="btn btn-outline-secondary" [routerLink]="'/resources/' + resource.resourceId + '/inquire'">Make Offer</button>
-            </div>
+            <button *ngIf="session.id !== resource.createdBy" class="me-2 btn btn-sm btn-secondary"
+                    [routerLink]="'/resources/' + resource.resourceId + '/inquire'">Contact
+            </button>
+            <button *ngIf="session.id !== resource.createdBy" class="me-2 btn btn-sm btn-secondary"
+                    [routerLink]="'/resources/' + resource.resourceId + '/inquire'">Make Offer
+            </button>
           </div>
+
         </div>
       </div>
     </div>

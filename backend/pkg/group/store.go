@@ -1,7 +1,6 @@
 package group
 
 import (
-	"context"
 	"github.com/commonpool/backend/pkg/group/domain"
 	"github.com/commonpool/backend/pkg/group/readmodels"
 	"github.com/commonpool/backend/pkg/keys"
@@ -15,19 +14,6 @@ type GetGroupsRequest struct {
 type GetGroupsResult struct {
 	Items      *Groups
 	TotalCount int64
-}
-
-type Store interface {
-	CreateGroupAndMembership(ctx context.Context, groupKey keys.GroupKey, createdBy keys.UserKey, name string, description string) (*Group, *domain.Membership, error)
-	GetGroup(ctx context.Context, groupKey keys.GroupKey) (*Group, error)
-	GetGroups(take int, skip int) (*Groups, int64, error)
-	GetGroupsByKeys(ctx context.Context, groupKeys *keys.GroupKeys) (*Groups, error)
-	CreateMembership(ctx context.Context, membershipKey keys.MembershipKey, isMember bool, isAdmin bool, isOwner bool, isDeactivated bool, groupConfirmed bool, userConfirmed bool) (*domain.Membership, error)
-	MarkInvitationAsAccepted(ctx context.Context, membershipKey keys.MembershipKey, decisionFrom MembershipParty) error
-	GetMembership(ctx context.Context, membershipKey keys.MembershipKey) (*domain.Membership, error)
-	GetMembershipsForUser(ctx context.Context, userKey keys.UserKey, membershipStatus *domain.MembershipStatus) (*domain.Memberships, error)
-	GetMembershipsForGroup(ctx context.Context, groupKey keys.GroupKey, membershipStatus *domain.MembershipStatus) (*domain.Memberships, error)
-	DeleteMembership(ctx context.Context, membershipKey keys.MembershipKey) error
 }
 
 type CreateGroupRequest struct {

@@ -6,6 +6,7 @@ import (
 	"github.com/commonpool/backend/pkg/auth/readmodel"
 	"github.com/commonpool/backend/pkg/eventbus"
 	"github.com/commonpool/backend/pkg/eventsource"
+	"github.com/commonpool/backend/pkg/keys"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"time"
@@ -63,7 +64,7 @@ func (l *UserReadModelListener) handleEvent(ctx context.Context, event eventsour
 func (l *UserReadModelListener) handleUserDiscovered(e domain.UserDiscovered) error {
 	return getOptimisticLocking(l.db, e.SequenceNo).
 		Create(&readmodel.UserReadModel{
-			UserKey:  e.AggregateID,
+			UserKey:  keys.NewUserKey(e.AggregateID),
 			Email:    e.UserInfo.Email,
 			Username: e.UserInfo.Username,
 			Version:  e.SequenceNo,

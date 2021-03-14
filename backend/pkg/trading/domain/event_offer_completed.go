@@ -1,8 +1,13 @@
 package domain
 
-import "github.com/commonpool/backend/pkg/eventsource"
+import (
+	"github.com/commonpool/backend/pkg/eventsource"
+	"github.com/commonpool/backend/pkg/keys"
+)
 
 type OfferCompletedPayload struct {
+	OfferItems *OfferItems   `json:"offer_items"`
+	GroupKey   keys.GroupKey `json:"group_key"`
 }
 
 type OfferCompleted struct {
@@ -10,10 +15,13 @@ type OfferCompleted struct {
 	OfferCompletedPayload `json:"payload"`
 }
 
-func NewOfferCompleted() *OfferCompleted {
+func NewOfferCompleted(offerItems *OfferItems, groupKey keys.GroupKey) *OfferCompleted {
 	return &OfferCompleted{
 		eventsource.NewEventEnvelope(OfferCompletedEvent, 1),
-		OfferCompletedPayload{},
+		OfferCompletedPayload{
+			OfferItems: offerItems,
+			GroupKey:   groupKey,
+		},
 	}
 }
 

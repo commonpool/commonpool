@@ -64,17 +64,17 @@ func (h *TradingHandler) HandleOfferItemTargetPicker(c echo.Context) error {
 		})
 	}
 
-	users, err := h.userService.GetByKeys(ctx, targets.GetUserKeys())
+	users, err := h.getUsersByKeys.Get(targets.GetUserKeys())
 	if err != nil {
 		return err
 	}
 
-	for _, item := range users.Items {
-		userKey := item.GetUserKey().String()
+	for userKey, user := range users {
+		userID := userKey.String()
 		items = append(items, OfferGroupOrUserPickerItem{
 			Type:   keys.UserTarget,
-			UserID: &userKey,
-			Name:   item.Username,
+			UserID: &userID,
+			Name:   user.Username,
 		})
 	}
 
