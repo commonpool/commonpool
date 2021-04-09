@@ -1,5 +1,0 @@
-<div class="resource-picker">
-  <ng-select name="resource" (ngModelChange)="flexibleSubject.next($event)" [ngModel]="selectedId$ | async" placeholder="Select resource">
-    <ng-option *ngFor="let resource of items$ | async" [value]="resource.resourceId">{{resource.info.name}}</ng-option>
-  </ng-select>
-</div>

@@ -1,0 +1,53 @@
+{{ define "user_posts_view" }}
+    <!doctype html>
+    <html lang="en">
+
+    {{template "header" .}}
+    {{template "topnav" .}}
+
+
+    <div class="container mt-5">
+
+        {{ template "alerts_row" .Alerts }}
+
+        <div class="row mb-3">
+            <div class="col-12">
+                <h4><i class="bi bi-person"></i> User: {{ html User.HTMLLink }}</h4>
+                <small>Joined {{User.CreatedAt.Format "Jan 02, 2006"}}</small>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                {{template "user_nav" User}}
+            </div>
+        </div>
+
+        <div class="row mt-2">
+            <div class="col-12">
+                <div class="p-3 fs-5 bg-light">
+                    To create a new post, go to the group where you want to post.
+                </div>
+            </div>
+        </div>
+
+        <div class="px-0 px-md-2 mt-3 bg-light py-1">
+            {{ if not .Posts}}
+                <div class="px-3">
+                    {{ if eq AuthenticatedUser.ID User.ID }}You haven't{{else}}{{html User.HTMLLink}} hasn't{{end}}
+                    posted anything yet.
+                </div>
+            {{else}}
+                {{range .Posts}}
+                    <div class="my-2">
+                        {{ template "post_card" . }}
+                    </div>
+                {{end}}
+            {{end}}
+        </div>
+    </div>
+
+    <div class="py-5"></div>
+
+    </html>
+{{end}}

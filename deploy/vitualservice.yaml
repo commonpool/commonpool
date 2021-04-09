@@ -1,0 +1,30 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: commonpool
+  namespace: default
+spec:
+  gateways:
+    - commonpool
+  hosts:
+    - commonpool.net
+  http:
+    - route:
+        - destination:
+            host: commonpool
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: keycloak
+  namespace: auth
+spec:
+  gateways:
+    - keycloak
+  hosts:
+    - auth.commonpool.net
+  http:
+    - name: keycloak
+      route:
+        - destination:
+            host: keycloak

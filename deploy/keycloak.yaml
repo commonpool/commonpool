@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: keycloak
+  name: keycloak
+  namespace: auth
+spec:
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      containers:
+        - env:
+            - name: KEYCLOAK_USER_FILE
+              value: /secrets/username
+            - name: KEYCLOAK_PASSWORD_FILE
+              value: /secrets/password
+            - name: PROXY_ADDRESS_FORWARDING
+              value: "true"
+            - name: DB_VENDOR
+              value: postgres
+            - name: DB_ADDR
+              value: postgres.default
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_DATABASE
+              value: keycloak
+            - name: DB_SCHEMA
+              value: public
+            - name: DB_USER_FILE
+              value: /secrets/db-username
+            - name: DB_PASSWORD_FILE
+              value: /secrets/db-password
+          image: quay.io/keycloak/keycloak:11.0.2
+          imagePullPolicy: IfNotPresent
+          name: keycloak
+          ports:
+            - containerPort: 8080
+              name: http-keycloak
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /auth/realms/master
+              port: 8080
+              scheme: HTTP
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /secrets/db-username
+              name: db-user-secret
+              readOnly: true
+              subPath: username
+            - mountPath: /secrets/db-password
+              name: db-user-secret
+              readOnly: true
+              subPath: password
+            - mountPath: /secrets/username
+              name: keycloak-secret
+              readOnly: true
+              subPath: username
+            - mountPath: /secrets/password
+              name: keycloak-secret
+              readOnly: true
+              subPath: password
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: db-user-secret
+          secret:
+            defaultMode: 420
+            items:
+              - key: username
+                path: username
+              - key: password
+                path: password
+            secretName: keycloak-db
+        - name: keycloak-secret
+          secret:
+            defaultMode: 420
+            items:
+              - key: username
+                path: username
+              - key: password
+                path: password
+            secretName: keycloak

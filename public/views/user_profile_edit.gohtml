@@ -1,0 +1,50 @@
+{{ define "user_profile_edit_view" }}
+    <!doctype html>
+    <html lang="en">
+
+    {{template "header" .}}
+    {{template "topnav" .}}
+
+    <div class="container mt-5">
+
+        {{ template "alerts_row" .Alerts }}
+
+        <div class="row mb-3">
+            <div class="col-12">
+                <h4><i class="bi bi-person"></i> User: {{ html User.HTMLLink }}</h4>
+                <small>Joined {{User.CreatedAt.Format "Jan 02, 2006"}}</small>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                {{template "user_nav" User}}
+            </div>
+        </div>
+
+        <div class="px-3 mt-3 py-2 bg-light">
+            <form action="/users/{{User.ID}}/profile/edit" method="post" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="name" class="form-label">Name</label>
+                    <input type="text" class="form-control" id="name" name="name" value="{{User.Name}}">
+                </div>
+                <div class="mb-3">
+                    <label for="contactInfo" class="form-label">Contact Info</label>
+                    <textarea class="form-control" name="contactInfo" id="contactInfo">{{User.ContactInfo}}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="about" class="form-label">Tell us a bit about yourself:</label>
+                    <textarea class="form-control" name="about" id="about">{{User.About}}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="profilePicture" class="form-label">Profile picture</label>
+                    <input class="form-control" type="file" accept="image/*" name="profilePicture" id="profilePicture">
+                </div>
+                <div>
+                    <button class="btn btn-primary">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    </html>
+{{end}}

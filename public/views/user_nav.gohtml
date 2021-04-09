@@ -1,0 +1,21 @@
+{{ define "user_nav" }}
+    <ul class="nav nav-pills bg-light p-3">
+        <li class="nav-item">
+            <a class="nav-link {{if isView "get_user_posts"}}active{{end}}" href="/users/{{ .ID }}">
+                Posts
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {{if isView "get_user_groups"}}active{{end}}" href="/users/{{ .ID }}/groups">
+                Groups
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {{if isView "get_user_profile"}}active{{end}}" href="/users/{{ .ID }}/profile">
+                Profile
+            </a>
+        </li>
+    </ul>
+{{end}}
+
+

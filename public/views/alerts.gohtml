@@ -1,0 +1,17 @@
+{{define "alerts"}}
+    {{range . }}
+        <div class="alert {{.Class}}" role="alert">
+            {{.HTML}}
+        </div>
+    {{end}}
+{{end}}
+
+{{define "alerts_row"}}
+    {{if .}}
+        <div class="row mb-3">
+            <div class="col-12">
+                {{template "alerts" .}}
+            </div>
+        </div>
+    {{end}}
+{{end}}

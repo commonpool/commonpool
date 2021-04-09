@@ -1,0 +1,34 @@
+{{ define "groupnav" }}
+    <ul class="nav nav-pills bg-light py-3 px-md-3 justify-content-center justify-content-md-start">
+        <li class="nav-item">
+            <a class="nav-link {{if isView "get_group_posts"}}active{{end}}" href="/groups/{{ .ID }}">Posts</a>
+        </li>
+        {{if AuthenticatedUserMembership }}
+            {{if AuthenticatedUserMembership.IsActive}}
+                <li class="nav-item text-md-start">
+                    <a class="nav-link {{if isView "get_group_members"}}active{{end}}" href="/groups/{{ .ID }}/members">Members</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{if isView "get_group_post_new"}}active{{end}}"
+                       href="/groups/{{ .ID }}/posts/new">New
+                        Post</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{if isView "get_group_send"}}active{{end}}"
+                       href="/groups/{{ .ID }}/send">Send</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{if isView "get_group_history"}}active{{end}}" href="/groups/{{ .ID }}/history">History</a>
+                </li>
+
+                {{ if AuthenticatedUserMembership.IsOwner}}
+                    <li class="nav-item">
+                        <a class="nav-link {{if isView "get_group_settings"}}active{{end}}"
+                           href="/groups/{{ .ID }}/settings">Settings</a>
+                    </li>
+                {{end}}
+
+            {{end}}
+        {{end}}
+    </ul>
+{{end}}

@@ -1,0 +1,25 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: commonpool-tls
+  namespace: istio-system
+spec:
+  dnsNames:
+    - commonpool.net
+  issuerRef:
+    kind: ClusterIssuer
+    name: letsencrypt-prod
+  secretName: commonpool-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: auth-tls
+  namespace: istio-system
+spec:
+  dnsNames:
+    - auth.commonpool.net
+  issuerRef:
+    kind: ClusterIssuer
+    name: letsencrypt-prod
+  secretName: auth-tls

@@ -1,0 +1,41 @@
+{{ define "user_groups_view" }}
+    <!doctype html>
+    <html lang="en">
+
+    {{template "header" .}}
+    {{template "topnav" .}}
+
+    <div class="container mt-5">
+
+        {{ template "alerts_row" .Alerts }}
+
+        <div class="row mb-3">
+            <div class="col-12">
+                <h4><i class="bi bi-person"></i> User: {{ html User.HTMLLink }}</h4>
+                <small>Joined {{User.CreatedAt.Format "Jan 02, 2006"}}</small>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                {{template "user_nav" User}}
+            </div>
+        </div>
+
+        {{ if not .Memberships}}
+            <div class="row">
+                <div class="col-12">
+                    <div class="p-3">
+                        {{ if eq AuthenticatedUser.ID User.ID }}You haven't{{else}}{{html User.HTMLLink}} hasn't{{end}}
+                        joined any group yet.
+                    </div>
+                </div>
+            </div>
+        {{else}}
+            {{range .Memberships}}
+                {{template "membership_row" .}}
+            {{end}}
+        {{end}}
+    </div>
+    </html>
+{{end}}

@@ -1,0 +1,28 @@
+{{ define "group_settings" }}
+    <!doctype html>
+    <html lang="en">
+
+    {{template "header" .}}
+    {{template "topnav" .}}
+
+    <div class="container mt-5">
+
+        {{ template "alerts_row" .Alerts }}
+
+        {{ template "group_header_row" Group}}
+
+        <div class="row mb-3">
+            <div class="col-12">
+                {{template "groupnav" Group}}
+            </div>
+        </div>
+
+        <form class="mb-3" action="/groups/{{Group.ID}}/delete" method="post">
+            <button class="btn btn-danger">
+                Delete group
+            </button>
+        </form>
+
+    </div>
+    </html>
+{{end}}

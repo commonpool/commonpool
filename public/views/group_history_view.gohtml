@@ -1,0 +1,144 @@
+{{ define "group_history_view" }}
+    <!doctype html>
+    <html lang="en">
+
+    {{template "header" .}}
+    {{template "topnav" .}}
+
+    <div class="container mt-5">
+
+        {{ template "alerts_row" .Alerts }}
+        {{ template "group_header_row" Group}}
+
+        <div class="row mb-3">
+            <div class="col-12">
+                {{template "groupnav" Group}}
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <form method="get" class="pt-2">
+
+                    <div class="mb-2">
+                        <input type="checkbox" name="showGroup" id="showGroup" class="form-check-input" value="true"
+                               {{if .ShowGroup}}checked{{end}}
+                        >
+                        <label class="form-check-label" for="showGroup">Show group</label>
+                    </div>
+
+                    <div class="mb-2">
+
+                        <label class="form-label" for="users">Select users to show:</label>
+                        <select name="users" id="users" class="form-control" multiple>
+                            {{range .Users}}
+                                <option value="{{.ID}}" {{if .Selected}}selected{{end}} >{{.Username}}</option>
+                            {{end}}
+                        </select>
+
+                    </div>
+                    <div class="mb-2">
+                        <button type="submit" class="btn btn-primary">Show</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    {{if not .Rows}}
+
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    No data
+                </div>
+            </div>
+        </div>
+
+    {{else}}
+        <div class="container-fluid">
+            <div class="overflow-scroll">
+                <table class="table table-bordered">
+                    <thead>
+                    <tr>
+                        <th rowspan="2">
+                            <div style="width:150px">Time</div>
+                        </th>
+                        <th rowspan="2">
+                            <div style="width:300px">Description</div>
+                        </th>
+                        {{if .ShowGroup}}
+                            <th colspan="9" class="text-center">Group</th>
+                        {{end}}
+                        {{range .RowUsers}}
+                            <th colspan="7" class="text-center">{{.Username}}</th>
+                        {{end}}
+                    </tr>
+                    <tr>
+                        {{if .ShowGroup}}
+                            <th>All Requests</th>
+                            <th>All Offers</th>
+                            <th>Requests by group</th>
+                            <th>Offers by group</th>
+                            <th>Hours in bank</th>
+                            <th>
+                                <div style="width:220px">Acknowledgements received</div>
+                            </th>
+                            <th>
+                                <div style="width:220px">Acknowledgements sent</div>
+                            </th>
+                            <th>
+                                <div style="width:250px">Notes</div>
+                            </th>
+                        {{end}}
+                        {{range .RowUsers}}
+                            <th>Requests</th>
+                            <th>Offers</th>
+                            <th>Hours in bank</th>
+                            <th>
+                                <div style="width:220px">Acknowledgements received</div>
+                            </th>
+                            <th>
+                                <div style="width:220px">Acknowledgements sent</div>
+                            </th>
+                            <th>
+                                <div style="width:250px">Notes</div>
+                            </th>
+                        {{end}}
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {{range .Rows}}
+                        {{$row := .}}
+                        <tr>
+                            <td>{{.Time.Format "15:04 Jan 02, 2006"}}</td>
+                            <td>{{html .Description}}</td>
+                            {{if $.ShowGroup}}
+                                <td>{{.GroupRow.AllRequestCount}}</td>
+                                <td>{{.GroupRow.AllOfferCount}}</td>
+                                <td>{{.GroupRow.RequestCount}}</td>
+                                <td>{{.GroupRow.OfferCount}}</td>
+                                <td>{{.GroupRow.Credits}}</td>
+                                <td>{{html .GroupRow.AcknowledgementsReceived}}</td>
+                                <td>{{html .GroupRow.AcknowledgementsSent}}</td>
+                                <td>{{html .GroupRow.Note}}</td>
+                            {{end}}
+                            {{range $index, $user := $.RowUsers}}
+                                {{$userRow := $row.GetRow $index}}
+                                <td>{{$userRow.RequestCount}}</td>
+                                <td>{{$userRow.OfferCount}}</td>
+                                <td>{{$userRow.Credits}}</td>
+                                <td>{{html $userRow.AcknowledgementsReceived}}</td>
+                                <td>{{html $userRow.AcknowledgementsSent}}</td>
+                                <td>{{html $userRow.Note}}</td>
+                            {{end}}
+                        </tr>
+                    {{end}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {{end}}
+    </html>
+{{end}}

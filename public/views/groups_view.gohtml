@@ -1,0 +1,30 @@
+{{ define "groups" }}
+    <!doctype html>
+    <html lang="en">
+
+    {{template "header" .}}
+    {{template "topnav" .}}
+
+
+    <div class="container mt-5">
+
+        {{ template "alerts_row" .Alerts }}
+
+        <div class="row">
+            <div class="col">
+                <ul class="list-group">
+                    {{ range .Groups }}
+                        <a class="list-group-item" href="/groups/{{.ID}}">{{.Name}}</a>
+                    {{end}}
+                </ul>
+            </div>
+        </div>
+        <div class="row mt-5">
+            <div class="col">
+                <a href="/groups/new" class="btn btn-primary">Create group</a>
+            </div>
+        </div>
+    </div>
+
+    </html>
+{{end}}

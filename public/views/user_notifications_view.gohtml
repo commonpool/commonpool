@@ -1,0 +1,35 @@
+{{ define "user_notifications_view" }}
+    <!doctype html>
+    <html lang="en">
+
+    {{template "header" .}}
+    {{template "topnav" .}}
+
+    <div class="container mt-3">
+
+        {{ template "alerts_row" .Alerts }}
+
+        <div class="px-3 mt-3 py-2 bg-light">
+            {{ if not .Notifications}}
+                <div class="px-3">
+                    You have no notifications
+                </div>
+            {{else}}
+                <div class="list-group">
+                    {{range .Notifications}}
+                        <div class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <p class="mb-1">
+                                    {{html .Message}}
+                                </p>
+                                <small>{{.CreatedAt.Format  "Jan 02 15:04"}}</small>
+                            </div>
+
+                        </div>
+                    {{end}}
+                </div>
+            {{end}}
+        </div>
+    </div>
+    </html>
+{{end}}

@@ -1,0 +1,87 @@
+{{ define "post_card" }}
+    <div class="card shadow">
+        <div class="card-body">
+
+            <div class="d-flex flex-row">
+                {{ if .Author.ProfilePictureID}}
+                    <img height="40" class="d-inline-block me-2 rounded-circle" src="/images/users/{{.AuthorID}}/{{.Author.ProfilePictureID}}/thumb.jpg">
+                {{end}}
+
+                <small>
+                    {{.CreatedAt.Format "Jan 02, 2006"}}
+                    /
+                    <span class="fs-6">by {{template "user_link" .Author}}</span>
+                    /
+                    <span class="fs-6">group {{template "group_link" .Group}}</span>
+                </small>
+
+                <div class="flex-grow-1"></div>
+                <div>
+                    {{ template "post_type_badge" .}}
+                </div>
+            </div>
+            <h5 class="card-title mt-2">
+                <a href="/groups/{{.GroupID}}/posts/{{.ID}}">{{.Title}}</a>
+            </h5>
+            <p>
+                {{.Description}}
+            </p>
+            {{if and .ValueFrom .ValueTo}}
+                <p class="mt-2">
+                    {{.ValueFrom}} - {{.ValueTo}}
+                </p>
+            {{end}}
+
+
+            {{if isView "get_group_post"}}
+                {{if .Images}}
+                    <div>
+                        {{with index .Images 0}}
+                            <img
+                                    id="img-{{$.GroupID}}-{{$.ID}}"
+                                    class="shadow-sm border"
+                                    style="max-width: 100%;
+                                    {{if not (isView "get_group_post")}}
+                                        max-height:300px;
+                                    {{else}}
+                                        max-height: 2400px;
+                                    {{end}}"
+                                    src="/images/{{if isView "get_group_post"}}full{{else}}medium{{end}}/groups/{{$.GroupID}}/posts/{{$.ID}}/{{.ID}}.jpg">
+                        {{end}}
+                    </div>
+                {{end}}
+            {{end}}
+
+            <div class="mt-2">
+                {{range .Images}}
+                    <img
+                            class="shadow-sm border"
+                            height="80"
+                            src="/images/thumb/groups/{{$.GroupID}}/posts/{{$.ID}}/{{.ID}}.jpg"
+                            {{if isView "get_group_post"}}
+                                style="cursor: pointer"
+                                onclick="document.getElementById('img-{{$.GroupID}}-{{$.ID}}').setAttribute('src', '/images/full/groups/{{$.GroupID}}/posts/{{$.ID}}/{{.ID}}.jpg')"
+                            {{end}}
+                    >
+                {{end}}
+            </div>
+        </div>
+        <div class="card-footer bg-white">
+            <div>
+                {{ if eq .Author.ID session.UserID}}
+                    {{ if isView "get_group_post"}}
+                        <a class="ml-2" href="/groups/{{.GroupID}}/posts/{{.ID}}/edit">Edit</a>
+                        <form class="d-inline-block" method="post" action="/groups/{{.GroupID}}/posts/{{.ID}}/delete">
+                            <button style="margin-top:-3px" class="p-0 ml-2 text-danger btn btn-link" type="submit">
+                                Delete
+                            </button>
+                        </form>
+                    {{end}}
+                {{end}}
+                <a class="ml-2" href="/groups/{{.GroupID}}/posts/{{.ID}}#replies">
+                    {{.MessageCount}} replies
+                </a>
+            </div>
+        </div>
+    </div>
+{{end}}

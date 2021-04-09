@@ -1,0 +1,111 @@
+{{ define "post_view" }}
+    <!doctype html>
+    <html lang="en">
+
+    <style>
+        @media (min-width: 800px) {
+            .message {
+                max-width: 60%;
+            }
+        }
+
+        .message {
+            border-radius: 1rem !important;
+            text-wrap: normal;
+            padding: 0.75rem;
+        }
+    </style>
+
+    {{template "header" .}}
+    {{template "topnav" .}}
+
+    <div class="container mt-5">
+
+        {{ template "alerts_row" .Alerts }}
+        {{ template "group_header_row" Group}}
+
+        <div class="row mb-3">
+            <div class="col-12">
+                {{template "groupnav" Group}}
+            </div>
+        </div>
+
+
+        <div class="p-3 my-3 bg-light rounded-3 shadow-sm">
+
+            <div class="mb-3">
+                {{ template "post_card" Post }}
+            </div>
+
+            <a id="replies"></a>
+
+            {{if not .Messages}}
+                <p>No replies</p>
+            {{else}}
+                {{ range .Messages }}
+                    <div class="mt-3 {{if eq .AuthorID AuthenticatedUser.ID}}text-end{{end}}">
+
+
+                        <div class="d-flex flex-row-{{if eq .AuthorID AuthenticatedUser.ID}}reverse{{end}}">
+
+
+                            {{if .Author.ProfilePictureID}}
+                                <img
+                                        class="rounded-circle align-self-center"
+                                        style="margin-top:2.25rem"
+                                        height="24"
+                                        src="/images/users/{{.AuthorID}}/{{.Author.ProfilePictureID}}/thumb.jpg">
+                            {{end}}
+
+                            <div class="d-flex flex-column px-2 flex-grow-1">
+                                <div class="mb-2">
+                                    <small>{{template "user_link" .Author}} {{.CreatedAt.Format "Jan 02 15:04"}}</small>
+                                </div>
+
+                                <div class="
+                                fw-bolder
+                                message
+                                shadow
+                                fs-5
+                                px-3
+                                d-table
+                                {{if eq .AuthorID AuthenticatedUser.ID}}
+                                    bg-primary
+                                    text-white
+                                    align-self-end
+                                {{else}}
+                                    bg-light
+                                    text-dark
+                                    align-self-start
+                                {{end}}">
+                                    {{.Content}}
+                                </div>
+                            </div>
+
+
+
+                        </div>
+                    </div>
+                {{end}}
+            {{end}}
+            {{ if AuthenticatedUserMembership}}
+                {{ if AuthenticatedUserMembership.IsActive}}
+                    <form class="mt-5" method="post" action="/groups/{{Post.GroupID}}/posts/{{Post.ID}}/message">
+                        <div class="row">
+                            <div class="col-8 col-md-10">
+                                <textarea class="form-control" placeholder="Send reply" type="text" name="content"
+                                          id="content"></textarea>
+                            </div>
+                            <div class="col-4 col-md-2">
+                                <button class="btn btn-block btn-primary w-100">Send reply</button>
+                            </div>
+                        </div>
+                    </form>
+                {{end}}
+            {{end}}
+        </div>
+
+
+    </div>
+    </html>
+{{end}}

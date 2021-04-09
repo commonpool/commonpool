@@ -1,0 +1,53 @@
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: commonpool
+  namespace: default
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - hosts:
+        - commonpool.net
+      port:
+        name: http
+        number: 80
+        protocol: HTTP
+      tls:
+        httpsRedirect: true
+    - hosts:
+        - commonpool.net
+      port:
+        name: https
+        number: 443
+        protocol: HTTPS
+      tls:
+        credentialName: commonpool-tls
+        mode: SIMPLE
+---
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: keycloak
+  namespace: auth
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - hosts:
+        - auth.commonpool.net
+      port:
+        name: http
+        number: 80
+        protocol: HTTP
+      tls:
+        httpsRedirect: true
+    - hosts:
+        - auth.commonpool.net
+      port:
+        name: https-443
+        number: 443
+        protocol: HTTPS
+      tls:
+        credentialName: auth-tls
+        mode: SIMPLE

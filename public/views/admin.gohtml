@@ -1,0 +1,14 @@
+{{ define "admin" }}
+    <!doctype html>
+    <html lang="en">
+
+    {{template "header" .}}
+    {{template "topnav" .}}
+
+    <div class="container mt-5">
+        <form method="post" action="/admin/clear">
+            <button class="btn btn-danger">Clear all data</button>
+        </form>
+    </div>
+    </html>
+{{end}}

@@ -1,0 +1,10 @@
+*.db
+.env
+.env-export
+.env.sample
+docker-compose.yaml
+.dockerignore
+build.sh
+push.sh
+Dockerfile
+deploy

@@ -1,0 +1,9 @@
+{{define "post_type_badge"}}
+    {{if eq "offer" .Type}}
+        <span class="badge badge-sm bg-primary">Offer</span>
+    {{else if eq "request" .Type}}
+        <span class="badge badge-sm bg-danger">Request</span>
+    {{else if eq "comment" .Type}}
+        <span class="badge badge-sm bg-secondary">Comment</span>
+    {{end}}
+{{end}}

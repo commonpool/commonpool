@@ -1,0 +1,52 @@
+{{ define "group" }}
+    <!doctype html>
+    <html lang="en">
+
+    {{template "header" .}}
+    {{template "topnav" .}}
+
+    <div class="container mt-5">
+
+        {{ template "alerts_row" .Alerts }}
+
+        {{ template "group_header_row" Group}}
+
+        <div class="row mb-3">
+            <div class="col-12">
+                {{template "groupnav" Group}}
+            </div>
+        </div>
+
+        <form class="mb-3" action="/groups/{{Group.ID}}" method="get">
+            <div class="row">
+                <div class="col-12 col-md-7 mb-2 mb-md-0">
+                    <input name="query" id="query" type="text" class="form-control" placeholder="Search posts"
+                           value="{{if .Query}}{{.Query}}{{end}}"/>
+                </div>
+                <div class="col-12 col-md-3 mb-2 mb-md-2">
+                    <select class="form-select" name="type">
+                        <option value="" {{if eq .Type nil}}selected{{end}}>All</option>
+                        <option value="offer" {{if .Type}}{{if .Type.IsOffer}}selected{{end}}{{end}}>Offers</option>
+                        <option value="request" {{if .Type}}{{if .Type.IsRequest}}selected{{end}}{{end}}>Requests</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-2">
+                    <button class="w-100 btn btn-primary" type="submit">Search</button>
+                </div>
+            </div>
+        </form>
+
+        <div class="px-0 px-md-2 mt-3 bg-light py-1">
+            <div class="col-12">
+                {{ range .Posts}}
+                    <div class="my-2">
+                        {{ template "post_card" .}}
+                    </div>
+                {{end}}
+            </div>
+        </div>
+    </div>
+
+    <div class="py-5"></div>
+    </html>
+{{end}}

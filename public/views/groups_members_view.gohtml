@@ -1,0 +1,35 @@
+{{ define "group_members" }}
+    <!doctype html>
+    <html lang="en">
+
+    {{template "header" .}}
+    {{template "topnav" .}}
+
+
+    <div class="container mt-5">
+
+        {{ template "alerts_row" .Alerts }}
+        {{ template "group_header_row" Group}}
+
+        <div class="row mb-3">
+            <div class="col-12">
+                {{template "groupnav" Group}}
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="list-group">
+                    {{ range Group.Memberships }}
+                        {{template "membership_row" .}}
+                    {{end}}
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+    </html>
+
+{{end}}

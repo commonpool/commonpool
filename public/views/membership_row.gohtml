@@ -1,0 +1,100 @@
+{{define "membership_row"}}
+    {{$authenticatedMembership := getMembership .GroupID AuthenticatedUser.ID}}
+    <div class="list-group-item">
+        <div class="d-flex flex-row">
+            <div>
+                {{ if isView "get_group_members"}}
+                    {{template "user_link" .User}}
+                {{else if isView "get_user_groups"}}
+                    {{template "group_link" .Group}}
+                {{end}}
+            </div>
+            <div class="flex-grow-1"></div>
+            <div>
+
+                {{if $authenticatedMembership}}
+                    {{if and .MemberConfirmed .GroupConfirmed }}
+
+                    {{ else if not .MemberConfirmed}}
+                        <button class="btn btn-sm btn-success" disabled>Invitation sent</button>
+                        <button class="btn btn-sm btn-outline-danger">Cancel invitation</button>
+
+                    {{ else if and (not .GroupConfirmed) $authenticatedMembership.IsAdmin }}
+                        <form class="d-inline-block" method="post"
+                              action="/groups/{{.GroupID}}/users/{{.UserID}}/join">
+                            <button class="btn btn-sm btn-success">Accept</button>
+                        </form>
+                        <form class="d-inline-block" method="post"
+                              action="/groups/{{.GroupID}}/users/{{.UserID}}/leave">
+                            <button class="btn btn-sm btn-outline-danger">Deny</button>
+                        </form>
+                    {{end}}
+                {{end}}
+            </div>
+
+            <!-- Expand Button -->
+            <a class="ms-2 btn btn-sm btn-light"
+               href="#user-{{.UserID}}-group-{{.GroupID}}"
+               role="button"
+               data-bs-toggle="collapse"
+               aria-expanded="false"
+               aria-controls="user-{{.UserID}}-group-{{.GroupID}}">
+                More
+            </a>
+            <!-- End Expand Button -->
+
+        </div>
+
+        <!-- Expandable User Info -->
+        <div class="collapse" id="user-{{.UserID}}-group-{{.GroupID}}">
+            <p class="mt-2">Member since {{.CreatedAt.Format "Jan 02, 2006"}}</p>
+            <p>Role: {{.Permission}}</p>
+            <div class="mt-2">
+                {{if $authenticatedMembership}}
+                    {{if and (not (eq .UserID AuthenticatedUser.ID)) ($authenticatedMembership.IsAdmin) }}
+                        {{if .IsActive}}
+                            <form class="d-inline-block" method="post"
+                                  action="/groups/{{.GroupID}}/users/{{.UserID}}/leave">
+                                <button class="btn btn-outline-danger" style="margin-top:-3px; height: 2.5rem;">Kick
+                                    out
+                                </button>
+                            </form>
+                        {{end}}
+                    {{end}}
+                {{end}}
+                {{if eq .UserID AuthenticatedUser.ID }}
+                    <form class="d-inline-block" method="post"
+                          action="/groups/{{.GroupID}}/users/{{.UserID}}/leave">
+                        <button class="btn btn-outline-danger" style="margin-top:-3px; height: 2.5rem;">Leave group
+                        </button>
+                    </form>
+                {{end}}
+                {{ if $authenticatedMembership}}
+                    {{if and $authenticatedMembership.IsActive $authenticatedMembership.IsAdmin}}
+                        {{if not (eq $authenticatedMembership.UserID .UserID)}}
+                            <form class="d-inline-block" id="form-user-{{.UserID}}"
+                                  action="/groups/{{.GroupID}}/users/{{.UserID}}/permissions" method="post">
+                                <select
+                                        name="permission"
+                                        class="form-select"
+                                        style="height: 2.5rem;"
+                                        onchange="document.getElementById('form-user-{{.UserID}}').submit()"
+                                        {{ if not ($authenticatedMembership.Permission.Gte .Permission)}}disabled{{end}}
+                                >
+                                    <option value="owner" {{if eq .Permission "owner"}}selected{{end}}>Owner
+                                    </option>
+                                    <option value="admin" {{if eq .Permission "admin"}}selected{{end}}>Admin
+                                    </option>
+                                    <option value="member" {{if eq .Permission "member"}}selected{{end}}>Member
+                                    </option>
+                                </select>
+                            </form>
+                        {{end}}
+                    {{end}}
+                {{end}}
+
+            </div>
+        </div>
+        <!-- End Expandable User Info -->
+    </div>
+{{end}}

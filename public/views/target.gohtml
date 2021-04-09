@@ -1,0 +1,9 @@
+{{define "target"}}
+
+    {{if eq .Type "user"}}
+        {{template "user_link" .User}}
+    {{else if eq .Type "group"}}
+        {{template "group_link" .Group}}
+    {{end}}
+
+{{end}}

@@ -1,0 +1,23 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: commonpool-data
+parameters:
+  type: gp2
+provisioner: kubernetes.io/aws-ebs
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+allowVolumeExpansion: true
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: commonpool-data
+  namespace: default
+spec:
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: commonpool-data
+  accessModes:
+    - ReadWriteOnce

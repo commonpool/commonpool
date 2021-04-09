@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: commonpool
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: commonpool
+  template:
+    metadata:
+      labels:
+        app: commonpool
+    spec:
+      containers:
+        - name: commonpool
+          image: commonpool/backend:latest
+          volumeMounts:
+            - mountPath: /var/data/public
+              name: data
+              readOnly: false
+          env:
+            - name: PUBLIC_DIR
+              value: /var/data/public
+            - name: SECURE_COOKIES
+              value: "true"
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  key: username
+                  name: postgres
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: postgres
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: database
+                  name: postgres
+            - name: DB_PROVIDER
+              value: postgres
+            - name: VIEWS_DIR
+              value: /app/views
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_HOST
+              value: postgres
+            - name: OIDC_DISCOVERY_URL
+              value: https://auth.commonpool.net/auth/realms/commonpool
+            - name: OIDC_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: client-id
+                  name: commonpool-staging-oidc-creds
+            - name: OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: client-secret
+                  name: commonpool-staging-oidc-creds
+            - name: OIDC_REDIRECT_URL
+              value: https://commonpool.net/auth/callback
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: commonpool-data

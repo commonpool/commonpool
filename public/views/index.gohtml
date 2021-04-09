@@ -1,0 +1,58 @@
+{{ define "index" }}
+    <!doctype html>
+    <html lang="en">
+
+    {{template "header" .}}
+    {{template "topnav" .}}
+
+    <div class="container mt-3">
+
+        {{ template "alerts_row" .Alerts }}
+
+        <div class="p-5 mb-4 bg-light rounded-3">
+            <div class="container">
+                <h1 class="display-5 fw-bold">Commonpool</h1>
+                {{if .IsAuthenticated}}
+                    <p class="col-md-8 fs-4">Hello {{ .Session.Username }}!</p>
+                {{end}}
+                <p class="col-md-8 fs-4">
+                    Welcome to commonpool.
+                </p>
+                {{if not .IsAuthenticated}}
+                    <a href="/auth/login" class="btn btn-primary btn-lg">Login</a>
+                {{end}}
+            </div>
+        </div>
+    </div>
+
+
+    <div class="container mt-5">
+
+        <div class="row">
+            <div class="col-12">
+                <h3>Groups</h3>
+            </div>
+        </div>
+        {{ if .Groups}}
+            <div class="row">
+                <div class="col-12">
+                    <ul class="list-group">
+                        {{ range .Groups }}
+                            <a class="list-group-item" href="/groups/{{.ID}}">{{.Name}}</a>
+                        {{end}}
+                    </ul>
+                </div>
+            </div>
+        {{else}}
+            <p>No groups</p>
+        {{end}}
+        <div class="row mt-5">
+            <div class="col">
+                <a href="/groups/new" class="btn btn-primary">Create group</a>
+            </div>
+        </div>
+    </div>
+
+
+    </html>
+{{end}}

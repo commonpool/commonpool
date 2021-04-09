@@ -1,0 +1,33 @@
+{{ define "group_header_row"}}
+    <div class="row mb-3">
+        <div class="col-7">
+            <h4><i class="bi bi-box"></i> Group: {{html .HTMLLink }}</h4>
+            <small>Created {{.CreatedAt.Format "Jan 02, 2006"}}</small>
+        </div>
+        <div class="col-5 text-end">
+            {{if not AuthenticatedUserMembership}}
+                <form action="/groups/{{.ID}}/users/{{AuthenticatedUser.ID}}/join" method="post">
+                    <button class="btn btn-success">Join group</button>
+                </form>
+            {{end}}
+
+            {{if AuthenticatedUserMembership}}
+                {{with AuthenticatedUserMembership}}
+
+                    {{if and .MemberConfirmed .GroupConfirmed}}
+                        <form action="/groups/{{$.ID}}/users/{{.UserID}}/leave" method="post">
+                            <button class="btn btn-outline-danger">Leave group</button>
+                        </form>
+                    {{else if .MemberConfirmed}}
+                        <div>
+                            <button class="btn btn-outline-success d-inline-block" disabled>Join Request Sent</button>
+                            <form action="/groups/{{$.ID}}/users/{{.UserID}}/leave" method="post" class="d-inline-block">
+                                <button class="ml-2 btn btn-outline-danger">Cancel Request</button>
+                            </form>
+                        </div>
+                    {{end}}
+                {{end}}
+            {{end}}
+        </div>
+    </div>
+{{end}}

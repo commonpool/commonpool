@@ -1,0 +1,259 @@
+{{ define "post_form" }}
+    <!doctype html>
+    <html lang="en">
+
+    {{template "header" .}}
+    {{template "topnav" .}}
+
+    <style>
+        .img-container.toDelete img {
+            opacity: 0.5
+        }
+
+        .not-deleted {
+            opacity: 0.5;
+        }
+
+        .not-deleted:hover {
+            opacity: 1;
+        }
+
+        .img-container.toDelete .deleted {
+            display: block
+        }
+
+        .img-container.toDelete .not-deleted {
+            display: none
+        }
+
+        .img-container:not(.toDelete) img {
+            opacity: 1
+        }
+
+        .img-container:not(.toDelete) .not-deleted {
+            display: block;
+        }
+
+        .img-container:not(.toDelete) .deleted {
+            display: none;
+        }
+    </style>
+
+    <script type="application/javascript">
+
+        function toggleImage(id) {
+            const elem = document.getElementById('img-container-' + id)
+            if (elem.classList.contains('toDelete')) {
+                elem.classList.remove('toDelete')
+                document.getElementById('img-' + id + '-delete').value = "false"
+            } else {
+                elem.classList.add('toDelete')
+                document.getElementById('img-' + id + '-delete').value = "true"
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function (event) {
+
+            const valuesGrp = document.getElementById("valuesGrp")
+            const type = document.getElementById("type")
+            const imgGrp = document.getElementById("imgGrp")
+
+            function addImage() {
+                const imageInputs = document.getElementsByClassName("img-input")
+                const idx = imageInputs.length
+
+                // Create container div
+                const container = document.createElement("div")
+                container.classList.add("img-input-grp", "row")
+
+                // Create column div
+                const col1 = document.createElement("div")
+                col1.classList.add("col-10")
+                col1.classList.add("col-md-8")
+                container.appendChild(col1)
+
+                // Create column div
+                const col2 = document.createElement("div")
+                col2.classList.add("col-2")
+                col2.classList.add("col-md-4")
+                container.appendChild(col2)
+
+                // Create input
+                const newInput = document.createElement("input")
+                newInput.classList.add("img-input", "form-control")
+                newInput.type = "file"
+                newInput.accept = "image/*"
+                newInput.id = "image-" + idx
+                newInput.onchange = ev => {
+                    if (!ev.target.value) {
+                        imgGrp.removeChild(container)
+                    } else {
+                        addImage()
+                    }
+                    updateImages()
+                }
+                col1.appendChild(newInput)
+
+                // Create label
+                const newLabel = document.createElement("label")
+                newLabel.classList.add("form-label")
+                newLabel.for = newInput.id
+                col1.appendChild(newLabel)
+
+                // Create button
+                const button = document.createElement("button")
+                button.classList.add("btn", "bg-white", "shadow-sm")
+                button.innerHTML = '<i class="bi bi-x"></i>'
+                button.type = "button"
+                button.onclick = () => {
+                    imgGrp.removeChild(container)
+                    updateImages()
+                }
+                col2.appendChild(button)
+                imgGrp.append(container)
+            }
+
+            function updateImages() {
+                let imageInputs = document.getElementsByClassName("img-input")
+                if (imageInputs.length === 0) {
+                    addImage()
+                }
+                setTimeout(() => {
+                    imageInputs = document.getElementsByClassName("img-input")
+                    for (let i = 0; i < imageInputs.length; i++) {
+                        imageInputs[i].setAttribute("name", "image-" + i)
+                        imageInputs[i].setAttribute("id", "image-" + i)
+                    }
+                }, 0)
+            }
+
+            function updateValuesVisibility() {
+                console.log(type.value)
+                if (type.value !== "request" && type.value !== "offer") {
+                    valuesGrp.classList.add("d-none")
+                } else {
+                    valuesGrp.classList.remove("d-none")
+                }
+            }
+
+            type.onchange = ev => {
+                updateValuesVisibility()
+            }
+
+            updateValuesVisibility()
+            updateImages()
+
+        })
+
+    </script>
+    <div class="container mt-5">
+
+        {{ template "alerts_row" .Alerts }}
+        {{ template "group_header_row" Group}}
+
+        <div class="row mb-3">
+            <div class="col-12">
+                {{template "groupnav" Group}}
+            </div>
+        </div>
+
+        <div class="row ">
+            <div class="col-12">
+                <div class="bg-light p-3">
+                    <form action="{{if .Post}}/groups/{{.Group.ID}}/posts/{{.Post.ID}}/edit{{else}}/groups/{{.Group.ID}}/posts/new{{end}}"
+                          enctype="multipart/form-data"
+                          method="post">
+                        <div class="mb-3">
+                            <label class="form-label" for="type">Type</label>
+                            <select class="form-select" name="type" id="type">
+                                <option value="offer" {{if .Post}}{{if eq .Post.Type "offer"}}selected{{end}}{{end}}>
+                                    Offer
+                                </option>
+                                <option value="request"
+                                        {{if .Post}}{{if eq .Post.Type "request"}}selected{{end}}{{end}}>
+                                    Request
+                                </option>
+                                <option value="comment"
+                                        {{if .Post}}{{if eq .Post.Type "comment"}}selected{{end}}{{end}}>
+                                    Comment
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="title">Title</label>
+                            <input type="text" class="form-control" id="title" name="title"
+                                   value="{{if .Post}}{{.Post.Title}}{{end}}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="description">Description</label>
+                            <textarea class="form-control" id="description"
+                                      name="description">{{if .Post}}{{.Post.Description}}{{end}}</textarea>
+                        </div>
+
+                        <div id="valuesGrp">
+                            <div class="mb-3">
+                                <label class="form-label" for="valueFrom">Time value from</label>
+                                <input class="form-control" type="text" id="valueFrom" name="valueFrom" placeholder="1h"
+                                       value="{{if .Post}}{{.Post.ValueFrom}}{{end}}">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label" for="valueTo">Time value to</label>
+                                <input class="form-control" type="text" id="valueTo" name="valueTo" placeholder="2h"
+                                       value="{{if .Post}}{{.Post.ValueTo}}{{end}}">
+                            </div>
+                        </div>
+
+                        {{ if .Post}}
+                            {{if .Post.Images}}
+                                <h5>Images</h5>
+                                <div class="my-2">
+                                    {{range $index, $image :=.Post.Images}}
+                                        <div class="my-2 me-3 position-relative d-inline-block img-container"
+                                             id="img-container-{{$image.ID}}">
+
+                                            <input type="hidden" id="img-{{$image.ID}}-group"
+                                                   name="existingImages[{{$index}}].id" value="{{$image.ID}}"/>
+                                            <input type="hidden" id="img-{{$image.ID}}-group"
+                                                   name="existingImages[{{$index}}].groupId"
+                                                   value="{{$image.GroupID}}"/>
+                                            <input type="hidden" id="img-{{$image.ID}}-post"
+                                                   name="existingImages[{{$index}}].postId" value="{{$image.PostID}}"/>
+                                            <input type="hidden" id="img-{{$image.ID}}-delete"
+                                                   name="existingImages[{{$index}}].delete" value="false"/>
+
+                                            <img src="/images/full/groups/{{$image.GroupID}}/posts/{{$image.PostID}}/{{$image.ID}}.jpg"
+                                                 class="shadow-sm border"
+                                                 style="height:120px">
+                                            <a class="position-absolute" href="#"
+                                               style="top: -12px; right: -12px"
+                                               id="img-btn-{{$image.ID}}"
+                                               onclick="toggleImage({{$image.ID}})"
+                                            >
+                                                <i class="bi bi-x-circle-fill fs-4 deleted"
+                                                   id="img-btn-{{$image.ID}}-icon"></i>
+                                                <i class="bi bi-x-circle fs-4 not-deleted"
+                                                   id="img-btn-{{$image.ID}}-icon"></i>
+                                            </a>
+                                        </div>
+                                    {{end}}
+                                </div>
+                            {{end}}
+                        {{end}}
+
+                        <h5>Add Images</h5>
+                        <div id="imgGrp">
+
+                        </div>
+
+                        <button class="btn btn-primary mt-3" type="submit">Submit</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </html>
+{{end}}

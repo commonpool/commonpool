@@ -1,0 +1,33 @@
+{{ define "group_acknowledgements_view" }}
+    <!doctype html>
+    <html lang="en">
+
+    {{template "header" .}}
+    {{template "topnav" .}}
+
+
+    <div class="container mt-5">
+
+        {{ template "alerts_row" .Alerts }}
+        {{ template "group_header_row" Group}}
+
+        <div class="row mb-3">
+            <div class="col-12">
+                {{template "groupnav" Group}}
+            </div>
+        </div>
+
+        <div class="px-3 mt-3 py-2 bg-light">
+            {{ if not .Acknowledgements}}
+                <div class="px-3">
+                    Group hasn't received any acknowledgements yet.
+                </div>
+            {{else}}
+                {{range .Acknowledgements}}
+                    <p>Received acknowledgement by {{template "target" .SentBy}} on {{.CreatedAt.Format "Jan 02, 2006"}}</p>
+                {{end}}
+            {{end}}
+        </div>
+    </div>
+    </html>
+{{end}}

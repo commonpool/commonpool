@@ -1,0 +1,19 @@
+{{ define "groupform" }}
+    <!doctype html>
+    <html lang="en">
+
+    {{template "header" .}}
+    {{template "topnav" .}}
+
+    <div class="container bg-light py-3 mt-5">
+        <form action="/groups/new" method="post">
+            <div class="mb-3">
+                <label for="name">Name</label>
+                <input type="text" class="form-control" id="name" name="name">
+            </div>
+            <button class="btn btn-primary" type="submit">Submit</button>
+        </form>
+    </div>
+
+    </html>
+{{end}}

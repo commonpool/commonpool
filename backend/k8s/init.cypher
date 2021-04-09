@@ -1,6 +1,0 @@
-CREATE INDEX FOR (u:User) ON (u.id)
-
-CREATE CONSTRAINT ON (u:User) ASSERT u.id IS UNIQUE
-
-CREATE INDEX FOR (g:Group) ON (g.id),
-CREATE INDEX FOR (r:Resource) ON (r.id)

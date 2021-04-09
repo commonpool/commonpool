@@ -1,0 +1,151 @@
+{{ define "group_send" }}
+    <!doctype html>
+    <html lang="en">
+
+    {{template "header" .}}
+    {{template "topnav" .}}
+
+    <script type="application/javascript">
+        document.addEventListener("DOMContentLoaded", function (event) {
+            const form = document.getElementById('form')
+            const type = document.getElementById('type');
+            const source = document.getElementById('source');
+            const target = document.getElementById('target');
+            const amount = document.getElementById('amount');
+            const amountGrp = document.getElementById('amount-grp');
+            const ackGrp = document.getElementById('ack-grp');
+            const ack = document.getElementById('ack');
+
+            function updateCreditsVisibility() {
+                if (type.value === "credits") {
+                    amountGrp.classList.remove("d-none")
+                } else {
+                    amountGrp.classList.add("d-none")
+                }
+            }
+
+            function updateAcknowledgementVisibility() {
+                if (type.value === "acknowledgement") {
+                    ackGrp.classList.remove("d-none")
+                } else {
+                    ackGrp.classList.add("d-none")
+                }
+            }
+
+            function updateSendTo() {
+                setTimeout(() => {
+                    console.log(source.value)
+                    console.log(target.value)
+                    if (source.value === target.value) {
+                        target.selectedIndex = 0
+                    }
+                }, 0)
+            }
+
+            target.onchange = () => {
+                updateSendTo()
+            }
+
+            source.onchange = () => {
+                updateSendTo()
+            }
+
+            type.onchange = () => {
+                updateCreditsVisibility()
+                updateAcknowledgementVisibility()
+            }
+
+            updateCreditsVisibility()
+            updateAcknowledgementVisibility()
+
+        });
+    </script>
+
+    <div class="container mt-5">
+
+        {{ template "alerts_row" .Alerts }}
+        {{ template "group_header_row" Group}}
+
+        <div class="row mb-3">
+            <div class="col-12">
+                {{template "groupnav" Group}}
+            </div>
+        </div>
+
+        <form id="form" method="post">
+
+            <div class="form-group" id="source-grp">
+                <label for="source">Send from:</label>
+                <select class="form-select" name="source" id="source" required>
+                    {{ range .Sources }}
+                        <option value="{{.Value}}">{{.DisplayName}}</option>
+                    {{end}}
+                </select>
+            </div>
+
+
+            <div class="form-group mt-2" id="type-grp">
+                <label for="type">Send:</label>
+                <select class="form-select" name="type" id="type" required>
+                    <option value="" {{if .Type.IsEmpty}}selected{{end}}></option>
+                    <option value="credits" {{if .Type.IsCredits}}selected{{end}}>Credits</option>
+                    <option value="acknowledgement" {{if .Type.IsAcknowledgement}}selected{{end}}>Acknowledgement
+                    <option value="other" {{if .Type.IsOther}}selected{{end}}>Other (see note)</option>
+                </select>
+            </div>
+
+
+            <div class="form-group mt-2" id="target-grp">
+                <label for="target">Send to:</label>
+                <select class="form-select" name="target" id="target" required>
+                    <option value="" selected></option>
+                    {{ range .Targets }}
+                        <option value="{{.Value}}">{{.DisplayName}}</option>
+                    {{end}}
+                </select>
+            </div>
+
+            <div class="mt-2" id="ack-grp">
+
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="acknowledgementType" id="thanks-object-gift" value="thanks-gift-object">
+                    <label class="form-check-label" for="thanks-object-gift">
+                        Thank you for the gift (object)
+                    </label>
+                </div>
+
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="acknowledgementType" id="thanks-service-gift"  value="thanks-gift-service">
+                    <label class="form-check-label" for="thanks-service-gift">
+                        Thank you for the gift (service)
+                    </label>
+                </div>
+
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="acknowledgementType" id="thanks-lent-object" value="thanks-lent-object">
+                    <label class="form-check-label" for="thanks-lent-object">
+                        Thank you for lending me an object
+                    </label>
+                </div>
+
+            </div>
+
+            <div class="form-group d-none mt-2" id="amount-grp">
+                <label for="amount">Amount</label>
+                <input type="text" class="form-control" id="amount" name="amount">
+            </div>
+
+
+            <div class="form-group mt-2" id="notes-grp">
+                <label for="notes">Add a note:</label>
+                <textarea type="text" class="form-control" id="notes" name="notes"></textarea>
+            </div>
+
+            <button class="btn btn-primary mt-2">Send</button>
+
+
+        </form>
+
+    </div>
+    </html>
+{{end}}
